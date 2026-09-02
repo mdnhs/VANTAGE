@@ -41,7 +41,7 @@ export function HeroSection() {
 
         <div className='flex flex-wrap gap-4 pt-4'>
           <Link
-            href='#quote'
+            href='/get-a-quote'
             className='bg-[#ffb4ab] px-8 py-4 text-xs font-bold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_10px_15px_-3px_rgba(255,180,171,0.2),0px_4px_6px_-4px_rgba(255,180,171,0.2)] transition-opacity hover:opacity-90'
           >
             Get a Free Quote

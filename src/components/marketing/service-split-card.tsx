@@ -36,7 +36,7 @@ export function ServiceSplitCards() {
             <p className='text-base leading-6 text-[#e6bdb8]'>{service.description}</p>
 
             <Link
-              href='#quote'
+              href='/get-a-quote'
               className='flex items-center gap-2 pt-2 text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'
             >
               Quote Service

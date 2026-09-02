@@ -54,7 +54,7 @@ export function MarketingHeader() {
 
         <div className='flex items-center gap-6'>
           <Link
-            href='#quote'
+            href='/get-a-quote'
             className='bg-[#dc2626] px-8 py-3 text-xs font-semibold tracking-[1.2px] text-[#fff6f5] uppercase transition-colors hover:bg-[#dc2626]/90'
           >
             Get a Free Quote

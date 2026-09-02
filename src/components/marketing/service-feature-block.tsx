@@ -64,7 +64,7 @@ export function ServiceFeatureBlock({
         )}
 
         <Link
-          href='#quote'
+          href='/get-a-quote'
           className='flex w-fit items-center gap-2 bg-[#ffb4ab] px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#690005] uppercase transition-opacity hover:opacity-90'
         >
           Get a Quote
