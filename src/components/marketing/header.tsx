@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { label: 'Insurance', href: '/insurance' },
   { label: 'About', href: '/about' },
   { label: 'Process', href: '#process' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 export function MarketingHeader() {
