@@ -19,12 +19,12 @@ Hono API → Service → Repository → Drizzle ORM → Neon serverless driver �
 ## Setup commands to append
 
 ```bash
-pnpm add drizzle-orm @neondatabase/serverless
-pnpm add -D drizzle-kit
+yarn add drizzle-orm @neondatabase/serverless
+yarn add -D drizzle-kit
 # schema changes → SQL:
-pnpm drizzle-kit generate
+yarn drizzle-kit generate
 # apply to the database:
-pnpm drizzle-kit migrate
+yarn drizzle-kit migrate
 ```
 
 Add to `package.json` scripts:
@@ -58,12 +58,12 @@ Both are server-only. Never prefix them with `NEXT_PUBLIC_`.
 
 In the Neon console → Branch → Compute:
 
-| Setting              | Value                     | Why                                                          |
-| -------------------- | ------------------------- | ------------------------------------------------------------ |
-| Suspend after        | **minimum available**     | Idle minutes are billed until it suspends                     |
-| Min compute size     | **0.25 CU**               | The minimum is billed for every awake second                  |
-| Max compute size     | 1–2 CU                    | Autoscale ceiling; raise only on measured slow queries        |
-| Preview branches     | same, or deleted          | Every branch has its own compute and its own bill             |
+| Setting          | Value                 | Why                                                    |
+| ---------------- | --------------------- | ------------------------------------------------------ |
+| Suspend after    | **minimum available** | Idle minutes are billed until it suspends              |
+| Min compute size | **0.25 CU**           | The minimum is billed for every awake second           |
+| Max compute size | 1–2 CU                | Autoscale ceiling; raise only on measured slow queries |
+| Preview branches | same, or deleted      | Every branch has its own compute and its own bill      |
 
 Check the Monitoring tab after deploying. A flat "always active" line means something is polling —
 find it and remove it before tuning anything else.
@@ -130,7 +130,7 @@ Rules:
   ```
 
 - **Batch every independent read.** `Promise.all` / `db.batch([...])` collapses N sequential
-  round trips into one awake window; a serial chain bills the *sum* of every latency on both
+  round trips into one awake window; a serial chain bills the _sum_ of every latency on both
   meters. Never `await` queries one after another in a request unless the second genuinely needs
   the first one's result.
 
@@ -241,7 +241,9 @@ const listColumns = {
 };
 
 export const orderRepository = {
-  async list(params: OrderListParams): Promise<{ rows: Array<Pick<Order, 'id' | 'reference' | 'status' | 'createdAt'>>; total: number }> {
+  async list(
+    params: OrderListParams,
+  ): Promise<{ rows: Array<Pick<Order, 'id' | 'reference' | 'status' | 'createdAt'>>; total: number }> {
     const filters: SQL[] = [];
     if (params.status) filters.push(eq(orders.status, params.status));
     if (params.search) filters.push(ilike(orders.reference, `%${params.search}%`));

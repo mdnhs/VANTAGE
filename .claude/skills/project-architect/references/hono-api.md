@@ -16,7 +16,7 @@ Next.js App Router
 ## Setup commands to append
 
 ```bash
-pnpm add hono @hono/zod-validator zod
+yarn add hono @hono/zod-validator zod
 ```
 
 ---
@@ -344,11 +344,16 @@ const idParamSchema = z.object({ id: z.string().uuid() });
 export const orders = new Hono<AuthEnv>()
   .use('*', requireAuth)
 
-  .get('/', requirePermission('order_management.order.view_list'), zValidator('query', orderListQuerySchema), async (c) => {
-    const query = c.req.valid('query');
-    const { rows, total } = await orderService.list(query);
-    return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
-  })
+  .get(
+    '/',
+    requirePermission('order_management.order.view_list'),
+    zValidator('query', orderListQuerySchema),
+    async (c) => {
+      const query = c.req.valid('query');
+      const { rows, total } = await orderService.list(query);
+      return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
+    },
+  )
 
   .get('/:id', zValidator('param', idParamSchema), async (c) => {
     const { id } = c.req.valid('param');

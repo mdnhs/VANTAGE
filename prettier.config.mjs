@@ -1,0 +1,16 @@
+export default {
+  printWidth: 120,
+  jsxSingleQuote: true,
+  quoteProps: 'as-needed',
+  bracketSameLine: false,
+  semi: true,
+  singleQuote: true,
+  trailingComma: 'all',
+  tabWidth: 2,
+  useTabs: false,
+  bracketSpacing: true,
+  arrowParens: 'always',
+  endOfLine: 'lf',
+  plugins: ['prettier-plugin-tailwindcss'],
+  tailwindStylesheet: './src/app/globals.css',
+};

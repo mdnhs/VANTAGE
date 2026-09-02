@@ -81,7 +81,7 @@ Ensure the `.dark` block of CSS variables is present (already in core globals.cs
 ### Rendering the toggle
 
 The button renders identical markup in both themes (the icons swap via CSS `dark:` classes), so it
-needs no `mounted` guard. If you write a variant that renders *different content* per theme — a
+needs no `mounted` guard. If you write a variant that renders _different content_ per theme — a
 label, a different icon component — it must guard on mount or it will mismatch on hydration:
 
 ```tsx
@@ -95,5 +95,5 @@ Prefer the CSS-only version: no guard, no layout shift, no extra client state.
 ## Setup commands to append
 
 ```bash
-pnpm add next-themes
+yarn add next-themes
 ```

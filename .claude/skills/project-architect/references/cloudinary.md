@@ -14,7 +14,7 @@ Browser → signed upload → Cloudinary → global CDN → user
 ## Setup commands to append
 
 ```bash
-pnpm add cloudinary next-cloudinary
+yarn add cloudinary next-cloudinary
 ```
 
 ## Environment variables
@@ -70,10 +70,7 @@ export const media = new Hono<AuthEnv>()
   .post('/sign', rateLimit(30), zValidator('json', signSchema), (c) => {
     const { folder } = c.req.valid('json');
     const timestamp = Math.round(Date.now() / 1000);
-    const signature = cloudinary.utils.api_sign_request(
-      { timestamp, folder },
-      process.env.CLOUDINARY_API_SECRET!,
-    );
+    const signature = cloudinary.utils.api_sign_request({ timestamp, folder }, process.env.CLOUDINARY_API_SECRET!);
 
     return ok(c, {
       signature,

@@ -6,7 +6,7 @@ suspended. Default position — **serve from the CDN; wake the database only on 
 
 Remember what Neon actually bills: **time awake, not query count**. A cheap query every 30 seconds
 costs far more than an expensive one every hour, because the endpoint never suspends. Cache to
-reduce *frequency of contact*, not just data volume.
+reduce _frequency of contact_, not just data volume.
 
 ```text
 User → Vercel CDN → (hit) response
@@ -17,15 +17,15 @@ User → Vercel CDN → (hit) response
 
 ## Decision table
 
-| Content                                     | Strategy                                          | Cost when done right |
-| ------------------------------------------- | ------------------------------------------------- | -------------------- |
-| `/`, `/about`, `/pricing`, marketing pages   | Fully static (no dynamic APIs) — pure CDN          | 0 functions, 0 DB    |
-| `sitemap.ts` / `robots.ts`                   | Cached route handlers, daily `revalidate`         | ~0 — see `seo` skill |
-| Blog posts, docs                             | Static + `generateStaticParams`                   | 0 functions, 0 DB    |
-| Products, categories, public profiles        | `'use cache'` + tags, revalidated on write        | 1 function, 0 DB     |
-| Public settings, feature flags               | Long `cacheLife` + tag invalidation on save       | 1 function, 0 DB     |
-| Dashboard lists (per-user)                   | No shared cache; TanStack Query, long `staleTime` | 1 function, 1 wake   |
-| Anything user-specific or auth-gated         | Never cached at the CDN; `Cache-Control: private` | 1 function, 1 wake   |
+| Content                                    | Strategy                                          | Cost when done right |
+| ------------------------------------------ | ------------------------------------------------- | -------------------- |
+| `/`, `/about`, `/pricing`, marketing pages | Fully static (no dynamic APIs) — pure CDN         | 0 functions, 0 DB    |
+| `sitemap.ts` / `robots.ts`                 | Cached route handlers, daily `revalidate`         | ~0 — see `seo` skill |
+| Blog posts, docs                           | Static + `generateStaticParams`                   | 0 functions, 0 DB    |
+| Products, categories, public profiles      | `'use cache'` + tags, revalidated on write        | 1 function, 0 DB     |
+| Public settings, feature flags             | Long `cacheLife` + tag invalidation on save       | 1 function, 0 DB     |
+| Dashboard lists (per-user)                 | No shared cache; TanStack Query, long `staleTime` | 1 function, 1 wake   |
+| Anything user-specific or auth-gated       | Never cached at the CDN; `Cache-Control: private` | 1 function, 1 wake   |
 
 Push every row upward in this table wherever the product allows. A public page rendered per request
 is the single most expensive mistake available in this stack.
@@ -39,7 +39,7 @@ be static — a single such call opts the whole route into dynamic rendering, tu
 into a billed function invocation on **every** visit. This is the most common accidental cost
 regression in a Next.js app.
 
-Check `pnpm build` output after any change to a marketing route: `○` = static (free),
+Check `yarn build` output after any change to a marketing route: `○` = static (free),
 `ƒ` = dynamic (billed per request). Treat an `○ → ƒ` change as a build failure.
 
 ```tsx

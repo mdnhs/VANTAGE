@@ -3,7 +3,7 @@
 Replaces raw `useSearchParams` / `router.push` with type-safe, declarative search param
 management. Especially useful for table filters, pagination, and any URL-driven state.
 
-> **Cost warning — read before copying anything below.** With `shallow: false`, *every* keystroke in
+> **Cost warning — read before copying anything below.** With `shallow: false`, _every_ keystroke in
 > a filter input triggers a server round trip: a billed Vercel invocation and a Neon wake-up per
 > character. Typing "invoice" = 7 of each. The parsers below are configured with debouncing and
 > sensible history defaults to prevent that. Do not remove them.
@@ -64,12 +64,12 @@ export const useTableSearchParams = () =>
 
 Pick one data path per table and stay with it:
 
-| Path                                    | Setting                        | Cost per keystroke              |
-| --------------------------------------- | ------------------------------ | -------------------------------- |
-| Server-rendered table (RSC reads params) | `shallow: false` + debounce    | 1 invocation per debounced burst |
-| Client table (TanStack Query)            | `shallow: true` + debounce     | 0 — URL only; query key refetches |
+| Path                                     | Setting                     | Cost per keystroke                |
+| ---------------------------------------- | --------------------------- | --------------------------------- |
+| Server-rendered table (RSC reads params) | `shallow: false` + debounce | 1 invocation per debounced burst  |
+| Client table (TanStack Query)            | `shallow: true` + debounce  | 0 — URL only; query key refetches |
 
-Debounce the *text* inputs. Selects, page changes and sort toggles are discrete — they can update
+Debounce the _text_ inputs. Selects, page changes and sort toggles are discrete — they can update
 immediately (`limitUrlUpdates` applies per-hook, so use a second hook if you need both behaviours).
 
 ### Usage pattern in feature table filters
@@ -113,7 +113,11 @@ export const tableSearchParamsCache = createSearchParamsCache(tableSearchParamsP
 import { tableSearchParamsCache } from '@/lib/search-params';
 import { orderService } from '@/server/services/order-service';
 
-export default async function OrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   // Next.js 16: searchParams is a Promise.
   const { page, limit, search } = await tableSearchParamsCache.parse(searchParams);
   const { rows } = await orderService.list({ page, limit: Math.min(limit, 100), search });
@@ -145,7 +149,7 @@ export const useOrderSearchParams = () =>
 ## Setup commands to append
 
 ```bash
-pnpm add nuqs
+yarn add nuqs
 # No other setup needed — nuqs works with the NuqsAdapter already configured
 ```
 

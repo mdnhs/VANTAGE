@@ -12,8 +12,8 @@ invocation and a Neon wake-up. Refetch-on-focus and intervals are off deliberate
 ## Setup commands to append
 
 ```bash
-pnpm add @tanstack/react-query
-pnpm add @tanstack/react-query-devtools
+yarn add @tanstack/react-query
+yarn add @tanstack/react-query-devtools
 ```
 
 ---

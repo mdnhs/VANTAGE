@@ -19,7 +19,7 @@ Zod schema  →  Hono route module  →  Service (cache + rules)  →  Repositor
 ```
 
 **Cost is priority #1 in this project: fewer Vercel invocations, fewer Neon compute hours.** Neon
-bills time awake, not queries — so the goal is to touch the database *less often*, not merely to
+bills time awake, not queries — so the goal is to touch the database _less often_, not merely to
 write faster SQL.
 
 Read these references before generating — they hold the full source patterns:
@@ -45,7 +45,7 @@ Read these references before generating — they hold the full source patterns:
    means a migration plus a redirect map.
 9. **Does the UI need a total count?** If not, use cursor pagination and skip `COUNT(*)` entirely.
 10. **How fresh must it be?** This sets `revalidate` and client `staleTime`. "Real time" is
-   expensive — confirm it is a real requirement before agreeing to it.
+    expensive — confirm it is a real requirement before agreeing to it.
 
 Do not guess 3, 5 or 6. Ask if unclear: getting caching or authorisation wrong is a data leak,
 not a style issue.
@@ -81,7 +81,7 @@ Then:
 
 - Re-export from `src/server/db/schema/index.ts`.
 - Add an index for every foreign key and every field named in step 7.
-- `pnpm db:generate` → review the generated SQL → `pnpm db:migrate`. Commit the SQL file.
+- `yarn db:generate` → review the generated SQL → `yarn db:migrate`. Commit the SQL file.
 
 **Never** hand-edit an already-applied migration. Write a new one.
 
@@ -193,11 +193,16 @@ Thin handlers, per `hono-api.md`:
 ```typescript
 export const orders = new Hono<AuthEnv>()
   .use('*', requireAuth)
-  .get('/', requirePermission('order_management.order.view_list'), zValidator('query', orderListQuerySchema), async (c) => {
-    const query = c.req.valid('query');
-    const { rows, total } = await orderService.list(query);
-    return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
-  });
+  .get(
+    '/',
+    requirePermission('order_management.order.view_list'),
+    zValidator('query', orderListQuerySchema),
+    async (c) => {
+      const query = c.req.valid('query');
+      const { rows, total } = await orderService.list(query);
+      return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
+    },
+  );
 ```
 
 - `zValidator` from `@/server/lib/validator` (the one that produces the shared error envelope).
@@ -239,8 +244,8 @@ Permissions (if gated) go in `src/lib/permission/permissions.ts` with the same k
 
 ## Verification
 
-- [ ] `pnpm db:generate` produced SQL that matches the intended change; migration applied
-- [ ] `pnpm tsc --noEmit` clean; no `any`
+- [ ] `yarn db:generate` produced SQL that matches the intended change; migration applied
+- [ ] `yarn tsc --noEmit` clean; no `any`
 - [ ] Every filter/sort/join column has an index
 - [ ] `limit` is capped; list responses carry `pagination`
 - [ ] Auth/permission middleware present on every non-public route

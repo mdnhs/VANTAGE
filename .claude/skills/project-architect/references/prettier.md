@@ -39,7 +39,7 @@ dist
 build
 public
 coverage
-pnpm-lock.yaml
+yarn.lock
 src/server/db/migrations
 *.min.js
 ```
@@ -62,7 +62,7 @@ time afterwards doubles the slowest part of every commit for no extra signal.
 ## Setup commands
 
 ```bash
-pnpm add -D prettier prettier-plugin-tailwindcss lint-staged
+yarn add -D prettier prettier-plugin-tailwindcss lint-staged
 ```
 
 Tailwind v4 has no `tailwind.config.js`, so point the plugin at the CSS entry that holds

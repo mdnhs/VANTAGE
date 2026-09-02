@@ -348,6 +348,6 @@ import { Link, redirect, useRouter } from '@/lib/translation/navigation';
 ## Setup commands
 
 ```bash
-pnpm add next-intl
+yarn add next-intl
 # Remove if previously installed: negotiator @formatjs/intl-localematcher @types/negotiator
 ```

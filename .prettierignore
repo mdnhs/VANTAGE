@@ -1,0 +1,10 @@
+node_modules
+.next
+.vercel
+dist
+build
+public
+coverage
+yarn.lock
+src/server/db/migrations
+*.min.js

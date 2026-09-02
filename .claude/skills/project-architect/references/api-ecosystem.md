@@ -568,5 +568,5 @@ Pick REST-client **or** RPC per project and stay consistent.
 ```bash
 # No extra setup needed for the REST client.
 # Hono RPC client (optional, comes with hono):
-# pnpm add hono
+# yarn add hono
 ```

@@ -388,18 +388,18 @@ cosmetic — the server check is the real one, and it is not optional.
 
 ## Naming Conventions Reminder
 
-| Thing                  | Convention                 | Example                 |
-| ---------------------- | -------------------------- | ----------------------- |
-| Directory              | kebab-case                 | `order-items/`          |
-| Component files        | kebab-case                 | `order-table.tsx`       |
-| Hook files             | kebab-case with `use-`     | `use-order-list.ts`     |
-| Server files           | kebab-case                 | `order-repository.ts`   |
-| Types/Interfaces       | PascalCase                 | `OrderItem`             |
-| Zod schemas            | camelCase + `Schema`       | `orderItemSchema`       |
-| Constants              | SCREAMING_SNAKE_CASE       | `ORDER_ITEM_QUERY_KEYS` |
-| Service/hook instances | camelCase                  | `orderItemService`      |
-| DB table/columns       | snake_case in SQL          | `order_items.order_id`  |
-| Cache tags             | `resource:scope`           | `orders:list`           |
+| Thing                  | Convention             | Example                 |
+| ---------------------- | ---------------------- | ----------------------- |
+| Directory              | kebab-case             | `order-items/`          |
+| Component files        | kebab-case             | `order-table.tsx`       |
+| Hook files             | kebab-case with `use-` | `use-order-list.ts`     |
+| Server files           | kebab-case             | `order-repository.ts`   |
+| Types/Interfaces       | PascalCase             | `OrderItem`             |
+| Zod schemas            | camelCase + `Schema`   | `orderItemSchema`       |
+| Constants              | SCREAMING_SNAKE_CASE   | `ORDER_ITEM_QUERY_KEYS` |
+| Service/hook instances | camelCase              | `orderItemService`      |
+| DB table/columns       | snake_case in SQL      | `order_items.order_id`  |
+| Cache tags             | `resource:scope`       | `orders:list`           |
 
 ---
 
@@ -440,4 +440,4 @@ Cost review:
 - [ ] Mutations invalidate the narrowest matching query key, not everything
 - [ ] Cursor pagination used unless the UI genuinely displays a total count
 - [ ] No new cron, scheduled job, or always-on dependency introduced
-- [ ] `pnpm tsc --noEmit` and `pnpm lint` clean
+- [ ] `yarn tsc --noEmit` and `yarn lint` clean

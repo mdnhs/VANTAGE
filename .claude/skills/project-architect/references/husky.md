@@ -29,10 +29,10 @@ npx --no -- commitlint --edit "$1"
 ### `.husky/pre-push`
 
 ```sh
-pnpm tsc --noEmit && pnpm lint
+yarn tsc --noEmit && yarn lint
 ```
 
-A full `pnpm build` on every push costs a minute or more and mostly re-checks what lint-staged
+A full `yarn build` on every push costs a minute or more and mostly re-checks what lint-staged
 already covered. Type-check plus lint catches the same class of breakage in seconds. Let CI run the
 real build.
 
@@ -70,11 +70,11 @@ Example: `feat(orders): add order export to CSV`
 ## Setup commands
 
 ```bash
-pnpm add -D husky @commitlint/cli @commitlint/config-conventional
-pnpm exec husky init          # creates .husky/ and adds the prepare script
+yarn add -D husky @commitlint/cli @commitlint/config-conventional
+yarn husky init          # creates .husky/ and adds the prepare script
 chmod +x .husky/pre-commit .husky/commit-msg .husky/pre-push
 ```
 
 `husky init` writes a `prepare` script and a sample `pre-commit` — overwrite its contents with the
-files above rather than appending. Hooks only run after `pnpm install` has executed `prepare`, so
+files above rather than appending. Hooks only run after `yarn install` has executed `prepare`, so
 tell the user to re-install once if hooks appear to do nothing.

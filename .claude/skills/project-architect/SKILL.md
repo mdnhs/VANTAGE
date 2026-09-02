@@ -80,7 +80,7 @@ Ask the user for:
 
 - **API prefix** (default `/api`)
 - **API version** (default `/v1`)
-- **API base URL** — only if the frontend talks to a *separate external* backend. Default is empty,
+- **API base URL** — only if the frontend talks to a _separate external_ backend. Default is empty,
   meaning the Hono API in this project, served same-origin.
 
 ### Step 3 — Optional features
@@ -135,7 +135,7 @@ After the interview, generate all files in this order:
 >
 > Tailwind v4 removed the default `cursor: pointer` on `<button>`, so without the flag every
 > button in the app shows an arrow cursor. If the project was already initialised without it, fix
-> it now — before any components are added — per *Retrofitting pointer cursors* in the shadcn
+> it now — before any components are added — per _Retrofitting pointer cursors_ in the shadcn
 > skill (`../shadcn/cli.md`): add `"pointer": true` to `components.json`, then add
 > `cursor-pointer` to the base class of `buttonVariants` in `components/ui/button.tsx` and to the
 > other interactive primitives. Doing it later means editing every component already generated.
@@ -417,27 +417,27 @@ Route handler (Hono) → Service → Repository → Drizzle → Neon
 
 ## Naming Conventions (always enforce)
 
-| Item               | Convention                 | Example                 |
-| ------------------ | -------------------------- | ----------------------- |
-| Files (components) | kebab-case                 | `order-table.tsx`       |
-| Files (hooks)      | kebab-case, `use-` prefix  | `use-order-list.ts`     |
-| Server files       | kebab-case                 | `order-repository.ts`   |
-| Directories        | kebab-case                 | `order-processing/`     |
-| React Components   | PascalCase                 | `OrderTable`            |
-| Functions/Hooks    | camelCase                  | `useOrderList`          |
-| Constants          | SCREAMING_SNAKE_CASE       | `API_ROUTES`            |
-| Types/Interfaces   | PascalCase                 | `OrderResponse`         |
-| DB tables/columns  | snake_case in SQL          | `orders.user_id`        |
-| Drizzle table var  | camelCase plural           | `orders`                |
-| Zod schemas        | camelCase + `Schema`       | `orderSchema`           |
-| Cache tags         | `resource:scope`           | `orders:list`           |
+| Item               | Convention                | Example               |
+| ------------------ | ------------------------- | --------------------- |
+| Files (components) | kebab-case                | `order-table.tsx`     |
+| Files (hooks)      | kebab-case, `use-` prefix | `use-order-list.ts`   |
+| Server files       | kebab-case                | `order-repository.ts` |
+| Directories        | kebab-case                | `order-processing/`   |
+| React Components   | PascalCase                | `OrderTable`          |
+| Functions/Hooks    | camelCase                 | `useOrderList`        |
+| Constants          | SCREAMING_SNAKE_CASE      | `API_ROUTES`          |
+| Types/Interfaces   | PascalCase                | `OrderResponse`       |
+| DB tables/columns  | snake_case in SQL         | `orders.user_id`      |
+| Drizzle table var  | camelCase plural          | `orders`              |
+| Zod schemas        | camelCase + `Schema`      | `orderSchema`         |
+| Cache tags         | `resource:scope`          | `orders:list`         |
 
 ---
 
 ## Final Checklist
 
 - [ ] `.env.local` has real values from interview; `.env.example` has empty values; both gitignored/committed correctly
-- [ ] `pnpm build` passes; marketing routes appear as static (`○`) in the build output — treat any
+- [ ] `yarn build` passes; marketing routes appear as static (`○`) in the build output — treat any
       unintended `ƒ` as a build failure
 - [ ] Zero polling: no `refetchInterval`, no cron, no short `revalidate`, no querying health check
 - [ ] User told to set Neon autosuspend to minimum and min compute to 0.25 CU

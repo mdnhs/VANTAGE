@@ -63,15 +63,15 @@ explicitly beats a negative lookahead over the whole site.
 
 ## Cost-critical project settings
 
-| Setting                        | Value                    | Why                                                     |
-| ------------------------------ | ------------------------ | ------------------------------------------------------- |
-| Fluid Compute                  | **on**                   | Shares instances; idle await time is not billed per call |
-| Image Optimization             | **off / custom loader**  | Cloudinary transforms instead — see `cloudinary.md`      |
-| Function memory                | smallest that fits       | Memory × duration is the charge                          |
-| Cron jobs                      | **none by default**      | Every scheduled run is billed and wakes Neon             |
-| Deployment protection / previews | prune stale previews   | Preview deploys and Neon preview branches both bill      |
-| Observability / log drains     | sampled in production    | Log volume is its own meter                              |
-| Skew protection / analytics    | enable only if used      | Unused paid add-ons are pure loss                        |
+| Setting                          | Value                   | Why                                                      |
+| -------------------------------- | ----------------------- | -------------------------------------------------------- |
+| Fluid Compute                    | **on**                  | Shares instances; idle await time is not billed per call |
+| Image Optimization               | **off / custom loader** | Cloudinary transforms instead — see `cloudinary.md`      |
+| Function memory                  | smallest that fits      | Memory × duration is the charge                          |
+| Cron jobs                        | **none by default**     | Every scheduled run is billed and wakes Neon             |
+| Deployment protection / previews | prune stale previews    | Preview deploys and Neon preview branches both bill      |
+| Observability / log drains       | sampled in production   | Log volume is its own meter                              |
+| Skew protection / analytics      | enable only if used     | Unused paid add-ons are pure loss                        |
 
 **No cron jobs unless the business requires them.** A "cache warmer" or uptime ping costs on both
 meters every run and usually exceeds the misses it prevents. If a health check is monitored
@@ -197,7 +197,7 @@ Use a Neon branch for preview deployments so previews never write to production 
 - [ ] `vercel.json` region matches the Neon region
 - [ ] Every server secret set in Vercel, none of them `NEXT_PUBLIC_`
 - [ ] `.env.example` committed with empty values; `.env.local` gitignored
-- [ ] `pnpm build` passes locally with `NODE_ENV=production`
+- [ ] `yarn build` passes locally with `NODE_ENV=production`
 - [ ] Migrations applied before the deploy that depends on them
 - [ ] `/api/health` returns 200 after deploy — and touches no database
 - [ ] Marketing routes show as static in the build output (`○`), not dynamic (`ƒ`)

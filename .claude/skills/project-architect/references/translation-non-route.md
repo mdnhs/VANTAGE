@@ -335,5 +335,5 @@ async function submitAction(data: FormData) {
 ## Setup commands
 
 ```bash
-pnpm add next-intl
+yarn add next-intl
 ```

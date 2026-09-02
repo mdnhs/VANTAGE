@@ -134,8 +134,8 @@ This keeps feature modules decoupled and boundaries clean.
 ## Setup commands to append
 
 ```bash
-pnpm add -D eslint-plugin-boundaries
-pnpm add server-only
+yarn add -D eslint-plugin-boundaries
+yarn add server-only
 # Verify module boundaries are working
-pnpm eslint src/ --quiet
+yarn eslint src/ --quiet
 ```

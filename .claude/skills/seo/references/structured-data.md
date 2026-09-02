@@ -1,12 +1,12 @@
 # Structured Data (JSON-LD)
 
-Machine-readable description of what a page *is*. Drives rich results — star ratings, breadcrumbs,
+Machine-readable description of what a page _is_. Drives rich results — star ratings, breadcrumbs,
 FAQ accordions, article bylines. No library needed: it is a `<script>` tag with a JSON object.
 
 Type definitions are worth the one dev dependency:
 
 ```bash
-pnpm add -D schema-dts
+yarn add -D schema-dts
 ```
 
 ---
@@ -71,18 +71,18 @@ Never fetch extra data just for JSON-LD — reuse what the page already loaded.
 
 ## Which type to use
 
-| Page                     | Type(s)                                       |
-| ------------------------ | --------------------------------------------- |
-| Home / all pages         | `Organization` + `WebSite`                    |
-| Blog post, news, guide   | `Article` / `BlogPosting` / `NewsArticle`     |
-| Product page             | `Product` + `Offer` (+ `AggregateRating`)     |
-| Pricing / plans          | `Product` + `Offer`, or `Service`             |
-| FAQ section              | `FAQPage`                                     |
-| How-to / tutorial        | `HowTo`                                       |
-| Any nested page          | `BreadcrumbList`                              |
-| Local business           | `LocalBusiness` + `PostalAddress`             |
-| Job posting              | `JobPosting`                                  |
-| Event                    | `Event`                                       |
+| Page                   | Type(s)                                   |
+| ---------------------- | ----------------------------------------- |
+| Home / all pages       | `Organization` + `WebSite`                |
+| Blog post, news, guide | `Article` / `BlogPosting` / `NewsArticle` |
+| Product page           | `Product` + `Offer` (+ `AggregateRating`) |
+| Pricing / plans        | `Product` + `Offer`, or `Service`         |
+| FAQ section            | `FAQPage`                                 |
+| How-to / tutorial      | `HowTo`                                   |
+| Any nested page        | `BreadcrumbList`                          |
+| Local business         | `LocalBusiness` + `PostalAddress`         |
+| Job posting            | `JobPosting`                              |
+| Event                  | `Event`                                   |
 
 Multiple types on one page are fine — emit separate `<script>` tags, or one `@graph` array.
 
@@ -151,7 +151,7 @@ schema={{
 
 ## Validation
 
-- Google Rich Results Test — the authority on whether it is *eligible*.
+- Google Rich Results Test — the authority on whether it is _eligible_.
 - schema.org validator — catches malformed vocabulary.
 - Search Console → Enhancements — shows what Google actually parsed after crawling.
 
