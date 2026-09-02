@@ -1,10 +1,13 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/', active: true },
+  { label: 'Home', href: '/' },
   { label: 'Services', href: '#services' },
-  { label: 'Our Work', href: '#our-work' },
+  { label: 'Our Work', href: '/our-work' },
   { label: 'Insurance', href: '#insurance' },
   { label: 'About', href: '#about' },
   { label: 'Process', href: '#process' },
@@ -12,6 +15,8 @@ const NAV_LINKS = [
 ];
 
 export function MarketingHeader() {
+  const pathname = usePathname();
+
   return (
     <header className='sticky top-0 z-50 border-b border-white/10 bg-[#131313]/80 backdrop-blur-md'>
       <div className='flex h-20 items-center justify-between px-6 sm:px-12'>
@@ -29,19 +34,22 @@ export function MarketingHeader() {
         </div>
 
         <nav className='hidden items-center gap-8 lg:flex'>
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={
-                link.active
-                  ? 'text-base font-bold tracking-[1.6px] text-[#ffb4ab] uppercase'
-                  : 'text-xs font-semibold tracking-[1.2px] text-[#e6bdb8] uppercase transition-colors hover:text-[#e5e2e1]'
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const isActive = link.href.startsWith('/') && pathname === link.href;
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={
+                  isActive
+                    ? 'text-base font-bold tracking-[1.6px] text-[#ffb4ab] uppercase'
+                    : 'text-xs font-semibold tracking-[1.2px] text-[#e6bdb8] uppercase transition-colors hover:text-[#e5e2e1]'
+                }
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className='flex items-center gap-6'>
