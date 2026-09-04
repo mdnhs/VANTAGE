@@ -24,7 +24,7 @@ export default function OurWorkPage() {
         <div className='flex justify-center'>
           <button
             type='button'
-            className='flex items-center gap-2 border border-white/20 px-8 py-4 text-xs font-semibold tracking-[1.8px] text-[#e5e2e1] uppercase transition-colors hover:bg-white/5'
+            className='flex items-center gap-2 border border-white/20 px-8 py-4 text-xs font-semibold tracking-[1.8px] text-[#e5e2e1] uppercase transition-all hover:-translate-y-1 hover:bg-white/5'
           >
             Load More Projects
             <Image

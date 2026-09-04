@@ -44,11 +44,14 @@ const PROJECTS: Project[] = [
   },
 ];
 
-function ProjectCard({ project }: { project: Project }) {
+// Literal class names so Tailwind's content scanner can pick them up statically.
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-100', 'motion-delay-200', 'motion-delay-300'];
+
+function ProjectCard({ project, delayClass }: { project: Project; delayClass: string }) {
   return (
-    <div className='flex flex-col gap-4'>
+    <div className={`group intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up ${delayClass}`}>
       <div
-        className={`group relative w-full overflow-hidden rounded-xl bg-[#201f1f] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] ${project.aspect}`}
+        className={`relative w-full overflow-hidden rounded-xl bg-[#201f1f] shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] transition-transform duration-300 group-hover:-translate-y-1 ${project.aspect}`}
       >
         <Image
           src={project.after}
@@ -86,7 +89,7 @@ function ProjectCard({ project }: { project: Project }) {
           alt=''
           width={13}
           height={13}
-          className='mt-2 size-[13px] shrink-0'
+          className='mt-2 size-[13px] shrink-0 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1'
         />
       </div>
     </div>
@@ -97,13 +100,13 @@ export function ProjectGrid() {
   return (
     <div className='grid grid-cols-1 gap-12 sm:grid-cols-2'>
       <div className='flex flex-col gap-12'>
-        <ProjectCard project={PROJECTS[0]} />
-        <ProjectCard project={PROJECTS[2]} />
+        <ProjectCard project={PROJECTS[0]} delayClass={STAGGER_DELAY[0]} />
+        <ProjectCard project={PROJECTS[2]} delayClass={STAGGER_DELAY[2]} />
       </div>
       <div className='flex flex-col gap-12 sm:pt-16'>
-        <ProjectCard project={PROJECTS[1]} />
+        <ProjectCard project={PROJECTS[1]} delayClass={STAGGER_DELAY[1]} />
         <div className='sm:-mt-12'>
-          <ProjectCard project={PROJECTS[3]} />
+          <ProjectCard project={PROJECTS[3]} delayClass={STAGGER_DELAY[3]} />
         </div>
       </div>
     </div>

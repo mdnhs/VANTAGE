@@ -14,7 +14,7 @@ export function ServicesHero() {
         <div className='absolute inset-0 bg-gradient-to-b from-[rgba(19,19,19,0.9)] via-[rgba(19,19,19,0.6)] via-50% to-[#131313]' />
       </div>
 
-      <div className='flex max-w-[1280px] flex-col items-center gap-6 text-center'>
+      <div className='flex max-w-[1280px] motion-preset-slide-up flex-col items-center gap-6 text-center motion-duration-700'>
         <span className='text-xs font-semibold tracking-[2.4px] text-[#ffb4ab] uppercase'>Master Craftsmanship</span>
 
         <h1 className='max-w-[896px] font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-[-1.28px] text-[#e5e2e1] uppercase drop-shadow-[0px_25px_12.5px_rgba(0,0,0,0.15)] lg:text-[64px] lg:leading-[72px]'>

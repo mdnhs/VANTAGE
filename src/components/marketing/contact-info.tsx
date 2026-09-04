@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function ContactInfo() {
   return (
-    <div className='flex flex-col gap-8'>
+    <div className='flex motion-preset-slide-up flex-col gap-8 motion-duration-700'>
       <div className='flex flex-col gap-4'>
         <h1 className='font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-[-1.6px] text-[#e5e2e1] uppercase lg:text-[64px] lg:tracking-[-3.2px]'>
           Get In
@@ -17,7 +17,7 @@ export function ContactInfo() {
       </div>
 
       <div className='flex max-w-[448px] flex-col gap-6'>
-        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md'>
+        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md transition-colors duration-300 hover:border-[#ffb4ab]/30'>
           <Image
             src='/assets/marketing/icon-contact-location.svg'
             alt=''
@@ -35,7 +35,7 @@ export function ContactInfo() {
           </div>
         </div>
 
-        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md'>
+        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md transition-colors duration-300 hover:border-[#ffb4ab]/30'>
           <Image
             src='/assets/marketing/icon-contact-phone.svg'
             alt=''
@@ -56,7 +56,7 @@ export function ContactInfo() {
                 href='https://wa.me/35312345678'
                 target='_blank'
                 rel='noopener noreferrer'
-                className='flex w-fit items-center gap-2 rounded-full border border-[#25d366]/20 bg-[#25d366]/10 px-4 py-2'
+                className='flex w-fit items-center gap-2 rounded-full border border-[#25d366]/20 bg-[#25d366]/10 px-4 py-2 transition-all hover:scale-105 hover:bg-[#25d366]/20'
               >
                 <Image src='/assets/marketing/icon-whatsapp.svg' alt='' width={16} height={16} className='size-4' />
                 <span className='text-xs font-semibold tracking-[0.6px] text-[#c4c7ca]'>WhatsApp Us</span>
@@ -65,7 +65,7 @@ export function ContactInfo() {
           </div>
         </div>
 
-        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md'>
+        <div className='flex gap-4 rounded-xl border border-white/5 bg-[#201f1f]/30 p-6 backdrop-blur-md transition-colors duration-300 hover:border-[#ffb4ab]/30'>
           <Image
             src='/assets/marketing/icon-contact-email.svg'
             alt=''

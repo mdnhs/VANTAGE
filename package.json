@@ -52,6 +52,8 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "schema-dts": "^2.0.0",
     "tailwindcss": "^4",
+    "tailwindcss-intersect": "^2.2.0",
+    "tailwindcss-motion": "^1.1.1",
     "typescript": "^5"
   },
   "packageManager": "yarn@1.22.22"

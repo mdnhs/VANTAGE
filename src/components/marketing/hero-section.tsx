@@ -16,7 +16,7 @@ export function HeroSection() {
         <div className='absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-80' />
       </div>
 
-      <div className='relative z-10 flex max-w-[768px] flex-col gap-8'>
+      <div className='relative z-10 flex max-w-[768px] motion-preset-slide-up flex-col gap-8 motion-duration-700'>
         <div className='flex flex-col gap-4'>
           <div className='flex items-center gap-4'>
             <span className='h-px w-12 bg-[#ffb4ab]/50' />
@@ -42,13 +42,14 @@ export function HeroSection() {
         <div className='flex flex-wrap gap-4 pt-4'>
           <Link
             href='/get-a-quote'
-            className='bg-[#ffb4ab] px-8 py-4 text-xs font-bold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_10px_15px_-3px_rgba(255,180,171,0.2),0px_4px_6px_-4px_rgba(255,180,171,0.2)] transition-opacity hover:opacity-90'
+            className='group relative overflow-hidden bg-[#ffb4ab] px-8 py-4 text-xs font-bold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_10px_15px_-3px_rgba(255,180,171,0.2),0px_4px_6px_-4px_rgba(255,180,171,0.2)] transition-all hover:-translate-y-1'
           >
-            Get a Free Quote
+            <span className='absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-shimmer' />
+            <span className='relative'>Get a Free Quote</span>
           </Link>
           <Link
             href='#our-work'
-            className='border border-white/20 px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase transition-colors hover:bg-white/5'
+            className='border border-white/20 px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase transition-all hover:border-[#ffb4ab]/50 hover:bg-white/5 hover:shadow-[0_4px_20px_rgba(255,180,171,0.15)]'
           >
             View Our Work
           </Link>

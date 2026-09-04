@@ -3,7 +3,7 @@ import Image from 'next/image';
 export function HeritageSection() {
   return (
     <section className='grid grid-cols-1 gap-8 px-6 py-20 sm:px-12 lg:grid-cols-12 lg:gap-6 lg:py-[120px]'>
-      <div className='flex flex-col gap-8 lg:col-span-5'>
+      <div className='intersect-once flex flex-col gap-8 lg:col-span-5 intersect:motion-preset-slide-right'>
         <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-[-0.4px] text-[#e5e2e1] uppercase lg:text-[40px] lg:leading-[48px]'>
           Our Heritage
         </h2>
@@ -30,7 +30,7 @@ export function HeritageSection() {
         </div>
       </div>
 
-      <div className='flex flex-col gap-6 pt-14 lg:col-span-6 lg:col-start-7'>
+      <div className='intersect-once flex flex-col gap-6 pt-14 lg:col-span-6 lg:col-start-7 intersect:motion-preset-slide-left'>
         <div className='relative h-[500px] w-full overflow-hidden rounded-xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]'>
           <Image
             src='/assets/marketing/about-heritage.jpg'

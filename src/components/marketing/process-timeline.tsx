@@ -32,10 +32,21 @@ const STEPS = [
   { number: '07', label: 'Return', description: 'Vehicle handed back fully valeted, certified, and guaranteed.' },
 ];
 
-function Step({ step }: { step: (typeof STEPS)[number] }) {
+// Literal class names so Tailwind's content scanner can pick them up statically.
+const STAGGER_DELAY = [
+  'motion-delay-0',
+  'motion-delay-75',
+  'motion-delay-150',
+  'motion-delay-225',
+  'motion-delay-300',
+  'motion-delay-375',
+  'motion-delay-450',
+];
+
+function Step({ step, delayClass }: { step: (typeof STEPS)[number]; delayClass: string }) {
   return (
-    <div className='flex flex-col gap-4'>
-      <span className='relative z-10 flex size-12 items-center justify-center rounded-full bg-[#131313] font-[family-name:var(--font-manrope)] text-2xl font-semibold text-[#e5e2e1] ring-2 ring-[#2a2a2a]'>
+    <div className={`group intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up ${delayClass}`}>
+      <span className='relative z-10 flex size-12 items-center justify-center rounded-full bg-[#131313] font-[family-name:var(--font-manrope)] text-2xl font-semibold text-[#e5e2e1] ring-2 ring-[#2a2a2a] transition-all duration-300 group-hover:motion-preset-pop group-hover:ring-[#ffb4ab]/40'>
         {step.number}
       </span>
       <div className='flex flex-col gap-1'>
@@ -49,7 +60,7 @@ function Step({ step }: { step: (typeof STEPS)[number] }) {
 export function ProcessTimeline() {
   return (
     <section className='flex flex-col gap-20 px-6 py-20 sm:px-12 lg:py-[120px]'>
-      <div className='flex flex-col items-center gap-4 text-center'>
+      <div className='intersect-once flex flex-col items-center gap-4 text-center intersect:motion-preset-slide-up-sm'>
         <span className='text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'>The Methodology</span>
         <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-[-0.4px] text-[#e5e2e1] uppercase lg:text-[40px] lg:leading-[48px]'>
           7 Steps to Perfection
@@ -58,8 +69,8 @@ export function ProcessTimeline() {
 
       <div className='relative grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4'>
         <div className='pointer-events-none absolute top-6 right-0 left-0 hidden h-px bg-[#2a2a2a] sm:block' />
-        {STEPS.map((step) => (
-          <Step key={step.number} step={step} />
+        {STEPS.map((step, index) => (
+          <Step key={step.number} step={step} delayClass={STAGGER_DELAY[index]} />
         ))}
       </div>
     </section>

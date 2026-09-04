@@ -24,7 +24,7 @@ const STANDARDS = [
 export function StandardsSection() {
   return (
     <section className='grid grid-cols-1 items-center gap-12 px-6 py-20 sm:px-12 lg:grid-cols-2 lg:gap-[120px] lg:py-[120px]'>
-      <div className='relative h-[400px] w-full overflow-hidden rounded-2xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[600px]'>
+      <div className='intersect-once relative h-[400px] w-full overflow-hidden rounded-2xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[600px] intersect:motion-preset-slide-right'>
         <Image
           src='/assets/marketing/about-standards.jpg'
           alt='Vantage Autobody facility'
@@ -33,7 +33,7 @@ export function StandardsSection() {
         />
       </div>
 
-      <div className='flex flex-col gap-8'>
+      <div className='intersect-once flex flex-col gap-8 intersect:motion-preset-slide-left'>
         <div className='flex items-center gap-4 opacity-80'>
           <span className='text-xs font-semibold tracking-[1.2px] text-[#c4c7ca] uppercase'>Facility & Tech</span>
           <span className='h-px w-12 bg-[#c4c7ca]' />
@@ -47,8 +47,8 @@ export function StandardsSection() {
 
         <div className='flex flex-col gap-6'>
           {STANDARDS.map((item) => (
-            <div key={item.title} className='flex gap-6'>
-              <div className='flex size-12 shrink-0 items-center justify-center rounded-full bg-[#201f1f]'>
+            <div key={item.title} className='group flex gap-6'>
+              <div className='flex size-12 shrink-0 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop'>
                 <Image src={item.icon} alt='' width={22} height={22} className='size-[22px]' />
               </div>
               <div className='flex flex-col gap-2'>

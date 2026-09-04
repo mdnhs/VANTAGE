@@ -50,7 +50,7 @@ export function ContactForm() {
   }
 
   return (
-    <div className='relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a]/80 px-6 py-10 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md sm:px-12 sm:py-12'>
+    <div className='relative motion-preset-slide-up overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a]/80 px-6 py-10 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] backdrop-blur-md motion-delay-150 motion-duration-700 sm:px-12 sm:py-12'>
       <div className='pointer-events-none absolute inset-0 bg-gradient-to-br from-[#ffb4ab]/5 via-transparent to-transparent' />
 
       <div className='relative flex flex-col gap-8'>
@@ -126,7 +126,7 @@ export function ContactForm() {
               alt=''
               width={33}
               height={32}
-              className='h-8 w-[33px]'
+              className={`h-8 w-[33px] transition-transform duration-300 ${isDragging ? 'scale-110' : ''}`}
             />
             <p className='text-base text-[#e5e2e1]'>
               Drag &amp; drop photos here or{' '}
@@ -161,7 +161,7 @@ export function ContactForm() {
           </span>
           <button
             type='button'
-            className='flex items-center gap-2 rounded bg-[#ffb4ab] px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_4px_10px_rgba(220,38,38,0.15)] transition-opacity hover:opacity-90'
+            className='group flex items-center gap-2 rounded bg-[#ffb4ab] px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_4px_10px_rgba(220,38,38,0.15)] transition-all hover:-translate-y-1 hover:opacity-90'
           >
             Submit Enquiry
             <Image
@@ -169,7 +169,7 @@ export function ContactForm() {
               alt=''
               width={13}
               height={13}
-              className='size-[13px]'
+              className='size-[13px] transition-transform duration-300 group-hover:translate-x-1'
             />
           </button>
         </div>

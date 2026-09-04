@@ -14,7 +14,7 @@ export function AboutHero() {
         <div className='absolute inset-0 bg-gradient-to-t from-[#131313] via-[rgba(19,19,19,0.8)] via-50% to-transparent' />
       </div>
 
-      <div className='relative z-10 flex flex-col gap-6'>
+      <div className='relative z-10 flex motion-preset-slide-up flex-col gap-6 motion-duration-700'>
         <div className='flex items-center gap-4 opacity-80'>
           <span className='h-px w-12 bg-[#ffb4ab]' />
           <span className='text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'>

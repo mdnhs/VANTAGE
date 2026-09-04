@@ -7,14 +7,17 @@ const TRUST_ITEMS = [
   { label: 'Quality Workmanship', icon: '/assets/marketing/icon-trust-quality.svg' },
 ];
 
+// Literal class names so Tailwind's content scanner can pick them up statically.
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-100', 'motion-delay-200', 'motion-delay-300'];
+
 export function TrustStrip() {
   return (
     <div className='relative z-10 -mt-16 px-6 sm:px-12'>
       <div className='grid grid-cols-2 divide-y divide-white/5 rounded-lg bg-[#2a2a2a]/50 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] backdrop-blur-md sm:grid-cols-4 sm:divide-x sm:divide-y-0'>
-        {TRUST_ITEMS.map((item) => (
+        {TRUST_ITEMS.map((item, index) => (
           <div
             key={item.label}
-            className='flex flex-col items-center justify-center gap-3 rounded-[inherit] bg-[#1c1b1b]/90 p-6 backdrop-blur-sm'
+            className={`intersect-once flex flex-col items-center justify-center gap-3 rounded-[inherit] bg-[#1c1b1b]/90 p-6 backdrop-blur-sm intersect:motion-preset-slide-up-sm ${STAGGER_DELAY[index]}`}
           >
             <Image src={item.icon} alt='' width={22} height={22} className='size-[22px]' />
             <span className='text-center text-xs font-semibold tracking-[1.2px] text-[#e6bdb8] uppercase'>

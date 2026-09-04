@@ -14,10 +14,13 @@ const SERVICES = [
   },
 ];
 
+// Literal class names so Tailwind's content scanner can pick them up statically.
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300', 'motion-delay-450'];
+
 export function ServicesSection() {
   return (
     <section id='services' className='flex flex-col gap-16 px-6 py-20 sm:px-12 lg:py-[120px]'>
-      <div className='flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end'>
+      <div className='intersect-once flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end intersect:motion-preset-slide-up-sm'>
         <div className='flex max-w-[672px] flex-col gap-4'>
           <div className='flex items-center gap-4'>
             <span className='h-px w-8 bg-[#ffb4ab]/50' />
@@ -40,12 +43,12 @@ export function ServicesSection() {
       </div>
 
       <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4'>
-        {SERVICES.map((service) => (
+        {SERVICES.map((service, index) => (
           <div
             key={service.title}
-            className='group relative flex min-h-[280px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-8 pt-8 pb-6 backdrop-blur-md'
+            className={`group intersect-once relative flex min-h-[280px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-8 pt-8 pb-6 backdrop-blur-md transition-colors duration-300 hover:border-[#ffb4ab]/40 intersect:motion-preset-slide-up ${STAGGER_DELAY[index]}`}
           >
-            <div className='flex size-12 items-center justify-center rounded-full bg-[#201f1f]'>
+            <div className='flex size-12 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop'>
               <Image src={service.icon} alt='' width={18} height={18} className='size-[18px]' />
             </div>
 
@@ -58,7 +61,7 @@ export function ServicesSection() {
 
             <Link
               href='#services'
-              className='flex items-center gap-2 pt-2 text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase opacity-0 transition-opacity group-hover:opacity-100'
+              className='flex items-center gap-2 pt-2 text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase opacity-0 group-hover:motion-preset-slide-up-sm group-hover:opacity-100'
             >
               Learn More
               <Image

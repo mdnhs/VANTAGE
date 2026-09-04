@@ -5,7 +5,7 @@ const GARAGE_LOCATION: [number, number] = [-6.2603, 53.3498];
 
 export function VisitUsSection() {
   return (
-    <div className='relative h-[400px] w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[500px]'>
+    <div className='intersect-once relative h-[400px] w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[500px] intersect:motion-preset-slide-up'>
       <Map center={GARAGE_LOCATION} zoom={14} className='h-full w-full' theme='dark'>
         <MapControls />
         <MapMarker longitude={GARAGE_LOCATION[0]} latitude={GARAGE_LOCATION[1]} color='#dc2626'>

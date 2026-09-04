@@ -1,6 +1,6 @@
 export function PortfolioHero() {
   return (
-    <div className='flex max-w-[768px] flex-col gap-4'>
+    <div className='flex max-w-[768px] motion-preset-slide-up flex-col gap-4 motion-duration-700'>
       <div className='flex items-center gap-4'>
         <span className='h-px w-12 bg-[#ffb4ab]' />
         <span className='text-xs font-semibold tracking-[2.4px] text-[#ffb4ab] uppercase'>Portfolio</span>
