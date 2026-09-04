@@ -1,16 +1,24 @@
 import Image from 'next/image';
+import { Map, MapControls, MapMarker, MarkerPopup } from '@/components/ui/map';
+
+const GARAGE_LOCATION: [number, number] = [-6.2603, 53.3498];
 
 export function VisitUsSection() {
   return (
     <div className='relative h-[400px] w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[500px]'>
-      <Image
-        src='/assets/marketing/contact-map.png'
-        alt='Map showing Vantage Autobody location'
-        fill
-        className='object-cover'
-      />
+      <Map center={GARAGE_LOCATION} zoom={14} className='h-full w-full' theme='dark'>
+        <MapControls />
+        <MapMarker longitude={GARAGE_LOCATION[0]} latitude={GARAGE_LOCATION[1]} color='#dc2626'>
+          <MarkerPopup>
+            <div className='flex flex-col gap-1 p-1 text-[#131313]'>
+              <span className='font-[family-name:var(--font-manrope)] text-sm font-semibold'>Vantage Autobody</span>
+              <span className='text-xs'>Unit 4, Industrial Estate, Dublin Road</span>
+            </div>
+          </MarkerPopup>
+        </MapMarker>
+      </Map>
 
-      <div className='absolute bottom-6 left-6 flex flex-col gap-2 rounded-xl border border-white/10 bg-[#131313]/90 p-6 shadow-lg backdrop-blur-md'>
+      <div className='pointer-events-none absolute bottom-6 left-6 flex flex-col gap-2 rounded-xl border border-white/10 bg-[#131313]/90 p-6 shadow-lg backdrop-blur-md'>
         <span className='font-[family-name:var(--font-manrope)] text-2xl font-semibold tracking-[-0.6px] text-[#e5e2e1] uppercase'>
           Visit Us
         </span>
