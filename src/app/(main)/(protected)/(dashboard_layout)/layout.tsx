@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
-// TODO: add sidebar/header once components/layout is scaffolded for a feature.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return <div className='flex min-h-screen flex-col'>{children}</div>;
+  return (
+    <div className='min-h-screen bg-[#0a0c10] font-sans text-slate-200 antialiased selection:bg-red-600 selection:text-white'>
+      {children}
+    </div>
+  );
 }
