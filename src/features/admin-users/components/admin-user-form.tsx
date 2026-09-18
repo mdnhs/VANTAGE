@@ -19,6 +19,7 @@ const PERMISSION_LABELS: Record<PermissionValue, string> = {
   [PERMISSIONS.LOGOS_MANAGE]: 'Manage Partner Logos',
   [PERMISSIONS.SETTINGS_MANAGE]: 'Manage Settings',
   [PERMISSIONS.ADMINS_MANAGE]: 'Manage Admins',
+  [PERMISSIONS.USERS_MANAGE]: 'Manage Users',
 };
 
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);

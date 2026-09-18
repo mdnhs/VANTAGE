@@ -4,7 +4,7 @@ import { QuoteForm } from '@/components/marketing/quote-form';
 import { serviceService } from '@/server/services/service-service';
 
 export const metadata: Metadata = {
-  title: 'Get a Free Quote — Vantage Autobody',
+  title: 'Get a Free Quote',
   description:
     'Precision assessment starts here. Provide your vehicle details and images for an accurate, no-obligation estimate from our master technicians.',
   alternates: { canonical: '/get-a-quote' },

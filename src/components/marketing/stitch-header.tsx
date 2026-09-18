@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, ArrowRight, Menu, X, ShieldCheck } from 'lucide-react';
+import { cldUrl } from '@/lib/cloudinary/url';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -18,10 +19,13 @@ const NAV_LINKS = [
 
 interface StitchHeaderProps {
   phone: string;
+  businessName: string;
+  logoPublicId: string | null;
 }
 
-export function StitchHeader({ phone }: StitchHeaderProps) {
+export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeaderProps) {
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
+  const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 112 }) : '/assets/marketing/logo.jpg';
 
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,16 +35,15 @@ export function StitchHeader({ phone }: StitchHeaderProps) {
     <header className='sticky top-0 z-40 w-full border-b border-white/10 bg-[#0d0d0d]/90 backdrop-blur-xl transition-all'>
       <div className='container mx-auto flex h-20 items-center justify-between gap-6 px-6 sm:px-12'>
         {/* Logo */}
-        <Link href='/' className='group flex items-center'>
-          <div className='relative size-11 overflow-hidden rounded-md border border-white/10 transition-all group-hover:border-[#dc2626]/60'>
-            <Image
-              src='/assets/marketing/logo.jpg'
-              alt='Vantage Autobody'
-              fill
-              className='object-contain p-0.5'
-              priority
-            />
-          </div>
+        <Link href='/' className='flex shrink-0 items-center'>
+          <Image
+            src={logoSrc}
+            alt={businessName}
+            width={200}
+            height={112}
+            className='h-12 w-auto object-contain sm:h-14'
+            priority
+          />
         </Link>
 
         {/* Desktop Nav Links */}

@@ -9,8 +9,11 @@ export default function cloudinaryLoader({
   width: number;
   quality?: number;
 }): string {
-  // Local /public assets aren't on Cloudinary — pass them through unchanged.
-  if (src.startsWith('/')) return src;
+  // Local /public assets aren't on Cloudinary — pass them through unchanged. Same for a src
+  // that's already a full Cloudinary URL (built by cldUrl() with its own explicit
+  // width/height/crop/gravity) — re-wrapping it here would nest a second transform URL
+  // inside the first and break the image entirely.
+  if (src.startsWith('/') || src.startsWith('http://') || src.startsWith('https://')) return src;
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const transforms = ['f_auto', `q_${quality ?? 'auto'}`, `w_${width}`, 'c_limit'];

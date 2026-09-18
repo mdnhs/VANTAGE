@@ -7,7 +7,7 @@ import { PartnerLogosStrip } from '@/components/marketing/partner-logos-strip';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 
 export const metadata: Metadata = {
-  title: 'Insurance Support — Vantage Autobody',
+  title: 'Insurance Support',
   description:
     'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
   alternates: { canonical: '/insurance' },

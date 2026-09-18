@@ -4,7 +4,7 @@ import { ServiceFeatureBlock } from '@/components/marketing/service-feature-bloc
 import { ServiceSplitCards } from '@/components/marketing/service-split-card';
 
 export const metadata: Metadata = {
-  title: 'Services — Vantage Autobody',
+  title: 'Services',
   description:
     'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
   alternates: { canonical: '/services' },

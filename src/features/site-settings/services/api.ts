@@ -1,5 +1,12 @@
 import { API_ROUTES } from '@/lib/routes/api-routes';
-import type { SiteSettings, UpdateSiteSettingsInput } from '../types';
+import type {
+  SiteSettings,
+  UpdateBusinessInfoInput,
+  UpdateContactInput,
+  UpdateHeroMediaInput,
+  UpdateSeoInput,
+  UpdateSocialLinksInput,
+} from '../types';
 
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
 
@@ -18,12 +25,36 @@ export async function fetchAdminSiteSettings(): Promise<SiteSettings | null> {
   return parseOrThrow<SiteSettings | null>(res);
 }
 
-export async function updateSiteSettings(input: UpdateSiteSettingsInput): Promise<SiteSettings> {
-  const res = await fetch(`${BASE_URL}${API_ROUTES.siteSettings.update}`, {
+function patchSection<T>(path: string, input: T): Promise<Response> {
+  return fetch(`${BASE_URL}${path}`, {
     method: 'PATCH',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
+}
+
+export async function updateBusinessInfo(input: UpdateBusinessInfoInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateBusinessInfo, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateContact(input: UpdateContactInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateContact, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateSocialLinks(input: UpdateSocialLinksInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateSocialLinks, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateHeroMedia(input: UpdateHeroMediaInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateHeroMedia, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateSeo(input: UpdateSeoInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateSeo, input);
   return parseOrThrow<SiteSettings>(res);
 }

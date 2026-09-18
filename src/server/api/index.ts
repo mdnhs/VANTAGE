@@ -10,6 +10,7 @@ import { projects } from './projects';
 import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
+import { users } from './users';
 
 const app = new Hono().basePath('/api/v1');
 
@@ -33,7 +34,8 @@ export const api = app
   .route('/projects', projects)
   .route('/testimonials', testimonials)
   .route('/partner-logos', partnerLogos)
-  .route('/admins', admins);
+  .route('/admins', admins)
+  .route('/users', users);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 

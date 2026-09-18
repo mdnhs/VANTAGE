@@ -1,4 +1,5 @@
 // Re-export every table here as features are scaffolded.
+export * from './auth';
 export * from './admin-users';
 export * from './site-settings';
 export * from './services';

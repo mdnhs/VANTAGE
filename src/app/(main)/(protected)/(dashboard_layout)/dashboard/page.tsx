@@ -1,18 +1,21 @@
 import type { Metadata } from 'next';
-import { AdminWorkspace } from '@/features/admin/components/admin-workspace';
-import { parseAdminTab } from '@/features/admin/tabs';
+import { getSession } from '@/lib/permission/server-utils';
 
 export const metadata: Metadata = {
+  title: 'Dashboard',
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via the layout) and ?tab per request — must not be prerendered.
+// Reads the session cookie (via the layout) per request — must not be prerendered.
 export const instant = false;
 
-// Workshop operations workspace. Records are still in-memory mock data (features/admin/mock-data)
-// until the enquiries/customers backend exists.
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const { tab } = await searchParams;
+export default async function DashboardPage() {
+  const session = await getSession();
 
-  return <AdminWorkspace activeTab={parseAdminTab(tab)} />;
+  return (
+    <div className='flex flex-col gap-2'>
+      <h1 className='text-xl font-semibold'>Welcome{session ? `, ${session.name}` : ''}</h1>
+      <p className='text-sm text-muted-foreground'>Pick a section from the sidebar to manage site content.</p>
+    </div>
+  );
 }

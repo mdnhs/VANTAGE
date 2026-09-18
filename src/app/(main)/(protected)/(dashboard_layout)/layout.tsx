@@ -7,6 +7,7 @@ import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { inter } from '@/lib/font';
 
 // Every route under this layout reads the session cookie per request (auth check +
 // permission-filtered nav) — inherently dynamic, so it must not be prerendered.
@@ -20,7 +21,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <PermissionsProvider permissions={session.permissions}>
-      <SidebarProvider>
+      <SidebarProvider className={`${inter.variable} font-(family-name:--font-inter)`}>
         <Sidebar />
         <SidebarInset>
           <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border transition-[width,height] ease-linear'>

@@ -8,6 +8,7 @@ export const PERMISSIONS = {
   LOGOS_MANAGE: 'content.logos.manage',
   SETTINGS_MANAGE: 'content.settings.manage',
   ADMINS_MANAGE: 'user_management.admin.manage',
+  USERS_MANAGE: 'user_management.user.manage',
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

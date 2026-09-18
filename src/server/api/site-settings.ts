@@ -4,7 +4,13 @@ import { zValidator } from '@/server/lib/validator';
 import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { updateSiteSettingsSchema } from '@/validations/site-settings-schema';
+import {
+  updateBusinessInfoSchema,
+  updateContactSchema,
+  updateHeroMediaSchema,
+  updateSeoSchema,
+  updateSocialLinksSchema,
+} from '@/validations/site-settings-schema';
 
 export const siteSettings = new Hono<AuthEnv>()
   // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
@@ -19,14 +25,64 @@ export const siteSettings = new Hono<AuthEnv>()
     return ok(c, data);
   })
 
+  // One PATCH route per settings-page tab — each validates and writes only the columns
+  // its own section owns, so saving one tab can never overwrite another's fields.
   .patch(
-    '/',
+    '/business-info',
     requireAuth,
     requirePermission(PERMISSIONS.SETTINGS_MANAGE),
-    zValidator('json', updateSiteSettingsSchema),
+    zValidator('json', updateBusinessInfoSchema),
     async (c) => {
       const input = c.req.valid('json');
-      const data = await siteSettingsService.update(input);
+      const data = await siteSettingsService.updateBusinessInfo(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/contact',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateContactSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateContact(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/social-links',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateSocialLinksSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateSocialLinks(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/hero-media',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateHeroMediaSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateHeroMedia(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/seo',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateSeoSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateSeo(input);
       return ok(c, data);
     },
   );

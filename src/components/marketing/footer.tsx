@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 const SERVICES_LINKS = ['Collision Repair', 'Precision Respraying', 'Classic Restoration', 'Dent Removal'];
@@ -23,7 +24,15 @@ export async function MarketingFooter() {
       <div className='container mx-auto flex flex-col gap-20 px-6 pt-20 pb-12 sm:px-12 lg:gap-[120px] lg:pt-[121px]'>
         <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4'>
           <div className='flex flex-col gap-6'>
-            <Image src='/assets/marketing/logo.jpg' alt={settings.businessName} width={40} height={40} />
+            <Image
+              src={
+                settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : '/assets/marketing/logo.jpg'
+              }
+              alt={settings.businessName}
+              width={320}
+              height={200}
+              className='h-20 w-auto self-start object-contain'
+            />
             <p className='max-w-[320px] text-base leading-6 text-[#e6bdb8]'>
               Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
               obsession.

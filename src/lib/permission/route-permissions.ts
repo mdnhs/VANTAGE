@@ -5,10 +5,10 @@ import { PERMISSIONS, type PermissionValue } from './permissions';
 // are built in later phases — this file's shape should not otherwise change.
 export const ROUTE_PERMISSIONS: Record<string, PermissionValue[]> = {
   '/dashboard': [],
-  '/content/services': [PERMISSIONS.SERVICES_MANAGE],
-  '/content/projects': [PERMISSIONS.PROJECTS_MANAGE],
-  '/content/testimonials': [PERMISSIONS.TESTIMONIALS_MANAGE],
-  '/content/logos': [PERMISSIONS.LOGOS_MANAGE],
-  '/content/settings': [PERMISSIONS.SETTINGS_MANAGE],
-  '/content/admins': [PERMISSIONS.ADMINS_MANAGE],
+  '/dashboard/services': [PERMISSIONS.SERVICES_MANAGE],
+  '/dashboard/projects': [PERMISSIONS.PROJECTS_MANAGE],
+  '/dashboard/testimonials': [PERMISSIONS.TESTIMONIALS_MANAGE],
+  '/dashboard/partner-logos': [PERMISSIONS.LOGOS_MANAGE],
+  '/dashboard/settings': [PERMISSIONS.SETTINGS_MANAGE],
+  '/dashboard/admins': [PERMISSIONS.ADMINS_MANAGE],
 };

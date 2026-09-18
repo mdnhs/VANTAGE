@@ -2,44 +2,57 @@ import type { Metadata, Viewport } from 'next';
 import { geistSans, geistMono } from '@/lib/font';
 import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
+import { cldUrl } from '@/lib/cloudinary/url';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-const APP_NAME = 'Vantage';
 
-export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
-  title: {
-    default: `${APP_NAME} — Enterprise Next.js starter`,
-    template: `%s | ${APP_NAME}`,
-  },
-  description: 'Vantage is a cost-optimized, EU-first Next.js enterprise application.',
-  applicationName: APP_NAME,
-  generator: 'Next.js',
-  referrer: 'origin-when-cross-origin',
-  formatDetection: { email: false, address: false, telephone: false },
-  alternates: { canonical: '/' },
-  openGraph: {
-    type: 'website',
-    siteName: APP_NAME,
-    locale: 'en_IE',
-    url: '/',
-    title: `${APP_NAME} — Enterprise Next.js starter`,
-    description: 'Vantage is a cost-optimized, EU-first Next.js enterprise application.',
-    images: [{ url: '/opengraph-image.png', width: 1200, height: 630, alt: APP_NAME }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${APP_NAME} — Enterprise Next.js starter`,
-    description: 'Vantage is a cost-optimized, EU-first Next.js enterprise application.',
-    images: ['/opengraph-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
-  },
-};
+// Site-wide fallback metadata — editable from the admin's Settings > SEO tab. Individual
+// pages that set their own `metadata`/`generateMetadata` still override these per-field.
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await siteSettingsService.getPublic();
+  const title = settings.metaTitle || settings.businessName;
+  const description = settings.metaDescription || `${settings.businessName} — ${settings.openingHours}`;
+  const ogImage = settings.ogImagePublicId
+    ? cldUrl(settings.ogImagePublicId, { width: 1200, height: 630, crop: 'fill' })
+    : '/opengraph-image.png';
+
+  return {
+    metadataBase: new URL(APP_URL),
+    title: {
+      default: title,
+      template: `%s | ${settings.businessName}`,
+    },
+    description,
+    applicationName: settings.businessName,
+    generator: 'Next.js',
+    referrer: 'origin-when-cross-origin',
+    formatDetection: { email: false, address: false, telephone: false },
+    alternates: { canonical: '/' },
+    openGraph: {
+      type: 'website',
+      siteName: settings.businessName,
+      locale: 'en_IE',
+      url: '/',
+      title,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: settings.businessName }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: settings.twitterHandle || undefined,
+      title,
+      description,
+      images: [ogImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -50,7 +63,9 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  const settings = await siteSettingsService.getPublic();
+
   return (
     <html
       lang='en'
@@ -63,7 +78,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
             '@context': 'https://schema.org',
             '@type': 'Organization',
             '@id': `${APP_URL}/#organization`,
-            name: APP_NAME,
+            name: settings.businessName,
             url: APP_URL,
           }}
         />
@@ -73,7 +88,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
             '@type': 'WebSite',
             '@id': `${APP_URL}/#website`,
             url: APP_URL,
-            name: APP_NAME,
+            name: settings.businessName,
             publisher: { '@id': `${APP_URL}/#organization` },
           }}
         />

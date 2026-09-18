@@ -5,7 +5,7 @@ import { VisitUsSection } from '@/components/marketing/visit-us-section';
 import { serviceService } from '@/server/services/service-service';
 
 export const metadata: Metadata = {
-  title: 'Contact — Vantage Autobody',
+  title: 'Contact',
   description:
     'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
   alternates: { canonical: '/contact' },

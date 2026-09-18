@@ -4,43 +4,42 @@ export const APP_ROUTES = {
   },
   dashboard: {
     index: '/dashboard',
-    tab: (tab: string) => `/dashboard?tab=${tab}`,
   },
   content: {
     settings: {
-      index: '/content/settings',
+      index: '/dashboard/settings',
     },
     services: {
-      index: '/content/services',
-      create: '/content/services/create',
-      edit: (id: string) => `/content/services/${id}/edit`,
+      index: '/dashboard/services',
+      create: '/dashboard/services/create',
+      edit: (id: string) => `/dashboard/services/${id}/edit`,
     },
     projects: {
-      index: '/content/projects',
-      create: '/content/projects/create',
-      edit: (id: string) => `/content/projects/${id}/edit`,
+      index: '/dashboard/projects',
+      create: '/dashboard/projects/create',
+      edit: (id: string) => `/dashboard/projects/${id}/edit`,
     },
     testimonials: {
-      index: '/content/testimonials',
-      create: '/content/testimonials/create',
-      edit: (id: string) => `/content/testimonials/${id}/edit`,
+      index: '/dashboard/testimonials',
+      create: '/dashboard/testimonials/create',
+      edit: (id: string) => `/dashboard/testimonials/${id}/edit`,
     },
     partnerLogos: {
-      index: '/content/partner-logos',
-      create: '/content/partner-logos/create',
-      edit: (id: string) => `/content/partner-logos/${id}/edit`,
+      index: '/dashboard/partner-logos',
+      create: '/dashboard/partner-logos/create',
+      edit: (id: string) => `/dashboard/partner-logos/${id}/edit`,
     },
     admins: {
-      index: '/content/admins',
-      create: '/content/admins/create',
-      edit: (id: string) => `/content/admins/${id}/edit`,
+      index: '/dashboard/admins',
+      create: '/dashboard/admins/create',
+      edit: (id: string) => `/dashboard/admins/${id}/edit`,
     },
   },
   // TODO: add feature app routes here as features are scaffolded
   // orders: {
-  //   index: '/orders',
-  //   create: '/orders/create',
-  //   details: (id: string) => `/orders/${id}`,
-  //   edit: (id: string) => `/orders/${id}/edit`,
+  //   index: '/dashboard/orders',
+  //   create: '/dashboard/orders/create',
+  //   details: (id: string) => `/dashboard/orders/${id}`,
+  //   edit: (id: string) => `/dashboard/orders/${id}/edit`,
   // },
 } as const;

@@ -6,7 +6,7 @@ import { ProjectGrid } from '@/components/marketing/project-grid';
 import { projectService } from '@/server/services/project-service';
 
 export const metadata: Metadata = {
-  title: 'Our Work — Vantage Autobody',
+  title: 'Our Work',
   description:
     'Explore a curated selection of our most challenging and rewarding restoration projects. Precision engineering meets master craftsmanship.',
   alternates: { canonical: '/our-work' },

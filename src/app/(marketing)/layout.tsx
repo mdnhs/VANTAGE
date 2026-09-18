@@ -10,7 +10,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <div className={`${manrope.variable} ${inter.variable} bg-[#131313] font-[family-name:var(--font-inter)]`}>
-      <StitchHeader phone={settings.phone} />
+      <StitchHeader phone={settings.phone} businessName={settings.businessName} logoPublicId={settings.logoPublicId} />
       {children}
       <StitchCta phone={settings.phone} />
       <MarketingFooter />

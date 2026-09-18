@@ -11,12 +11,22 @@ import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 
-export const metadata: Metadata = {
-  title: 'Vantage Autobody — Precision Crash Repair & Restoration Dublin',
-  description:
-    'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.',
-  alternates: { canonical: '/' },
-};
+const DESCRIPTION =
+  'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.';
+
+// Homepage puts the business name first (absolute title, bypassing the root layout's
+// "%s | {businessName}" template) so it's still visible when a browser tab truncates
+// the title — every other page keeps the template's page-name-first order.
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await siteSettingsService.getPublic();
+  const description = settings.metaDescription || DESCRIPTION;
+
+  return {
+    title: { absolute: `${settings.businessName} — Precision Crash Repair & Restoration Dublin` },
+    description,
+    alternates: { canonical: '/' },
+  };
+}
 
 export default async function Home() {
   const [settings, services, testimonials, partnerLogos] = await Promise.all([

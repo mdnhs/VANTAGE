@@ -5,7 +5,7 @@ import { TeamSection } from '@/components/marketing/team-section';
 import { StandardsSection } from '@/components/marketing/standards-section';
 
 export const metadata: Metadata = {
-  title: 'About — Vantage Autobody',
+  title: 'About',
   description:
     "Founded in 1998, Vantage Autobody has evolved into Ireland's premier high-end collision and repair facility.",
   alternates: { canonical: '/about' },

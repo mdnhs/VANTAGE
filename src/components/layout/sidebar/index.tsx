@@ -17,7 +17,6 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { NavUser } from '@/components/layout/sidebar/nav-user';
-import { WORKFLOW_TABS } from '@/features/admin/tabs';
 
 interface NavItem {
   label: string;
@@ -28,11 +27,21 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: APP_ROUTES.dashboard.index, icon: LayoutDashboard, permissions: [] },
-  { label: 'Services', href: '/content/services', icon: Wrench, permissions: [PERMISSIONS.SERVICES_MANAGE] },
-  { label: 'Projects', href: '/content/projects', icon: FolderKanban, permissions: [PERMISSIONS.PROJECTS_MANAGE] },
+  {
+    label: 'Services',
+    href: APP_ROUTES.content.services.index,
+    icon: Wrench,
+    permissions: [PERMISSIONS.SERVICES_MANAGE],
+  },
+  {
+    label: 'Projects',
+    href: APP_ROUTES.content.projects.index,
+    icon: FolderKanban,
+    permissions: [PERMISSIONS.PROJECTS_MANAGE],
+  },
   {
     label: 'Testimonials',
-    href: '/content/testimonials',
+    href: APP_ROUTES.content.testimonials.index,
     icon: MessageSquareQuote,
     permissions: [PERMISSIONS.TESTIMONIALS_MANAGE],
   },
@@ -48,7 +57,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     permissions: [PERMISSIONS.SETTINGS_MANAGE],
   },
-  { label: 'Admins', href: '/content/admins', icon: Users, permissions: [PERMISSIONS.ADMINS_MANAGE] },
+  { label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [PERMISSIONS.ADMINS_MANAGE] },
 ];
 
 // Server-rendered so nav items are filtered by permission before the HTML ever reaches the
@@ -82,19 +91,6 @@ export async function Sidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Workshop</SidebarGroupLabel>
-          <SidebarMenu>
-            {WORKFLOW_TABS.map((tab) => (
-              <SidebarMenuItem key={tab.id}>
-                <SidebarMenuButton tooltip={tab.title} render={<Link href={APP_ROUTES.dashboard.tab(tab.id)} />}>
-                  <tab.icon />
-                  <span>{tab.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>Content</SidebarGroupLabel>
           <SidebarMenu>

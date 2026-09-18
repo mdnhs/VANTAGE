@@ -21,6 +21,10 @@ export const siteSettings = pgTable('site_settings', {
   heroVideoPublicId: varchar('hero_video_public_id', { length: 500 }),
   heroFallbackImagePublicId: varchar('hero_fallback_image_public_id', { length: 500 }),
   heroVideoEnabled: boolean('hero_video_enabled').notNull().default(false),
+  metaTitle: varchar('meta_title', { length: 255 }),
+  metaDescription: varchar('meta_description', { length: 500 }),
+  ogImagePublicId: varchar('og_image_public_id', { length: 500 }),
+  twitterHandle: varchar('twitter_handle', { length: 50 }),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

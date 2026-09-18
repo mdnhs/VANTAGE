@@ -14,7 +14,11 @@ export const API_ROUTES = {
   siteSettings: {
     public: '/site-settings',
     admin: '/site-settings/admin',
-    update: '/site-settings',
+    updateBusinessInfo: '/site-settings/business-info',
+    updateContact: '/site-settings/contact',
+    updateSocialLinks: '/site-settings/social-links',
+    updateHeroMedia: '/site-settings/hero-media',
+    updateSeo: '/site-settings/seo',
   },
   services: {
     public: '/services',
@@ -62,6 +66,10 @@ export const API_ROUTES = {
     create: '/admins',
     update: (id: string) => `/admins/${id}`,
     resetPassword: (id: string) => `/admins/${id}/password`,
+  },
+  users: {
+    list: '/users',
+    create: '/users',
   },
   // TODO: add feature route groups here as features are scaffolded
   // orders: {
