@@ -12,9 +12,9 @@ import { testimonialService } from '@/server/services/testimonial-service';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 
 export const metadata: Metadata = {
-  title: 'Vantage Autobody — Precision Crash Repair & Restoration',
+  title: 'Vantage Autobody — Precision Crash Repair & Restoration Dublin',
   description:
-    'Professional crash repair, structural bodywork, precision paint, and high-end vehicle restoration in Ireland. Your vehicle, our obsession.',
+    'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.',
   alternates: { canonical: '/' },
 };
 
