@@ -3,8 +3,19 @@ import Link from 'next/link';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
-const SERVICES_LINKS = ['Collision Repair', 'Precision Respraying', 'Classic Restoration', 'Dent Removal'];
-const COMPANY_LINKS = ['Our Process', 'Insurance Partners', 'Showcase', 'Testimonials'];
+const SERVICES_LINKS = [
+  { label: 'Collision Repair', href: '/services' },
+  { label: 'Precision Respraying', href: '/services' },
+  { label: 'Classic Restoration', href: '/services' },
+  { label: 'Dent Removal', href: '/services' },
+];
+
+const COMPANY_LINKS = [
+  { label: 'Our Process', href: '/process' },
+  { label: 'Insurance Partners', href: '/insurance' },
+  { label: 'Showcase', href: '/our-work' },
+  { label: 'About Us', href: '/about' },
+];
 
 const SOCIAL_LINKS = [
   { key: 'facebookUrl', icon: '/assets/marketing/icon-social-1.svg' },
@@ -21,8 +32,8 @@ export async function MarketingFooter() {
 
   return (
     <footer className='border-t border-white/5 bg-[#0e0e0e]'>
-      <div className='container mx-auto flex flex-col gap-20 px-6 pt-20 pb-12 sm:px-12 lg:gap-[120px] lg:pt-[121px]'>
-        <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='container mx-auto flex flex-col gap-12 px-4 pt-14 pb-10 sm:gap-16 sm:px-6 sm:pt-20 sm:pb-12 md:px-12 lg:gap-[120px] lg:pt-[121px]'>
+        <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-4'>
           <div className='flex flex-col gap-6'>
             <Image
               src={
@@ -31,9 +42,9 @@ export async function MarketingFooter() {
               alt={settings.businessName}
               width={320}
               height={200}
-              className='h-20 w-auto self-start object-contain'
+              className='h-16 w-auto self-start object-contain sm:h-20'
             />
-            <p className='max-w-[320px] text-base leading-6 text-[#e6bdb8]'>
+            <p className='max-w-[320px] text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>
               Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
               obsession.
             </p>
@@ -44,7 +55,7 @@ export async function MarketingFooter() {
                   href={settings[social.key] as string}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex size-10 items-center justify-center rounded-full bg-[#201f1f]'
+                  className='flex size-10 items-center justify-center rounded-full bg-[#201f1f] text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white'
                 >
                   <Image src={social.icon} alt='' width={15} height={15} className='size-[15px]' />
                 </Link>
@@ -52,30 +63,38 @@ export async function MarketingFooter() {
             </div>
           </div>
 
-          <div className='flex flex-col gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Services</h4>
+          <div className='flex flex-col gap-4 sm:gap-6'>
+            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Services</h4>
             <nav className='flex flex-col gap-3'>
               {SERVICES_LINKS.map((link) => (
-                <Link key={link} href='#services' className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'>
-                  {link}
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
+                >
+                  {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className='flex flex-col gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Company</h4>
+          <div className='flex flex-col gap-4 sm:gap-6'>
+            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Company</h4>
             <nav className='flex flex-col gap-3'>
               {COMPANY_LINKS.map((link) => (
-                <Link key={link} href='#about' className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'>
-                  {link}
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
+                >
+                  {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className='flex flex-col gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Contact</h4>
+          <div className='flex flex-col gap-4 sm:gap-6'>
+            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Contact</h4>
             <div className='flex flex-col gap-4'>
               <div className='flex items-start gap-3'>
                 <Image
@@ -83,22 +102,39 @@ export async function MarketingFooter() {
                   alt=''
                   width={16}
                   height={20}
-                  className='mt-0.5 h-5 w-4'
+                  className='mt-0.5 h-5 w-4 shrink-0'
                 />
-                <span className='text-base leading-6 text-[#e6bdb8]'>{settings.address}</span>
+                <span className='text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>
+                  {settings.address}
+                </span>
               </div>
               <div className='flex items-center gap-3'>
-                <Image src='/assets/marketing/icon-phone.svg' alt='' width={18} height={18} className='size-[18px]' />
+                <Image
+                  src='/assets/marketing/icon-phone.svg'
+                  alt=''
+                  width={18}
+                  height={18}
+                  className='size-[18px] shrink-0'
+                />
                 <Link
                   href={`tel:${settings.phone.replace(/\s+/g, '')}`}
-                  className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'
+                  className='text-sm break-all text-neutral-400 transition-colors hover:text-white sm:text-base'
                 >
                   {settings.phone}
                 </Link>
               </div>
               <div className='flex items-center gap-3'>
-                <Image src='/assets/marketing/icon-email.svg' alt='' width={20} height={16} className='h-4 w-5' />
-                <Link href={`mailto:${settings.email}`} className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'>
+                <Image
+                  src='/assets/marketing/icon-email.svg'
+                  alt=''
+                  width={20}
+                  height={16}
+                  className='h-4 w-5 shrink-0'
+                />
+                <Link
+                  href={`mailto:${settings.email}`}
+                  className='text-sm break-all text-neutral-400 transition-colors hover:text-white sm:text-base'
+                >
                   {settings.email}
                 </Link>
               </div>
@@ -106,20 +142,20 @@ export async function MarketingFooter() {
           </div>
         </div>
 
-        <div className='flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 sm:flex-row'>
-          <span className='text-xs font-semibold tracking-[1.2px] text-[#e6bdb8]/50 uppercase'>
+        <div className='flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 text-center sm:flex-row sm:text-left'>
+          <span className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase'>
             © 2024 {settings.businessName}. Registered in Ireland.
           </span>
-          <div className='flex gap-8'>
+          <div className='flex flex-wrap justify-center gap-6 sm:gap-8'>
             <Link
               href='#privacy'
-              className='text-xs font-semibold tracking-[1.2px] text-[#e6bdb8]/50 uppercase hover:text-[#e6bdb8]'
+              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
             >
               Privacy Policy
             </Link>
             <Link
               href='#terms'
-              className='text-xs font-semibold tracking-[1.2px] text-[#e6bdb8]/50 uppercase hover:text-[#e6bdb8]'
+              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
             >
               Terms of Service
             </Link>

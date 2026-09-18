@@ -69,6 +69,78 @@ export const updateHomepageCatalogSchema = z.object({
   catalogSubtext: optionalText,
 });
 
+export const updateServicesHeroSchema = z.object({
+  servicesHeroEyebrow: optionalTextMax(200),
+  servicesHeroHeadlineLine1: optionalTextMax(100),
+  servicesHeroHeadlineAccent: optionalTextMax(100),
+  servicesHeroSubtext: optionalText,
+});
+
+export const updateOurWorkHeroSchema = z.object({
+  ourWorkHeroEyebrow: optionalTextMax(200),
+  ourWorkHeroHeadlineLine1: optionalTextMax(100),
+  ourWorkHeroHeadlineAccent: optionalTextMax(100),
+  ourWorkHeroSubtext: optionalText,
+});
+
+const insuranceFeatureSchema = z.object({ title: z.string().min(1).max(120), description: z.string().min(1).max(500) });
+const insuranceStepSchema = z.object({ label: z.string().min(1).max(80), description: z.string().min(1).max(300) });
+
+export const updateInsurancePageSchema = z.object({
+  insuranceHeroEyebrow: optionalTextMax(200),
+  insuranceHeroLine1: optionalTextMax(100),
+  insuranceHeroLine2: optionalTextMax(100),
+  insuranceHeroLine3: optionalTextMax(100),
+  insuranceHeroSubtext: optionalText,
+  insuranceCoordinationTitle: optionalTextMax(160),
+  insuranceCoordinationSubtext: optionalText,
+  insuranceFeatures: z.array(insuranceFeatureSchema).max(6).optional(),
+  insuranceStepsEyebrow: optionalTextMax(100),
+  insuranceStepsTitle: optionalTextMax(160),
+  insuranceSteps: z.array(insuranceStepSchema).max(12).optional(),
+  insuranceCtaLine1: optionalTextMax(100),
+  insuranceCtaAccent: optionalTextMax(100),
+  insuranceCtaSubtext: optionalText,
+  insuranceDisclaimer: optionalText,
+});
+
+const aboutTeamMemberSchema = z.object({
+  name: z.string().min(1).max(120),
+  role: z.string().min(1).max(120),
+  imagePublicId: z.string().max(255).nullable(),
+});
+const aboutStandardSchema = z.object({ title: z.string().min(1).max(160), description: z.string().min(1).max(500) });
+
+export const updateAboutPageSchema = z.object({
+  aboutHeroEyebrow: optionalTextMax(200),
+  aboutHeroLine1: optionalTextMax(100),
+  aboutHeroAccent1: optionalTextMax(100),
+  aboutHeroLine2: optionalTextMax(100),
+  aboutHeroAccent2: optionalTextMax(100),
+  aboutHeroImagePublicId: optionalTextMax(255),
+  aboutHeritageTitle: optionalTextMax(160),
+  aboutHeritageText: optionalText,
+  aboutHeritageStat1Value: optionalTextMax(40),
+  aboutHeritageStat1Label: optionalTextMax(80),
+  aboutHeritageStat2Value: optionalTextMax(40),
+  aboutHeritageStat2Label: optionalTextMax(80),
+  aboutHeritageImagePublicId: optionalTextMax(255),
+  aboutHeritageQuote: optionalText,
+  aboutTeamTitle: optionalTextMax(160),
+  aboutTeamSubtext: optionalText,
+  aboutTeamMembers: z.array(aboutTeamMemberSchema).max(12).optional(),
+  aboutStandardsEyebrow: optionalTextMax(100),
+  aboutStandardsTitle: optionalTextMax(160),
+  aboutStandardsImagePublicId: optionalTextMax(255),
+  aboutStandardsItems: z.array(aboutStandardSchema).max(6).optional(),
+});
+
+export const updateProcessPageSchema = z.object({
+  processPageEyebrow: optionalTextMax(200),
+  processPageTitle: optionalTextMax(160),
+  processPageSubtext: optionalText,
+});
+
 // Union of every section — what the repository's upsert accepts, since it only ever
 // receives one section's fields at a time.
 export const updateSiteSettingsSchema = updateBusinessInfoSchema
@@ -77,7 +149,12 @@ export const updateSiteSettingsSchema = updateBusinessInfoSchema
   .merge(updateHeroMediaSchema)
   .merge(updateSeoSchema)
   .merge(updateHomepageHeroSchema)
-  .merge(updateHomepageCatalogSchema);
+  .merge(updateHomepageCatalogSchema)
+  .merge(updateServicesHeroSchema)
+  .merge(updateOurWorkHeroSchema)
+  .merge(updateInsurancePageSchema)
+  .merge(updateAboutPageSchema)
+  .merge(updateProcessPageSchema);
 
 export type UpdateBusinessInfoInput = z.infer<typeof updateBusinessInfoSchema>;
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
@@ -86,4 +163,9 @@ export type UpdateHeroMediaInput = z.infer<typeof updateHeroMediaSchema>;
 export type UpdateSeoInput = z.infer<typeof updateSeoSchema>;
 export type UpdateHomepageHeroInput = z.infer<typeof updateHomepageHeroSchema>;
 export type UpdateHomepageCatalogInput = z.infer<typeof updateHomepageCatalogSchema>;
+export type UpdateServicesHeroInput = z.infer<typeof updateServicesHeroSchema>;
+export type UpdateOurWorkHeroInput = z.infer<typeof updateOurWorkHeroSchema>;
+export type UpdateInsurancePageInput = z.infer<typeof updateInsurancePageSchema>;
+export type UpdateAboutPageInput = z.infer<typeof updateAboutPageSchema>;
+export type UpdateProcessPageInput = z.infer<typeof updateProcessPageSchema>;
 export type UpdateSiteSettingsInput = z.infer<typeof updateSiteSettingsSchema>;

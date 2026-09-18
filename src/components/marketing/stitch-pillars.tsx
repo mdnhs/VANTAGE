@@ -46,7 +46,7 @@ export function StitchPillars({ pillars }: StitchPillarsProps) {
   if (pillars.length === 0) return null;
 
   return (
-    <section className='relative z-20 container mx-auto -mt-10 px-6 sm:px-12'>
+    <section className='relative z-20 container mx-auto -mt-6 px-4 sm:-mt-10 sm:px-6 lg:px-12'>
       <div className='intersect-once grid grid-cols-1 gap-4 rounded-xl border border-white/10 bg-[#141414] p-3 shadow-2xl backdrop-blur-2xl sm:grid-cols-2 lg:grid-cols-4 intersect:motion-preset-fade'>
         {pillars.map((pillar, index) => {
           const Icon = ICONS[pillar.icon] ?? Factory;

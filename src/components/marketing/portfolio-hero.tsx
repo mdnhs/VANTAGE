@@ -1,20 +1,26 @@
-export function PortfolioHero() {
+interface PortfolioHeroProps {
+  eyebrow: string;
+  headlineLine1: string;
+  headlineAccent: string;
+  subtext: string;
+}
+
+export function PortfolioHero({ eyebrow, headlineLine1, headlineAccent, subtext }: PortfolioHeroProps) {
   return (
     <div className='flex max-w-[768px] motion-preset-slide-up flex-col gap-4 motion-duration-700'>
       <div className='flex items-center gap-4'>
-        <span className='h-px w-12 bg-[#ffb4ab]' />
-        <span className='text-xs font-semibold tracking-[2.4px] text-[#ffb4ab] uppercase'>Portfolio</span>
+        <span className='h-px w-12 bg-red-500' />
+        <span className='text-xs font-semibold tracking-[2.4px] text-red-500 uppercase'>{eyebrow}</span>
       </div>
 
-      <h1 className='font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-[-1.6px] text-[#e5e2e1] uppercase lg:text-[64px] lg:leading-[57.6px] lg:tracking-[-3.2px]'>
-        Our Recent
+      <h1 className='xs:text-4xl font-[family-name:var(--font-manrope)] text-3xl leading-tight font-extrabold tracking-tight text-[#e5e2e1] uppercase sm:text-5xl sm:leading-[1.1] lg:text-[64px] lg:leading-[57.6px] lg:tracking-[-3.2px]'>
+        {headlineLine1}
         <br />
-        <span className='text-[#e6bdb8]'>Restorations.</span>
+        <span className='text-[#dc2626]'>{headlineAccent}</span>
       </h1>
 
-      <p className='max-w-[576px] pt-4 text-lg leading-7 text-[#e6bdb8]'>
-        Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master
-        craftsmanship.
+      <p className='max-w-[576px] pt-2 text-base leading-relaxed text-neutral-300 sm:pt-4 sm:text-lg sm:leading-7'>
+        {subtext}
       </p>
     </div>
   );

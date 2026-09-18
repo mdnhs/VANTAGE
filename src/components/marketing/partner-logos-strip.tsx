@@ -12,12 +12,12 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
   if (logos.length === 0) return null;
 
   return (
-    <section className='container mx-auto bg-[#131313] px-6 py-14 sm:px-12'>
-      <div className='mx-auto flex max-w-[1152px] flex-col gap-8'>
-        <p className='text-center text-xs font-semibold tracking-[1.2px] text-[#e6bdb8] uppercase'>
+    <section className='container mx-auto bg-[#131313] px-4 py-10 sm:px-6 sm:py-14 lg:px-12'>
+      <div className='mx-auto flex max-w-[1152px] flex-col gap-6 sm:gap-8'>
+        <p className='text-center text-xs font-semibold tracking-[1.2px] text-neutral-400 uppercase'>
           Trusted By Leading Insurance Providers
         </p>
-        <div className='flex flex-wrap items-center justify-center gap-x-10 gap-y-6'>
+        <div className='flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:gap-x-10 sm:gap-y-6'>
           {logos.map((logo) => {
             const image = (
               <Image

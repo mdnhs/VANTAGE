@@ -10,6 +10,8 @@ export const PERMISSIONS = {
   CATALOG_MANAGE: 'content.catalog.manage',
   PROCESS_MANAGE: 'content.process.manage',
   SETTINGS_MANAGE: 'content.settings.manage',
+  QUOTES_MANAGE: 'leads.quotes.manage',
+  CONTACTS_MANAGE: 'leads.contacts.manage',
   ADMINS_MANAGE: 'user_management.admin.manage',
   USERS_MANAGE: 'user_management.user.manage',
 } as const;

@@ -8,6 +8,8 @@ export const createServiceSchema = z.object({
   slug: z.string().min(1).max(140).regex(slugPattern, 'Must be lowercase kebab-case (e.g. crash-repair)'),
   description: z.string().min(1),
   iconPublicId: z.string().max(255).nullable().optional(),
+  imagePublicId: z.string().max(255).nullable().optional(),
+  checklist: z.array(z.string().min(1).max(160)).max(10).optional(),
   startingPrice: z.number().int().nonnegative().nullable().optional(),
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),

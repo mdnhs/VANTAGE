@@ -22,6 +22,15 @@ export const APP_ROUTES = {
     homePage: {
       index: '/dashboard/home-page',
     },
+    insurance: {
+      index: '/dashboard/insurance',
+    },
+    about: {
+      index: '/dashboard/about',
+    },
+    processPage: {
+      index: '/dashboard/process-page',
+    },
     // `index` points back at the relevant Home page tab — pillars/process steps/testimonials/
     // partner logos no longer have their own standalone list page, only create/edit (used by
     // the table's "Cancel").
@@ -56,11 +65,14 @@ export const APP_ROUTES = {
       edit: (id: string) => `/dashboard/admins/${id}/edit`,
     },
   },
-  // TODO: add feature app routes here as features are scaffolded
-  // orders: {
-  //   index: '/dashboard/orders',
-  //   create: '/dashboard/orders/create',
-  //   details: (id: string) => `/dashboard/orders/${id}`,
-  //   edit: (id: string) => `/dashboard/orders/${id}/edit`,
-  // },
+  leads: {
+    quotes: {
+      index: '/dashboard/quotes',
+      details: (id: string) => `/dashboard/quotes/${id}`,
+    },
+    contacts: {
+      index: '/dashboard/contacts',
+      details: (id: string) => `/dashboard/contacts/${id}`,
+    },
+  },
 } as const;

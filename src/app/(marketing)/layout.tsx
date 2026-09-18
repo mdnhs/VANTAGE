@@ -9,7 +9,9 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
   const settings = await siteSettingsService.getPublic();
 
   return (
-    <div className={`${manrope.variable} ${inter.variable} bg-[#131313] font-[family-name:var(--font-inter)]`}>
+    <div
+      className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#131313] font-[family-name:var(--font-inter)]`}
+    >
       <StitchHeader phone={settings.phone} businessName={settings.businessName} logoPublicId={settings.logoPublicId} />
       {children}
       <StitchCta phone={settings.phone} />

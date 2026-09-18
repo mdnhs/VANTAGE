@@ -16,6 +16,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 
+import { submitQuoteRequest } from '@/features/quote-requests/services/api';
+
 const CATEGORIES = [
   { id: 'collision', label: 'Collision', icon: CarFront },
   { id: 'pdr', label: 'Dent / PDR', icon: Bandage },
@@ -25,20 +27,31 @@ const CATEGORIES = [
 
 const STEPS = ['Vehicle & Reg', 'Damage Type', 'Photos & Contact'];
 
-function SubmitRow({ label, type, onClick }: { label: string; type: 'button' | 'submit'; onClick?: () => void }) {
+function SubmitRow({
+  label,
+  type,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  type: 'button' | 'submit';
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <div className='pt-2'>
       <button
         type={type}
         onClick={onClick}
-        className='group flex w-full items-center justify-center gap-2 rounded bg-[#dc2626] py-4 text-xs font-bold tracking-widest text-white uppercase shadow-[0_4px_25px_rgba(220,38,38,0.45)] transition-all hover:bg-red-700'
+        disabled={disabled}
+        className='group flex w-full items-center justify-center gap-2 rounded bg-[#dc2626] px-4 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-[0_4px_25px_rgba(220,38,38,0.45)] transition-all hover:bg-red-700 disabled:opacity-60 sm:py-4'
       >
         <span>{label}</span>
         <ArrowRight className='size-4 transition-transform group-hover:translate-x-1' />
       </button>
-      <div className='mt-3 flex items-center justify-between font-mono text-[11px] text-neutral-400'>
+      <div className='mt-3 flex flex-col gap-1 text-center font-mono text-[11px] text-neutral-400 sm:flex-row sm:items-center sm:justify-between sm:text-left'>
         <span>
-          ⚡ Average response time: <strong>48 minutes</strong>
+          ⚡ Average response time: <strong className='text-neutral-200'>48 minutes</strong>
         </span>
         <span>No card required</span>
       </div>
@@ -78,6 +91,8 @@ export function StitchEstimator() {
   const [selectedCategory, setSelectedCategory] = useState('collision');
   const [photoCount, setPhotoCount] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Form contact state
   const [name, setName] = useState('');
@@ -94,25 +109,46 @@ export function StitchEstimator() {
 
   const activeStep = submitted ? 3 : showContact ? 3 : 1;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      await submitQuoteRequest({
+        name,
+        phone,
+        email,
+        registration: regNumber || null,
+        description: vehicleFound ? `Vehicle detected: ${vehicleFound}` : null,
+        serviceType: selectedCategory,
+        source: 'homepage_estimator',
+      });
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit quote. Please try again.';
+      setErrorMsg(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <section id='estimator' className='relative w-full overflow-hidden border-y border-white/10 bg-[#111111] py-24'>
+    <section
+      id='estimator'
+      className='relative w-full overflow-hidden border-y border-white/10 bg-[#111111] py-16 sm:py-24'
+    >
       {/* Background glow */}
       <div className='pointer-events-none absolute top-1/2 right-0 size-96 -translate-y-1/2 rounded-full bg-red-600/10 blur-3xl' />
 
-      <div className='container mx-auto px-6 sm:px-12'>
-        <div className='grid grid-cols-1 items-center gap-12 lg:grid-cols-12'>
+      <div className='container mx-auto px-4 sm:px-6 lg:px-12'>
+        <div className='grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-12'>
           {/* Left Column */}
           <div className='intersect-once flex flex-col gap-6 lg:col-span-5 intersect:motion-preset-slide-right'>
             <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
               <span className='h-px w-6 bg-[#dc2626]' />
               2-Minute Online Quotation
             </span>
-            <h2 className='font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
+            <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-white uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
               Show Us The Damage. <br />
               <span className='text-[#dc2626]'>We&apos;ll Provide The Cost.</span>
             </h2>
@@ -162,30 +198,31 @@ export function StitchEstimator() {
 
           {/* Right Column: Interactive 3-Step Card */}
           <div className='intersect-once motion-delay-150 lg:col-span-7 intersect:motion-preset-slide-left'>
-            <div className='relative rounded-xl border border-white/15 bg-[#181818] p-6 shadow-2xl sm:p-8'>
+            <div className='relative rounded-xl border border-white/15 bg-[#181818] p-4 shadow-2xl sm:p-8'>
               {/* Steps Bar */}
-              <div className='mb-6 flex items-center justify-between border-b border-white/10 pb-6'>
+              <div className='mb-6 flex items-center justify-between gap-1 border-b border-white/10 pb-5 sm:pb-6'>
                 {STEPS.map((label, idx) => {
                   const step = idx + 1;
                   const isActive = activeStep === step;
                   const isReached = activeStep >= step;
                   return (
                     <div key={label} className='contents'>
-                      {idx > 0 && <div className='hidden h-px w-8 bg-white/20 sm:block' />}
-                      <div className='flex items-center gap-2'>
+                      {idx > 0 && <div className='hidden h-px w-6 bg-white/20 sm:block' />}
+                      <div className='flex items-center gap-1.5 sm:gap-2'>
                         <span
-                          className={`flex size-6 items-center justify-center rounded-full font-mono text-xs font-bold ${
+                          className={`flex size-5 items-center justify-center rounded-full font-mono text-[10px] font-bold sm:size-6 sm:text-xs ${
                             isReached ? 'bg-[#dc2626] text-white' : 'bg-white/10 text-neutral-300'
                           }`}
                         >
                           {step}
                         </span>
                         <span
-                          className={`text-xs tracking-wider uppercase ${
+                          className={`text-[10px] tracking-wider uppercase sm:text-xs ${
                             isActive ? 'font-bold text-white' : 'font-medium text-neutral-400'
                           }`}
                         >
-                          {label}
+                          <span className='sm:hidden'>{idx === 0 ? 'Vehicle' : idx === 1 ? 'Damage' : 'Contact'}</span>
+                          <span className='hidden sm:inline'>{label}</span>
                         </span>
                       </div>
                     </div>
@@ -227,9 +264,9 @@ export function StitchEstimator() {
                       Irish Registration Number
                     </label>
                     <div className='flex items-center overflow-hidden rounded-md border border-white/20 bg-black shadow-inner transition-all focus-within:border-[#dc2626]'>
-                      <div className='flex flex-col items-center justify-center border-r border-white/10 bg-[#003399] px-3.5 py-3 text-white select-none'>
-                        <span className='text-[10px] leading-none tracking-tight'>★ ★</span>
-                        <span className='mt-0.5 text-[11px] font-bold tracking-widest'>IRL</span>
+                      <div className='flex shrink-0 flex-col items-center justify-center border-r border-white/10 bg-[#003399] px-2.5 py-2.5 text-white select-none sm:px-3.5 sm:py-3'>
+                        <span className='text-[9px] leading-none tracking-tight sm:text-[10px]'>★ ★</span>
+                        <span className='mt-0.5 text-[10px] font-bold tracking-widest sm:text-[11px]'>IRL</span>
                       </div>
                       <input
                         id='estimator-reg'
@@ -237,15 +274,15 @@ export function StitchEstimator() {
                         value={regNumber}
                         onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
                         placeholder='e.g. 241-D-12345'
-                        className='w-full bg-transparent px-4 py-3 font-mono text-lg font-bold tracking-widest text-white uppercase placeholder:text-neutral-600 focus:outline-none'
+                        className='w-full min-w-0 bg-transparent px-2.5 py-2.5 font-mono text-sm font-bold tracking-normal text-white uppercase placeholder:text-neutral-600 focus:outline-none sm:px-4 sm:py-3 sm:text-lg sm:tracking-widest'
                       />
                       <button
                         type='button'
                         onClick={handleLookup}
-                        className='flex items-center gap-1 border-l border-white/10 bg-white/10 px-4 py-3 font-mono text-xs text-neutral-300 uppercase transition-colors hover:bg-white/20'
+                        className='flex shrink-0 items-center gap-1 border-l border-white/10 bg-white/10 px-3 py-2.5 font-mono text-[11px] text-neutral-300 uppercase transition-colors hover:bg-white/20 sm:px-4 sm:py-3 sm:text-xs'
                       >
                         <Search className='size-3.5' />
-                        {isLookingUp ? 'Searching' : 'Lookup'}
+                        <span className='xs:inline hidden'>{isLookingUp ? 'Searching' : 'Lookup'}</span>
                       </button>
                     </div>
                     {vehicleFound ? (
@@ -359,7 +396,12 @@ export function StitchEstimator() {
                   >
                     ← Back to vehicle details
                   </button>
-                  <SubmitRow label='Send My Free Quote Request' type='submit' />
+                  {errorMsg && <p className='text-xs text-red-500'>{errorMsg}</p>}
+                  <SubmitRow
+                    label={isSubmitting ? 'Sending Request…' : 'Send My Free Quote Request'}
+                    type='submit'
+                    disabled={isSubmitting}
+                  />
                 </form>
               )}
             </div>

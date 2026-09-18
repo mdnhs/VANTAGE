@@ -6,6 +6,11 @@ import type {
   UpdateContactInput,
   UpdateHeroMediaInput,
   UpdateHomepageCatalogInput,
+  UpdateServicesHeroInput,
+  UpdateOurWorkHeroInput,
+  UpdateInsurancePageInput,
+  UpdateAboutPageInput,
+  UpdateProcessPageInput,
   UpdateHomepageHeroInput,
   UpdateSeoInput,
   UpdateSocialLinksInput,
@@ -57,6 +62,16 @@ const FALLBACK_SETTINGS = {
   catalogHeadlineAccent: 'Showroom Finish.',
   catalogSubtext:
     'Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved techniques.',
+  servicesHeroEyebrow: 'Master Craftsmanship',
+  servicesHeroHeadlineLine1: 'Professional Bodywork.',
+  servicesHeroHeadlineAccent: 'Precision Finish.',
+  servicesHeroSubtext:
+    'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
+  ourWorkHeroEyebrow: 'Portfolio',
+  ourWorkHeroHeadlineLine1: 'Our Recent',
+  ourWorkHeroHeadlineAccent: 'Restorations.',
+  ourWorkHeroSubtext:
+    'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.',
 } as const;
 
 export type PublicSiteSettings = Awaited<ReturnType<typeof getPublicUncached>>;
@@ -85,7 +100,12 @@ async function updateSection(
     | UpdateHeroMediaInput
     | UpdateSeoInput
     | UpdateHomepageHeroInput
-    | UpdateHomepageCatalogInput,
+    | UpdateHomepageCatalogInput
+    | UpdateServicesHeroInput
+    | UpdateOurWorkHeroInput
+    | UpdateInsurancePageInput
+    | UpdateAboutPageInput
+    | UpdateProcessPageInput,
 ) {
   const row = await siteSettingsRepository.upsert(data);
   // Second arg must match the `cacheLife` profile used in getPublicCached above.
@@ -108,4 +128,9 @@ export const siteSettingsService = {
   updateSeo: (data: UpdateSeoInput) => updateSection(data),
   updateHomepageHero: (data: UpdateHomepageHeroInput) => updateSection(data),
   updateHomepageCatalog: (data: UpdateHomepageCatalogInput) => updateSection(data),
+  updateServicesHero: (data: UpdateServicesHeroInput) => updateSection(data),
+  updateOurWorkHero: (data: UpdateOurWorkHeroInput) => updateSection(data),
+  updateInsurancePage: (data: UpdateInsurancePageInput) => updateSection(data),
+  updateAboutPage: (data: UpdateAboutPageInput) => updateSection(data),
+  updateProcessPage: (data: UpdateProcessPageInput) => updateSection(data),
 };

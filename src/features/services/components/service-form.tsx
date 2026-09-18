@@ -24,8 +24,8 @@ interface FormState {
   name: string;
   slug: string;
   description: string;
-  iconPublicId: string;
-  startingPrice: string;
+  imagePublicId: string;
+  checklist: string;
   isEnabled: boolean;
 }
 
@@ -34,8 +34,8 @@ function toFormState(data: Service | null): FormState {
     name: data?.name ?? '',
     slug: data?.slug ?? '',
     description: data?.description ?? '',
-    iconPublicId: data?.iconPublicId ?? '',
-    startingPrice: data?.startingPrice != null ? String(data.startingPrice) : '',
+    imagePublicId: data?.imagePublicId ?? '',
+    checklist: (data?.checklist ?? []).join('\n'),
     isEnabled: data?.isEnabled ?? true,
   };
 }
@@ -46,8 +46,8 @@ interface ServiceFormProps {
     name: string;
     slug: string;
     description: string;
-    iconPublicId: string | null;
-    startingPrice: number | null;
+    imagePublicId: string | null;
+    checklist: string[];
     isEnabled: boolean;
   }) => Promise<unknown>;
   isSubmitting: boolean;
@@ -85,8 +85,11 @@ export function ServiceForm({
       name: form.name,
       slug: form.slug,
       description: form.description,
-      iconPublicId: form.iconPublicId || null,
-      startingPrice: form.startingPrice.trim() === '' ? null : Number(form.startingPrice),
+      imagePublicId: form.imagePublicId || null,
+      checklist: form.checklist
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean),
       isEnabled: form.isEnabled,
     });
   };
@@ -124,15 +127,14 @@ export function ServiceForm({
               required
             />
           </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='startingPrice'>Starting price (€)</Label>
-            <Input
-              id='startingPrice'
-              type='number'
-              min={0}
-              value={form.startingPrice}
-              onChange={(e) => setField('startingPrice', e.target.value)}
-              placeholder='Optional'
+          <div className='flex flex-col gap-1.5 sm:col-span-2'>
+            <Label htmlFor='checklist'>Checklist (one item per line)</Label>
+            <Textarea
+              id='checklist'
+              value={form.checklist}
+              onChange={(e) => setField('checklist', e.target.value)}
+              placeholder={'Structural Realignment\nLaser Chassis Measuring'}
+              rows={5}
             />
           </div>
           <div className='flex items-center gap-3 pt-6'>
@@ -144,12 +146,12 @@ export function ServiceForm({
             <Label htmlFor='isEnabled'>Visible on the public site</Label>
           </div>
           <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Icon</Label>
+            <Label>Image</Label>
             <CloudinaryUpload
               mode='single-image'
               folder='vantage/services'
-              value={form.iconPublicId || null}
-              onChange={(v) => setField('iconPublicId', (v as string) ?? '')}
+              value={form.imagePublicId || null}
+              onChange={(v) => setField('imagePublicId', (v as string) ?? '')}
             />
           </div>
         </CardContent>

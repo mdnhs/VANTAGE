@@ -10,5 +10,7 @@ export * from './partner-logos';
 export * from './homepage-pillars';
 export * from './homepage-process-steps';
 export * from './homepage-catalogs';
+export * from './quote-requests';
+export * from './contact-messages';
 export * from './relations';
 // export * from './orders';

@@ -9,6 +9,11 @@ import {
   updateContactSchema,
   updateHeroMediaSchema,
   updateHomepageCatalogSchema,
+  updateServicesHeroSchema,
+  updateOurWorkHeroSchema,
+  updateInsurancePageSchema,
+  updateAboutPageSchema,
+  updateProcessPageSchema,
   updateHomepageHeroSchema,
   updateSeoSchema,
   updateSocialLinksSchema,
@@ -109,6 +114,66 @@ export const siteSettings = new Hono<AuthEnv>()
     async (c) => {
       const input = c.req.valid('json');
       const data = await siteSettingsService.updateHomepageCatalog(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/services-hero',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateServicesHeroSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateServicesHero(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/our-work-hero',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateOurWorkHeroSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateOurWorkHero(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/insurance-page',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateInsurancePageSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateInsurancePage(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/about-page',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateAboutPageSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateAboutPage(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/process-page',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateProcessPageSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateProcessPage(input);
       return ok(c, data);
     },
   );

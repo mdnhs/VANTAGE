@@ -11,6 +11,9 @@ export const services = pgTable(
     slug: varchar('slug', { length: 140 }).notNull().unique(),
     description: text('description').notNull(),
     iconPublicId: varchar('icon_public_id', { length: 255 }),
+    // Hero image + bullet list for the public /services page feature blocks.
+    imagePublicId: varchar('image_public_id', { length: 255 }),
+    checklist: text('checklist').array().notNull().default([]),
     startingPrice: integer('starting_price'),
     displayOrder: integer('display_order').notNull().default(0),
     isEnabled: boolean('is_enabled').notNull().default(true),

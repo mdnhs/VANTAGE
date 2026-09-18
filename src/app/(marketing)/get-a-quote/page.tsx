@@ -16,10 +16,10 @@ export default async function GetAQuotePage() {
   return (
     <>
       <main className='relative overflow-hidden'>
-        <div className='pointer-events-none absolute top-0 right-0 h-[800px] w-[427px] bg-gradient-to-b from-[rgba(255,180,171,0.05)] to-transparent mix-blend-screen' />
-        <div className='pointer-events-none absolute bottom-0 left-0 size-64 rounded-full bg-[rgba(255,180,171,0.05)] blur-[50px]' />
+        <div className='pointer-events-none absolute top-0 right-0 h-[800px] w-[427px] bg-gradient-to-b from-red-600/10 to-transparent mix-blend-screen' />
+        <div className='pointer-events-none absolute bottom-0 left-0 size-64 rounded-full bg-red-600/10 blur-[50px]' />
 
-        <div className='relative container mx-auto flex flex-col gap-8 px-6 pt-16 pb-24 sm:px-12'>
+        <div className='relative container mx-auto flex flex-col gap-6 px-4 pt-12 pb-20 sm:gap-8 sm:px-6 sm:pt-16 sm:pb-24 md:px-12'>
           <QuoteHero />
           <QuoteForm services={services} />
         </div>

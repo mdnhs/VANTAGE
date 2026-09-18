@@ -27,17 +27,31 @@ export async function VisitUsSection() {
         </MapMarker>
       </Map>
 
-      <div className='pointer-events-none absolute bottom-6 left-6 flex flex-col gap-2 rounded-xl border border-white/10 bg-[#131313]/90 p-6 shadow-lg backdrop-blur-md'>
-        <span className='font-[family-name:var(--font-manrope)] text-2xl font-semibold tracking-[-0.6px] text-[#e5e2e1] uppercase'>
+      <div className='pointer-events-none absolute right-4 bottom-4 left-4 flex flex-col gap-2 rounded-xl border border-white/10 bg-[#131313]/90 p-4 shadow-lg backdrop-blur-md sm:right-auto sm:bottom-6 sm:left-6 sm:p-6'>
+        <span className='font-[family-name:var(--font-manrope)] text-xl font-semibold tracking-[-0.6px] text-[#e5e2e1] uppercase sm:text-2xl'>
           Visit Us
         </span>
         <div className='flex items-center gap-2'>
-          <Image src='/assets/marketing/icon-visit-clock.svg' alt='' width={12} height={12} className='size-3' />
-          <span className='text-base text-[#e6bdb8]'>{formatOpeningHoursSummary(settings.openingHours)}</span>
+          <Image
+            src='/assets/marketing/icon-visit-clock.svg'
+            alt=''
+            width={12}
+            height={12}
+            className='size-3 shrink-0'
+          />
+          <span className='text-xs text-neutral-300 sm:text-base'>
+            {formatOpeningHoursSummary(settings.openingHours)}
+          </span>
         </div>
         <div className='flex items-center gap-2'>
-          <Image src='/assets/marketing/icon-visit-pin.svg' alt='' width={11} height={12} className='h-3 w-[11px]' />
-          <span className='text-base text-[#e6bdb8]'>{settings.address}</span>
+          <Image
+            src='/assets/marketing/icon-visit-pin.svg'
+            alt=''
+            width={11}
+            height={12}
+            className='h-3 w-[11px] shrink-0'
+          />
+          <span className='text-xs text-neutral-300 sm:text-base'>{settings.address}</span>
         </div>
       </div>
     </div>

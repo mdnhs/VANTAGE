@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Globe } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { getSession } from '@/lib/permission/server-utils';
 import { PermissionsProvider } from '@/lib/permission/permissions-provider';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -36,6 +40,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+            <Link
+              href='/'
+              target='_blank'
+              rel='noopener noreferrer'
+              aria-label='View live site (opens in a new tab)'
+              title='View live site'
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'mr-4 ml-auto')}
+            >
+              <Globe className='size-4' />
+            </Link>
           </header>
           <main className='flex-1 p-6'>{children}</main>
         </SidebarInset>

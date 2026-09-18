@@ -36,17 +36,17 @@ function ProjectCard({ project, delayClass, aspect }: { project: ProjectPublic; 
           </span>
         </div>
 
-        <div className='absolute right-4 bottom-4 bg-[#ffb4ab]/90 px-3 py-1 opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100'>
-          <span className='text-xs font-semibold tracking-[0.6px] text-[#690005] uppercase'>View Before State</span>
+        <div className='absolute right-4 bottom-4 rounded-xs bg-[#dc2626]/90 px-3 py-1 opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100'>
+          <span className='text-xs font-bold tracking-[0.6px] text-white uppercase'>View Before State</span>
         </div>
       </div>
 
       <div className='flex items-start justify-between gap-4'>
         <div className='flex flex-col'>
-          <h3 className='font-[family-name:var(--font-manrope)] text-2xl font-semibold tracking-[-0.6px] text-[#e5e2e1] uppercase'>
+          <h3 className='font-[family-name:var(--font-manrope)] text-xl font-semibold tracking-tight text-[#e5e2e1] uppercase sm:text-2xl'>
             {project.title}
           </h3>
-          <p className='text-base text-[#e6bdb8]'>{project.vehicleModel}</p>
+          <p className='text-sm text-neutral-400 sm:text-base'>{project.vehicleModel}</p>
         </div>
         <Image
           src='/assets/marketing/icon-project-link.svg'
@@ -68,15 +68,15 @@ interface ProjectGridProps {
 // right (offset down to stagger the rows) — generic over any project count, not just 4.
 export function ProjectGrid({ projects }: ProjectGridProps) {
   if (projects.length === 0) {
-    return <p className='text-sm text-[#e6bdb8]'>No projects published yet — check back soon.</p>;
+    return <p className='text-sm text-neutral-400'>No projects published yet — check back soon.</p>;
   }
 
   const left = projects.filter((_, index) => index % 2 === 0);
   const right = projects.filter((_, index) => index % 2 === 1);
 
   return (
-    <div className='grid grid-cols-1 gap-12 sm:grid-cols-2'>
-      <div className='flex flex-col gap-12'>
+    <div className='grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-12'>
+      <div className='flex flex-col gap-8 sm:gap-12'>
         {left.map((project, i) => (
           <ProjectCard
             key={project.id}
@@ -86,7 +86,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
           />
         ))}
       </div>
-      <div className='flex flex-col gap-12 sm:pt-16'>
+      <div className='flex flex-col gap-8 sm:gap-12 sm:pt-16'>
         {right.map((project, i) => (
           <div key={project.id} className={i === right.length - 1 && right.length > 1 ? 'sm:-mt-12' : undefined}>
             <ProjectCard

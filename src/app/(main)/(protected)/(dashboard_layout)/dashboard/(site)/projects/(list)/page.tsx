@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { PermissionGate } from '@/lib/permission/permission-gate';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { siteSettingsService } from '@/server/services/site-settings-service';
+import { OurWorkHeroForm } from '@/features/projects/components/our-work-hero-form';
 import { projectService } from '@/server/services/project-service';
 import { ProjectTable } from '@/features/projects/components/list/project-table';
 
@@ -17,11 +19,15 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ProjectsListPage() {
-  const { rows, total } = await projectService.listAdmin({ page: 1, limit: 50 });
+  const [{ rows, total }, settings] = await Promise.all([
+    projectService.listAdmin({ page: 1, limit: 50 }),
+    siteSettingsService.getAdmin(),
+  ]);
 
   return (
     <PermissionGate permissions={[PERMISSIONS.PROJECTS_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
       <div className='flex flex-col gap-6'>
+        <OurWorkHeroForm settings={settings ?? null} />
         <div className='flex items-center justify-between'>
           <div>
             <h1 className='text-xl font-semibold'>Projects</h1>

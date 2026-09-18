@@ -64,7 +64,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
             <th className='px-4 py-2.5 font-medium'>Order</th>
             <th className='px-4 py-2.5 font-medium'>Name</th>
             <th className='px-4 py-2.5 font-medium'>Slug</th>
-            <th className='px-4 py-2.5 font-medium'>Starting price</th>
+            <th className='px-4 py-2.5 font-medium'>Checklist items</th>
             <th className='px-4 py-2.5 font-medium'>Enabled</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
@@ -100,7 +100,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
               </td>
               <td className='px-4 py-2.5 font-medium'>{service.name}</td>
               <td className='px-4 py-2.5 text-muted-foreground'>{service.slug}</td>
-              <td className='px-4 py-2.5'>{service.startingPrice != null ? `€${service.startingPrice}` : '—'}</td>
+              <td className='px-4 py-2.5'>{service.checklist.length}</td>
               <td className='px-4 py-2.5'>
                 <EnabledToggle service={service} />
               </td>

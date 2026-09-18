@@ -21,6 +21,11 @@ export const API_ROUTES = {
     updateSeo: '/site-settings/seo',
     updateHomepageHero: '/site-settings/homepage-hero',
     updateHomepageCatalog: '/site-settings/homepage-catalog',
+    updateServicesHero: '/site-settings/services-hero',
+    updateOurWorkHero: '/site-settings/our-work-hero',
+    updateInsurancePage: '/site-settings/insurance-page',
+    updateAboutPage: '/site-settings/about-page',
+    updateProcessPage: '/site-settings/process-page',
   },
   services: {
     public: '/services',
@@ -100,11 +105,20 @@ export const API_ROUTES = {
     list: '/users',
     create: '/users',
   },
-  // TODO: add feature route groups here as features are scaffolded
-  // orders: {
-  //   list: '/orders',
-  //   create: '/orders',
-  //   detail: (id: string) => `/orders/${id}`,
-  //   update: (id: string) => `/orders/${id}`,
-  // },
+  quotes: {
+    submit: '/quotes',
+    adminList: '/quotes/admin/list',
+    stats: '/quotes/admin/stats',
+    detail: (id: string) => `/quotes/${id}`,
+    update: (id: string) => `/quotes/${id}`,
+    remove: (id: string) => `/quotes/${id}`,
+  },
+  contacts: {
+    submit: '/contacts',
+    adminList: '/contacts/admin/list',
+    stats: '/contacts/admin/stats',
+    detail: (id: string) => `/contacts/${id}`,
+    update: (id: string) => `/contacts/${id}`,
+    remove: (id: string) => `/contacts/${id}`,
+  },
 } as const;

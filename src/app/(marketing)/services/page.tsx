@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
-import { ServiceSplitCards } from '@/components/marketing/service-split-card';
+import { cldUrl } from '@/lib/cloudinary/url';
+import { siteSettingsService } from '@/server/services/site-settings-service';
+import { serviceService } from '@/server/services/service-service';
 
 export const metadata: Metadata = {
   title: 'Services',
@@ -10,40 +12,45 @@ export const metadata: Metadata = {
   alternates: { canonical: '/services' },
 };
 
-export default function ServicesPage() {
+const CHECKLIST_ICON = '/assets/marketing/icon-checklist-crash.svg';
+const FALLBACK_IMAGE = '/assets/marketing/service-crash-repair.jpg';
+
+// Content is CMS-driven (Dashboard → Services) — order and enabled state come from there.
+export default async function ServicesPage() {
+  const [services, settings] = await Promise.all([serviceService.listPublished(), siteSettingsService.getPublic()]);
+
   return (
     <>
       <main className='flex flex-col'>
-        <ServicesHero />
+        <ServicesHero
+          eyebrow={settings.servicesHeroEyebrow ?? 'Master Craftsmanship'}
+          headlineLine1={settings.servicesHeroHeadlineLine1 ?? 'Professional Bodywork.'}
+          headlineAccent={settings.servicesHeroHeadlineAccent ?? 'Precision Finish.'}
+          subtext={
+            settings.servicesHeroSubtext ??
+            'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.'
+          }
+        />
 
-        <div className='container mx-auto flex flex-col gap-[120px] px-6 py-[120px] sm:px-12'>
-          <ServiceFeatureBlock
-            image='/assets/marketing/service-crash-repair.jpg'
-            watermark='01'
-            heading='Crash Repair'
-            description='Structural integrity is paramount. We utilize laser measuring systems and factory-approved alignment jigs to ensure your chassis is restored to exact OEM tolerances after a collision.'
-            checklist={[
-              { icon: '/assets/marketing/icon-checklist-crash.svg', label: 'Structural Realignment' },
-              { icon: '/assets/marketing/icon-checklist-crash.svg', label: 'Laser Chassis Measuring' },
-              { icon: '/assets/marketing/icon-checklist-crash.svg', label: 'Factory Panel Welding' },
-            ]}
-          />
-
-          <ServiceSplitCards />
-
-          <ServiceFeatureBlock
-            reverse
-            image='/assets/marketing/service-paintwork.jpg'
-            watermark='02'
-            heading='Precision Paintwork'
-            description='From localized blending to complete bare-metal resprays, our climate-controlled downdraft booths ensure a glass-like finish. We use computerized color matching for an undetectable repair.'
-            checklist={[
-              { icon: '/assets/marketing/icon-checklist-paint-1.svg', label: 'Computerized Color Matching' },
-              { icon: '/assets/marketing/icon-checklist-paint-2.svg', label: 'Multi-stage Clearcoat' },
-              { icon: '/assets/marketing/icon-checklist-paint-3.svg', label: 'Full Factory Resprays' },
-            ]}
-          />
-        </div>
+        {services.length > 0 && (
+          <div className='container mx-auto flex flex-col gap-16 px-4 py-16 sm:gap-24 sm:px-6 sm:py-24 lg:gap-[120px] lg:px-12 lg:py-[120px]'>
+            {services.map((service, index) => (
+              <ServiceFeatureBlock
+                key={service.id}
+                reverse={index % 2 === 1}
+                image={
+                  service.imagePublicId
+                    ? cldUrl(service.imagePublicId, { width: 1200, height: 900, crop: 'fill' })
+                    : FALLBACK_IMAGE
+                }
+                watermark={String(index + 1).padStart(2, '0')}
+                heading={service.name}
+                description={service.description}
+                checklist={service.checklist.map((label) => ({ icon: CHECKLIST_ICON, label }))}
+              />
+            ))}
+          </div>
+        )}
       </main>
     </>
   );

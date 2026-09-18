@@ -1,3 +1,5 @@
+import { PROCESS_PAGE_DEFAULTS } from '@/features/process-page/defaults';
+
 const STAGGER_DELAY = [
   'motion-delay-0',
   'motion-delay-100',
@@ -15,27 +17,31 @@ interface ProcessStep {
 
 interface StitchProcessProps {
   steps: ProcessStep[];
+  eyebrow?: string;
+  title?: string;
+  subtext?: string;
 }
 
 // Content is CMS-driven (Dashboard → Homepage Process Steps) — the step number shown is
 // derived from display order (index + 1), not stored as a column.
-export function StitchProcess({ steps }: StitchProcessProps) {
+export function StitchProcess({
+  steps,
+  eyebrow = PROCESS_PAGE_DEFAULTS.eyebrow,
+  title = PROCESS_PAGE_DEFAULTS.title,
+  subtext = PROCESS_PAGE_DEFAULTS.subtext,
+}: StitchProcessProps) {
   if (steps.length === 0) return null;
 
   return (
-    <section id='process' className='w-full border-y border-white/10 bg-[#111111] py-24'>
-      <div className='container mx-auto px-6 sm:px-12'>
+    <section id='process' className='w-full border-y border-white/10 bg-[#111111] py-16 sm:py-24'>
+      <div className='container mx-auto px-4 sm:px-6 lg:px-12'>
         {/* Header */}
-        <div className='intersect-once mx-auto mb-16 max-w-2xl text-center intersect:motion-preset-slide-up'>
-          <span className='font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
-            Predictable &amp; Certified Workflow
-          </span>
-          <h2 className='mt-2 font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
-            The {steps.length}-Step Vantage Standard
+        <div className='intersect-once mx-auto mb-12 max-w-2xl text-center sm:mb-16 intersect:motion-preset-slide-up'>
+          <span className='font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>{eyebrow}</span>
+          <h2 className='mt-2 font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-white uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+            {title.replace('{count}', String(steps.length))}
           </h2>
-          <p className='mt-3 text-base leading-6 text-neutral-400'>
-            From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.
-          </p>
+          <p className='mt-3 text-base leading-6 text-neutral-400'>{subtext}</p>
         </div>
 
         {/* Steps Grid */}

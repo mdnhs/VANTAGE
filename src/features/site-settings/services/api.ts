@@ -5,6 +5,11 @@ import type {
   UpdateContactInput,
   UpdateHeroMediaInput,
   UpdateHomepageCatalogInput,
+  UpdateServicesHeroInput,
+  UpdateOurWorkHeroInput,
+  UpdateInsurancePageInput,
+  UpdateAboutPageInput,
+  UpdateProcessPageInput,
   UpdateHomepageHeroInput,
   UpdateSeoInput,
   UpdateSocialLinksInput,
@@ -68,5 +73,30 @@ export async function updateHomepageHero(input: UpdateHomepageHeroInput): Promis
 
 export async function updateHomepageCatalog(input: UpdateHomepageCatalogInput): Promise<SiteSettings> {
   const res = await patchSection(API_ROUTES.siteSettings.updateHomepageCatalog, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateServicesHero(input: UpdateServicesHeroInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateServicesHero, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateOurWorkHero(input: UpdateOurWorkHeroInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateOurWorkHero, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateInsurancePage(input: UpdateInsurancePageInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateInsurancePage, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateAboutPage(input: UpdateAboutPageInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateAboutPage, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateProcessPage(input: UpdateProcessPageInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateProcessPage, input);
   return parseOrThrow<SiteSettings>(res);
 }

@@ -16,8 +16,8 @@ export default async function ContactPage() {
 
   return (
     <>
-      <main className='container mx-auto flex flex-col gap-16 px-6 py-16 sm:px-12 lg:py-24'>
-        <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16'>
+      <main className='container mx-auto flex flex-col gap-10 px-4 py-12 sm:gap-16 sm:px-6 sm:py-16 md:px-12 lg:py-24'>
+        <div className='grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16'>
           <ContactInfo />
           <ContactForm services={services} />
         </div>

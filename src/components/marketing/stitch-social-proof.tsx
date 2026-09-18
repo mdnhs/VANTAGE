@@ -66,15 +66,15 @@ export function StitchSocialProof({ testimonials, partnerLogos }: StitchSocialPr
   const reviews = testimonials.length > 0 ? testimonials.map(toReviewCard) : DEFAULT_REVIEWS;
 
   return (
-    <section id='insurance' className='container mx-auto px-6 py-24 sm:px-12'>
+    <section id='insurance' className='container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-12'>
       {/* Insurer Ribbon */}
-      <div className='intersect-once mb-16 border-b border-white/10 pb-16 motion-duration-700 intersect:motion-preset-fade'>
-        <div className='mb-8 text-center'>
+      <div className='intersect-once mb-12 border-b border-white/10 pb-12 motion-duration-700 sm:mb-16 sm:pb-16 intersect:motion-preset-fade'>
+        <div className='mb-6 text-center sm:mb-8'>
           <span className='font-mono text-xs tracking-[0.2em] text-neutral-400 uppercase'>
             Accepted By Ireland&apos;s Leading Motor Insurers
           </span>
         </div>
-        <div className='flex flex-wrap items-center justify-center gap-8 opacity-75 md:gap-14'>
+        <div className='flex flex-wrap items-center justify-center gap-6 opacity-75 sm:gap-8 md:gap-14'>
           {partnerLogos.length > 0
             ? partnerLogos.map((logo) => {
                 const image = (

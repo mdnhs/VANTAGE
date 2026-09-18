@@ -52,7 +52,7 @@ export function StitchHero({
     : '/assets/marketing/stitch-hero.jpg';
 
   return (
-    <section className='relative flex min-h-[760px] w-full items-center justify-center overflow-hidden border-b border-white/10 lg:min-h-[820px]'>
+    <section className='relative flex min-h-[620px] w-full items-center justify-center overflow-hidden border-b border-white/10 sm:min-h-[720px] lg:min-h-[820px]'>
       {/* Background Image */}
       <div className='absolute inset-0 z-0'>
         {showVideo ? (
@@ -81,44 +81,46 @@ export function StitchHero({
         <div className='absolute inset-0 bg-[radial-gradient(#dc2626_1px,transparent_1px)] [background-size:28px_28px] opacity-10' />
       </div>
 
-      <div className='relative z-10 container mx-auto flex flex-col justify-center px-6 py-20 sm:px-12'>
+      <div className='relative z-10 container mx-auto flex flex-col justify-center px-4 py-16 sm:px-6 sm:py-20 md:px-12'>
         <div className='flex max-w-3xl flex-col gap-6'>
           {/* Eyebrow Badge */}
           <div className='inline-flex w-fit motion-preset-slide-down-sm items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 backdrop-blur-md motion-duration-500'>
             <span className='size-2 animate-pulse rounded-full bg-[#dc2626] shadow-[0_0_8px_#dc2626]' />
-            <span className='font-mono text-[11px] tracking-widest text-neutral-300 uppercase'>{eyebrow}</span>
+            <span className='font-mono text-[10px] tracking-widest text-neutral-300 uppercase sm:text-[11px]'>
+              {eyebrow}
+            </span>
           </div>
 
           {/* Hero Headline */}
-          <h1 className='motion-preset-slide-up font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-tight text-white uppercase motion-delay-100 motion-duration-700 lg:text-[64px] lg:leading-[1.08]'>
+          <h1 className='xs:text-4xl motion-preset-slide-up font-[family-name:var(--font-manrope)] text-3xl leading-tight font-extrabold tracking-tight text-white uppercase motion-delay-100 motion-duration-700 sm:text-5xl sm:leading-[1.1] lg:text-[64px] lg:leading-[1.08]'>
             {headlineLine1} <br />
             {headlineLine2} <br />
-            <span className='bg-gradient-to-r from-red-500 via-[#ffb4ab] to-white bg-clip-text text-transparent'>
+            <span className='bg-gradient-to-r from-red-500 via-red-400 to-white bg-clip-text text-transparent'>
               {headlineAccent}
             </span>
           </h1>
 
           {/* Subtext */}
-          <p className='max-w-2xl motion-preset-slide-up-sm text-lg leading-relaxed text-neutral-300 motion-delay-200 motion-duration-700'>
+          <p className='max-w-2xl motion-preset-slide-up-sm text-base leading-relaxed text-neutral-300 motion-delay-200 motion-duration-700 sm:text-lg'>
             {subtext}
           </p>
 
           {/* CTAs */}
-          <div className='flex motion-preset-slide-up-sm flex-wrap items-center gap-4 pt-4 motion-delay-300 motion-duration-700'>
+          <div className='flex motion-preset-slide-up-sm flex-col items-stretch gap-3 pt-4 motion-delay-300 motion-duration-700 sm:flex-row sm:items-center sm:gap-4'>
             <a
               href='#estimator'
-              className='group relative flex items-center gap-3 overflow-hidden rounded bg-[#dc2626] px-8 py-4 text-sm tracking-widest text-white uppercase shadow-lg shadow-red-900/40 transition-all hover:bg-red-700'
+              className='group relative flex items-center justify-center gap-3 overflow-hidden rounded bg-[#dc2626] px-6 py-3.5 text-xs tracking-widest text-white uppercase shadow-lg shadow-red-900/40 transition-all hover:bg-red-700 sm:px-8 sm:py-4 sm:text-sm'
             >
-              <Calculator className='size-5' />
+              <Calculator className='size-4 sm:size-5' />
               <span className='font-bold'>Get a Free Estimate</span>
-              <ArrowRight className='size-4 transition-transform group-hover:translate-x-1' />
+              <ArrowRight className='size-3.5 transition-transform group-hover:translate-x-1 sm:size-4' />
             </a>
 
             <a
               href='#work'
-              className='flex items-center gap-2 rounded border border-white/15 bg-[#181818]/70 px-8 py-4 text-sm tracking-widest text-white uppercase transition-all hover:border-[#dc2626] hover:bg-[#2a2a2a]'
+              className='flex items-center justify-center gap-2 rounded border border-white/15 bg-[#181818]/70 px-6 py-3.5 text-xs tracking-widest text-white uppercase transition-all hover:border-[#dc2626] hover:bg-[#2a2a2a] sm:px-8 sm:py-4 sm:text-sm'
             >
-              <Images className='size-[18px] text-neutral-400' />
+              <Images className='size-4 text-neutral-400 sm:size-[18px]' />
               <span>View Our Work</span>
             </a>
           </div>

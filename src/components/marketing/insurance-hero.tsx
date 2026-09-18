@@ -1,35 +1,40 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-export function InsuranceHero() {
-  return (
-    <section className='container mx-auto grid grid-cols-1 items-center gap-12 px-6 pt-16 pb-20 sm:px-12 lg:grid-cols-2 lg:gap-24 lg:pb-[120px]'>
-      <div className='flex motion-preset-slide-up flex-col gap-6 motion-duration-700'>
-        <span className='text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'>Insurance Claims</span>
+interface InsuranceHeroProps {
+  eyebrow: string;
+  line1: string;
+  line2: string;
+  line3: string;
+  subtext: string;
+}
 
-        <h1 className='font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-[-1.6px] text-[#e5e2e1] uppercase lg:text-[64px] lg:tracking-[-3.2px]'>
-          Accident Repair
+export function InsuranceHero({ eyebrow, line1, line2, line3, subtext }: InsuranceHeroProps) {
+  return (
+    <section className='container mx-auto grid grid-cols-1 items-center gap-10 px-4 pt-12 pb-16 sm:gap-12 sm:px-6 sm:pt-16 sm:pb-20 lg:grid-cols-2 lg:gap-24 lg:px-12 lg:pb-[120px]'>
+      <div className='flex motion-preset-slide-up flex-col gap-5 motion-duration-700 sm:gap-6'>
+        <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>{eyebrow}</span>
+
+        <h1 className='xs:text-4xl font-[family-name:var(--font-manrope)] text-3xl leading-tight font-extrabold tracking-tight text-[#e5e2e1] uppercase sm:text-5xl sm:leading-[1.1] lg:text-[64px] lg:tracking-[-3.2px]'>
+          {line1}
           <br />
-          <span className='text-[#e6bdb8]'>Without The</span>
+          <span className='text-[#dc2626]'>{line2}</span>
           <br />
-          <span className='text-[#e6bdb8]'>Headache.</span>
+          <span className='text-white'>{line3}</span>
         </h1>
 
-        <p className='max-w-[512px] text-lg leading-7 text-[#e6bdb8]'>
-          We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road
-          while our dedicated specialists coordinate seamlessly with your insurance provider.
-        </p>
+        <p className='max-w-[512px] text-base leading-relaxed text-neutral-300 sm:text-lg sm:leading-7'>{subtext}</p>
 
         <Link
           href='/get-a-quote'
-          className='w-fit bg-[#ffb4ab] px-8 py-4 text-xs font-semibold tracking-[1.2px] text-[#690005] uppercase shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all hover:-translate-y-1 hover:opacity-90'
+          className='flex w-full items-center justify-center rounded bg-[#dc2626] px-8 py-4 text-xs font-bold tracking-[1.2px] text-white uppercase shadow-[0_4px_20px_rgba(220,38,38,0.35)] transition-all hover:-translate-y-1 hover:bg-red-700 sm:w-fit'
         >
           Talk to a Specialist
         </Link>
       </div>
 
       <div className='relative motion-preset-slide-left motion-delay-150 motion-duration-700'>
-        <div className='pointer-events-none absolute -bottom-8 -left-8 size-48 rounded-full bg-[#ffb4ab]/10 blur-[32px]' />
+        <div className='pointer-events-none absolute -bottom-8 -left-8 size-48 rounded-full bg-red-600/10 blur-[32px]' />
         <div className='relative aspect-[4/5] w-full overflow-hidden rounded-xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]'>
           <Image
             src='/assets/marketing/insurance-hero.jpg'

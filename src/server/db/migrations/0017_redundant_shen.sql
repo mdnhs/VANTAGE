@@ -1,0 +1,21 @@
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_eyebrow" varchar(200);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_line1" varchar(100);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_accent1" varchar(100);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_line2" varchar(100);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_accent2" varchar(100);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_hero_image_public_id" varchar(255);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_title" varchar(160);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_text" text;--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_stat1_value" varchar(40);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_stat1_label" varchar(80);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_stat2_value" varchar(40);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_stat2_label" varchar(80);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_image_public_id" varchar(255);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_heritage_quote" text;--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_team_title" varchar(160);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_team_subtext" text;--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_team_members" jsonb;--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_standards_eyebrow" varchar(100);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_standards_title" varchar(160);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_standards_image_public_id" varchar(255);--> statement-breakpoint
+ALTER TABLE "site_settings" ADD COLUMN "about_standards_items" jsonb;

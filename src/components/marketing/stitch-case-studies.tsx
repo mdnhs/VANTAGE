@@ -42,15 +42,15 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
   };
 
   return (
-    <section id='work' className='container mx-auto px-6 py-24 sm:px-12'>
+    <section id='work' className='container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-12'>
       {/* Header */}
-      <div className='intersect-once mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end intersect:motion-preset-slide-up'>
+      <div className='intersect-once mb-10 flex flex-col items-start justify-between gap-6 sm:mb-12 md:flex-row md:items-end intersect:motion-preset-slide-up'>
         <div className='flex max-w-2xl flex-col gap-3'>
           <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             <span className='h-px w-6 bg-[#dc2626]' />
             Verified Results
           </span>
-          <h2 className='font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
+          <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-white uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
             Before &amp; After <br />
             <span className='text-[#dc2626]'>Restoration Proof.</span>
           </h2>
@@ -115,7 +115,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                   <div className='mb-1 font-mono text-xs tracking-wider text-[#dc2626] uppercase'>
                     {project.serviceCategory}
                   </div>
-                  <h3 className='mb-2 font-[family-name:var(--font-manrope)] text-2xl leading-8 font-semibold text-white'>
+                  <h3 className='mb-2 font-[family-name:var(--font-manrope)] text-xl leading-7 font-semibold text-white sm:text-2xl sm:leading-8'>
                     {project.title}
                   </h3>
                   <p className='mb-4 text-base leading-6 text-neutral-400'>{project.description}</p>

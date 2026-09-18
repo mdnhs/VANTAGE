@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { PermissionGate } from '@/lib/permission/permission-gate';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { siteSettingsService } from '@/server/services/site-settings-service';
+import { ServicesHeroForm } from '@/features/services/components/services-hero-form';
 import { serviceService } from '@/server/services/service-service';
 import { ServiceTable } from '@/features/services/components/list/service-table';
 
@@ -17,16 +19,20 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ServicesListPage() {
-  const { rows, total } = await serviceService.listAdmin({ page: 1, limit: 50 });
+  const [{ rows, total }, settings] = await Promise.all([
+    serviceService.listAdmin({ page: 1, limit: 50 }),
+    siteSettingsService.getAdmin(),
+  ]);
 
   return (
     <PermissionGate permissions={[PERMISSIONS.SERVICES_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
       <div className='flex flex-col gap-6'>
+        <ServicesHeroForm settings={settings ?? null} />
         <div className='flex items-center justify-between'>
           <div>
             <h1 className='text-xl font-semibold'>Services</h1>
             <p className='text-sm text-muted-foreground'>
-              Services shown on the homepage and services page, in display order.
+              Services shown on the public services page, in display order.
             </p>
           </div>
           <Link href={APP_ROUTES.content.services.create} className={cn(buttonVariants())}>

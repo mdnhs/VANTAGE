@@ -21,6 +21,8 @@ const PERMISSION_LABELS: Record<PermissionValue, string> = {
   [PERMISSIONS.CATALOG_MANAGE]: 'Manage Homepage Catalog',
   [PERMISSIONS.PROCESS_MANAGE]: 'Manage Homepage Process',
   [PERMISSIONS.SETTINGS_MANAGE]: 'Manage Settings',
+  [PERMISSIONS.QUOTES_MANAGE]: 'Manage Quote Requests',
+  [PERMISSIONS.CONTACTS_MANAGE]: 'Manage Contact Inquiries',
   [PERMISSIONS.ADMINS_MANAGE]: 'Manage Admins',
   [PERMISSIONS.USERS_MANAGE]: 'Manage Users',
 };

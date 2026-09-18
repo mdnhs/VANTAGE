@@ -33,7 +33,7 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
   return (
     // MAIN STICKY NAVIGATION
     <header className='sticky top-0 z-40 w-full border-b border-white/10 bg-[#0d0d0d]/90 backdrop-blur-xl transition-all'>
-      <div className='container mx-auto flex h-20 items-center justify-between gap-6 px-6 sm:px-12'>
+      <div className='container mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:h-20 sm:gap-6 sm:px-6 lg:px-12'>
         {/* Logo */}
         <Link href='/' className='flex shrink-0 items-center'>
           <Image
@@ -41,7 +41,7 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
             alt={businessName}
             width={200}
             height={112}
-            className='h-12 w-auto object-contain sm:h-14'
+            className='h-10 w-auto object-contain sm:h-12 md:h-14'
             priority
           />
         </Link>
@@ -65,7 +65,7 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
         </nav>
 
         {/* Right CTAs */}
-        <div className='flex items-center gap-4'>
+        <div className='flex items-center gap-2 sm:gap-4'>
           <a href={phoneHref} className='hidden flex-col pr-2 text-right sm:flex'>
             <span className='font-mono text-[10px] tracking-wider text-neutral-400 uppercase'>Crash Direct Line</span>
             <span className='text-sm font-semibold tracking-tight text-white transition-colors hover:text-[#dc2626]'>
@@ -75,17 +75,19 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
 
           <Link
             href='/#estimator'
-            className='flex items-center gap-2 rounded bg-[#dc2626] px-6 py-3 text-xs font-bold tracking-wider text-white uppercase shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all hover:bg-red-700'
+            className='flex shrink-0 items-center gap-1.5 rounded bg-[#dc2626] px-3.5 py-2 text-[11px] font-bold tracking-wider text-white uppercase shadow-[0_0_20px_rgba(220,38,38,0.4)] transition-all hover:bg-red-700 sm:gap-2 sm:px-6 sm:py-3 sm:text-xs'
           >
-            <span>Get a Free Quote</span>
-            <ArrowRight className='size-3.5' />
+            <span>
+              <span className='xs:inline hidden'>Get a Free </span>Quote
+            </span>
+            <ArrowRight className='size-3 sm:size-3.5' />
           </Link>
 
           {/* Mobile Hamburger */}
           <button
             type='button'
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className='flex size-10 items-center justify-center rounded border border-white/10 text-neutral-300 hover:text-white xl:hidden'
+            className='flex size-9 items-center justify-center rounded border border-white/10 text-neutral-300 hover:text-white sm:size-10 xl:hidden'
             aria-label='Toggle navigation menu'
           >
             {mobileMenuOpen ? <X className='size-5' /> : <Menu className='size-5' />}
@@ -95,25 +97,38 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
 
       {/* Mobile Dropdown Menu */}
       {mobileMenuOpen && (
-        <div className='border-b border-white/10 bg-[#121212] px-6 py-5 xl:hidden'>
+        <div className='border-b border-white/10 bg-[#121212] px-4 py-5 shadow-2xl sm:px-6 xl:hidden'>
           <nav className='flex flex-col gap-3'>
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className='text-sm font-semibold tracking-wider text-neutral-300 uppercase transition-colors hover:text-white'
+                className={`rounded-md px-2 py-1.5 text-sm font-semibold tracking-wider uppercase transition-colors ${
+                  pathname === link.href ? 'bg-red-500/10 text-[#dc2626]' : 'text-neutral-300 hover:text-white'
+                }`}
               >
                 {link.label}
               </Link>
             ))}
-            <div className='mt-3 flex flex-col gap-2 border-t border-white/10 pt-3'>
-              <a href={phoneHref} className='flex items-center gap-2 text-sm text-neutral-200'>
+            <div className='mt-3 flex flex-col gap-2.5 border-t border-white/10 pt-4'>
+              <Link
+                href='/get-a-quote'
+                onClick={() => setMobileMenuOpen(false)}
+                className='flex w-full items-center justify-center gap-2 rounded bg-[#dc2626] py-3 text-xs font-bold tracking-wider text-white uppercase shadow-md hover:bg-red-700'
+              >
+                <span>Request Free Quote Online</span>
+                <ArrowRight className='size-3.5' />
+              </Link>
+              <a
+                href={phoneHref}
+                className='flex items-center gap-2 rounded-md bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200'
+              >
                 <Phone className='size-4 text-[#dc2626]' />
-                {phone} (Direct Hotline)
+                <span>{phone} (Direct Hotline)</span>
               </a>
-              <span className='flex items-center gap-2 text-xs text-neutral-400'>
-                <ShieldCheck className='size-4 text-emerald-500' />
+              <span className='flex items-center gap-2 px-1 text-xs text-neutral-400'>
+                <ShieldCheck className='size-4 shrink-0 text-emerald-500' />
                 Irish Certified Technicians &amp; NCT Approved
               </span>
             </div>

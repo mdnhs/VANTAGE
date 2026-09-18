@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { LayoutDashboard, Wrench, FolderKanban, Home, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, Globe, Settings, Users, ClipboardList, MessageSquare } from 'lucide-react';
+import { SITE_NAV_ITEMS } from '@/components/layout/site-nav-items';
 import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
 import { getSession } from '@/lib/permission/server-utils';
 import { createPermissionChecker } from '@/lib/permission/utils';
@@ -25,40 +26,59 @@ interface NavItem {
   permissions: PermissionValue[];
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: APP_ROUTES.dashboard.index, icon: LayoutDashboard, permissions: [] },
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+// The six public-page editors (home, services, our work, insurance, about, process) live
+// behind one "Website pages" entry — they share a left-hand page menu (see SITE_NAV_ITEMS).
+const NAV_GROUPS: NavGroup[] = [
   {
-    label: 'Services',
-    href: APP_ROUTES.content.services.index,
-    icon: Wrench,
-    permissions: [PERMISSIONS.SERVICES_MANAGE],
+    label: 'Overview',
+    items: [{ label: 'Dashboard', href: APP_ROUTES.dashboard.index, icon: LayoutDashboard, permissions: [] }],
   },
   {
-    label: 'Projects',
-    href: APP_ROUTES.content.projects.index,
-    icon: FolderKanban,
-    permissions: [PERMISSIONS.PROJECTS_MANAGE],
-  },
-  {
-    label: 'Home page',
-    href: APP_ROUTES.content.homePage.index,
-    icon: Home,
-    permissions: [
-      PERMISSIONS.SETTINGS_MANAGE,
-      PERMISSIONS.PILLARS_MANAGE,
-      PERMISSIONS.CATALOG_MANAGE,
-      PERMISSIONS.PROCESS_MANAGE,
-      PERMISSIONS.TESTIMONIALS_MANAGE,
-      PERMISSIONS.LOGOS_MANAGE,
+    label: 'Leads',
+    items: [
+      {
+        label: 'Quote Requests',
+        href: APP_ROUTES.leads.quotes.index,
+        icon: ClipboardList,
+        permissions: [PERMISSIONS.QUOTES_MANAGE],
+      },
+      {
+        label: 'Contact Messages',
+        href: APP_ROUTES.leads.contacts.index,
+        icon: MessageSquare,
+        permissions: [PERMISSIONS.CONTACTS_MANAGE],
+      },
     ],
   },
   {
-    label: 'Site settings',
-    href: APP_ROUTES.content.settings.index,
-    icon: Settings,
-    permissions: [PERMISSIONS.SETTINGS_MANAGE],
+    label: 'Website',
+    items: [
+      // href is resolved per-viewer below to the first page they may edit.
+      {
+        label: 'Website pages',
+        href: APP_ROUTES.content.homePage.index,
+        icon: Globe,
+        permissions: [...new Set(SITE_NAV_ITEMS.flatMap((item) => item.permissions))],
+      },
+      {
+        label: 'Site settings',
+        href: APP_ROUTES.content.settings.index,
+        icon: Settings,
+        permissions: [PERMISSIONS.SETTINGS_MANAGE],
+      },
+    ],
   },
-  { label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [PERMISSIONS.ADMINS_MANAGE] },
+  {
+    label: 'System',
+    items: [
+      { label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [PERMISSIONS.ADMINS_MANAGE] },
+    ],
+  },
 ];
 
 // Server-rendered so nav items are filtered by permission before the HTML ever reaches the
@@ -70,9 +90,16 @@ export async function Sidebar() {
   const session = await getSession();
   const checker = session ? createPermissionChecker(session.permissions) : null;
 
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => item.permissions.length === 0 || checker?.hasAnyPermissionByValues(item.permissions),
-  );
+  const canSee = (permissions: PermissionValue[]) =>
+    permissions.length === 0 || Boolean(checker?.hasAnyPermissionByValues(permissions));
+  const firstSitePage = SITE_NAV_ITEMS.find((item) => canSee(item.permissions));
+
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items
+      .filter((item) => canSee(item.permissions))
+      .map((item) => (item.label === 'Website pages' && firstSitePage ? { ...item, href: firstSitePage.href } : item)),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <SidebarPrimitive collapsible='icon'>
@@ -92,19 +119,21 @@ export async function Sidebar() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Content</SidebarGroupLabel>
-          <SidebarMenu>
-            {visibleItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton tooltip={item.label} render={<Link href={item.href} />}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
+        {visibleGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarMenu>
+              {group.items.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton tooltip={item.label} render={<Link href={item.href} />}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>{session && <NavUser user={{ name: session.name, email: session.email }} />}</SidebarFooter>
       <SidebarRail />

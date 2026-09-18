@@ -4,12 +4,14 @@ import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
 import { admins } from './admins';
 import { auth } from './auth';
+import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
 import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { media } from './media';
 import { partnerLogos } from './partner-logos';
 import { projects } from './projects';
+import { quoteRequests } from './quote-requests';
 import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
@@ -40,6 +42,8 @@ export const api = app
   .route('/homepage-pillars', homepagePillars)
   .route('/homepage-catalogs', homepageCatalogs)
   .route('/homepage-process-steps', homepageProcessSteps)
+  .route('/quotes', quoteRequests)
+  .route('/contacts', contacts)
   .route('/admins', admins)
   .route('/users', users);
 // TODO: mount feature route modules here as they are scaffolded

@@ -52,21 +52,19 @@ export function HomePageTabs({
   );
 
   return (
-    <Tabs
-      value={tab}
-      onValueChange={(value) => setTab(value as (typeof SECTION_VALUES)[number])}
-      orientation='vertical'
-      className='flex-row items-start gap-6'
-    >
-      <TabsList variant='line' className='w-36 shrink-0'>
-        {SECTIONS.map((section) => (
-          <TabsTrigger key={section.value} value={section.value}>
-            {section.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof SECTION_VALUES)[number])} className='gap-6'>
+      {/* Horizontal here: the outer "Website pages" menu already owns the left column. */}
+      <div className='overflow-x-auto border-b border-border'>
+        <TabsList variant='line' className='h-auto w-max justify-start'>
+          {SECTIONS.map((section) => (
+            <TabsTrigger key={section.value} value={section.value}>
+              {section.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
 
-      <div className='min-w-0 flex-1'>
+      <div className='min-w-0'>
         <TabsContent value='hero'>
           <HeroForm initialData={settings} />
         </TabsContent>
