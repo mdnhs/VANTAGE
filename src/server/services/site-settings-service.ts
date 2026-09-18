@@ -5,6 +5,8 @@ import type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
   UpdateHeroMediaInput,
+  UpdateHomepageCatalogInput,
+  UpdateHomepageHeroInput,
   UpdateSeoInput,
   UpdateSocialLinksInput,
 } from '@/validations/site-settings-schema';
@@ -36,6 +38,25 @@ const FALLBACK_SETTINGS = {
   metaDescription: null,
   ogImagePublicId: null,
   twitterHandle: null,
+  heroEyebrow: "Ireland's Premier Collision & Respray Specialists",
+  heroHeadlineLine1: 'We Restore',
+  heroHeadlineLine2: 'Your Car',
+  heroHeadlineAccent: 'To Its Best.',
+  heroSubtext:
+    'Manufacturer-standard accident repair, computerized laser chassis realignment, certified spray painting, and bespoke automotive restoration in Dublin. Your vehicle, our obsession.',
+  trustBadge1Title: '4.9★ Google Rated',
+  trustBadge1Subtitle: '180+ Dublin Reviews',
+  trustBadge2Title: 'Direct Insurer Billing',
+  trustBadge2Subtitle: 'AXA, Allianz, Zurich',
+  trustBadge3Title: 'Lifetime Paint Warranty',
+  trustBadge3Subtitle: 'Standox & PPG Systems',
+  trustBadge4Title: 'Courtesy Replacement',
+  trustBadge4Subtitle: 'Cars Available On-Site',
+  catalogEyebrow: 'Specialist Autobody Divisions',
+  catalogHeadlineLine1: 'From Damage To',
+  catalogHeadlineAccent: 'Showroom Finish.',
+  catalogSubtext:
+    'Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved techniques.',
 } as const;
 
 export type PublicSiteSettings = Awaited<ReturnType<typeof getPublicUncached>>;
@@ -57,7 +78,14 @@ async function getPublicCached() {
 // Same singleton row, same cache tag — each section just writes its own subset of columns
 // through the same upsert, so no section can clobber another's fields.
 async function updateSection(
-  data: UpdateBusinessInfoInput | UpdateContactInput | UpdateSocialLinksInput | UpdateHeroMediaInput | UpdateSeoInput,
+  data:
+    | UpdateBusinessInfoInput
+    | UpdateContactInput
+    | UpdateSocialLinksInput
+    | UpdateHeroMediaInput
+    | UpdateSeoInput
+    | UpdateHomepageHeroInput
+    | UpdateHomepageCatalogInput,
 ) {
   const row = await siteSettingsRepository.upsert(data);
   // Second arg must match the `cacheLife` profile used in getPublicCached above.
@@ -78,4 +106,6 @@ export const siteSettingsService = {
   updateSocialLinks: (data: UpdateSocialLinksInput) => updateSection(data),
   updateHeroMedia: (data: UpdateHeroMediaInput) => updateSection(data),
   updateSeo: (data: UpdateSeoInput) => updateSection(data),
+  updateHomepageHero: (data: UpdateHomepageHeroInput) => updateSection(data),
+  updateHomepageCatalog: (data: UpdateHomepageCatalogInput) => updateSection(data),
 };

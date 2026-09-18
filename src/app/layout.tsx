@@ -4,6 +4,7 @@ import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -13,7 +14,8 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await siteSettingsService.getPublic();
   const title = settings.metaTitle || settings.businessName;
-  const description = settings.metaDescription || `${settings.businessName} — ${settings.openingHours}`;
+  const description =
+    settings.metaDescription || `${settings.businessName} — ${formatOpeningHoursSummary(settings.openingHours)}`;
   const ogImage = settings.ogImagePublicId
     ? cldUrl(settings.ogImagePublicId, { width: 1200, height: 630, crop: 'fill' })
     : '/opengraph-image.png';

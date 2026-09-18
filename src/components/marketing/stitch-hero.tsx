@@ -2,25 +2,50 @@ import Image from 'next/image';
 import { Calculator, ArrowRight, Images, Star, Landmark, BadgeCheck, Car } from 'lucide-react';
 import { cldUrl } from '@/lib/cloudinary/url';
 
-const TRUST_ITEMS = [
-  { icon: Star, iconClass: 'text-amber-400', title: '4.9★ Google Rated', sub: '180+ Dublin Reviews' },
-  { icon: Landmark, iconClass: 'text-[#dc2626]', title: 'Direct Insurer Billing', sub: 'AXA, Allianz, Zurich' },
-  { icon: BadgeCheck, iconClass: 'text-emerald-400', title: 'Lifetime Paint Warranty', sub: 'Standox & PPG Systems' },
-  { icon: Car, iconClass: 'text-sky-400', title: 'Courtesy Replacement', sub: 'Cars Available On-Site' },
-];
+// Icon + accent color per trust-ticker position are fixed; only the title/subtitle text is
+// CMS-driven (Site settings → Homepage tab), zipped in by index with `trustItems`.
+const TRUST_ICONS = [
+  { icon: Star, iconClass: 'text-amber-400' },
+  { icon: Landmark, iconClass: 'text-[#dc2626]' },
+  { icon: BadgeCheck, iconClass: 'text-emerald-400' },
+  { icon: Car, iconClass: 'text-sky-400' },
+] as const;
+
+interface TrustItem {
+  title: string;
+  subtitle: string;
+}
 
 interface StitchHeroProps {
   heroVideoEnabled?: boolean;
   heroVideoPublicId?: string | null;
   heroFallbackImagePublicId?: string | null;
+  eyebrow?: string | null;
+  headlineLine1?: string | null;
+  headlineLine2?: string | null;
+  headlineAccent?: string | null;
+  subtext?: string | null;
+  trustItems?: TrustItem[];
 }
 
-// Background media is CMS-driven (Site settings); the bundled workshop shot is the fallback.
+// Background media and hero copy are CMS-driven (Site settings); the bundled workshop shot
+// and hardcoded copy below are the fallback until an admin edits Site settings.
 export function StitchHero({
   heroVideoEnabled = false,
   heroVideoPublicId = null,
   heroFallbackImagePublicId = null,
+  eyebrow = "Ireland's Premier Collision & Respray Specialists",
+  headlineLine1 = 'We Restore',
+  headlineLine2 = 'Your Car',
+  headlineAccent = 'To Its Best.',
+  subtext = 'Manufacturer-standard accident repair, computerized laser chassis realignment, certified spray painting, and bespoke automotive restoration in Dublin. Your vehicle, our obsession.',
+  trustItems = [],
 }: StitchHeroProps) {
+  const trustTicker = TRUST_ICONS.map((entry, index) => ({
+    ...entry,
+    title: trustItems[index]?.title ?? '',
+    sub: trustItems[index]?.subtitle ?? '',
+  })).filter((item) => item.title || item.sub);
   const showVideo = heroVideoEnabled && Boolean(heroVideoPublicId);
   const fallbackImageSrc = heroFallbackImagePublicId
     ? cldUrl(heroFallbackImagePublicId, { width: 1920 })
@@ -61,25 +86,20 @@ export function StitchHero({
           {/* Eyebrow Badge */}
           <div className='inline-flex w-fit items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 backdrop-blur-md'>
             <span className='size-2 animate-pulse rounded-full bg-[#dc2626] shadow-[0_0_8px_#dc2626]' />
-            <span className='font-mono text-[11px] tracking-widest text-neutral-300 uppercase'>
-              Ireland&apos;s Premier Collision &amp; Respray Specialists
-            </span>
+            <span className='font-mono text-[11px] tracking-widest text-neutral-300 uppercase'>{eyebrow}</span>
           </div>
 
           {/* Hero Headline */}
           <h1 className='font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-tight text-white uppercase lg:text-[64px] lg:leading-[1.08]'>
-            We Restore <br />
-            Your Car <br />
+            {headlineLine1} <br />
+            {headlineLine2} <br />
             <span className='bg-gradient-to-r from-red-500 via-[#ffb4ab] to-white bg-clip-text text-transparent'>
-              To Its Best.
+              {headlineAccent}
             </span>
           </h1>
 
           {/* Subtext */}
-          <p className='max-w-2xl text-lg leading-relaxed text-neutral-300'>
-            Manufacturer-standard accident repair, computerized laser chassis realignment, certified spray painting, and
-            bespoke automotive restoration in Dublin. Your vehicle, our obsession.
-          </p>
+          <p className='max-w-2xl text-lg leading-relaxed text-neutral-300'>{subtext}</p>
 
           {/* CTAs */}
           <div className='flex flex-wrap items-center gap-4 pt-4'>
@@ -103,8 +123,8 @@ export function StitchHero({
 
           {/* Trust Ticker */}
           <div className='mt-2 grid grid-cols-2 gap-4 border-t border-white/10 pt-8 md:grid-cols-4'>
-            {TRUST_ITEMS.map(({ icon: Icon, iconClass, title, sub }) => (
-              <div key={title} className='flex items-center gap-2.5'>
+            {trustTicker.map(({ icon: Icon, iconClass, title, sub }, index) => (
+              <div key={`${title}-${index}`} className='flex items-center gap-2.5'>
                 <Icon className={`size-[18px] shrink-0 ${iconClass}`} />
                 <div className='flex flex-col'>
                   <span className='text-xs leading-tight font-bold text-white'>{title}</span>

@@ -9,15 +9,35 @@ import {
   Wrench,
   Disc,
   ShieldCheck,
+  Car,
+  Sparkles,
+  Shield,
+  Flame,
   ArrowRight,
   ArrowUpRight,
   type LucideIcon,
 } from 'lucide-react';
 import { cldUrl } from '@/lib/cloudinary/url';
 import type { ServicePublic } from '@/features/services/types';
+import type { HomepageCatalogPublic } from '@/features/homepage-catalogs/types';
 
 // Shown for services created without an uploaded icon, cycled by position.
 const FALLBACK_ICONS = [CarFront, Bandage, PaintRoller, Palette, Wand2, Wrench, Disc, ShieldCheck];
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  'car-front': CarFront,
+  bandage: Bandage,
+  'paint-roller': PaintRoller,
+  palette: Palette,
+  wand2: Wand2,
+  wrench: Wrench,
+  disc: Disc,
+  'shield-check': ShieldCheck,
+  car: Car,
+  sparkles: Sparkles,
+  shield: Shield,
+  flame: Flame,
+};
 
 interface ServiceCard {
   key: string;
@@ -29,7 +49,7 @@ interface ServiceCard {
   iconPublicId: string | null;
 }
 
-// Design catalogue, rendered until services are published from the CMS.
+// Design catalogue, rendered until items are published from the CMS.
 const DEFAULT_SERVICES: ServiceCard[] = [
   [
     'Crash & Collision Repair',
@@ -101,12 +121,48 @@ function toCard(service: ServicePublic, index: number): ServiceCard {
   };
 }
 
-interface StitchServicesProps {
-  services: ServicePublic[];
+function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceCard {
+  return {
+    key: item.id,
+    name: item.title,
+    description: item.description,
+    badge: item.badge,
+    footnote: item.footnote || 'Free Estimate',
+    icon: (item.icon && ICON_MAP[item.icon]) || FALLBACK_ICONS[index % FALLBACK_ICONS.length],
+    iconPublicId: item.iconPublicId,
+  };
 }
 
-export function StitchServices({ services }: StitchServicesProps) {
-  const cards = services.length > 0 ? services.map(toCard) : DEFAULT_SERVICES;
+interface StitchServicesProps {
+  catalogItems?: HomepageCatalogPublic[];
+  services?: ServicePublic[];
+  eyebrow?: string | null;
+  headlineLine1?: string | null;
+  headlineAccent?: string | null;
+  subtext?: string | null;
+}
+
+export function StitchServices({
+  catalogItems,
+  services,
+  eyebrow,
+  headlineLine1,
+  headlineAccent,
+  subtext,
+}: StitchServicesProps) {
+  const cards =
+    catalogItems && catalogItems.length > 0
+      ? catalogItems.map(catalogItemToCard)
+      : services && services.length > 0
+        ? services.map(toCard)
+        : DEFAULT_SERVICES;
+
+  const displayEyebrow = eyebrow || 'Specialist Autobody Divisions';
+  const displayLine1 = headlineLine1 || 'From Damage To';
+  const displayAccent = headlineAccent || 'Showroom Finish.';
+  const displaySubtext =
+    subtext ||
+    'Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved techniques.';
 
   return (
     <section id='services' className='container mx-auto px-6 py-24 sm:px-12'>
@@ -115,16 +171,13 @@ export function StitchServices({ services }: StitchServicesProps) {
         <div className='flex max-w-2xl flex-col gap-3'>
           <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             <span className='h-px w-6 bg-[#dc2626]' />
-            Specialist Autobody Divisions
+            {displayEyebrow}
           </span>
           <h2 className='font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
-            From Damage To <br />
-            <span className='text-[#dc2626]'>Showroom Finish.</span>
+            {displayLine1} <br />
+            <span className='text-[#dc2626]'>{displayAccent}</span>
           </h2>
-          <p className='text-base leading-6 text-neutral-400'>
-            Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved
-            techniques.
-          </p>
+          <p className='text-base leading-6 text-neutral-400'>{displaySubtext}</p>
         </div>
 
         <div className='flex items-center gap-3'>

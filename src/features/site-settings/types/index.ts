@@ -3,6 +3,8 @@ import type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
   UpdateHeroMediaInput,
+  UpdateHomepageCatalogInput,
+  UpdateHomepageHeroInput,
   UpdateSeoInput,
   UpdateSocialLinksInput,
 } from '@/validations/site-settings-schema';
@@ -14,4 +16,6 @@ export type {
   UpdateSocialLinksInput,
   UpdateHeroMediaInput,
   UpdateSeoInput,
+  UpdateHomepageHeroInput,
+  UpdateHomepageCatalogInput,
 };

@@ -4,6 +4,7 @@ import { createMiddleware } from 'hono/factory';
 import { ApiError } from '@/server/lib/errors';
 import { SESSION_COOKIE, verifySessionToken } from '@/server/lib/session';
 import { decompressPermissions } from '@/lib/permission/utils';
+import { PERMISSIONS } from '@/lib/permission/permissions';
 
 export interface AuthUser {
   id: string;
@@ -42,6 +43,7 @@ export const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
 export const requirePermission = (permission: string) =>
   createMiddleware<AuthEnv>(async (c, next) => {
     const user = c.get('user');
-    if (!user?.permissions.includes(permission)) throw ApiError.forbidden();
+    const hasAccess = user?.permissions.includes(permission) || user?.permissions.includes(PERMISSIONS.ADMINS_MANAGE);
+    if (!hasAccess) throw ApiError.forbidden();
     await next();
   });

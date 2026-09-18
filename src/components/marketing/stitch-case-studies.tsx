@@ -4,65 +4,38 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { cldUrl } from '@/lib/cloudinary/url';
+import type { Project } from '@/server/db/schema';
 
-interface CaseStudy {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  timeline: string;
-  paintCode: string;
-  beforeImg: string;
-  afterImg: string;
+type FeaturedProject = Pick<
+  Project,
+  | 'id'
+  | 'title'
+  | 'vehicleModel'
+  | 'serviceCategory'
+  | 'beforeImagePublicId'
+  | 'afterImagePublicId'
+  | 'description'
+  | 'completedAt'
+>;
+
+interface StitchCaseStudiesProps {
+  projects: FeaturedProject[];
 }
 
-const CASE_STUDIES: CaseStudy[] = [
-  {
-    id: 'porsche-911',
-    category: 'Bare-Metal Respray',
-    title: 'Porsche 911 (992) Carrera GTS',
-    description:
-      'Complete exterior restoration, acid dip treatment, 4 coats of Guards Red (G1) with ceramic clear coat finish.',
-    timeline: '12 Working Days',
-    paintCode: 'Porsche G1 Carmine',
-    beforeImg: '/assets/marketing/project-porsche-911-before.jpg',
-    afterImg: '/assets/marketing/project-porsche-911-after.jpg',
-  },
-  {
-    id: 'bmw-m4',
-    category: 'Quarter Panel Reconstruction',
-    title: 'BMW 3 Series M-Sport (G20)',
-    description:
-      'Rear side impact repair, OEM quarter section replacement with factory laser weld seams and robotic seam sealing.',
-    timeline: '6 Working Days',
-    paintCode: 'BMW C31 Portimao Blue',
-    beforeImg: '/assets/marketing/project-bmw-3-series-before.jpg',
-    afterImg: '/assets/marketing/project-bmw-3-series-after.jpg',
-  },
-  {
-    id: 'audi-rs6',
-    category: 'Front Wing & ADAS Calibration',
-    title: 'Audi RS6 Avant Carbon Edition',
-    description:
-      'Aluminum wing reconstruction, matrix LED headlight installation, and dynamic ADAS radar realignment on digital rig.',
-    timeline: '5 Working Days',
-    paintCode: 'Audi Nardo Grey (LY7C)',
-    beforeImg: '/assets/marketing/project-audi-rs6-before.jpg',
-    afterImg: '/assets/marketing/project-audi-rs6-after.jpg',
-  },
-];
+const dateFormatter = new Intl.DateTimeFormat('en-IE', { year: 'numeric', month: 'short' });
 
-export function StitchCaseStudies() {
-  const [viewState, setViewState] = useState<Record<string, 'after' | 'before'>>({
-    'porsche-911': 'after',
-    'bmw-m4': 'after',
-    'audi-rs6': 'after',
-  });
+// Sourced from the featured, published Projects (admin-managed under Dashboard → Projects) —
+// no separate content type for case studies, this section just presents a slice of Projects.
+export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
+  const [viewState, setViewState] = useState<Record<string, 'after' | 'before'>>({});
+
+  if (projects.length === 0) return null;
 
   const toggleView = (id: string) => {
     setViewState((prev) => ({
       ...prev,
-      [id]: prev[id] === 'after' ? 'before' : 'after',
+      [id]: prev[id] === 'before' ? 'after' : 'before',
     }));
   };
 
@@ -89,26 +62,26 @@ export function StitchCaseStudies() {
           href='/our-work'
           className='flex items-center gap-1.5 border-b border-neutral-600 pb-1 font-mono text-xs tracking-widest text-neutral-300 uppercase hover:text-white'
         >
-          View 140+ Case Studies <ArrowRight className='size-3.5' />
+          View All Case Studies <ArrowRight className='size-3.5' />
         </Link>
       </div>
 
-      {/* 3 Case Study Cards */}
+      {/* Case Study Cards */}
       <div className='grid grid-cols-1 gap-8 md:grid-cols-3'>
-        {CASE_STUDIES.map((study) => {
-          const currentMode = viewState[study.id] || 'after';
-          const currentImg = currentMode === 'after' ? study.afterImg : study.beforeImg;
+        {projects.map((project) => {
+          const currentMode = viewState[project.id] ?? 'after';
+          const currentPublicId = currentMode === 'after' ? project.afterImagePublicId : project.beforeImagePublicId;
 
           return (
             <div
-              key={study.id}
+              key={project.id}
               className='group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#161616] transition-all hover:border-[#dc2626]/50'
             >
               {/* Image Preview with Mode Toggle */}
               <div className='relative h-64 w-full overflow-hidden bg-black'>
                 <Image
-                  src={currentImg}
-                  alt={`${study.title} ${currentMode}`}
+                  src={cldUrl(currentPublicId, { width: 640, height: 480, crop: 'fill' })}
+                  alt={`${project.title} ${currentMode}`}
                   fill
                   className='object-cover transition-transform duration-500 group-hover:scale-105'
                 />
@@ -116,7 +89,7 @@ export function StitchCaseStudies() {
                 {/* Top Badge: Before/After Toggle */}
                 <button
                   type='button'
-                  onClick={() => toggleView(study.id)}
+                  onClick={() => toggleView(project.id)}
                   aria-label={currentMode === 'after' ? 'Show before photo' : 'Show after photo'}
                   className='absolute top-3 left-3 rounded border border-white/10 bg-black/80 px-2.5 py-1 font-mono text-[10px] text-white backdrop-blur-md transition-colors hover:border-[#dc2626]'
                 >
@@ -137,21 +110,25 @@ export function StitchCaseStudies() {
               {/* Card Details */}
               <div className='flex flex-1 flex-col justify-between p-6'>
                 <div>
-                  <div className='mb-1 font-mono text-xs tracking-wider text-[#dc2626] uppercase'>{study.category}</div>
+                  <div className='mb-1 font-mono text-xs tracking-wider text-[#dc2626] uppercase'>
+                    {project.serviceCategory}
+                  </div>
                   <h3 className='mb-2 font-[family-name:var(--font-manrope)] text-2xl leading-8 font-semibold text-white'>
-                    {study.title}
+                    {project.title}
                   </h3>
-                  <p className='mb-4 text-base leading-6 text-neutral-400'>{study.description}</p>
+                  <p className='mb-4 text-base leading-6 text-neutral-400'>{project.description}</p>
                 </div>
 
                 <div className='space-y-2 border-t border-white/5 pt-4 font-mono text-xs'>
                   <div className='flex justify-between text-neutral-400'>
-                    <span>Repair Timeline:</span>
-                    <span className='text-white'>{study.timeline}</span>
+                    <span>Vehicle:</span>
+                    <span className='text-white'>{project.vehicleModel}</span>
                   </div>
                   <div className='flex justify-between text-neutral-400'>
-                    <span>Paint Code:</span>
-                    <span className='text-white'>{study.paintCode}</span>
+                    <span>Completed:</span>
+                    <span className='text-white'>
+                      {project.completedAt ? dateFormatter.format(new Date(project.completedAt)) : '—'}
+                    </span>
                   </div>
                 </div>
               </div>

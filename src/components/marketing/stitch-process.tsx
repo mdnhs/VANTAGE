@@ -1,37 +1,19 @@
-const STEPS = [
-  {
-    number: '01',
-    title: 'Digital Assessment',
-    description: 'High-definition imaging, ultrasonic thickness readings, and diagnostic computer pre-scans.',
-    highlight: false,
-  },
-  {
-    number: '02',
-    title: 'Clear Estimate',
-    description: 'Line-item parts, labor hours, and paint schedules provided with guaranteed cost caps.',
-    highlight: false,
-  },
-  {
-    number: '03',
-    title: 'Insurer Approval',
-    description: 'Direct liaison with loss adjusters and digital sign-offs to immediately trigger parts orders.',
-    highlight: false,
-  },
-  {
-    number: '04',
-    title: 'Precision Repair',
-    description: 'Celette jig pulling, panel welding, waterborne basecoat, and 60°C oven baking.',
-    highlight: true,
-  },
-  {
-    number: '05',
-    title: 'Audit & Delivery',
-    description: 'Full 42-point quality check, road test, valet sanitization, and lifetime warranty cert.',
-    highlight: false,
-  },
-];
+interface ProcessStep {
+  id: string;
+  title: string;
+  description: string;
+  isHighlighted: boolean;
+}
 
-export function StitchProcess() {
+interface StitchProcessProps {
+  steps: ProcessStep[];
+}
+
+// Content is CMS-driven (Dashboard → Homepage Process Steps) — the step number shown is
+// derived from display order (index + 1), not stored as a column.
+export function StitchProcess({ steps }: StitchProcessProps) {
+  if (steps.length === 0) return null;
+
   return (
     <section id='process' className='w-full border-y border-white/10 bg-[#111111] py-24'>
       <div className='container mx-auto px-6 sm:px-12'>
@@ -41,26 +23,26 @@ export function StitchProcess() {
             Predictable &amp; Certified Workflow
           </span>
           <h2 className='mt-2 font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
-            The 5-Step Vantage Standard
+            The {steps.length}-Step Vantage Standard
           </h2>
           <p className='mt-3 text-base leading-6 text-neutral-400'>
             From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.
           </p>
         </div>
 
-        {/* 5 Steps Grid */}
+        {/* Steps Grid */}
         <div className='relative grid grid-cols-1 gap-6 md:grid-cols-5'>
-          {STEPS.map((step) => (
+          {steps.map((step, index) => (
             <div
-              key={step.number}
+              key={step.id}
               className='relative flex flex-col gap-3 rounded-lg border border-white/10 bg-[#1c1b1b] p-6'
             >
               <span
                 className={`font-[family-name:var(--font-manrope)] text-3xl font-extrabold ${
-                  step.highlight ? 'text-[#dc2626]' : 'text-neutral-700'
+                  step.isHighlighted ? 'text-[#dc2626]' : 'text-neutral-700'
                 }`}
               >
-                {step.number}
+                {String(index + 1).padStart(2, '0')}
               </span>
               <h3 className='text-base font-bold tracking-wider text-white uppercase'>{step.title}</h3>
               <p className='text-sm leading-relaxed text-neutral-400'>{step.description}</p>

@@ -65,7 +65,7 @@ export const serviceRepository = {
     await db
       .update(services)
       .set({
-        displayOrder: sql`(CASE ${services.id} ${caseChunks} END)`,
+        displayOrder: sql`(CASE ${services.id} ${caseChunks} END)::integer`,
         updatedAt: new Date(),
       })
       .where(inArray(services.id, ids));

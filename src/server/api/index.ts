@@ -4,6 +4,9 @@ import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
 import { admins } from './admins';
 import { auth } from './auth';
+import { homepageCatalogs } from './homepage-catalogs';
+import { homepagePillars } from './homepage-pillars';
+import { homepageProcessSteps } from './homepage-process-steps';
 import { media } from './media';
 import { partnerLogos } from './partner-logos';
 import { projects } from './projects';
@@ -34,6 +37,9 @@ export const api = app
   .route('/projects', projects)
   .route('/testimonials', testimonials)
   .route('/partner-logos', partnerLogos)
+  .route('/homepage-pillars', homepagePillars)
+  .route('/homepage-catalogs', homepageCatalogs)
+  .route('/homepage-process-steps', homepageProcessSteps)
   .route('/admins', admins)
   .route('/users', users);
 // TODO: mount feature route modules here as they are scaffolded

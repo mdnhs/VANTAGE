@@ -116,7 +116,7 @@ export const projectRepository = {
     await db
       .update(projects)
       .set({
-        displayOrder: sql`(CASE ${projects.id} ${caseChunks} END)`,
+        displayOrder: sql`(CASE ${projects.id} ${caseChunks} END)::integer`,
         updatedAt: new Date(),
       })
       .where(inArray(projects.id, ids));

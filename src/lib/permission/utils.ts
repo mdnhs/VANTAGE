@@ -30,11 +30,15 @@ export type PermissionChecker = ReturnType<typeof createPermissionChecker>;
 
 export const createPermissionChecker = (permissions: PermissionValue[]) => {
   const set = new Set(permissions);
+  // Users with ADMINS_MANAGE have administrative superuser privileges across all sections
+  const isAdmin = set.has(PERMISSIONS.ADMINS_MANAGE);
 
-  const hasPermissionByValue = (permission: PermissionValue): boolean => set.has(permission);
-  const hasAnyPermissionByValues = (values: PermissionValue[]): boolean => values.some(hasPermissionByValue);
-  const hasAllPermissionsByValues = (values: PermissionValue[]): boolean => values.every(hasPermissionByValue);
-  const getAllPermissions = (): PermissionValue[] => Array.from(set);
+  const hasPermissionByValue = (permission: PermissionValue): boolean => isAdmin || set.has(permission);
+  const hasAnyPermissionByValues = (values: PermissionValue[]): boolean => isAdmin || values.some(hasPermissionByValue);
+  const hasAllPermissionsByValues = (values: PermissionValue[]): boolean =>
+    isAdmin || values.every(hasPermissionByValue);
+  const getAllPermissions = (): PermissionValue[] =>
+    isAdmin ? (Object.values(PERMISSIONS) as PermissionValue[]) : Array.from(set);
 
   return {
     hasPermissionByValue,

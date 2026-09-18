@@ -63,7 +63,7 @@ export const partnerLogoRepository = {
     await db
       .update(partnerLogos)
       .set({
-        displayOrder: sql`(CASE ${partnerLogos.id} ${caseChunks} END)`,
+        displayOrder: sql`(CASE ${partnerLogos.id} ${caseChunks} END)::integer`,
         updatedAt: new Date(),
       })
       .where(inArray(partnerLogos.id, ids));

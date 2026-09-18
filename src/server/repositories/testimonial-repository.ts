@@ -84,7 +84,7 @@ export const testimonialRepository = {
     await db
       .update(testimonials)
       .set({
-        displayOrder: sql`(CASE ${testimonials.id} ${caseChunks} END)`,
+        displayOrder: sql`(CASE ${testimonials.id} ${caseChunks} END)::integer`,
         updatedAt: new Date(),
       })
       .where(inArray(testimonials.id, ids));

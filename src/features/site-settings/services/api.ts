@@ -4,6 +4,8 @@ import type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
   UpdateHeroMediaInput,
+  UpdateHomepageCatalogInput,
+  UpdateHomepageHeroInput,
   UpdateSeoInput,
   UpdateSocialLinksInput,
 } from '../types';
@@ -56,5 +58,15 @@ export async function updateHeroMedia(input: UpdateHeroMediaInput): Promise<Site
 
 export async function updateSeo(input: UpdateSeoInput): Promise<SiteSettings> {
   const res = await patchSection(API_ROUTES.siteSettings.updateSeo, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateHomepageHero(input: UpdateHomepageHeroInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateHomepageHero, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateHomepageCatalog(input: UpdateHomepageCatalogInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateHomepageCatalog, input);
   return parseOrThrow<SiteSettings>(res);
 }

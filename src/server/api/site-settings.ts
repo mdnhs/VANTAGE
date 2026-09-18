@@ -8,6 +8,8 @@ import {
   updateBusinessInfoSchema,
   updateContactSchema,
   updateHeroMediaSchema,
+  updateHomepageCatalogSchema,
+  updateHomepageHeroSchema,
   updateSeoSchema,
   updateSocialLinksSchema,
 } from '@/validations/site-settings-schema';
@@ -83,6 +85,30 @@ export const siteSettings = new Hono<AuthEnv>()
     async (c) => {
       const input = c.req.valid('json');
       const data = await siteSettingsService.updateSeo(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/homepage-hero',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateHomepageHeroSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateHomepageHero(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/homepage-catalog',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateHomepageCatalogSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateHomepageCatalog(input);
       return ok(c, data);
     },
   );

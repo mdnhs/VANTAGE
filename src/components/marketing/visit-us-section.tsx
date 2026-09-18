@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Map, MapControls, MapMarker, MarkerPopup } from '@/components/ui/map';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
 
 // Coordinates aren't part of site settings (no lat/lng field on the model), so the pin
 // stays hardcoded here — address and hours text below are pulled from admin-managed
@@ -32,7 +33,7 @@ export async function VisitUsSection() {
         </span>
         <div className='flex items-center gap-2'>
           <Image src='/assets/marketing/icon-visit-clock.svg' alt='' width={12} height={12} className='size-3' />
-          <span className='text-base text-[#e6bdb8]'>{settings.openingHours}</span>
+          <span className='text-base text-[#e6bdb8]'>{formatOpeningHoursSummary(settings.openingHours)}</span>
         </div>
         <div className='flex items-center gap-2'>
           <Image src='/assets/marketing/icon-visit-pin.svg' alt='' width={11} height={12} className='h-3 w-[11px]' />

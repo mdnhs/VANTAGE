@@ -10,6 +10,7 @@ import { requireAuth, type AuthEnv } from '@/server/middleware/auth';
 import { adminUserRepository } from '@/server/repositories/admin-user-repository';
 import { createSessionToken, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/server/lib/session';
 import { decompressPermissions } from '@/lib/permission/utils';
+import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -28,7 +29,12 @@ export const auth = new Hono<AuthEnv>()
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) throw ApiError.unauthorized('Invalid email or password');
 
-    const permissions = decompressPermissions(user.permissionsBitfield);
+    const decompressed = decompressPermissions(user.permissionsBitfield);
+    const permissions =
+      user.role === 'admin' || decompressed.includes(PERMISSIONS.ADMINS_MANAGE)
+        ? (Object.values(PERMISSIONS) as PermissionValue[])
+        : decompressed;
+
     const token = await createSessionToken({
       id: user.id,
       email: user.email,

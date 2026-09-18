@@ -19,15 +19,36 @@ export const APP_ROUTES = {
       create: '/dashboard/projects/create',
       edit: (id: string) => `/dashboard/projects/${id}/edit`,
     },
+    homePage: {
+      index: '/dashboard/home-page',
+    },
+    // `index` points back at the relevant Home page tab — pillars/process steps/testimonials/
+    // partner logos no longer have their own standalone list page, only create/edit (used by
+    // the table's "Cancel").
     testimonials: {
-      index: '/dashboard/testimonials',
+      index: '/dashboard/home-page?tab=testimonials',
       create: '/dashboard/testimonials/create',
       edit: (id: string) => `/dashboard/testimonials/${id}/edit`,
     },
     partnerLogos: {
-      index: '/dashboard/partner-logos',
+      index: '/dashboard/home-page?tab=partner-logos',
       create: '/dashboard/partner-logos/create',
       edit: (id: string) => `/dashboard/partner-logos/${id}/edit`,
+    },
+    homepagePillars: {
+      index: '/dashboard/home-page?tab=pillars',
+      create: '/dashboard/homepage-pillars/create',
+      edit: (id: string) => `/dashboard/homepage-pillars/${id}/edit`,
+    },
+    homepageCatalogs: {
+      index: '/dashboard/home-page?tab=catalog',
+      create: '/dashboard/homepage-catalogs/create',
+      edit: (id: string) => `/dashboard/homepage-catalogs/${id}/edit`,
+    },
+    homepageProcessSteps: {
+      index: '/dashboard/home-page?tab=process',
+      create: '/dashboard/homepage-process-steps/create',
+      edit: (id: string) => `/dashboard/homepage-process-steps/${id}/edit`,
     },
     admins: {
       index: '/dashboard/admins',

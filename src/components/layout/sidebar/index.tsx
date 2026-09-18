@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LayoutDashboard, Wrench, FolderKanban, MessageSquareQuote, Images, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, Wrench, FolderKanban, Home, Settings, Users } from 'lucide-react';
 import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
 import { getSession } from '@/lib/permission/server-utils';
 import { createPermissionChecker } from '@/lib/permission/utils';
@@ -40,16 +40,17 @@ const NAV_ITEMS: NavItem[] = [
     permissions: [PERMISSIONS.PROJECTS_MANAGE],
   },
   {
-    label: 'Testimonials',
-    href: APP_ROUTES.content.testimonials.index,
-    icon: MessageSquareQuote,
-    permissions: [PERMISSIONS.TESTIMONIALS_MANAGE],
-  },
-  {
-    label: 'Partner logos',
-    href: APP_ROUTES.content.partnerLogos.index,
-    icon: Images,
-    permissions: [PERMISSIONS.LOGOS_MANAGE],
+    label: 'Home page',
+    href: APP_ROUTES.content.homePage.index,
+    icon: Home,
+    permissions: [
+      PERMISSIONS.SETTINGS_MANAGE,
+      PERMISSIONS.PILLARS_MANAGE,
+      PERMISSIONS.CATALOG_MANAGE,
+      PERMISSIONS.PROCESS_MANAGE,
+      PERMISSIONS.TESTIMONIALS_MANAGE,
+      PERMISSIONS.LOGOS_MANAGE,
+    ],
   },
   {
     label: 'Site settings',
