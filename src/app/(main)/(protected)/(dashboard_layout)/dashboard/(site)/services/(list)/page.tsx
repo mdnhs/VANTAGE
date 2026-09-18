@@ -6,6 +6,7 @@ import { PermissionGate } from '@/lib/permission/permission-gate';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { SectionTabs } from '@/components/layout/section-tabs';
 import { ServicesHeroForm } from '@/features/services/components/services-hero-form';
 import { serviceService } from '@/server/services/service-service';
 import { ServiceTable } from '@/features/services/components/list/service-table';
@@ -27,19 +28,32 @@ export default async function ServicesListPage() {
   return (
     <PermissionGate permissions={[PERMISSIONS.SERVICES_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
       <div className='flex flex-col gap-6'>
-        <ServicesHeroForm settings={settings ?? null} />
-        <div className='flex items-center justify-between'>
-          <div>
-            <h1 className='text-xl font-semibold'>Services</h1>
-            <p className='text-sm text-muted-foreground'>
-              Services shown on the public services page, in display order.
-            </p>
-          </div>
-          <Link href={APP_ROUTES.content.services.create} className={cn(buttonVariants())}>
-            Add service
-          </Link>
+        <div>
+          <h1 className='text-xl font-semibold'>Services page</h1>
+          <p className='text-sm text-muted-foreground'>
+            Hero copy and the service blocks shown on the public services page.
+          </p>
         </div>
-        <ServiceTable initialData={{ data: rows, total }} />
+        <SectionTabs
+          tabs={[
+            { value: 'hero', label: 'Hero', content: <ServicesHeroForm settings={settings ?? null} /> },
+            {
+              value: 'services',
+              label: 'Services',
+              content: (
+                <>
+                  <div className='flex items-center justify-between'>
+                    <p className='text-sm text-muted-foreground'>Displayed in this order on the services page.</p>
+                    <Link href={APP_ROUTES.content.services.create} className={cn(buttonVariants())}>
+                      Add service
+                    </Link>
+                  </div>
+                  <ServiceTable initialData={{ data: rows, total }} />
+                </>
+              ),
+            },
+          ]}
+        />
       </div>
     </PermissionGate>
   );

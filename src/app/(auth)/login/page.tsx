@@ -1,17 +1,19 @@
 import type { Metadata } from 'next';
 import { LoginForm } from '@/features/auth/components/login-form';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
 export const metadata: Metadata = {
   title: 'Sign in',
   robots: { index: false, follow: false, nocache: true },
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const settings = await siteSettingsService.getPublic();
+
   return (
-    <div className='flex w-full flex-col items-center gap-6 bg-muted p-6 md:p-10'>
-      <div className='w-full max-w-sm md:max-w-4xl'>
-        <LoginForm />
-      </div>
-    </div>
+    <LoginForm
+      businessName={settings.businessName?.trim() || 'Vantage Admin'}
+      logoPublicId={'logoPublicId' in settings ? settings.logoPublicId : null}
+    />
   );
 }

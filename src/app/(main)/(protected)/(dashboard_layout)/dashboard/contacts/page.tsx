@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { PermissionGate } from '@/lib/permission/permission-gate';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { contactMessageService } from '@/server/services/contact-message-service';
-import { ContactMessageTable } from '@/features/contact-messages/components/list/contact-message-table';
+import { ContactInboxView } from '@/features/contact-messages/components/inbox/contact-inbox-view';
 
 export const metadata: Metadata = {
-  title: 'Contact Inquiries',
+  title: 'Contact Messages Inbox',
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -13,7 +13,7 @@ export const instant = false;
 
 export default async function ContactsPage() {
   const [contactsData, stats] = await Promise.all([
-    contactMessageService.list({ page: 1, limit: 25, status: 'all' }),
+    contactMessageService.list({ page: 1, limit: 50, status: 'all' }),
     contactMessageService.stats(),
   ]);
 
@@ -22,19 +22,7 @@ export default async function ContactsPage() {
       permissions={[PERMISSIONS.CONTACTS_MANAGE, PERMISSIONS.ADMINS_MANAGE]}
       fallback={<p>You do not have access to this page.</p>}
     >
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>Contact Inquiries</h1>
-          <p className='text-sm text-muted-foreground'>
-            General messages, service inquiries, and questions submitted via the Contact page.
-          </p>
-        </div>
-
-        <ContactMessageTable
-          initialData={{ data: contactsData.rows, total: contactsData.total }}
-          initialStats={stats}
-        />
-      </div>
+      <ContactInboxView initialData={{ data: contactsData.rows, total: contactsData.total }} initialStats={stats} />
     </PermissionGate>
   );
 }

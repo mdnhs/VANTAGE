@@ -27,8 +27,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     <PermissionsProvider permissions={session.permissions}>
       <SidebarProvider className={`${inter.variable} font-(family-name:--font-inter)`}>
         <Sidebar />
-        <SidebarInset>
-          <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border transition-[width,height] ease-linear'>
+        <SidebarInset className='h-svh overflow-y-auto md:peer-data-[variant=inset]:h-[calc(100svh-1rem)]'>
+          <header className='sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b border-border bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60'>
             <div className='flex items-center gap-2 px-4'>
               <SidebarTrigger className='-ml-1' />
               <Separator orientation='vertical' className='mr-2 data-vertical:h-4 data-vertical:self-auto' />
@@ -51,7 +51,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               <Globe className='size-4' />
             </Link>
           </header>
-          <main className='flex-1 p-6'>{children}</main>
+          <div className='flex-1 p-6'>{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </PermissionsProvider>

@@ -54,8 +54,8 @@ export function HomePageTabs({
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof SECTION_VALUES)[number])} className='gap-6'>
       {/* Horizontal here: the outer "Website pages" menu already owns the left column. */}
-      <div className='overflow-x-auto border-b border-border'>
-        <TabsList variant='line' className='h-auto w-max justify-start'>
+      <div className='border-b border-border'>
+        <TabsList variant='line' className='h-auto w-fit max-w-full flex-wrap justify-start'>
           {SECTIONS.map((section) => (
             <TabsTrigger key={section.value} value={section.value}>
               {section.label}

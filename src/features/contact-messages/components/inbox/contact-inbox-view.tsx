@@ -1,60 +1,58 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Archive, CheckCircle2, FileText, Inbox, PhoneForwarded, Search, Sparkles, Wrench, X } from 'lucide-react';
+import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { QuoteInboxItem } from './quote-inbox-item';
-import { QuoteInboxDetail } from './quote-inbox-detail';
-import { useQuoteRequestList } from '../../hooks/api/query/use-quote-request-list';
-import { useQuoteRequestStats } from '../../hooks/api/query/use-quote-request-stats';
-import type { QuoteRequest, QuoteRequestStats, QuoteStatus } from '../../types';
+import { ContactInboxItem } from './contact-inbox-item';
+import { ContactInboxDetail } from './contact-inbox-detail';
+import { useContactMessageList } from '../../hooks/api/query/use-contact-message-list';
+import { useContactMessageStats } from '../../hooks/api/query/use-contact-message-stats';
+import type { ContactMessage, ContactMessageStats, ContactStatus } from '../../types';
 
-interface QuoteInboxViewProps {
-  initialData: { data: QuoteRequest[]; total: number };
-  initialStats: QuoteRequestStats;
+interface ContactInboxViewProps {
+  initialData: { data: ContactMessage[]; total: number };
+  initialStats: ContactMessageStats;
 }
 
 const FOLDERS: Array<{
-  value: QuoteStatus | 'all';
+  value: ContactStatus | 'all';
   label: string;
   icon: typeof Inbox;
 }> = [
-  { value: 'all', label: 'All Quotes', icon: Inbox },
-  { value: 'new', label: 'New Leads', icon: Sparkles },
-  { value: 'contacted', label: 'Contacted', icon: PhoneForwarded },
-  { value: 'in_progress', label: 'In Progress', icon: Wrench },
-  { value: 'quoted', label: 'Quoted', icon: FileText },
-  { value: 'completed', label: 'Completed', icon: CheckCircle2 },
+  { value: 'all', label: 'All Messages', icon: Inbox },
+  { value: 'new', label: 'New', icon: Sparkles },
+  { value: 'read', label: 'Read', icon: MailOpen },
+  { value: 'replied', label: 'Replied', icon: Reply },
   { value: 'archived', label: 'Archived', icon: Archive },
 ];
 
-export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProps) {
-  const [status, setStatus] = useState<QuoteStatus | 'all'>('all');
+export function ContactInboxView({ initialData, initialStats }: ContactInboxViewProps) {
+  const [status, setStatus] = useState<ContactStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
-  const { data: stats } = useQuoteRequestStats();
+  const { data: stats } = useContactMessageStats();
   const currentStats = stats ?? initialStats;
 
-  const { data } = useQuoteRequestList({
+  const { data } = useContactMessageList({
     page: 1,
     limit: 50,
     status,
     search: search.trim() ? search.trim() : undefined,
   });
 
-  const quotes: QuoteRequest[] = data?.data ?? initialData.data;
+  const messages: ContactMessage[] = data?.data ?? initialData.data;
 
   // Active selected quote (defaults to explicitly selected quote, or fallback to first quote in list)
-  const activeSelectedId = selectedId ?? (quotes.length > 0 ? quotes[0].id : null);
+  const activeSelectedId = selectedId ?? (messages.length > 0 ? messages[0].id : null);
 
-  const selectedQuote = useMemo(() => {
-    if (!quotes.length) return null;
-    return quotes.find((q) => q.id === activeSelectedId) ?? quotes[0];
-  }, [quotes, activeSelectedId]);
+  const selectedMessage = useMemo(() => {
+    if (!messages.length) return null;
+    return messages.find((m) => m.id === activeSelectedId) ?? messages[0];
+  }, [messages, activeSelectedId]);
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
@@ -63,7 +61,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
   const handleDeleted = (id: string) => {
     if (activeSelectedId === id) {
-      const remaining = quotes.filter((q) => q.id !== id);
+      const remaining = messages.filter((m) => m.id !== id);
       setSelectedId(remaining.length > 0 ? remaining[0].id : null);
       setIsMobileDetailOpen(false);
     }
@@ -78,9 +76,9 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             <Inbox className='size-4.5' />
           </div>
           <div>
-            <h1 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>Quote Requests Inbox</h1>
+            <h1 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>Contact Messages Inbox</h1>
             <p className='text-xs text-muted-foreground'>
-              Customer collision, dent repair, and respray estimates received in real time.
+              General enquiries and questions submitted through the Contact page.
             </p>
           </div>
         </div>
@@ -94,7 +92,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             </span>
           )}
           <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
-            {quotes.length} of {currentStats.all} total
+            {messages.length} of {currentStats.all} total
           </span>
         </div>
       </div>
@@ -212,7 +210,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder='Search by customer, reg plate, model...'
+                placeholder='Search by name, email, phone...'
                 className='h-8 pr-8 pl-8 text-xs'
               />
               {search && (
@@ -229,26 +227,26 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
           {/* Threads List */}
           <div className='flex-1 overflow-y-auto'>
-            {quotes.length === 0 ? (
+            {messages.length === 0 ? (
               <div className='flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground'>
                 <div className='flex size-10 items-center justify-center rounded-full bg-muted/60'>
-                  <Wrench className='size-4 text-muted-foreground' />
+                  <Inbox className='size-4 text-muted-foreground' />
                 </div>
-                <p className='mt-3 text-xs font-semibold text-foreground'>No quote inquiries found</p>
+                <p className='mt-3 text-xs font-semibold text-foreground'>No messages found</p>
                 <p className='mt-1 text-[11px] text-muted-foreground'>
                   {search || status !== 'all'
                     ? 'Try clearing the search or switching filters.'
-                    : 'Customer requests submitted online will appear here.'}
+                    : 'Messages sent from the Contact page will appear here.'}
                 </p>
               </div>
             ) : (
               <div>
-                {quotes.map((quote) => (
-                  <QuoteInboxItem
-                    key={quote.id}
-                    quote={quote}
-                    isSelected={selectedQuote?.id === quote.id}
-                    onSelect={() => handleSelect(quote.id)}
+                {messages.map((message) => (
+                  <ContactInboxItem
+                    key={message.id}
+                    message={message}
+                    isSelected={selectedMessage?.id === message.id}
+                    onSelect={() => handleSelect(message.id)}
                   />
                 ))}
               </div>
@@ -263,10 +261,10 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             isMobileDetailOpen ? 'flex' : 'hidden md:flex',
           )}
         >
-          {selectedQuote ? (
-            <QuoteInboxDetail
-              key={selectedQuote.id}
-              quote={selectedQuote}
+          {selectedMessage ? (
+            <ContactInboxDetail
+              key={selectedMessage.id}
+              message={selectedMessage}
               onCloseMobile={() => setIsMobileDetailOpen(false)}
               onDeleted={handleDeleted}
             />
@@ -276,10 +274,10 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
                 <Inbox className='size-6 text-muted-foreground/60' />
               </div>
               <div className='flex max-w-sm flex-col gap-1'>
-                <h3 className='text-sm font-semibold text-foreground'>Select a Quote Request</h3>
+                <h3 className='text-sm font-semibold text-foreground'>Select a Message</h3>
                 <p className='text-xs leading-relaxed text-muted-foreground'>
-                  Choose an inquiry from the inbox on the left to read full vehicle details, examine damage photos,
-                  update status, and quote costs.
+                  Choose a message from the inbox on the left to read it, reply by email or phone, and update its
+                  status.
                 </p>
               </div>
             </div>

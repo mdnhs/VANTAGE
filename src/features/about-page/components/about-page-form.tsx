@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
 import { useUpdateAboutPage } from '@/features/site-settings/hooks/api/mutation/use-update-about-page';
+import { SectionTabs } from '@/components/layout/section-tabs';
 import type { AboutContent } from '../defaults';
 
 type ImageField = 'heroImagePublicId' | 'heritageImagePublicId' | 'standardsImagePublicId';
@@ -82,130 +83,157 @@ export function AboutPageForm({ initialContent }: { initialContent: AboutContent
 
   return (
     <form onSubmit={onSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Hero</CardTitle>
-          <CardDescription>Headline reads: line 1 + accent, line 2 + accent.</CardDescription>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='sm:col-span-2'>
-            <Text label='Eyebrow' {...register('heroEyebrow')} />
-          </div>
-          <Text label='Line 1' {...register('heroLine1')} />
-          <Text label='Line 1 accent (red)' {...register('heroAccent1')} />
-          <Text label='Line 2' {...register('heroLine2')} />
-          <Text label='Line 2 accent (grey)' {...register('heroAccent2')} />
-          <div className='sm:col-span-2'>{image('heroImagePublicId', 'Background image')}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Heritage</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='sm:col-span-2'>
-            <Text label='Title' {...register('heritageTitle')} />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Story</Label>
-            <Textarea rows={4} {...register('heritageText')} />
-          </div>
-          <Text label='Stat 1 value' {...register('heritageStat1Value')} />
-          <Text label='Stat 1 label' {...register('heritageStat1Label')} />
-          <Text label='Stat 2 value' {...register('heritageStat2Value')} />
-          <Text label='Stat 2 label' {...register('heritageStat2Label')} />
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Quote</Label>
-            <Textarea {...register('heritageQuote')} />
-          </div>
-          <div className='sm:col-span-2'>{image('heritageImagePublicId', 'Image')}</div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Team</CardTitle>
-        </CardHeader>
-        <CardContent className='flex flex-col gap-4'>
-          <Text label='Title' {...register('teamTitle')} />
-          <div className='flex flex-col gap-1.5'>
-            <Label>Description</Label>
-            <Textarea {...register('teamSubtext')} />
-          </div>
-          {members.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col gap-3 rounded-lg border border-border p-4'>
-              <div className='flex items-end gap-2'>
-                <div className='grid flex-1 gap-3 sm:grid-cols-2'>
-                  <Text label='Name' {...register(`teamMembers.${index}.name`)} />
-                  <Text label='Role' {...register(`teamMembers.${index}.role`)} />
-                </div>
-                <Button type='button' variant='ghost' size='icon' onClick={() => members.remove(index)}>
-                  <Trash2 className='size-4' />
-                </Button>
-              </div>
-              <Controller
-                control={control}
-                name={`teamMembers.${index}.imagePublicId`}
-                render={({ field: f }) => (
-                  <CloudinaryUpload
-                    mode='single-image'
-                    folder='vantage/about'
-                    value={f.value || null}
-                    onChange={(v) => f.onChange((v as string) ?? null)}
-                  />
-                )}
-              />
-            </div>
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            className='w-fit'
-            disabled={members.fields.length >= 12}
-            onClick={() => members.append({ name: '', role: '', imagePublicId: null })}
-          >
-            <Plus className='size-4' /> Add member
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Standards</CardTitle>
-          <CardDescription>Icons are fixed by position (first three items). Title may span two lines.</CardDescription>
-        </CardHeader>
-        <CardContent className='flex flex-col gap-4'>
-          <Text label='Eyebrow' {...register('standardsEyebrow')} />
-          <div className='flex flex-col gap-1.5'>
-            <Label>Title</Label>
-            <Textarea rows={2} {...register('standardsTitle')} />
-          </div>
-          {image('standardsImagePublicId', 'Image')}
-          {standards.fields.map((field, index) => (
-            <div key={field.id} className='flex flex-col gap-2 rounded-lg border border-border p-4'>
-              <div className='flex items-end gap-2'>
-                <div className='flex-1'>
-                  <Text label={`Item ${index + 1} title`} {...register(`standardsItems.${index}.title`)} />
-                </div>
-                <Button type='button' variant='ghost' size='icon' onClick={() => standards.remove(index)}>
-                  <Trash2 className='size-4' />
-                </Button>
-              </div>
-              <Textarea {...register(`standardsItems.${index}.description`)} />
-            </div>
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            className='w-fit'
-            disabled={standards.fields.length >= 6}
-            onClick={() => standards.append({ title: '', description: '' })}
-          >
-            <Plus className='size-4' /> Add item
-          </Button>
-        </CardContent>
-      </Card>
+      <SectionTabs
+        tabs={[
+          {
+            value: 'hero',
+            label: 'Hero',
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hero</CardTitle>
+                  <CardDescription>Headline reads: line 1 + accent, line 2 + accent.</CardDescription>
+                </CardHeader>
+                <CardContent className='grid gap-4 sm:grid-cols-2'>
+                  <div className='sm:col-span-2'>
+                    <Text label='Eyebrow' {...register('heroEyebrow')} />
+                  </div>
+                  <Text label='Line 1' {...register('heroLine1')} />
+                  <Text label='Line 1 accent (red)' {...register('heroAccent1')} />
+                  <Text label='Line 2' {...register('heroLine2')} />
+                  <Text label='Line 2 accent (grey)' {...register('heroAccent2')} />
+                  <div className='sm:col-span-2'>{image('heroImagePublicId', 'Background image')}</div>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: 'heritage',
+            label: 'Heritage',
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Heritage</CardTitle>
+                </CardHeader>
+                <CardContent className='grid gap-4 sm:grid-cols-2'>
+                  <div className='sm:col-span-2'>
+                    <Text label='Title' {...register('heritageTitle')} />
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label>Story</Label>
+                    <Textarea rows={4} {...register('heritageText')} />
+                  </div>
+                  <Text label='Stat 1 value' {...register('heritageStat1Value')} />
+                  <Text label='Stat 1 label' {...register('heritageStat1Label')} />
+                  <Text label='Stat 2 value' {...register('heritageStat2Value')} />
+                  <Text label='Stat 2 label' {...register('heritageStat2Label')} />
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label>Quote</Label>
+                    <Textarea {...register('heritageQuote')} />
+                  </div>
+                  <div className='sm:col-span-2'>{image('heritageImagePublicId', 'Image')}</div>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: 'team',
+            label: 'Team',
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team</CardTitle>
+                </CardHeader>
+                <CardContent className='flex flex-col gap-4'>
+                  <Text label='Title' {...register('teamTitle')} />
+                  <div className='flex flex-col gap-1.5'>
+                    <Label>Description</Label>
+                    <Textarea {...register('teamSubtext')} />
+                  </div>
+                  {members.fields.map((field, index) => (
+                    <div key={field.id} className='flex flex-col gap-3 rounded-lg border border-border p-4'>
+                      <div className='flex items-end gap-2'>
+                        <div className='grid flex-1 gap-3 sm:grid-cols-2'>
+                          <Text label='Name' {...register(`teamMembers.${index}.name`)} />
+                          <Text label='Role' {...register(`teamMembers.${index}.role`)} />
+                        </div>
+                        <Button type='button' variant='ghost' size='icon' onClick={() => members.remove(index)}>
+                          <Trash2 className='size-4' />
+                        </Button>
+                      </div>
+                      <Controller
+                        control={control}
+                        name={`teamMembers.${index}.imagePublicId`}
+                        render={({ field: f }) => (
+                          <CloudinaryUpload
+                            mode='single-image'
+                            folder='vantage/about'
+                            value={f.value || null}
+                            onChange={(v) => f.onChange((v as string) ?? null)}
+                          />
+                        )}
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    type='button'
+                    variant='outline'
+                    className='w-fit'
+                    disabled={members.fields.length >= 12}
+                    onClick={() => members.append({ name: '', role: '', imagePublicId: null })}
+                  >
+                    <Plus className='size-4' /> Add member
+                  </Button>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: 'standards',
+            label: 'Standards',
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Standards</CardTitle>
+                  <CardDescription>
+                    Icons are fixed by position (first three items). Title may span two lines.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col gap-4'>
+                  <Text label='Eyebrow' {...register('standardsEyebrow')} />
+                  <div className='flex flex-col gap-1.5'>
+                    <Label>Title</Label>
+                    <Textarea rows={2} {...register('standardsTitle')} />
+                  </div>
+                  {image('standardsImagePublicId', 'Image')}
+                  {standards.fields.map((field, index) => (
+                    <div key={field.id} className='flex flex-col gap-2 rounded-lg border border-border p-4'>
+                      <div className='flex items-end gap-2'>
+                        <div className='flex-1'>
+                          <Text label={`Item ${index + 1} title`} {...register(`standardsItems.${index}.title`)} />
+                        </div>
+                        <Button type='button' variant='ghost' size='icon' onClick={() => standards.remove(index)}>
+                          <Trash2 className='size-4' />
+                        </Button>
+                      </div>
+                      <Textarea {...register(`standardsItems.${index}.description`)} />
+                    </div>
+                  ))}
+                  <Button
+                    type='button'
+                    variant='outline'
+                    className='w-fit'
+                    disabled={standards.fields.length >= 6}
+                    onClick={() => standards.append({ title: '', description: '' })}
+                  >
+                    <Plus className='size-4' /> Add item
+                  </Button>
+                </CardContent>
+              </Card>
+            ),
+          },
+        ]}
+      />
 
       {update.isError && <p className='text-sm text-destructive'>{update.error.message}</p>}
       {saved && <p className='text-sm text-emerald-600'>Saved.</p>}

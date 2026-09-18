@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { PermissionGate } from '@/lib/permission/permission-gate';
 import { PERMISSIONS } from '@/lib/permission/permissions';
-import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { SectionTabs } from '@/components/layout/section-tabs';
+import { ProcessPanel } from '@/features/home-page/components/sections/process-panel';
+import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { ProcessPageForm } from '@/features/process-page/components/process-page-form';
 import { resolveProcessPageContent } from '@/features/process-page/defaults';
 
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ProcessPageContentPage() {
-  const settings = await siteSettingsService.getAdmin();
+  const [settings, steps] = await Promise.all([
+    siteSettingsService.getAdmin(),
+    homepageProcessStepService.listAdmin({ page: 1, limit: 50 }),
+  ]);
 
   return (
     <PermissionGate
@@ -27,14 +31,23 @@ export default async function ProcessPageContentPage() {
         <div>
           <h1 className='text-xl font-semibold'>Process page</h1>
           <p className='text-sm text-muted-foreground'>
-            Header copy for the public process page. The steps themselves are shared with the homepage and managed under{' '}
-            <Link href={APP_ROUTES.content.homepageProcessSteps.index} className='underline'>
-              Home page → Process
-            </Link>
-            .
+            Header copy and steps shown on the public process page. The steps are shared with the homepage.
           </p>
         </div>
-        <ProcessPageForm initialContent={resolveProcessPageContent(settings)} />
+        <SectionTabs
+          tabs={[
+            {
+              value: 'header',
+              label: 'Header',
+              content: <ProcessPageForm initialContent={resolveProcessPageContent(settings)} />,
+            },
+            {
+              value: 'steps',
+              label: 'Steps',
+              content: <ProcessPanel initialData={{ data: steps.rows, total: steps.total }} />,
+            },
+          ]}
+        />
       </div>
     </PermissionGate>
   );
