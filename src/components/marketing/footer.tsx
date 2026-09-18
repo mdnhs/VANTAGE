@@ -20,15 +20,10 @@ export async function MarketingFooter() {
 
   return (
     <footer className='border-t border-white/5 bg-[#0e0e0e]'>
-      <div className='flex flex-col gap-20 px-6 pt-20 pb-12 sm:px-12 lg:gap-[120px] lg:pt-[121px]'>
+      <div className='container mx-auto flex flex-col gap-20 px-6 pt-20 pb-12 sm:px-12 lg:gap-[120px] lg:pt-[121px]'>
         <div className='grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4'>
           <div className='flex flex-col gap-6'>
-            <div className='flex items-center gap-3'>
-              <Image src='/assets/marketing/logo.jpg' alt={`${settings.businessName} logo`} width={32} height={32} />
-              <span className='font-[family-name:var(--font-manrope)] text-2xl font-semibold text-[#e5e2e1] uppercase'>
-                {settings.businessName}
-              </span>
-            </div>
+            <Image src='/assets/marketing/logo.jpg' alt={settings.businessName} width={40} height={40} />
             <p className='max-w-[320px] text-base leading-6 text-[#e6bdb8]'>
               Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
               obsession.

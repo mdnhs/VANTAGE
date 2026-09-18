@@ -19,7 +19,7 @@ export function HeroSection({
     : '/assets/marketing/hero.jpg';
 
   return (
-    <section className='relative flex min-h-[600px] items-center overflow-hidden px-6 pt-32 pb-24 sm:px-12 lg:min-h-[790px] lg:pt-40 lg:pb-40'>
+    <section className='relative container mx-auto flex min-h-[600px] items-center overflow-hidden px-6 pt-32 pb-24 sm:px-12 lg:min-h-[790px] lg:pt-40 lg:pb-40'>
       <div className='absolute inset-0 z-0'>
         {showVideo ? (
           <video autoPlay muted loop playsInline poster={fallbackImageSrc} className='h-full w-full object-cover'>

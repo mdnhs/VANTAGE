@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Holds live MCP credentials (Stitch API key etc.) — copy .mcp.json.example instead
+.mcp.json

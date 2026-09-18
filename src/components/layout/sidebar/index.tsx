@@ -17,6 +17,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { NavUser } from '@/components/layout/sidebar/nav-user';
+import { WORKFLOW_TABS } from '@/features/admin/tabs';
 
 interface NavItem {
   label: string;
@@ -82,7 +83,20 @@ export async function Sidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>Workshop</SidebarGroupLabel>
+          <SidebarMenu>
+            {WORKFLOW_TABS.map((tab) => (
+              <SidebarMenuItem key={tab.id}>
+                <SidebarMenuButton tooltip={tab.title} render={<Link href={APP_ROUTES.dashboard.tab(tab.id)} />}>
+                  <tab.icon />
+                  <span>{tab.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Content</SidebarGroupLabel>
           <SidebarMenu>
             {visibleItems.map((item) => (
               <SidebarMenuItem key={item.href}>

@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export function HeritageSection() {
   return (
-    <section className='grid grid-cols-1 gap-8 px-6 py-20 sm:px-12 lg:grid-cols-12 lg:gap-6 lg:py-[120px]'>
+    <section className='container mx-auto grid grid-cols-1 gap-8 px-6 py-20 sm:px-12 lg:grid-cols-12 lg:gap-6 lg:py-[120px]'>
       <div className='intersect-once flex flex-col gap-8 lg:col-span-5 intersect:motion-preset-slide-right'>
         <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-[-0.4px] text-[#e5e2e1] uppercase lg:text-[40px] lg:leading-[48px]'>
           Our Heritage

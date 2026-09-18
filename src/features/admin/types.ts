@@ -1,3 +1,5 @@
+export type AdminTab = 'overview' | 'enquiries' | 'customers' | 'lifecycle' | 'pipeline' | 'staff' | 'reports';
+
 export type IntakeChannel =
   'Website Form' | 'Direct Phone Call' | 'WhatsApp' | 'Email' | 'Facebook / Social' | 'Walk-ins';
 

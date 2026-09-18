@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function InsuranceCta() {
   return (
-    <section className='intersect-once flex flex-col items-center gap-8 bg-[#353534] px-6 py-24 text-center sm:px-12 intersect:motion-preset-slide-up'>
+    <section className='intersect-once container mx-auto flex flex-col items-center gap-8 bg-[#353534] px-6 py-24 text-center sm:px-12 intersect:motion-preset-slide-up'>
       <h2 className='max-w-[768px] font-[family-name:var(--font-manrope)] text-4xl leading-[1.2] font-extrabold tracking-[-1.28px] text-[#e5e2e1] uppercase lg:text-[64px] lg:leading-[80px]'>
         Ready to Hand Over
         <br />

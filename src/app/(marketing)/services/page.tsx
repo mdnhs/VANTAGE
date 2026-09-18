@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/marketing/header';
-import { MarketingFooter } from '@/components/marketing/footer';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
 import { ServiceSplitCards } from '@/components/marketing/service-split-card';
@@ -15,11 +13,10 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <>
-      <MarketingHeader />
       <main className='flex flex-col'>
         <ServicesHero />
 
-        <div className='flex flex-col gap-[120px] px-6 py-[120px] sm:px-12'>
+        <div className='container mx-auto flex flex-col gap-[120px] px-6 py-[120px] sm:px-12'>
           <ServiceFeatureBlock
             image='/assets/marketing/service-crash-repair.jpg'
             watermark='01'
@@ -48,7 +45,6 @@ export default function ServicesPage() {
           />
         </div>
       </main>
-      <MarketingFooter />
     </>
   );
 }

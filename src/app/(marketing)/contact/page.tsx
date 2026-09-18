@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/marketing/header';
-import { MarketingFooter } from '@/components/marketing/footer';
 import { ContactInfo } from '@/components/marketing/contact-info';
 import { ContactForm } from '@/components/marketing/contact-form';
 import { VisitUsSection } from '@/components/marketing/visit-us-section';
@@ -18,8 +16,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <MarketingHeader />
-      <main className='flex flex-col gap-16 px-6 py-16 sm:px-12 lg:py-24'>
+      <main className='container mx-auto flex flex-col gap-16 px-6 py-16 sm:px-12 lg:py-24'>
         <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16'>
           <ContactInfo />
           <ContactForm services={services} />
@@ -27,7 +24,6 @@ export default async function ContactPage() {
 
         <VisitUsSection />
       </main>
-      <MarketingFooter />
     </>
   );
 }

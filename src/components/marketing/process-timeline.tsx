@@ -59,7 +59,7 @@ function Step({ step, delayClass }: { step: (typeof STEPS)[number]; delayClass: 
 
 export function ProcessTimeline() {
   return (
-    <section className='flex flex-col gap-20 px-6 py-20 sm:px-12 lg:py-[120px]'>
+    <section className='container mx-auto flex flex-col gap-20 px-6 py-20 sm:px-12 lg:py-[120px]'>
       <div className='intersect-once flex flex-col items-center gap-4 text-center intersect:motion-preset-slide-up-sm'>
         <span className='text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'>The Methodology</span>
         <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-[-0.4px] text-[#e5e2e1] uppercase lg:text-[40px] lg:leading-[48px]'>

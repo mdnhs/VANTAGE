@@ -23,7 +23,7 @@ const STANDARDS = [
 
 export function StandardsSection() {
   return (
-    <section className='grid grid-cols-1 items-center gap-12 px-6 py-20 sm:px-12 lg:grid-cols-2 lg:gap-[120px] lg:py-[120px]'>
+    <section className='container mx-auto grid grid-cols-1 items-center gap-12 px-6 py-20 sm:px-12 lg:grid-cols-2 lg:gap-[120px] lg:py-[120px]'>
       <div className='intersect-once relative h-[400px] w-full overflow-hidden rounded-2xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] lg:h-[600px] intersect:motion-preset-slide-right'>
         <Image
           src='/assets/marketing/about-standards.jpg'

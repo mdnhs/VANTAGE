@@ -12,7 +12,7 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
   if (logos.length === 0) return null;
 
   return (
-    <section className='bg-[#131313] px-6 py-14 sm:px-12'>
+    <section className='container mx-auto bg-[#131313] px-6 py-14 sm:px-12'>
       <div className='mx-auto flex max-w-[1152px] flex-col gap-8'>
         <p className='text-center text-xs font-semibold tracking-[1.2px] text-[#e6bdb8] uppercase'>
           Trusted By Leading Insurance Providers

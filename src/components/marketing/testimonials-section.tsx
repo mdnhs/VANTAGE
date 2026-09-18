@@ -33,7 +33,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
   if (testimonials.length === 0) return null;
 
   return (
-    <section id='testimonials' className='flex flex-col gap-16 px-6 py-20 sm:px-12 lg:py-[120px]'>
+    <section id='testimonials' className='container mx-auto flex flex-col gap-16 px-6 py-20 sm:px-12 lg:py-[120px]'>
       <div className='intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up-sm'>
         <div className='flex items-center gap-4'>
           <span className='h-px w-8 bg-[#ffb4ab]/50' />

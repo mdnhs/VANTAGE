@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export function InsuranceHero() {
   return (
-    <section className='grid grid-cols-1 items-center gap-12 px-6 pt-16 pb-20 sm:px-12 lg:grid-cols-2 lg:gap-24 lg:pb-[120px]'>
+    <section className='container mx-auto grid grid-cols-1 items-center gap-12 px-6 pt-16 pb-20 sm:px-12 lg:grid-cols-2 lg:gap-24 lg:pb-[120px]'>
       <div className='flex motion-preset-slide-up flex-col gap-6 motion-duration-700'>
         <span className='text-xs font-semibold tracking-[1.2px] text-[#ffb4ab] uppercase'>Insurance Claims</span>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface CaseStudy {
   id: string;
@@ -19,23 +19,23 @@ interface CaseStudy {
 const CASE_STUDIES: CaseStudy[] = [
   {
     id: 'porsche-911',
-    category: 'Rear Quarter & Chassis Realignment',
-    title: 'Porsche 911 GT3 (992)',
+    category: 'Bare-Metal Respray',
+    title: 'Porsche 911 (992) Carrera GTS',
     description:
-      'Offside quarter panel rebuild, Celette laser bench realignment, and 3-stage pearl respray with ceramic protection.',
-    timeline: '8 Working Days',
-    paintCode: 'Porsche Pure White (C9A)',
+      'Complete exterior restoration, acid dip treatment, 4 coats of Guards Red (G1) with ceramic clear coat finish.',
+    timeline: '12 Working Days',
+    paintCode: 'Porsche G1 Carmine',
     beforeImg: '/assets/marketing/project-porsche-911-before.jpg',
     afterImg: '/assets/marketing/project-porsche-911-after.jpg',
   },
   {
     id: 'bmw-m4',
-    category: 'Side Impact & Carbon Roof Respray',
-    title: 'BMW M4 Competition (G82)',
+    category: 'Quarter Panel Reconstruction',
+    title: 'BMW 3 Series M-Sport (G20)',
     description:
-      'Complete driver side doors replacement, B-pillar laser realignment, and OEM clear coat in Blowtherm booth.',
+      'Rear side impact repair, OEM quarter section replacement with factory laser weld seams and robotic seam sealing.',
     timeline: '6 Working Days',
-    paintCode: 'BMW Portimao Blue (C31)',
+    paintCode: 'BMW C31 Portimao Blue',
     beforeImg: '/assets/marketing/project-bmw-3-series-before.jpg',
     afterImg: '/assets/marketing/project-bmw-3-series-after.jpg',
   },
@@ -67,35 +67,34 @@ export function StitchCaseStudies() {
   };
 
   return (
-    <section id='work' className='mx-auto w-full max-w-[1280px] px-4 py-24 sm:px-6 lg:px-8'>
+    <section id='work' className='container mx-auto px-6 py-24 sm:px-12'>
       {/* Header */}
-      <div className='mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end'>
+      <div className='mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end'>
         <div className='flex max-w-2xl flex-col gap-3'>
           <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             <span className='h-px w-6 bg-[#dc2626]' />
-            Documented Transformations
+            Verified Results
           </span>
-          <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-tight text-white uppercase sm:text-4xl lg:text-[36px] lg:leading-[44px]'>
-            Recent Workshop <br />
-            <span className='text-[#dc2626]'>Case Studies.</span>
+          <h2 className='font-[family-name:var(--font-manrope)] text-4xl font-bold tracking-tight text-white uppercase lg:text-[40px] lg:leading-[48px]'>
+            Before &amp; After <br />
+            <span className='text-[#dc2626]'>Restoration Proof.</span>
           </h2>
-          <p className='text-sm text-neutral-400'>
-            Every structural chassis pull, panel fabrication, and respray is photographed and cataloged against factory
-            blueprint tolerances.
+          <p className='text-base leading-6 text-neutral-400'>
+            Zero flaws, undetectable color transitions, and exact factory panel gaps inspected under 2,000-lumen
+            lighting.
           </p>
         </div>
 
         <Link
           href='/our-work'
-          className='flex items-center gap-2 rounded border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs tracking-widest text-neutral-300 uppercase transition-all hover:border-[#dc2626] hover:text-white'
+          className='flex items-center gap-1.5 border-b border-neutral-600 pb-1 font-mono text-xs tracking-widest text-neutral-300 uppercase hover:text-white'
         >
-          <span>View Full Portfolio</span>
-          <ArrowUpRight className='size-3.5' />
+          View 140+ Case Studies <ArrowRight className='size-3.5' />
         </Link>
       </div>
 
       {/* 3 Case Study Cards */}
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+      <div className='grid grid-cols-1 gap-8 md:grid-cols-3'>
         {CASE_STUDIES.map((study) => {
           const currentMode = viewState[study.id] || 'after';
           const currentImg = currentMode === 'after' ? study.afterImg : study.beforeImg;
@@ -118,9 +117,11 @@ export function StitchCaseStudies() {
                 <button
                   type='button'
                   onClick={() => toggleView(study.id)}
-                  className='absolute top-3 left-3 rounded border border-white/20 bg-black/80 px-2.5 py-1 font-mono text-[10px] text-white backdrop-blur-md transition-colors hover:border-[#dc2626]'
+                  aria-label={currentMode === 'after' ? 'Show before photo' : 'Show after photo'}
+                  className='absolute top-3 left-3 rounded border border-white/10 bg-black/80 px-2.5 py-1 font-mono text-[10px] text-white backdrop-blur-md transition-colors hover:border-[#dc2626]'
                 >
-                  CLICK: {currentMode === 'after' ? 'SHOW BEFORE' : 'SHOW AFTER'}
+                  <span className={currentMode === 'before' ? 'text-[#dc2626]' : undefined}>BEFORE</span> /{' '}
+                  <span className={currentMode === 'after' ? 'text-[#dc2626]' : undefined}>AFTER</span>
                 </button>
 
                 {/* Status Indicator */}
@@ -137,10 +138,10 @@ export function StitchCaseStudies() {
               <div className='flex flex-1 flex-col justify-between p-6'>
                 <div>
                   <div className='mb-1 font-mono text-xs tracking-wider text-[#dc2626] uppercase'>{study.category}</div>
-                  <h3 className='mb-2 font-[family-name:var(--font-manrope)] text-base font-bold text-white'>
+                  <h3 className='mb-2 font-[family-name:var(--font-manrope)] text-2xl leading-8 font-semibold text-white'>
                     {study.title}
                   </h3>
-                  <p className='mb-4 text-xs leading-relaxed text-neutral-400'>{study.description}</p>
+                  <p className='mb-4 text-base leading-6 text-neutral-400'>{study.description}</p>
                 </div>
 
                 <div className='space-y-2 border-t border-white/5 pt-4 font-mono text-xs'>

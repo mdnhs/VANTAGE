@@ -12,7 +12,7 @@ const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-100', 'motion-delay-200',
 
 export function TrustStrip() {
   return (
-    <div className='relative z-10 -mt-16 px-6 sm:px-12'>
+    <div className='relative z-10 container mx-auto -mt-16 px-6 sm:px-12'>
       <div className='grid grid-cols-2 divide-y divide-white/5 rounded-lg bg-[#2a2a2a]/50 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] backdrop-blur-md sm:grid-cols-4 sm:divide-x sm:divide-y-0'>
         {TRUST_ITEMS.map((item, index) => (
           <div

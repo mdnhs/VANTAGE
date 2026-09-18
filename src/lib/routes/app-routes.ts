@@ -4,6 +4,7 @@ export const APP_ROUTES = {
   },
   dashboard: {
     index: '/dashboard',
+    tab: (tab: string) => `/dashboard?tab=${tab}`,
   },
   content: {
     settings: {

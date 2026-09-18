@@ -1,9 +1,19 @@
 import { manrope, inter } from '@/lib/font';
+import { StitchHeader } from '@/components/marketing/stitch-header';
+import { StitchCta } from '@/components/marketing/stitch-cta';
+import { MarketingFooter } from '@/components/marketing/footer';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
-export default function MarketingLayout({ children }: LayoutProps<'/'>) {
+// One navbar + closing CTA + footer for every public page; contact details come from CMS site settings.
+export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
+  const settings = await siteSettingsService.getPublic();
+
   return (
     <div className={`${manrope.variable} ${inter.variable} bg-[#131313] font-[family-name:var(--font-inter)]`}>
+      <StitchHeader phone={settings.phone} />
       {children}
+      <StitchCta phone={settings.phone} />
+      <MarketingFooter />
     </div>
   );
 }

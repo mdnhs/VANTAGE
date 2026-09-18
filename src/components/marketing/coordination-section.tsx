@@ -26,7 +26,7 @@ const FEATURES = [
 
 export function CoordinationSection() {
   return (
-    <section className='flex flex-col gap-16 bg-[#1c1b1b] px-6 py-20 sm:px-12 lg:py-[120px]'>
+    <section className='container mx-auto flex flex-col gap-16 bg-[#1c1b1b] px-6 py-20 sm:px-12 lg:py-[120px]'>
       <div className='intersect-once flex max-w-[672px] flex-col gap-4 intersect:motion-preset-slide-up-sm'>
         <h2 className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-[-0.4px] text-[#e5e2e1] uppercase lg:text-[40px] lg:leading-[48px]'>
           Seamless Coordination

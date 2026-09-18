@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/marketing/header';
-import { HeroSection } from '@/components/marketing/hero-section';
-import { TrustStrip } from '@/components/marketing/trust-strip';
-import { PartnerLogosStrip } from '@/components/marketing/partner-logos-strip';
-import { ServicesSection } from '@/components/marketing/services-section';
-import { TestimonialsSection } from '@/components/marketing/testimonials-section';
-import { MarketingFooter } from '@/components/marketing/footer';
+import { StitchHero } from '@/components/marketing/stitch-hero';
+import { StitchPillars } from '@/components/marketing/stitch-pillars';
+import { StitchServices } from '@/components/marketing/stitch-services';
+import { StitchEstimator } from '@/components/marketing/stitch-estimator';
+import { StitchCaseStudies } from '@/components/marketing/stitch-case-studies';
+import { StitchProcess } from '@/components/marketing/stitch-process';
+import { StitchSocialProof } from '@/components/marketing/stitch-social-proof';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
@@ -27,20 +27,20 @@ export default async function Home() {
   ]);
 
   return (
-    <>
-      <MarketingHeader />
-      <main>
-        <HeroSection
+    <div className='flex min-h-screen flex-col bg-[#0d0d0d] text-[#e5e2e1] antialiased selection:bg-[#dc2626] selection:text-white'>
+      <main className='grow'>
+        <StitchHero
           heroVideoEnabled={settings.heroVideoEnabled}
           heroVideoPublicId={settings.heroVideoPublicId}
           heroFallbackImagePublicId={settings.heroFallbackImagePublicId}
         />
-        <TrustStrip />
-        <PartnerLogosStrip logos={partnerLogos} />
-        <ServicesSection services={services} />
-        <TestimonialsSection testimonials={testimonials} />
+        <StitchPillars />
+        <StitchServices services={services} />
+        <StitchEstimator />
+        <StitchCaseStudies />
+        <StitchProcess />
+        <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} />
       </main>
-      <MarketingFooter />
-    </>
+    </div>
   );
 }

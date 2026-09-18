@@ -11,7 +11,7 @@ const TEAM = [
 
 export function TeamSection() {
   return (
-    <section className='relative overflow-hidden bg-[#1c1b1b] px-6 py-20 sm:px-12 lg:py-[120px]'>
+    <section className='relative container mx-auto overflow-hidden bg-[#1c1b1b] px-6 py-20 sm:px-12 lg:py-[120px]'>
       <div className='pointer-events-none absolute inset-y-0 right-0 left-1/2 bg-gradient-to-l from-[rgba(255,180,171,0.05)] to-transparent' />
 
       <div className='relative flex flex-col gap-16'>

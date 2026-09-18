@@ -1,7 +1,6 @@
 'use client';
 
 import { Search, Calendar, Bell, Plus } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +13,9 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ searchQuery, setSearchQuery, onOpenNewEnquiry }: AdminHeaderProps) {
   return (
-    <header className='sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#242a3e] bg-[#0f1219]/90 px-6 backdrop-blur-md'>
-      {/* Left: Sidebar Trigger & Search Bar */}
+    <header className='flex h-14 items-center justify-between rounded-xl border border-[#242a3e] bg-[#0f1219] px-4'>
+      {/* Left: Search Bar */}
       <div className='flex max-w-lg flex-1 items-center gap-4'>
-        <SidebarTrigger className='text-slate-400 hover:bg-[#141824] hover:text-white' />
-
         <div className='relative flex flex-1 items-center'>
           <Search className='pointer-events-none absolute left-3.5 z-10 size-4 text-slate-400' />
           <Input

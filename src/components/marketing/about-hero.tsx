@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export function AboutHero() {
   return (
-    <section className='relative flex min-h-[400px] items-end overflow-hidden px-6 pt-20 pb-16 sm:px-12 lg:min-h-[480px]'>
+    <section className='relative container mx-auto flex min-h-[400px] items-end overflow-hidden px-6 pt-20 pb-16 sm:px-12 lg:min-h-[480px]'>
       <div className='absolute inset-0 z-0'>
         <Image
           src='/assets/marketing/about-hero.jpg'

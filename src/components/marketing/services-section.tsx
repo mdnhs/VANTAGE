@@ -16,7 +16,7 @@ interface ServicesSectionProps {
 
 export function ServicesSection({ services }: ServicesSectionProps) {
   return (
-    <section id='services' className='flex flex-col gap-16 px-6 py-20 sm:px-12 lg:py-[120px]'>
+    <section id='services' className='container mx-auto flex flex-col gap-16 px-6 py-20 sm:px-12 lg:py-[120px]'>
       <div className='intersect-once flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-end intersect:motion-preset-slide-up-sm'>
         <div className='flex max-w-[672px] flex-col gap-4'>
           <div className='flex items-center gap-4'>

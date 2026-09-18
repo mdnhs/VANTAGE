@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { MarketingHeader } from '@/components/marketing/header';
-import { MarketingFooter } from '@/components/marketing/footer';
 import { PortfolioHero } from '@/components/marketing/portfolio-hero';
 import { PortfolioFilters } from '@/components/marketing/portfolio-filters';
 import { ProjectGrid } from '@/components/marketing/project-grid';
@@ -19,8 +17,7 @@ export default async function OurWorkPage() {
 
   return (
     <>
-      <MarketingHeader />
-      <main className='flex flex-col gap-20 px-6 pt-32 pb-16 sm:px-12 lg:gap-16 lg:pt-40'>
+      <main className='container mx-auto flex flex-col gap-20 px-6 pt-32 pb-16 sm:px-12 lg:gap-16 lg:pt-40'>
         <PortfolioHero />
         <PortfolioFilters />
         <ProjectGrid projects={projects} />
@@ -40,7 +37,6 @@ export default async function OurWorkPage() {
           </button>
         </div>
       </main>
-      <MarketingFooter />
     </>
   );
 }

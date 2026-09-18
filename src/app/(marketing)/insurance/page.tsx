@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/marketing/header';
-import { MarketingFooter } from '@/components/marketing/footer';
 import { InsuranceHero } from '@/components/marketing/insurance-hero';
 import { CoordinationSection } from '@/components/marketing/coordination-section';
 import { ProcessTimeline } from '@/components/marketing/process-timeline';
@@ -20,14 +18,13 @@ export default async function InsurancePage() {
 
   return (
     <>
-      <MarketingHeader />
       <main>
         <InsuranceHero />
         <PartnerLogosStrip logos={partnerLogos} />
         <CoordinationSection />
         <ProcessTimeline />
         <InsuranceCta />
-        <div className='bg-[#131313] px-6 py-8 sm:px-12'>
+        <div className='container mx-auto bg-[#131313] px-6 py-8 sm:px-12'>
           <p className='mx-auto max-w-[896px] text-center text-[10px] leading-[15px] tracking-[1px] text-[#e6bdb8]/50 uppercase'>
             Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms.
             Vantage Autobody operates independently and is legally entitled to repair vehicles insured by all major
@@ -35,7 +32,6 @@ export default async function InsurancePage() {
           </p>
         </div>
       </main>
-      <MarketingFooter />
     </>
   );
 }
