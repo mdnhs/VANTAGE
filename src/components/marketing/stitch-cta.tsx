@@ -8,7 +8,7 @@ export function StitchCta({ phone }: { phone: string }) {
       id='contact'
       className='relative w-full overflow-hidden border-t border-white/10 bg-gradient-to-b from-[#141414] to-[#0a0a0a] py-24'
     >
-      <div className='relative z-10 container mx-auto flex flex-col items-center px-6 text-center sm:px-12'>
+      <div className='intersect-once relative z-10 container mx-auto flex flex-col items-center px-6 text-center motion-duration-700 sm:px-12 intersect:motion-preset-slide-up'>
         {/* Eyebrow Badge */}
         <div className='mb-6 inline-flex items-center gap-2 rounded-full border border-red-800/40 bg-red-950/50 px-3 py-1 text-[#ffb4ab]'>
           <AlarmClock className='size-3.5' />

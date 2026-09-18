@@ -1,3 +1,11 @@
+const STAGGER_DELAY = [
+  'motion-delay-0',
+  'motion-delay-100',
+  'motion-delay-200',
+  'motion-delay-300',
+  'motion-delay-500',
+];
+
 interface ProcessStep {
   id: string;
   title: string;
@@ -18,7 +26,7 @@ export function StitchProcess({ steps }: StitchProcessProps) {
     <section id='process' className='w-full border-y border-white/10 bg-[#111111] py-24'>
       <div className='container mx-auto px-6 sm:px-12'>
         {/* Header */}
-        <div className='mx-auto mb-16 max-w-2xl text-center'>
+        <div className='intersect-once mx-auto mb-16 max-w-2xl text-center intersect:motion-preset-slide-up'>
           <span className='font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             Predictable &amp; Certified Workflow
           </span>
@@ -35,7 +43,7 @@ export function StitchProcess({ steps }: StitchProcessProps) {
           {steps.map((step, index) => (
             <div
               key={step.id}
-              className='relative flex flex-col gap-3 rounded-lg border border-white/10 bg-[#1c1b1b] p-6'
+              className={`intersect-once relative flex flex-col gap-3 rounded-lg border border-white/10 bg-[#1c1b1b] p-6 intersect:motion-preset-slide-up-sm ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
             >
               <span
                 className={`font-[family-name:var(--font-manrope)] text-3xl font-extrabold ${

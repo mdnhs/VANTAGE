@@ -84,13 +84,13 @@ export function StitchHero({
       <div className='relative z-10 container mx-auto flex flex-col justify-center px-6 py-20 sm:px-12'>
         <div className='flex max-w-3xl flex-col gap-6'>
           {/* Eyebrow Badge */}
-          <div className='inline-flex w-fit items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 backdrop-blur-md'>
+          <div className='inline-flex w-fit motion-preset-slide-down-sm items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.05] px-3.5 py-1.5 backdrop-blur-md motion-duration-500'>
             <span className='size-2 animate-pulse rounded-full bg-[#dc2626] shadow-[0_0_8px_#dc2626]' />
             <span className='font-mono text-[11px] tracking-widest text-neutral-300 uppercase'>{eyebrow}</span>
           </div>
 
           {/* Hero Headline */}
-          <h1 className='font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-tight text-white uppercase lg:text-[64px] lg:leading-[1.08]'>
+          <h1 className='motion-preset-slide-up font-[family-name:var(--font-manrope)] text-5xl leading-[1.1] font-extrabold tracking-tight text-white uppercase motion-delay-100 motion-duration-700 lg:text-[64px] lg:leading-[1.08]'>
             {headlineLine1} <br />
             {headlineLine2} <br />
             <span className='bg-gradient-to-r from-red-500 via-[#ffb4ab] to-white bg-clip-text text-transparent'>
@@ -99,10 +99,12 @@ export function StitchHero({
           </h1>
 
           {/* Subtext */}
-          <p className='max-w-2xl text-lg leading-relaxed text-neutral-300'>{subtext}</p>
+          <p className='max-w-2xl motion-preset-slide-up-sm text-lg leading-relaxed text-neutral-300 motion-delay-200 motion-duration-700'>
+            {subtext}
+          </p>
 
           {/* CTAs */}
-          <div className='flex flex-wrap items-center gap-4 pt-4'>
+          <div className='flex motion-preset-slide-up-sm flex-wrap items-center gap-4 pt-4 motion-delay-300 motion-duration-700'>
             <a
               href='#estimator'
               className='group relative flex items-center gap-3 overflow-hidden rounded bg-[#dc2626] px-8 py-4 text-sm tracking-widest text-white uppercase shadow-lg shadow-red-900/40 transition-all hover:bg-red-700'
@@ -122,7 +124,7 @@ export function StitchHero({
           </div>
 
           {/* Trust Ticker */}
-          <div className='mt-2 grid grid-cols-2 gap-4 border-t border-white/10 pt-8 md:grid-cols-4'>
+          <div className='mt-2 grid motion-preset-fade grid-cols-2 gap-4 border-t border-white/10 pt-8 motion-delay-500 motion-duration-700 md:grid-cols-4'>
             {trustTicker.map(({ icon: Icon, iconClass, title, sub }, index) => (
               <div key={`${title}-${index}`} className='flex items-center gap-2.5'>
                 <Icon className={`size-[18px] shrink-0 ${iconClass}`} />

@@ -107,7 +107,7 @@ export function StitchEstimator() {
       <div className='container mx-auto px-6 sm:px-12'>
         <div className='grid grid-cols-1 items-center gap-12 lg:grid-cols-12'>
           {/* Left Column */}
-          <div className='flex flex-col gap-6 lg:col-span-5'>
+          <div className='intersect-once flex flex-col gap-6 lg:col-span-5 intersect:motion-preset-slide-right'>
             <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
               <span className='h-px w-6 bg-[#dc2626]' />
               2-Minute Online Quotation
@@ -161,7 +161,7 @@ export function StitchEstimator() {
           </div>
 
           {/* Right Column: Interactive 3-Step Card */}
-          <div className='lg:col-span-7'>
+          <div className='intersect-once motion-delay-150 lg:col-span-7 intersect:motion-preset-slide-left'>
             <div className='relative rounded-xl border border-white/15 bg-[#181818] p-6 shadow-2xl sm:p-8'>
               {/* Steps Bar */}
               <div className='mb-6 flex items-center justify-between border-b border-white/10 pb-6'>

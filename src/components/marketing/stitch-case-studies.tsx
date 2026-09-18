@@ -23,6 +23,8 @@ interface StitchCaseStudiesProps {
   projects: FeaturedProject[];
 }
 
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300'];
+
 const dateFormatter = new Intl.DateTimeFormat('en-IE', { year: 'numeric', month: 'short' });
 
 // Sourced from the featured, published Projects (admin-managed under Dashboard → Projects) —
@@ -42,7 +44,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
   return (
     <section id='work' className='container mx-auto px-6 py-24 sm:px-12'>
       {/* Header */}
-      <div className='mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end'>
+      <div className='intersect-once mb-12 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end intersect:motion-preset-slide-up'>
         <div className='flex max-w-2xl flex-col gap-3'>
           <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             <span className='h-px w-6 bg-[#dc2626]' />
@@ -68,14 +70,14 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
 
       {/* Case Study Cards */}
       <div className='grid grid-cols-1 gap-8 md:grid-cols-3'>
-        {projects.map((project) => {
+        {projects.map((project, index) => {
           const currentMode = viewState[project.id] ?? 'after';
           const currentPublicId = currentMode === 'after' ? project.afterImagePublicId : project.beforeImagePublicId;
 
           return (
             <div
               key={project.id}
-              className='group flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#161616] transition-all hover:border-[#dc2626]/50'
+              className={`group intersect-once flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#161616] transition-all hover:border-[#dc2626]/50 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
             >
               {/* Image Preview with Mode Toggle */}
               <div className='relative h-64 w-full overflow-hidden bg-black'>

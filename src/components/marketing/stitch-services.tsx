@@ -21,6 +21,8 @@ import { cldUrl } from '@/lib/cloudinary/url';
 import type { ServicePublic } from '@/features/services/types';
 import type { HomepageCatalogPublic } from '@/features/homepage-catalogs/types';
 
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-100', 'motion-delay-200', 'motion-delay-300'];
+
 // Shown for services created without an uploaded icon, cycled by position.
 const FALLBACK_ICONS = [CarFront, Bandage, PaintRoller, Palette, Wand2, Wrench, Disc, ShieldCheck];
 
@@ -167,7 +169,7 @@ export function StitchServices({
   return (
     <section id='services' className='container mx-auto px-6 py-24 sm:px-12'>
       {/* Header */}
-      <div className='mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end'>
+      <div className='intersect-once mb-14 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end intersect:motion-preset-slide-up'>
         <div className='flex max-w-2xl flex-col gap-3'>
           <span className='flex items-center gap-2 font-mono text-xs tracking-[0.2em] text-[#dc2626] uppercase'>
             <span className='h-px w-6 bg-[#dc2626]' />
@@ -193,12 +195,12 @@ export function StitchServices({
 
       {/* Services Grid */}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
-        {cards.map((card) => {
+        {cards.map((card, index) => {
           const Icon = card.icon;
           return (
             <div
               key={card.key}
-              className='group relative flex flex-col justify-between rounded-lg border border-white/10 bg-[#161616] p-6 transition-all duration-300 hover:border-[#dc2626]/60 hover:shadow-[0_8px_30px_rgba(220,38,38,0.15)]'
+              className={`group intersect-once relative flex flex-col justify-between rounded-lg border border-white/10 bg-[#161616] p-6 transition-all duration-300 hover:border-[#dc2626]/60 hover:shadow-[0_8px_30px_rgba(220,38,38,0.15)] intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
             >
               <div>
                 <div className='mb-5 flex items-center justify-between'>

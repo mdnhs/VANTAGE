@@ -14,6 +14,8 @@ import {
 
 // Keys must match the `icon` column values written by the Homepage Pillars admin form
 // (src/validations/homepage-pillar-schema.ts → HOMEPAGE_PILLAR_ICONS).
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-100', 'motion-delay-200', 'motion-delay-300'];
+
 const ICONS: Record<string, LucideIcon> = {
   factory: Factory,
   flame: Flame,
@@ -45,13 +47,13 @@ export function StitchPillars({ pillars }: StitchPillarsProps) {
 
   return (
     <section className='relative z-20 container mx-auto -mt-10 px-6 sm:px-12'>
-      <div className='grid grid-cols-1 gap-4 rounded-xl border border-white/10 bg-[#141414] p-3 shadow-2xl backdrop-blur-2xl sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='intersect-once grid grid-cols-1 gap-4 rounded-xl border border-white/10 bg-[#141414] p-3 shadow-2xl backdrop-blur-2xl sm:grid-cols-2 lg:grid-cols-4 intersect:motion-preset-fade'>
         {pillars.map((pillar, index) => {
           const Icon = ICONS[pillar.icon] ?? Factory;
           return (
             <div
               key={pillar.id}
-              className='flex flex-col gap-2 rounded-lg border border-white/5 bg-[#1c1b1b]/90 p-5 transition-all hover:border-[#dc2626]/40'
+              className={`intersect-once flex flex-col gap-2 rounded-lg border border-white/5 bg-[#1c1b1b]/90 p-5 transition-all hover:border-[#dc2626]/40 intersect:motion-preset-slide-up-sm ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
             >
               <div className='flex items-center justify-between'>
                 <Icon className='size-6 text-[#dc2626]' />

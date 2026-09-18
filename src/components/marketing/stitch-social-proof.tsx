@@ -18,6 +18,8 @@ interface ReviewCard {
   badge: string;
 }
 
+const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300'];
+
 // Design content, rendered until insurers / featured testimonials are added in the CMS.
 const DEFAULT_INSURERS = ['ALLIANZ', 'AXA INSURANCE', 'ZURICH', 'FBD INSURANCE', 'AVIVA', 'LIBERTY'];
 
@@ -66,7 +68,7 @@ export function StitchSocialProof({ testimonials, partnerLogos }: StitchSocialPr
   return (
     <section id='insurance' className='container mx-auto px-6 py-24 sm:px-12'>
       {/* Insurer Ribbon */}
-      <div className='mb-16 border-b border-white/10 pb-16'>
+      <div className='intersect-once mb-16 border-b border-white/10 pb-16 motion-duration-700 intersect:motion-preset-fade'>
         <div className='mb-8 text-center'>
           <span className='font-mono text-xs tracking-[0.2em] text-neutral-400 uppercase'>
             Accepted By Ireland&apos;s Leading Motor Insurers
@@ -115,10 +117,10 @@ export function StitchSocialProof({ testimonials, partnerLogos }: StitchSocialPr
 
       {/* Testimonial Cards */}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-        {reviews.map((review) => (
+        {reviews.map((review, index) => (
           <div
             key={review.key}
-            className='flex flex-col justify-between rounded-lg border border-white/10 bg-[#141414] p-6'
+            className={`intersect-once flex flex-col justify-between rounded-lg border border-white/10 bg-[#141414] p-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
           >
             <div className='space-y-3'>
               <div className='flex gap-0.5' aria-label={`${review.rating} out of 5 stars`}>
