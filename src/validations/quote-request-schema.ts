@@ -14,7 +14,7 @@ export const createQuoteRequestSchema = z.object({
   year: z.number().int().min(1900).max(2100).nullable().optional(),
   serviceType: z.string().max(120).nullable().optional(),
   description: z.string().max(3000).nullable().optional(),
-  photoUrls: z.array(z.string()).optional(),
+  photoUrls: z.array(z.string()).max(6).optional(),
   source: z.enum(['website', 'quote_page', 'homepage_estimator', 'contact_modal']).optional().default('website'),
 });
 

@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
 import { PERMISSIONS } from '@/lib/permission/permissions';
+import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
   createQuoteRequestSchema,
@@ -19,6 +20,7 @@ export const quoteRequests = new Hono<AuthEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), zValidator('json', createQuoteRequestSchema), async (c) => {
     const input = c.req.valid('json');
+    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/quotes');
     const row = await quoteRequestService.create(input);
     return ok(c, row, { status: 201 });
   })

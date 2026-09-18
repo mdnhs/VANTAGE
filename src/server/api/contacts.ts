@@ -7,7 +7,7 @@ import { rateLimit } from '@/server/middleware/rate-limit';
 import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
 import { PERMISSIONS } from '@/lib/permission/permissions';
 import { contactMessageService } from '@/server/services/contact-message-service';
-import { cloudinary } from '@/lib/cloudinary/server';
+import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import {
   createContactMessageSchema,
   contactMessageListQuerySchema,
@@ -21,25 +21,7 @@ export const contacts = new Hono<AuthEnv>()
   .post('/', rateLimit(30, 60_000), zValidator('json', createContactMessageSchema), async (c) => {
     const input = c.req.valid('json');
 
-    if (input.photoUrls && input.photoUrls.length > 0) {
-      const processedUrls: string[] = [];
-      for (const item of input.photoUrls) {
-        if (item.startsWith('data:image/')) {
-          try {
-            const res = await cloudinary.uploader.upload(item, {
-              folder: 'vantage/inquiries',
-              resource_type: 'image',
-            });
-            processedUrls.push(res.secure_url);
-          } catch {
-            // Ignore failed individual image upload
-          }
-        } else {
-          processedUrls.push(item);
-        }
-      }
-      input.photoUrls = processedUrls;
-    }
+    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/inquiries');
 
     const row = await contactMessageService.create(input);
     return ok(c, row, { status: 201 });

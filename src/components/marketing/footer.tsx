@@ -159,6 +159,12 @@ export async function MarketingFooter() {
             >
               Terms of Service
             </Link>
+            <Link
+              href='/login'
+              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
+            >
+              Login
+            </Link>
           </div>
         </div>
       </div>

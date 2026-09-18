@@ -1,7 +1,18 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Archive, CheckCircle2, FileText, Inbox, PhoneForwarded, Search, Sparkles, Wrench, X } from 'lucide-react';
+import {
+  Archive,
+  CheckCircle2,
+  FileText,
+  Inbox,
+  PhoneForwarded,
+  Search,
+  Sparkles,
+  Wrench,
+  X,
+  RefreshCw,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -36,15 +47,25 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
-  const { data: stats } = useQuoteRequestStats();
+  const { data: stats, refetch: refetchStats, isFetching: isFetchingStats } = useQuoteRequestStats();
   const currentStats = stats ?? initialStats;
 
-  const { data } = useQuoteRequestList({
+  const {
+    data,
+    refetch: refetchList,
+    isFetching: isFetchingList,
+  } = useQuoteRequestList({
     page: 1,
     limit: 50,
     status,
     search: search.trim() ? search.trim() : undefined,
   });
+
+  const isRefreshing = isFetchingStats || isFetchingList;
+  const handleRefresh = () => {
+    void refetchStats();
+    void refetchList();
+  };
 
   const quotes: QuoteRequest[] = data?.data ?? initialData.data;
 
@@ -87,6 +108,18 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
         {/* Global Stats Counter */}
         <div className='flex items-center gap-2 text-xs'>
+          <Button
+            type='button'
+            variant='outline'
+            size='icon'
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title='Refresh'
+            aria-label='Refresh inbox'
+            className='size-7'
+          >
+            <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
+          </Button>
           {currentStats.new > 0 && (
             <span className='inline-flex items-center gap-1.5 rounded-full bg-red-600/10 px-2.5 py-1 font-semibold text-red-600 dark:bg-red-600/20 dark:text-red-400'>
               <span className='size-1.5 animate-pulse rounded-full bg-red-600' />

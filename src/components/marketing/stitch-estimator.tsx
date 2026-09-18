@@ -1,5 +1,6 @@
 'use client';
 
+import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { useState } from 'react';
 import {
   CheckCircle2,
@@ -89,7 +90,8 @@ export function StitchEstimator() {
   const [vehicleFound, setVehicleFound] = useState<string | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('collision');
-  const [photoCount, setPhotoCount] = useState(0);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const photoCount = photos.length;
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -114,6 +116,9 @@ export function StitchEstimator() {
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
+      const converted = await Promise.all(photos.map(imageFileToDataUrl));
+      const photoUrls = converted.filter((url): url is string => Boolean(url));
+
       await submitQuoteRequest({
         name,
         phone,
@@ -121,6 +126,7 @@ export function StitchEstimator() {
         registration: regNumber || null,
         description: vehicleFound ? `Vehicle detected: ${vehicleFound}` : null,
         serviceType: selectedCategory,
+        photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
         source: 'homepage_estimator',
       });
       setSubmitted(true);
@@ -340,7 +346,7 @@ export function StitchEstimator() {
                         accept='image/jpeg,image/png,image/heic'
                         multiple
                         className='sr-only'
-                        onChange={(e) => setPhotoCount(Math.min(e.target.files?.length ?? 0, 4))}
+                        onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, 4))}
                       />
                       <Camera className='mx-auto mb-2 size-[30px] text-neutral-400 transition-colors group-hover:text-[#dc2626]' />
                       {photoCount > 0 ? (
