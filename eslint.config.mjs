@@ -26,6 +26,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // Scratch git worktrees created by editor tooling (e.g. Kilo Code), not project source.
+    '.kilo/**',
   ]),
 ]);
 
