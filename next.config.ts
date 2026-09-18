@@ -12,9 +12,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
-  // Vercel Image Optimization stays off; Cloudinary loader takes over when media is added.
+  // Vercel Image Optimization stays off — Cloudinary is the optimiser now, so Next.js only
+  // lays out the element. This should keep the Vercel image-optimization meter at 0.
   images: {
-    unoptimized: true,
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinary/loader.ts',
+    remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com' }],
   },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

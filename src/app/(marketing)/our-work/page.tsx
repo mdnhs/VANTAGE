@@ -5,6 +5,7 @@ import { MarketingFooter } from '@/components/marketing/footer';
 import { PortfolioHero } from '@/components/marketing/portfolio-hero';
 import { PortfolioFilters } from '@/components/marketing/portfolio-filters';
 import { ProjectGrid } from '@/components/marketing/project-grid';
+import { projectService } from '@/server/services/project-service';
 
 export const metadata: Metadata = {
   title: 'Our Work — Vantage Autobody',
@@ -13,14 +14,16 @@ export const metadata: Metadata = {
   alternates: { canonical: '/our-work' },
 };
 
-export default function OurWorkPage() {
+export default async function OurWorkPage() {
+  const projects = await projectService.listPublished();
+
   return (
     <>
       <MarketingHeader />
       <main className='flex flex-col gap-20 px-6 pt-32 pb-16 sm:px-12 lg:gap-16 lg:pt-40'>
         <PortfolioHero />
         <PortfolioFilters />
-        <ProjectGrid />
+        <ProjectGrid projects={projects} />
         <div className='flex justify-center'>
           <button
             type='button'

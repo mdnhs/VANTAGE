@@ -1,6 +1,44 @@
 import type { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/permission/server-utils';
+import { PermissionsProvider } from '@/lib/permission/permissions-provider';
+import { Sidebar } from '@/components/layout/sidebar';
+import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-// TODO: add sidebar/header once components/layout is scaffolded for a feature.
-export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return <div className='flex min-h-screen flex-col'>{children}</div>;
+// Every route under this layout reads the session cookie per request (auth check +
+// permission-filtered nav) — inherently dynamic, so it must not be prerendered.
+export const instant = false;
+
+// Real auth/permission check for the dashboard shell — proxy.ts only checks cookie
+// presence, this verifies the JWT and redirects on an expired/invalid/missing session.
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const session = await getSession();
+  if (!session) redirect(APP_ROUTES.auth.login);
+
+  return (
+    <PermissionsProvider permissions={session.permissions}>
+      <SidebarProvider>
+        <Sidebar />
+        <SidebarInset>
+          <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border transition-[width,height] ease-linear'>
+            <div className='flex items-center gap-2 px-4'>
+              <SidebarTrigger className='-ml-1' />
+              <Separator orientation='vertical' className='mr-2 data-vertical:h-4 data-vertical:self-auto' />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </header>
+          <main className='flex-1 p-6'>{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </PermissionsProvider>
+  );
 }

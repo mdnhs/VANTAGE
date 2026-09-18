@@ -1,0 +1,21 @@
+CREATE TABLE "site_settings" (
+	"id" smallint PRIMARY KEY DEFAULT 1 NOT NULL,
+	"business_name" varchar(255) NOT NULL,
+	"phone" varchar(50) NOT NULL,
+	"emergency_phone" varchar(50),
+	"email" varchar(255) NOT NULL,
+	"address" text NOT NULL,
+	"opening_hours" text NOT NULL,
+	"google_maps_url" varchar(1000),
+	"whatsapp_number" varchar(50),
+	"facebook_url" varchar(1000),
+	"instagram_url" varchar(1000),
+	"tiktok_url" varchar(1000),
+	"linkedin_url" varchar(1000),
+	"logo_public_id" varchar(500),
+	"favicon_public_id" varchar(500),
+	"hero_video_public_id" varchar(500),
+	"hero_fallback_image_public_id" varchar(500),
+	"hero_video_enabled" boolean DEFAULT false NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);

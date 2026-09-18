@@ -2,8 +2,7 @@
 
 import { useRef, useState, type DragEvent } from 'react';
 import Image from 'next/image';
-
-const SERVICES = ['Crash Repair', 'Dent Repair', 'Scratch Repair', 'Precision Paintwork', 'Restoration', 'Other'];
+import type { ServicePublic } from '@/features/services/types';
 
 function FormField({
   label,
@@ -32,7 +31,11 @@ function FormField({
   );
 }
 
-export function ContactForm() {
+interface ContactFormProps {
+  services: ServicePublic[];
+}
+
+export function ContactForm({ services }: ContactFormProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -87,11 +90,12 @@ export function ContactForm() {
             className='w-full rounded-t-[2px] border-b border-white/10 bg-[#1a1a1a] px-3 py-3 text-base text-[#e5e2e1] outline-none focus:border-[#ffb4ab]'
           >
             <option value=''>Select a service...</option>
-            {SERVICES.map((option) => (
-              <option key={option} value={option}>
-                {option}
+            {services.map((option) => (
+              <option key={option.id} value={option.name}>
+                {option.name}
               </option>
             ))}
+            <option value='Other'>Other</option>
           </select>
         </div>
 

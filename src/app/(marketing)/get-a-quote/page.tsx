@@ -3,6 +3,7 @@ import { MarketingHeader } from '@/components/marketing/header';
 import { MarketingFooter } from '@/components/marketing/footer';
 import { QuoteHero } from '@/components/marketing/quote-hero';
 import { QuoteForm } from '@/components/marketing/quote-form';
+import { serviceService } from '@/server/services/service-service';
 
 export const metadata: Metadata = {
   title: 'Get a Free Quote — Vantage Autobody',
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/get-a-quote' },
 };
 
-export default function GetAQuotePage() {
+export default async function GetAQuotePage() {
+  const services = await serviceService.listPublished();
+
   return (
     <>
       <MarketingHeader />
@@ -21,7 +24,7 @@ export default function GetAQuotePage() {
 
         <div className='relative flex flex-col gap-8 px-6 pt-16 pb-24 sm:px-12'>
           <QuoteHero />
-          <QuoteForm />
+          <QuoteForm services={services} />
         </div>
       </main>
       <MarketingFooter />

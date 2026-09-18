@@ -1,23 +1,36 @@
 import type { Context } from 'hono';
+import { getCookie } from 'hono/cookie';
 import { createMiddleware } from 'hono/factory';
 import { ApiError } from '@/server/lib/errors';
+import { SESSION_COOKIE, verifySessionToken } from '@/server/lib/session';
+import { decompressPermissions } from '@/lib/permission/utils';
 
 export interface AuthUser {
   id: string;
   email: string;
+  name: string;
   permissions: string[];
 }
 
 export type AuthEnv = { Variables: { user: AuthUser } };
 
-// TODO: implement — verify the signed session cookie / JWT and read the claims.
-//
 // COST-CRITICAL: resolve the user from the token payload alone. Do NOT query the users
 // table here. This middleware runs on every authenticated request, so a lookup turns each
 // page view into a Neon wake-up and prevents the endpoint from ever suspending.
-// Put id, email and permission bits in the signed token; re-issue it when they change
-// (see the session-invalidation pattern) and hit the database only on login.
-const resolveUser = async (_c: Context): Promise<AuthUser | null> => null;
+// id, email and compressed permission bits live in the signed cookie; the database is only
+// hit on login (see src/server/api/auth.ts).
+const resolveUser = async (c: Context): Promise<AuthUser | null> => {
+  const token = getCookie(c, SESSION_COOKIE);
+  const payload = await verifySessionToken(token);
+  if (!payload) return null;
+
+  return {
+    id: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    permissions: decompressPermissions(payload.permissions),
+  };
+};
 
 export const requireAuth = createMiddleware<AuthEnv>(async (c, next) => {
   const user = await resolveUser(c);

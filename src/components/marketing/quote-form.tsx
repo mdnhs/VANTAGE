@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { cldUrl } from '@/lib/cloudinary/url';
+import type { ServicePublic } from '@/features/services/types';
 
-const SERVICES = [
-  { id: 'collision', label: 'Collision Repair', icon: '/assets/marketing/icon-service-collision.svg' },
-  { id: 'paint', label: 'Paint & Finish', icon: '/assets/marketing/icon-service-paint.svg' },
-  { id: 'restoration', label: 'Restoration', icon: '/assets/marketing/icon-service-restoration.svg' },
-  { id: 'detailing', label: 'Detailing', icon: '/assets/marketing/icon-service-detailing.svg' },
-] as const;
+// Fallback icon for services created without an uploaded icon — matches the icon used
+// elsewhere on the site (services-section.tsx) for the same case.
+const DEFAULT_SERVICE_ICON = '/assets/marketing/icon-crash-repair.svg';
 
 const UPCOMING_STEPS = ['02 Damage', '03 Photos', '04 Contact'];
 
@@ -39,12 +38,16 @@ function FormField({
   );
 }
 
-export function QuoteForm() {
+interface QuoteFormProps {
+  services: ServicePublic[];
+}
+
+export function QuoteForm({ services }: QuoteFormProps) {
   const [registration, setRegistration] = useState('');
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
-  const [selectedService, setSelectedService] = useState<(typeof SERVICES)[number]['id']>('collision');
+  const [selectedService, setSelectedService] = useState<string | null>(services[0]?.id ?? null);
 
   return (
     <div className='relative flex flex-col gap-12 rounded-2xl bg-[#1c1b1b] px-6 py-12 shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] sm:px-12'>
@@ -107,7 +110,7 @@ export function QuoteForm() {
           </span>
 
           <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-            {SERVICES.map((service) => {
+            {services.map((service) => {
               const isSelected = service.id === selectedService;
               return (
                 <button
@@ -120,8 +123,18 @@ export function QuoteForm() {
                       : 'flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-[rgba(92,64,60,0.1)] bg-[#131313] transition-colors hover:border-[rgba(92,64,60,0.3)]'
                   }
                 >
-                  <Image src={service.icon} alt='' width={24} height={24} className='size-6' />
-                  <span className='text-base font-medium text-[#e5e2e1]'>{service.label}</span>
+                  <Image
+                    src={
+                      service.iconPublicId
+                        ? cldUrl(service.iconPublicId, { width: 48, height: 48 })
+                        : DEFAULT_SERVICE_ICON
+                    }
+                    alt=''
+                    width={24}
+                    height={24}
+                    className='size-6'
+                  />
+                  <span className='text-base font-medium text-[#e5e2e1]'>{service.name}</span>
                 </button>
               );
             })}

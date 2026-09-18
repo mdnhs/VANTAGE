@@ -1,17 +1,39 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { cldUrl } from '@/lib/cloudinary/url';
 
-export function HeroSection() {
+interface HeroSectionProps {
+  heroVideoEnabled?: boolean;
+  heroVideoPublicId?: string | null;
+  heroFallbackImagePublicId?: string | null;
+}
+
+export function HeroSection({
+  heroVideoEnabled = false,
+  heroVideoPublicId = null,
+  heroFallbackImagePublicId = null,
+}: HeroSectionProps) {
+  const showVideo = heroVideoEnabled && Boolean(heroVideoPublicId);
+  const fallbackImageSrc = heroFallbackImagePublicId
+    ? cldUrl(heroFallbackImagePublicId, { width: 1920 })
+    : '/assets/marketing/hero.jpg';
+
   return (
     <section className='relative flex min-h-[600px] items-center overflow-hidden px-6 pt-32 pb-24 sm:px-12 lg:min-h-[790px] lg:pt-40 lg:pb-40'>
       <div className='absolute inset-0 z-0'>
-        <Image
-          src='/assets/marketing/hero.jpg'
-          alt='Restored sports car in the Vantage Autobody workshop'
-          fill
-          priority
-          className='object-cover'
-        />
+        {showVideo ? (
+          <video autoPlay muted loop playsInline poster={fallbackImageSrc} className='h-full w-full object-cover'>
+            <source src={cldUrl(heroVideoPublicId as string, { resourceType: 'video' })} type='video/mp4' />
+          </video>
+        ) : (
+          <Image
+            src={fallbackImageSrc}
+            alt='Restored sports car in the Vantage Autobody workshop'
+            fill
+            priority
+            className='object-cover'
+          />
+        )}
         <div className='absolute inset-0 bg-gradient-to-r from-[rgba(19,19,19,0.9)] via-[rgba(19,19,19,0.6)] via-50% to-[rgba(19,19,19,0)]' />
         <div className='absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-80' />
       </div>

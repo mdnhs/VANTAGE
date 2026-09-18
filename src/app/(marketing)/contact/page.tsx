@@ -4,6 +4,7 @@ import { MarketingFooter } from '@/components/marketing/footer';
 import { ContactInfo } from '@/components/marketing/contact-info';
 import { ContactForm } from '@/components/marketing/contact-form';
 import { VisitUsSection } from '@/components/marketing/visit-us-section';
+import { serviceService } from '@/server/services/service-service';
 
 export const metadata: Metadata = {
   title: 'Contact — Vantage Autobody',
@@ -12,14 +13,16 @@ export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const services = await serviceService.listPublished();
+
   return (
     <>
       <MarketingHeader />
       <main className='flex flex-col gap-16 px-6 py-16 sm:px-12 lg:py-24'>
         <div className='grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16'>
           <ContactInfo />
-          <ContactForm />
+          <ContactForm services={services} />
         </div>
 
         <VisitUsSection />

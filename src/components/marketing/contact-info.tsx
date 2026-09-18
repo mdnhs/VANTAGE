@@ -1,7 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
-export function ContactInfo() {
+// Server Component — reads settings via the cached service directly, same pattern as
+// footer.tsx, so headquarters address / phone / email / WhatsApp stay in sync with the
+// admin-managed site settings instead of being hardcoded per-page.
+export async function ContactInfo() {
+  const settings = await siteSettingsService.getPublic();
+
   return (
     <div className='flex motion-preset-slide-up flex-col gap-8 motion-duration-700'>
       <div className='flex flex-col gap-4'>
@@ -27,11 +33,7 @@ export function ContactInfo() {
           />
           <div className='flex flex-col gap-1'>
             <span className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Headquarters</span>
-            <span className='text-base leading-[1.625] text-[#e6bdb8]'>
-              Unit 4, Industrial Estate,
-              <br />
-              Dublin Road, Ireland
-            </span>
+            <span className='text-base leading-[1.625] text-[#e6bdb8]'>{settings.address}</span>
           </div>
         </div>
 
@@ -46,22 +48,24 @@ export function ContactInfo() {
           <div className='flex flex-1 flex-col gap-1'>
             <span className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Direct Line</span>
             <Link
-              href='tel:+35312345678'
+              href={`tel:${settings.phone.replace(/\s+/g, '')}`}
               className='font-[family-name:var(--font-manrope)] text-2xl font-semibold text-[#e5e2e1]'
             >
-              +353 1 234 5678
+              {settings.phone}
             </Link>
-            <div className='mt-2 border-t border-white/10 pt-4'>
-              <Link
-                href='https://wa.me/35312345678'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='flex w-fit items-center gap-2 rounded-full border border-[#25d366]/20 bg-[#25d366]/10 px-4 py-2 transition-all hover:scale-105 hover:bg-[#25d366]/20'
-              >
-                <Image src='/assets/marketing/icon-whatsapp.svg' alt='' width={16} height={16} className='size-4' />
-                <span className='text-xs font-semibold tracking-[0.6px] text-[#c4c7ca]'>WhatsApp Us</span>
-              </Link>
-            </div>
+            {settings.whatsappNumber && (
+              <div className='mt-2 border-t border-white/10 pt-4'>
+                <Link
+                  href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex w-fit items-center gap-2 rounded-full border border-[#25d366]/20 bg-[#25d366]/10 px-4 py-2 transition-all hover:scale-105 hover:bg-[#25d366]/20'
+                >
+                  <Image src='/assets/marketing/icon-whatsapp.svg' alt='' width={16} height={16} className='size-4' />
+                  <span className='text-xs font-semibold tracking-[0.6px] text-[#c4c7ca]'>WhatsApp Us</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
@@ -75,8 +79,8 @@ export function ContactInfo() {
           />
           <div className='flex flex-col gap-1'>
             <span className='text-xs font-semibold tracking-[1.2px] text-[#e5e2e1] uppercase'>Email</span>
-            <Link href='mailto:info@vantageautobody.ie' className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'>
-              info@vantageautobody.ie
+            <Link href={`mailto:${settings.email}`} className='text-base text-[#e6bdb8] hover:text-[#e5e2e1]'>
+              {settings.email}
             </Link>
           </div>
         </div>

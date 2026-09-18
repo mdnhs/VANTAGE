@@ -5,6 +5,8 @@ import { InsuranceHero } from '@/components/marketing/insurance-hero';
 import { CoordinationSection } from '@/components/marketing/coordination-section';
 import { ProcessTimeline } from '@/components/marketing/process-timeline';
 import { InsuranceCta } from '@/components/marketing/insurance-cta';
+import { PartnerLogosStrip } from '@/components/marketing/partner-logos-strip';
+import { partnerLogoService } from '@/server/services/partner-logo-service';
 
 export const metadata: Metadata = {
   title: 'Insurance Support — Vantage Autobody',
@@ -13,12 +15,15 @@ export const metadata: Metadata = {
   alternates: { canonical: '/insurance' },
 };
 
-export default function InsurancePage() {
+export default async function InsurancePage() {
+  const partnerLogos = await partnerLogoService.listEnabled();
+
   return (
     <>
       <MarketingHeader />
       <main>
         <InsuranceHero />
+        <PartnerLogosStrip logos={partnerLogos} />
         <CoordinationSection />
         <ProcessTimeline />
         <InsuranceCta />

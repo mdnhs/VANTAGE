@@ -2,7 +2,14 @@ import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
+import { admins } from './admins';
 import { auth } from './auth';
+import { media } from './media';
+import { partnerLogos } from './partner-logos';
+import { projects } from './projects';
+import { services } from './services';
+import { siteSettings } from './site-settings';
+import { testimonials } from './testimonials';
 
 const app = new Hono().basePath('/api/v1');
 
@@ -19,7 +26,14 @@ export const api = app
     c.header('Cache-Control', 'public, s-maxage=60');
     return c.json({ success: true, data: { status: 'ok' } });
   })
-  .route('/auth', auth);
+  .route('/auth', auth)
+  .route('/media', media)
+  .route('/site-settings', siteSettings)
+  .route('/services', services)
+  .route('/projects', projects)
+  .route('/testimonials', testimonials)
+  .route('/partner-logos', partnerLogos)
+  .route('/admins', admins);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 
