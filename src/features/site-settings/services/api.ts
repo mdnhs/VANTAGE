@@ -3,6 +3,7 @@ import type {
   SiteSettings,
   UpdateBusinessInfoInput,
   UpdateContactInput,
+  UpdateBrandingInput,
   UpdateHeroMediaInput,
   UpdateHomepageCatalogInput,
   UpdateServicesHeroInput,
@@ -53,6 +54,11 @@ export async function updateContact(input: UpdateContactInput): Promise<SiteSett
 
 export async function updateSocialLinks(input: UpdateSocialLinksInput): Promise<SiteSettings> {
   const res = await patchSection(API_ROUTES.siteSettings.updateSocialLinks, input);
+  return parseOrThrow<SiteSettings>(res);
+}
+
+export async function updateBranding(input: UpdateBrandingInput): Promise<SiteSettings> {
+  const res = await patchSection(API_ROUTES.siteSettings.updateBranding, input);
   return parseOrThrow<SiteSettings>(res);
 }
 

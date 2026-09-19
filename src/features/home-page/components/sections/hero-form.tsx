@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
 import { useUpdateHomepageHero } from '@/features/site-settings/hooks/api/mutation/use-update-homepage-hero';
 import { updateHomepageHeroSchema } from '@/validations/site-settings-schema';
 import { toHeroFormValues, type HeroFormValues } from './hero-form-values';
@@ -20,6 +22,7 @@ export function HeroForm({ initialData }: { initialData: SiteSettings | null }) 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<HeroFormValues>({
     resolver: zodResolver(updateHomepageHeroSchema),
@@ -80,6 +83,57 @@ export function HeroForm({ initialData }: { initialData: SiteSettings | null }) 
               <FieldLabel htmlFor='heroSubtext'>Subtext</FieldLabel>
               <Textarea id='heroSubtext' aria-invalid={!!errors.heroSubtext} {...register('heroSubtext')} />
               <FieldError errors={[errors.heroSubtext]} />
+            </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hero media</CardTitle>
+          <CardDescription>Homepage hero fallback image and background video.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FieldGroup>
+            <Field>
+              <FieldLabel>Hero fallback image</FieldLabel>
+              <Controller
+                control={control}
+                name='heroFallbackImagePublicId'
+                render={({ field }) => (
+                  <CloudinaryUpload
+                    mode='single-image'
+                    folder='vantage/hero'
+                    value={field.value || null}
+                    onChange={(v) => field.onChange((v as string) ?? '')}
+                  />
+                )}
+              />
+            </Field>
+            <Field>
+              <FieldLabel>Hero video</FieldLabel>
+              <Controller
+                control={control}
+                name='heroVideoPublicId'
+                render={({ field }) => (
+                  <CloudinaryUpload
+                    mode='video'
+                    folder='vantage/hero/video'
+                    value={field.value || null}
+                    onChange={(v) => field.onChange((v as string) ?? '')}
+                  />
+                )}
+              />
+            </Field>
+            <Field orientation='horizontal'>
+              <Controller
+                control={control}
+                name='heroVideoEnabled'
+                render={({ field }) => (
+                  <Switch id='heroVideoEnabled' checked={field.value ?? false} onCheckedChange={field.onChange} />
+                )}
+              />
+              <FieldLabel htmlFor='heroVideoEnabled'>Play hero video instead of the fallback image</FieldLabel>
             </Field>
           </FieldGroup>
         </CardContent>

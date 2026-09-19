@@ -11,16 +11,40 @@ import { Input } from '@/components/ui/input';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useLogin } from '@/features/auth/hooks/use-login';
+import { LottieLogo } from '@/components/ui/lottie-logo';
 
 interface LoginFormProps {
   businessName: string;
   logoPublicId: string | null;
+  logoLottieJson?: string | null;
+  logoUseLottie?: boolean;
 }
 
-function Brand({ businessName, logoPublicId }: LoginFormProps) {
+function Brand({ businessName, logoPublicId, logoLottieJson, logoUseLottie }: LoginFormProps) {
   return (
     <div className='flex items-center gap-3'>
-      {logoPublicId ? (
+      {logoUseLottie && logoLottieJson ? (
+        <LottieLogo
+          data={logoLottieJson}
+          alt={businessName}
+          className='size-10 object-contain'
+          fallback={
+            logoPublicId ? (
+              <Image
+                src={cldUrl(logoPublicId, { width: 80, height: 80, crop: 'fit' })}
+                alt={businessName}
+                width={40}
+                height={40}
+                className='size-10 object-contain'
+              />
+            ) : (
+              <div className='flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
+                <LayoutDashboard className='size-5' />
+              </div>
+            )
+          }
+        />
+      ) : logoPublicId ? (
         <Image
           src={cldUrl(logoPublicId, { width: 80, height: 80, crop: 'fit' })}
           alt={businessName}
@@ -41,7 +65,7 @@ function Brand({ businessName, logoPublicId }: LoginFormProps) {
   );
 }
 
-export function LoginForm({ businessName, logoPublicId }: LoginFormProps) {
+export function LoginForm({ businessName, logoPublicId, logoLottieJson, logoUseLottie }: LoginFormProps) {
   const router = useRouter();
   const login = useLogin();
   const [email, setEmail] = useState('');
@@ -76,7 +100,12 @@ export function LoginForm({ businessName, logoPublicId }: LoginFormProps) {
         <div className='absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/70 to-neutral-950/30' />
 
         <div className='relative z-10'>
-          <Brand businessName={businessName} logoPublicId={logoPublicId} />
+          <Brand
+            businessName={businessName}
+            logoPublicId={logoPublicId}
+            logoLottieJson={logoLottieJson}
+            logoUseLottie={logoUseLottie}
+          />
         </div>
 
         <div className='relative z-10 flex max-w-md flex-col gap-4'>
@@ -93,7 +122,12 @@ export function LoginForm({ businessName, logoPublicId }: LoginFormProps) {
       {/* Form panel */}
       <div className='flex flex-col px-6 py-8 sm:px-10'>
         <div className='lg:hidden'>
-          <Brand businessName={businessName} logoPublicId={logoPublicId} />
+          <Brand
+            businessName={businessName}
+            logoPublicId={logoPublicId}
+            logoLottieJson={logoLottieJson}
+            logoUseLottie={logoUseLottie}
+          />
         </div>
 
         <div className='flex flex-1 items-center justify-center'>

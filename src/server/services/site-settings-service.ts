@@ -4,6 +4,7 @@ import { siteSettingsRepository } from '@/server/repositories/site-settings-repo
 import type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
+  UpdateBrandingInput,
   UpdateHeroMediaInput,
   UpdateHomepageCatalogInput,
   UpdateServicesHeroInput,
@@ -36,6 +37,8 @@ const FALLBACK_SETTINGS = {
   linkedinUrl: null,
   logoPublicId: null,
   faviconPublicId: null,
+  logoLottieJson: null,
+  logoUseLottie: false,
   heroVideoPublicId: null,
   heroFallbackImagePublicId: null,
   heroVideoEnabled: false,
@@ -97,6 +100,7 @@ async function updateSection(
     | UpdateBusinessInfoInput
     | UpdateContactInput
     | UpdateSocialLinksInput
+    | UpdateBrandingInput
     | UpdateHeroMediaInput
     | UpdateSeoInput
     | UpdateHomepageHeroInput
@@ -124,6 +128,7 @@ export const siteSettingsService = {
   updateBusinessInfo: (data: UpdateBusinessInfoInput) => updateSection(data),
   updateContact: (data: UpdateContactInput) => updateSection(data),
   updateSocialLinks: (data: UpdateSocialLinksInput) => updateSection(data),
+  updateBranding: (data: UpdateBrandingInput) => updateSection(data),
   updateHeroMedia: (data: UpdateHeroMediaInput) => updateSection(data),
   updateSeo: (data: UpdateSeoInput) => updateSection(data),
   updateHomepageHero: (data: UpdateHomepageHeroInput) => updateSection(data),

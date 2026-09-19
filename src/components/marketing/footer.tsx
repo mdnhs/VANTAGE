@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { LottieLogo } from '@/components/ui/lottie-logo';
 
 const SERVICES_LINKS = [
   { label: 'Collision Repair', href: '/services' },
@@ -29,21 +30,44 @@ const SOCIAL_LINKS = [
 // Next.js dedupes identical cache-key reads within the same render, so it costs nothing extra.
 export async function MarketingFooter() {
   const settings = await siteSettingsService.getPublic();
+  const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
+  const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
 
   return (
     <footer className='border-t border-white/5 bg-[#0e0e0e]'>
       <div className='container mx-auto flex flex-col gap-12 px-4 pt-14 pb-10 sm:gap-16 sm:px-6 sm:pt-20 sm:pb-12 md:px-12 lg:gap-[120px] lg:pt-[121px]'>
         <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-4'>
           <div className='flex flex-col gap-6'>
-            <Image
-              src={
-                settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : '/assets/marketing/logo.jpg'
-              }
-              alt={settings.businessName}
-              width={320}
-              height={200}
-              className='h-16 w-auto self-start object-contain sm:h-20'
-            />
+            {logoUseLottie && logoLottieJson ? (
+              <LottieLogo
+                data={logoLottieJson}
+                alt={settings.businessName}
+                className='h-16 w-auto max-w-[240px] self-start sm:h-20 sm:max-w-[280px]'
+                fallback={
+                  <Image
+                    src={
+                      settings.logoPublicId
+                        ? cldUrl(settings.logoPublicId, { height: 200 })
+                        : '/assets/marketing/logo.jpg'
+                    }
+                    alt={settings.businessName}
+                    width={320}
+                    height={200}
+                    className='h-16 w-auto self-start object-contain sm:h-20'
+                  />
+                }
+              />
+            ) : (
+              <Image
+                src={
+                  settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : '/assets/marketing/logo.jpg'
+                }
+                alt={settings.businessName}
+                width={320}
+                height={200}
+                className='h-16 w-auto self-start object-contain sm:h-20'
+              />
+            )}
             <p className='max-w-[320px] text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>
               Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
               obsession.

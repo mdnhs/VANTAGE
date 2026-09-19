@@ -14,6 +14,8 @@ export default async function LoginPage() {
     <LoginForm
       businessName={settings.businessName?.trim() || 'Vantage Admin'}
       logoPublicId={'logoPublicId' in settings ? settings.logoPublicId : null}
+      logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
+      logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
     />
   );
 }

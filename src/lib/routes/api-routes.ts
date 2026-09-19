@@ -17,6 +17,7 @@ export const API_ROUTES = {
     updateBusinessInfo: '/site-settings/business-info',
     updateContact: '/site-settings/contact',
     updateSocialLinks: '/site-settings/social-links',
+    updateBranding: '/site-settings/branding',
     updateHeroMedia: '/site-settings/hero-media',
     updateSeo: '/site-settings/seo',
     updateHomepageHero: '/site-settings/homepage-hero',

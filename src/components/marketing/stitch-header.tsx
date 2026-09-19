@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, ArrowRight, Menu, X, ShieldCheck } from 'lucide-react';
 import { cldUrl } from '@/lib/cloudinary/url';
+import { LottieLogo } from '@/components/ui/lottie-logo';
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -21,11 +22,19 @@ interface StitchHeaderProps {
   phone: string;
   businessName: string;
   logoPublicId: string | null;
+  logoLottieJson?: string | null;
+  logoUseLottie?: boolean;
 }
 
-export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeaderProps) {
+export function StitchHeader({
+  phone,
+  businessName,
+  logoPublicId,
+  logoLottieJson,
+  logoUseLottie = false,
+}: StitchHeaderProps) {
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
-  const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 112 }) : '/assets/marketing/logo.jpg';
+  const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 240 }) : '/assets/marketing/logo.jpg';
 
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -33,17 +42,35 @@ export function StitchHeader({ phone, businessName, logoPublicId }: StitchHeader
   return (
     // MAIN STICKY NAVIGATION
     <header className='sticky top-0 z-40 w-full border-b border-white/10 bg-[#0d0d0d]/90 backdrop-blur-xl transition-all'>
-      <div className='container mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:h-20 sm:gap-6 sm:px-6 lg:px-12'>
+      <div className='container mx-auto flex items-center justify-between gap-3 px-4 py-1 sm:gap-6 sm:px-6 sm:py-1.5 md:py-2 lg:px-12'>
         {/* Logo */}
         <Link href='/' className='flex shrink-0 items-center'>
-          <Image
-            src={logoSrc}
-            alt={businessName}
-            width={200}
-            height={112}
-            className='h-10 w-auto object-contain sm:h-12 md:h-14'
-            priority
-          />
+          {logoUseLottie && logoLottieJson ? (
+            <LottieLogo
+              data={logoLottieJson}
+              alt={businessName}
+              className='h-12 w-auto max-w-[220px] sm:h-16 sm:max-w-[280px] md:h-20 md:max-w-[340px] lg:h-[88px] lg:max-w-[380px]'
+              fallback={
+                <Image
+                  src={logoSrc}
+                  alt={businessName}
+                  width={380}
+                  height={200}
+                  className='h-12 w-auto object-contain sm:h-16 md:h-20 lg:h-[88px]'
+                  priority
+                />
+              }
+            />
+          ) : (
+            <Image
+              src={logoSrc}
+              alt={businessName}
+              width={380}
+              height={200}
+              className='h-12 w-auto object-contain sm:h-16 md:h-20 lg:h-[88px]'
+              priority
+            />
+          )}
         </Link>
 
         {/* Desktop Nav Links */}

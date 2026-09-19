@@ -2,6 +2,7 @@ import type { SiteSettings } from '@/server/db/schema';
 import type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
+  UpdateBrandingInput,
   UpdateHeroMediaInput,
   UpdateHomepageCatalogInput,
   UpdateServicesHeroInput,
@@ -19,6 +20,7 @@ export type {
   UpdateBusinessInfoInput,
   UpdateContactInput,
   UpdateSocialLinksInput,
+  UpdateBrandingInput,
   UpdateHeroMediaInput,
   UpdateSeoInput,
   UpdateHomepageHeroInput,

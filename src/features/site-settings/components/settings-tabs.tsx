@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BusinessInfoForm } from './sections/business-info-form';
 import { ContactForm } from './sections/contact-form';
 import { SocialLinksForm } from './sections/social-links-form';
-import { HeroMediaForm } from './sections/hero-media-form';
+import { BrandingForm } from './sections/branding-form';
 import { SeoForm } from './sections/seo-form';
 import type { SiteSettings } from '../types';
 
@@ -13,11 +13,11 @@ const SECTIONS = [
   { value: 'business-info', label: 'Business info' },
   { value: 'contact', label: 'Contact' },
   { value: 'social-links', label: 'Social links' },
-  { value: 'hero-media', label: 'Hero media' },
+  { value: 'branding', label: 'Branding' },
   { value: 'seo', label: 'SEO' },
 ] as const;
 
-const SECTION_VALUES = SECTIONS.map((section) => section.value);
+const SECTION_VALUES = [...SECTIONS.map((section) => section.value), 'hero-media'] as const;
 
 // Tab is kept in the URL (?tab=...) via nuqs — refreshing or sharing a link to a specific
 // section lands on that section instead of always resetting to Business info.
@@ -27,9 +27,11 @@ export function SettingsTabs({ initialData }: { initialData: SiteSettings | null
     parseAsStringLiteral(SECTION_VALUES).withDefault('business-info').withOptions({ clearOnDefault: true }),
   );
 
+  const activeTab = tab === 'hero-media' ? 'branding' : tab;
+
   return (
     <Tabs
-      value={tab}
+      value={activeTab}
       onValueChange={(value) => setTab(value as (typeof SECTION_VALUES)[number])}
       orientation='vertical'
       className='flex-row items-start gap-6'
@@ -52,8 +54,11 @@ export function SettingsTabs({ initialData }: { initialData: SiteSettings | null
         <TabsContent value='social-links'>
           <SocialLinksForm initialData={initialData} />
         </TabsContent>
+        <TabsContent value='branding'>
+          <BrandingForm initialData={initialData} />
+        </TabsContent>
         <TabsContent value='hero-media'>
-          <HeroMediaForm initialData={initialData} />
+          <BrandingForm initialData={initialData} />
         </TabsContent>
         <TabsContent value='seo'>
           <SeoForm initialData={initialData} />

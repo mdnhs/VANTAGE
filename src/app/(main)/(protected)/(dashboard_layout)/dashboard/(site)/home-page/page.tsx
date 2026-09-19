@@ -43,8 +43,8 @@ export default async function HomePageContentPage() {
         <div>
           <h1 className='text-xl font-semibold'>Home page</h1>
           <p className='text-sm text-muted-foreground'>
-            Hero copy, feature pillars, catalog items, process steps, testimonials and partner logos shown on the
-            homepage.
+            Hero copy & media, feature pillars, catalog items, process steps, testimonials and partner logos shown on
+            the homepage.
           </p>
         </div>
         <HomePageTabs

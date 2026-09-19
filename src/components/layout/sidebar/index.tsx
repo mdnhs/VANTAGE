@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { LottieLogo } from '@/components/ui/lottie-logo';
 import { LayoutDashboard, Globe, Settings, Users, ClipboardList, MessageSquare } from 'lucide-react';
 import { SITE_NAV_ITEMS } from '@/components/layout/site-nav-items';
 import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
@@ -94,6 +95,8 @@ export async function Sidebar() {
   const [session, settings] = await Promise.all([getSession(), siteSettingsService.getPublic()]);
   const businessName = settings.businessName?.trim() || 'Vantage Admin';
   const logoPublicId = 'logoPublicId' in settings ? settings.logoPublicId : null;
+  const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
+  const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
   const checker = session ? createPermissionChecker(session.permissions) : null;
 
   const canSee = (permissions: PermissionValue[]) =>
@@ -119,10 +122,29 @@ export async function Sidebar() {
               <div
                 className={cn(
                   'flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden text-sidebar-primary-foreground',
-                  !logoPublicId && 'rounded-lg bg-sidebar-primary',
+                  !logoPublicId && !logoUseLottie && 'rounded-lg bg-sidebar-primary',
                 )}
               >
-                {logoPublicId ? (
+                {logoUseLottie && logoLottieJson ? (
+                  <LottieLogo
+                    data={logoLottieJson}
+                    alt={businessName}
+                    className='size-8 object-contain'
+                    fallback={
+                      logoPublicId ? (
+                        <Image
+                          src={cldUrl(logoPublicId, { width: 64, height: 64, crop: 'fit' })}
+                          alt={businessName}
+                          width={32}
+                          height={32}
+                          className='size-8 object-contain'
+                        />
+                      ) : (
+                        <LayoutDashboard className='size-4' />
+                      )
+                    }
+                  />
+                ) : logoPublicId ? (
                   <Image
                     src={cldUrl(logoPublicId, { width: 64, height: 64, crop: 'fit' })}
                     alt={businessName}

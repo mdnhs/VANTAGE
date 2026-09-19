@@ -7,6 +7,7 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import {
   updateBusinessInfoSchema,
   updateContactSchema,
+  updateBrandingSchema,
   updateHeroMediaSchema,
   updateHomepageCatalogSchema,
   updateServicesHeroSchema,
@@ -66,6 +67,18 @@ export const siteSettings = new Hono<AuthEnv>()
     async (c) => {
       const input = c.req.valid('json');
       const data = await siteSettingsService.updateSocialLinks(input);
+      return ok(c, data);
+    },
+  )
+
+  .patch(
+    '/branding',
+    requireAuth,
+    requirePermission(PERMISSIONS.SETTINGS_MANAGE),
+    zValidator('json', updateBrandingSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const data = await siteSettingsService.updateBranding(input);
       return ok(c, data);
     },
   )

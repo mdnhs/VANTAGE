@@ -88,6 +88,15 @@ export function AdminUserForm({
     }));
   };
 
+  const allSelected = ALL_PERMISSIONS.length > 0 && ALL_PERMISSIONS.every((p) => form.permissions.includes(p));
+
+  const toggleAllPermissions = (checked: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      permissions: checked ? [...ALL_PERMISSIONS] : [],
+    }));
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await onSubmit({
@@ -148,20 +157,40 @@ export function AdminUserForm({
       </Card>
 
       <Card>
-        <CardHeader>
+        <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-3'>
           <CardTitle>Permissions</CardTitle>
+          <span className='text-xs font-medium text-muted-foreground'>
+            {form.permissions.length} of {ALL_PERMISSIONS.length} selected
+          </span>
         </CardHeader>
-        <CardContent className='grid gap-3 sm:grid-cols-2'>
-          {ALL_PERMISSIONS.map((permission) => (
-            <div key={permission} className='flex items-center gap-3'>
-              <Switch
-                id={`permission-${permission}`}
-                checked={form.permissions.includes(permission)}
-                onCheckedChange={(checked) => togglePermission(permission, checked)}
-              />
-              <Label htmlFor={`permission-${permission}`}>{PERMISSION_LABELS[permission]}</Label>
+        <CardContent className='flex flex-col gap-4'>
+          {/* All permissions master toggle */}
+          <div className='flex items-center justify-between rounded-lg border border-border/80 bg-muted/40 p-3'>
+            <div className='flex flex-col gap-0.5'>
+              <Label htmlFor='toggle-all-permissions' className='cursor-pointer text-sm font-semibold'>
+                All permissions
+              </Label>
+              <span className='text-xs text-muted-foreground'>
+                Grant full administrative privileges across all website modules and settings.
+              </span>
             </div>
-          ))}
+            <Switch id='toggle-all-permissions' checked={allSelected} onCheckedChange={toggleAllPermissions} />
+          </div>
+
+          <div className='grid gap-3 pt-1 sm:grid-cols-2'>
+            {ALL_PERMISSIONS.map((permission) => (
+              <div key={permission} className='flex items-center gap-3'>
+                <Switch
+                  id={`permission-${permission}`}
+                  checked={form.permissions.includes(permission)}
+                  onCheckedChange={(checked) => togglePermission(permission, checked)}
+                />
+                <Label htmlFor={`permission-${permission}`} className='cursor-pointer text-sm'>
+                  {PERMISSION_LABELS[permission]}
+                </Label>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

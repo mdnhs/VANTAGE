@@ -22,7 +22,7 @@ export default async function SiteSettingsPage() {
         <div>
           <h1 className='text-xl font-semibold'>Site settings</h1>
           <p className='text-sm text-muted-foreground'>
-            Business contact info, social links and hero media shown across the public site.
+            Business contact info, social links, branding and SEO shown across the public site.
           </p>
         </div>
         <SettingsTabs initialData={initialData ?? null} />

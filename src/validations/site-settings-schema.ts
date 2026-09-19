@@ -31,9 +31,18 @@ export const updateSocialLinksSchema = z.object({
   linkedinUrl: optionalUrl,
 });
 
+export const updateBrandingSchema = z.object({
+  logoPublicId: optionalText,
+  faviconPublicId: optionalText,
+  logoLottieJson: optionalText,
+  logoUseLottie: z.boolean().optional(),
+});
+
 export const updateHeroMediaSchema = z.object({
   logoPublicId: optionalText,
   faviconPublicId: optionalText,
+  logoLottieJson: optionalText,
+  logoUseLottie: z.boolean().optional(),
   heroVideoPublicId: optionalText,
   heroFallbackImagePublicId: optionalText,
   heroVideoEnabled: z.boolean().optional(),
@@ -52,6 +61,9 @@ export const updateHomepageHeroSchema = z.object({
   heroHeadlineLine2: optionalTextMax(100),
   heroHeadlineAccent: optionalTextMax(100),
   heroSubtext: optionalText,
+  heroFallbackImagePublicId: optionalText,
+  heroVideoPublicId: optionalText,
+  heroVideoEnabled: z.boolean().optional(),
   trustBadge1Title: optionalTextMax(100),
   trustBadge1Subtitle: optionalTextMax(150),
   trustBadge2Title: optionalTextMax(100),
@@ -146,6 +158,7 @@ export const updateProcessPageSchema = z.object({
 export const updateSiteSettingsSchema = updateBusinessInfoSchema
   .merge(updateContactSchema)
   .merge(updateSocialLinksSchema)
+  .merge(updateBrandingSchema)
   .merge(updateHeroMediaSchema)
   .merge(updateSeoSchema)
   .merge(updateHomepageHeroSchema)
@@ -159,6 +172,7 @@ export const updateSiteSettingsSchema = updateBusinessInfoSchema
 export type UpdateBusinessInfoInput = z.infer<typeof updateBusinessInfoSchema>;
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 export type UpdateSocialLinksInput = z.infer<typeof updateSocialLinksSchema>;
+export type UpdateBrandingInput = z.infer<typeof updateBrandingSchema>;
 export type UpdateHeroMediaInput = z.infer<typeof updateHeroMediaSchema>;
 export type UpdateSeoInput = z.infer<typeof updateSeoSchema>;
 export type UpdateHomepageHeroInput = z.infer<typeof updateHomepageHeroSchema>;

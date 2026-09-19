@@ -18,6 +18,8 @@ export const siteSettings = pgTable('site_settings', {
   linkedinUrl: varchar('linkedin_url', { length: 1000 }),
   logoPublicId: varchar('logo_public_id', { length: 500 }),
   faviconPublicId: varchar('favicon_public_id', { length: 500 }),
+  logoLottieJson: text('logo_lottie_json'),
+  logoUseLottie: boolean('logo_use_lottie').notNull().default(false),
   heroVideoPublicId: varchar('hero_video_public_id', { length: 500 }),
   heroFallbackImagePublicId: varchar('hero_fallback_image_public_id', { length: 500 }),
   heroVideoEnabled: boolean('hero_video_enabled').notNull().default(false),
