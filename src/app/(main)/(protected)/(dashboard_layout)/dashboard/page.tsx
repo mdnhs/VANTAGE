@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { getSession } from '@/lib/permission/server-utils';
+import { analyticsService } from '@/server/services/analytics-service';
+import { DashboardOverviewView } from '@/features/dashboard-overview/components/dashboard-overview-view';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Operations Dashboard',
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -10,12 +12,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const [session, data] = await Promise.all([getSession(), analyticsService.getOverviewData()]);
 
-  return (
-    <div className='flex flex-col gap-2'>
-      <h1 className='text-xl font-semibold'>Welcome{session ? `, ${session.name}` : ''}</h1>
-      <p className='text-sm text-muted-foreground'>Pick a section from the sidebar to manage site content.</p>
-    </div>
-  );
+  return <DashboardOverviewView adminName={session?.name} data={data} />;
 }

@@ -1,8 +1,8 @@
 import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import type {
-  CreateQuoteRequestInput,
+  CreateQuoteRequestOutput,
   QuoteRequestListQuery,
-  UpdateQuoteRequestInput,
+  UpdateQuoteRequestOutput,
 } from '@/validations/quote-request-schema';
 
 export const quoteRequestService = {
@@ -18,11 +18,11 @@ export const quoteRequestService = {
     return quoteRequestRepository.byId(id);
   },
 
-  async create(data: CreateQuoteRequestInput) {
+  async create(data: CreateQuoteRequestOutput) {
     return quoteRequestRepository.create(data);
   },
 
-  async update(id: string, data: UpdateQuoteRequestInput) {
+  async update(id: string, data: UpdateQuoteRequestOutput) {
     return quoteRequestRepository.update(id, data);
   },
 

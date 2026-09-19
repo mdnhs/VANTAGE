@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { Camera, Car } from 'lucide-react';
 import { QuoteStatusBadge } from '../quote-status-badge';
+import { QuoteSourceBadge } from '../quote-source-badge';
 import { formatRelativeTime, formatServiceType, getAvatarColor, getInitials } from './quote-inbox-formatters';
 import type { QuoteRequest } from '../../types';
 
@@ -87,6 +88,7 @@ export function QuoteInboxItem({ quote, isSelected, onSelect }: QuoteInboxItemPr
         {/* Bottom Badges */}
         <div className='mt-0.5 flex flex-wrap items-center gap-1.5'>
           <QuoteStatusBadge status={quote.status} />
+          <QuoteSourceBadge source={quote.source} />
 
           {photoCount > 0 && (
             <span className='inline-flex items-center gap-1 rounded bg-muted/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
