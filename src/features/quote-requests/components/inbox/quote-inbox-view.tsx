@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Archive,
@@ -25,9 +25,12 @@ import { QuoteInboxItem } from './quote-inbox-item';
 import { QuoteInboxDetail } from './quote-inbox-detail';
 import { NewEnquiryDialog } from './new-enquiry-dialog';
 import { QuoteKanbanView } from '../kanban/quote-kanban-view';
+import { QuoteKanbanSkeleton } from '../kanban/quote-kanban-skeleton';
 import { useQuoteRequestList } from '../../hooks/api/query/use-quote-request-list';
 import { useQuoteRequestStats } from '../../hooks/api/query/use-quote-request-stats';
 import { updateQuoteRequest } from '../../services/api';
+import { quoteRequestKeys } from '../../utils/query-keys';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { QuoteRequest, QuoteRequestStats, QuoteStatus } from '../../types';
 
 interface QuoteInboxViewProps {
@@ -56,6 +59,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
   const [viewMode, setViewMode] = useState<'inbox' | 'kanban'>('kanban');
   const [status, setStatus] = useState<QuoteStatus | 'all'>('all');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const [isKanbanSheetOpen, setIsKanbanSheetOpen] = useState(false);
@@ -68,11 +72,12 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
     data,
     refetch: refetchList,
     isFetching: isFetchingList,
+    isLoading: isLoadingList,
   } = useQuoteRequestList({
     page: 1,
     limit: viewMode === 'kanban' ? 100 : 50,
     status: viewMode === 'kanban' ? 'all' : status,
-    search: search.trim() ? search.trim() : undefined,
+    search: debouncedSearch.trim() ? debouncedSearch.trim() : undefined,
   });
 
   const isRefreshing = isFetchingStats || isFetchingList;
@@ -91,14 +96,17 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
     return quotes.find((q) => q.id === activeSelectedId) ?? quotes[0];
   }, [quotes, activeSelectedId]);
 
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-    if (viewMode === 'inbox') {
-      setIsMobileDetailOpen(true);
-    } else {
-      setIsKanbanSheetOpen(true);
-    }
-  };
+  const handleSelect = useCallback(
+    (id: string) => {
+      setSelectedId(id);
+      if (viewMode === 'inbox') {
+        setIsMobileDetailOpen(true);
+      } else {
+        setIsKanbanSheetOpen(true);
+      }
+    },
+    [viewMode],
+  );
 
   const handleDeleted = (id: string) => {
     if (activeSelectedId === id) {
@@ -107,25 +115,26 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
       setIsMobileDetailOpen(false);
       setIsKanbanSheetOpen(false);
     }
-    void refetchList();
-    void refetchStats();
+    // useDeleteQuoteRequest's onSuccess already invalidates lists()+stats(); no manual refetch needed here.
   };
 
-  const handleKanbanStatusChange = async (id: string, newStatus: QuoteStatus) => {
-    setIsUpdatingStatus(true);
-    try {
-      await updateQuoteRequest(id, { status: newStatus });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['quote-requests'] }),
-        refetchList(),
-        refetchStats(),
-      ]);
-    } catch (err) {
-      console.error('Failed to move quote status:', err);
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
+  const handleKanbanStatusChange = useCallback(
+    async (id: string, newStatus: QuoteStatus) => {
+      setIsUpdatingStatus(true);
+      try {
+        await updateQuoteRequest(id, { status: newStatus });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: quoteRequestKeys.lists() }),
+          queryClient.invalidateQueries({ queryKey: quoteRequestKeys.stats() }),
+        ]);
+      } catch (err) {
+        console.error('Failed to move quote status:', err);
+      } finally {
+        setIsUpdatingStatus(false);
+      }
+    },
+    [queryClient],
+  );
 
   return (
     <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
@@ -183,8 +192,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
           <NewEnquiryDialog
             onCreated={(newId) => {
               setSelectedId(newId);
-              void refetchStats();
-              void refetchList();
+              // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
             }}
           />
 
@@ -245,19 +253,23 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
           {/* 8-Column Board */}
           <div className='min-h-0 flex-1 overflow-hidden'>
-            <QuoteKanbanView
-              quotes={quotes}
-              onSelectQuote={handleSelect}
-              onStatusChange={handleKanbanStatusChange}
-              isUpdating={isUpdatingStatus}
-            />
+            {isLoadingList && !data ? (
+              <QuoteKanbanSkeleton />
+            ) : (
+              <QuoteKanbanView
+                quotes={quotes}
+                onSelectQuote={handleSelect}
+                onStatusChange={handleKanbanStatusChange}
+                isUpdating={isUpdatingStatus}
+              />
+            )}
           </div>
 
           {/* Slide-over Detail Sheet for Kanban Card Inspection */}
           <Sheet open={isKanbanSheetOpen} onOpenChange={setIsKanbanSheetOpen}>
             <SheetContent
               side='right'
-              className='w-full overflow-hidden p-0 shadow-2xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl'
+              className='w-full overflow-hidden p-0 shadow-2xl sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl'
             >
               {selectedQuote ? (
                 <QuoteInboxDetail

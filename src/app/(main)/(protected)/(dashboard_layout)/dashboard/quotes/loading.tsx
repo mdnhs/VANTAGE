@@ -1,5 +1,5 @@
-import { InboxPageSkeleton } from '@/components/layout/page-skeleton';
+import { KanbanPageSkeleton } from '@/components/layout/page-skeleton';
 
 export default function Loading() {
-  return <InboxPageSkeleton />;
+  return <KanbanPageSkeleton />;
 }

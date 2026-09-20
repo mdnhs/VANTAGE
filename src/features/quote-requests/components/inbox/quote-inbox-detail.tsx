@@ -231,7 +231,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const currentAssignedStaff = adminUsers?.find((u) => u.id === assignedAdminId) || quote.assignedAdmin;
 
   return (
-    <div className='flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
+    <div className='@container flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
       {/* Top Action Toolbar */}
       <div className='sticky top-0 z-20 flex w-full flex-wrap items-center justify-between gap-2 border-b border-border/70 bg-background/95 px-4 py-2.5 backdrop-blur-xs sm:px-6'>
         {/* Left: Mobile Back Button & Status Dropdown */}
@@ -402,13 +402,13 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
         </div>
 
         {/* Row 1: Vehicle & Requested Service Chips */}
-        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'>
           {/* Vehicle card */}
           <div className='flex items-center gap-3 rounded-lg border border-border/70 bg-muted/20 p-3'>
             <div className='flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
               <Car className='size-4 text-foreground' />
             </div>
-            <div className='flex min-w-0 flex-col'>
+            <div className='flex min-w-0 flex-1 flex-col'>
               <span className='text-[10px] font-semibold text-muted-foreground uppercase'>Vehicle Model</span>
               <span className='truncate text-xs font-semibold text-foreground'>
                 {[quote.year, quote.make, quote.model].filter(Boolean).join(' ') || 'Not Specified'}
@@ -421,7 +421,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             <div className='flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground'>
               <Wrench className='size-4 text-red-600' />
             </div>
-            <div className='flex min-w-0 flex-col'>
+            <div className='flex min-w-0 flex-1 flex-col'>
               <span className='text-[10px] font-semibold text-muted-foreground uppercase'>Service Required</span>
               <span className='truncate text-xs font-semibold text-foreground'>
                 {formatServiceType(quote.serviceType)}
@@ -430,11 +430,11 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
           </div>
 
           {/* Registration card */}
-          <div className='flex items-center gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 sm:col-span-2 lg:col-span-1'>
+          <div className='flex items-center gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 sm:col-span-2 xl:col-span-1'>
             <div className='flex size-9 shrink-0 items-center justify-center rounded-md bg-muted font-mono text-xs font-bold text-muted-foreground'>
               IRL
             </div>
-            <div className='flex min-w-0 flex-col'>
+            <div className='flex min-w-0 flex-1 flex-col'>
               <span className='text-[10px] font-semibold text-muted-foreground uppercase'>Irish Reg Plate</span>
               <span className='truncate font-mono text-xs font-bold text-foreground uppercase'>
                 {quote.registration || 'No Plate Entered'}
@@ -444,16 +444,16 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
         </div>
 
         {/* Row 2: Customer Address, Assigned Staff & Physical Inspection (Phase 3) */}
-        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'>
           {/* Customer Address Card */}
           <div className='flex flex-col justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/20 p-3'>
             <div className='flex items-start gap-2.5'>
               <div className='flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-blue-500'>
                 <MapPin className='size-4' />
               </div>
-              <div className='flex min-w-0 flex-col'>
+              <div className='flex min-w-0 flex-1 flex-col'>
                 <span className='text-[10px] font-semibold text-muted-foreground uppercase'>Customer Address</span>
-                <span className='text-xs leading-snug font-medium break-words text-foreground'>
+                <span className='text-xs leading-snug font-medium text-foreground'>
                   {hasAddress ? (
                     [address || quote.address, city || quote.city, eircode || quote.eircode].filter(Boolean).join(', ')
                   ) : (
@@ -521,12 +521,12 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
           </div>
 
           {/* Scheduled Physical Inspection Card */}
-          <div className='flex flex-col justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/20 p-3 sm:col-span-2 lg:col-span-1'>
+          <div className='flex flex-col justify-between gap-2.5 rounded-lg border border-border/70 bg-muted/20 p-3 sm:col-span-2 xl:col-span-1'>
             <div className='flex items-start gap-2.5'>
               <div className='flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-amber-500'>
                 <CalendarClock className='size-4' />
               </div>
-              <div className='flex min-w-0 flex-col'>
+              <div className='flex min-w-0 flex-1 flex-col'>
                 <span className='text-[10px] font-semibold text-muted-foreground uppercase'>Physical Inspection</span>
                 <span className='text-xs font-semibold text-foreground'>
                   {inspectionDate ? (
@@ -548,7 +548,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
                 type='datetime-local'
                 value={inspectionDate}
                 onChange={(e) => handleInspectionChange(e.target.value)}
-                className='h-7 bg-background/70 font-mono text-[11px]'
+                className='h-7 min-w-0 flex-1 bg-background/70 font-mono text-[11px]'
               />
               {inspectionDate && (
                 <Button

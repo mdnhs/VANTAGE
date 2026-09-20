@@ -223,3 +223,70 @@ export function InboxPageSkeleton() {
     </div>
   );
 }
+
+// Pipeline page (quotes, kanban view): title + counters, then the 8-column board.
+// Mirrors QuoteKanbanView so the board doesn't jump when the real pipeline streams in.
+export function KanbanPageSkeleton() {
+  return (
+    <div
+      className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'
+      aria-busy='true'
+      aria-label='Loading'
+    >
+      <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-center gap-3'>
+          <Skeleton className='size-9 rounded-lg' />
+          <div className='flex flex-col gap-1.5'>
+            <Skeleton className='h-5 w-44' />
+            <Skeleton className='h-3 w-72 max-w-full' />
+          </div>
+        </div>
+        <div className='flex items-center gap-2'>
+          <Skeleton className='h-8 w-24 rounded-md' />
+          <Skeleton className='h-8 w-8 rounded-md' />
+        </div>
+      </div>
+
+      <div className='min-h-0 flex-1 overflow-hidden'>
+        <div className='flex h-full w-full gap-3.5 overflow-x-auto pt-1 pb-4'>
+          {Array.from({ length: 8 }, (_, col) => (
+            <div
+              key={col}
+              className='flex h-full max-w-[320px] min-w-[290px] flex-1 flex-col rounded-xl border border-border bg-muted/25'
+            >
+              <div className='flex flex-col gap-1.5 rounded-t-xl border-b border-border/80 bg-background/50 p-3'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <Skeleton className='size-2 rounded-full' />
+                    <Skeleton className='h-3 w-16' />
+                    <Skeleton className='size-5 rounded-full' />
+                  </div>
+                  <Skeleton className='size-6 rounded-md' />
+                </div>
+              </div>
+              <div className='flex flex-1 flex-col gap-2.5 overflow-y-auto p-2.5'>
+                {Array.from({ length: 3 }, (_, card) => (
+                  <div key={card} className='flex flex-col gap-2.5 rounded-lg border border-border/80 bg-card p-3'>
+                    <div className='flex items-center justify-between gap-2'>
+                      <Skeleton className='h-4 w-16 rounded' />
+                      <Skeleton className='h-2.5 w-10' />
+                    </div>
+                    <div className='flex flex-col gap-1'>
+                      <Skeleton className='h-3.5 w-3/4' />
+                      <Skeleton className='h-3 w-1/2' />
+                    </div>
+                    <Skeleton className='h-5 w-full rounded-md' />
+                    <div className='flex items-center justify-between border-t border-border/50 pt-1'>
+                      <Skeleton className='h-3 w-12' />
+                      <Skeleton className='h-5 w-5 rounded' />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

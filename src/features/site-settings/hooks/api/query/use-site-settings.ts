@@ -11,5 +11,6 @@ export function useSiteSettings() {
   return useQuery({
     queryKey: SITE_SETTINGS_QUERY_KEY,
     queryFn: fetchAdminSiteSettings,
+    staleTime: 5 * 60 * 1000,
   });
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChevronsUpDownIcon, LogOutIcon } from 'lucide-react';
+import { ChevronsUpDownIcon, LogOutIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -9,6 +10,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -33,6 +36,7 @@ const initials = (name: string) =>
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const logout = useLogout();
 
@@ -78,6 +82,26 @@ export function NavUser({ user }: NavUserProps) {
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className='text-xs text-muted-foreground'>Theme</DropdownMenuLabel>
+            {/* `theme` (not resolvedTheme) so 'System' shows as the selected option when it is. */}
+            <DropdownMenuRadioGroup
+              value={theme ?? 'system'}
+              onValueChange={(value: unknown) => setTheme(String(value))}
+            >
+              <DropdownMenuRadioItem value='light'>
+                <SunIcon />
+                Light
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value='dark'>
+                <MoonIcon />
+                Dark
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value='system'>
+                <MonitorIcon />
+                System
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} disabled={logout.isPending}>
               <LogOutIcon />

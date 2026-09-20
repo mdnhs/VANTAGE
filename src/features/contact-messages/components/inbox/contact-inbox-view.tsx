@@ -9,6 +9,7 @@ import { ContactInboxItem } from './contact-inbox-item';
 import { ContactInboxDetail } from './contact-inbox-detail';
 import { useContactMessageList } from '../../hooks/api/query/use-contact-message-list';
 import { useContactMessageStats } from '../../hooks/api/query/use-contact-message-stats';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import type { ContactMessage, ContactMessageStats, ContactStatus } from '../../types';
 
 interface ContactInboxViewProps {
@@ -31,6 +32,7 @@ const FOLDERS: Array<{
 export function ContactInboxView({ initialData, initialStats }: ContactInboxViewProps) {
   const [status, setStatus] = useState<ContactStatus | 'all'>('all');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
 
@@ -45,7 +47,7 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
     page: 1,
     limit: 50,
     status,
-    search: search.trim() ? search.trim() : undefined,
+    search: debouncedSearch.trim() ? debouncedSearch.trim() : undefined,
   });
 
   const isRefreshing = isFetchingStats || isFetchingList;

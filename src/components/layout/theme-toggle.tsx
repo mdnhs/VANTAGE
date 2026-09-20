@@ -1,9 +1,11 @@
 'use client';
+
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+
 import { Button } from '@/components/ui/button';
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, resolvedTheme } = useTheme();
 
   return (
@@ -14,7 +16,8 @@ export function ThemeToggle() {
       // and the toggle would do nothing on the first click.
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
       // `relative` is required — the Moon icon below is absolutely positioned.
-      className='relative'
+      className={`relative ${className ?? ''}`}
+      title='Toggle theme'
       aria-label='Toggle theme'
     >
       <Sun className='size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90' />

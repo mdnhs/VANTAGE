@@ -10,17 +10,51 @@ import type {
 
 export const analyticsService = {
   async getOverviewData(): Promise<DashboardOverviewData> {
-    const [kpiRow] = await db
-      .select({
-        totalAll: sql<number>`count(*)::int`,
-        totalNew: sql<number>`count(*) filter (where ${quoteRequests.status} = 'new')::int`,
-        activeJobs: sql<number>`count(*) filter (where ${quoteRequests.status} in ('in_progress', 'approved'))::int`,
-        completedWork: sql<number>`count(*) filter (where ${quoteRequests.status} = 'completed')::int`,
-        pendingQuotes: sql<number>`count(*) filter (where ${quoteRequests.status} in ('quote_sent', 'waiting_response', 'quoted'))::int`,
-        salesRevenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
-        pipelineValue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} not in ('cancelled', 'archived')), 0)::text`,
-      })
-      .from(quoteRequests);
+    // All 4 queries are independent (no data dependency between them) - run in parallel
+    // instead of sequentially to cut round-trip latency on this page load.
+    const [[kpiRow], monthlyRaw, channelsRaw, recentLeads] = await Promise.all([
+      db
+        .select({
+          totalAll: sql<number>`count(*)::int`,
+          totalNew: sql<number>`count(*) filter (where ${quoteRequests.status} = 'new')::int`,
+          activeJobs: sql<number>`count(*) filter (where ${quoteRequests.status} in ('in_progress', 'approved'))::int`,
+          completedWork: sql<number>`count(*) filter (where ${quoteRequests.status} = 'completed')::int`,
+          pendingQuotes: sql<number>`count(*) filter (where ${quoteRequests.status} in ('quote_sent', 'waiting_response', 'quoted'))::int`,
+          salesRevenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
+          pipelineValue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} not in ('cancelled', 'archived')), 0)::text`,
+        })
+        .from(quoteRequests),
+      db
+        .select({
+          monthKey: sql<string>`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
+          monthLabel: sql<string>`to_char(${quoteRequests.createdAt}, 'Mon YYYY')`,
+          shortLabel: sql<string>`to_char(${quoteRequests.createdAt}, 'Mon')`,
+          inquiries: sql<number>`count(*)::int`,
+          completed: sql<number>`count(*) filter (where ${quoteRequests.status} = 'completed')::int`,
+          revenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
+        })
+        .from(quoteRequests)
+        .groupBy(
+          sql`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
+          sql`to_char(${quoteRequests.createdAt}, 'Mon YYYY')`,
+          sql`to_char(${quoteRequests.createdAt}, 'Mon')`,
+          sql`date_trunc('month', ${quoteRequests.createdAt})`,
+        )
+        .orderBy(sql`date_trunc('month', ${quoteRequests.createdAt}) asc`)
+        .limit(6),
+      db
+        .select({
+          source: quoteRequests.source,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(quoteRequests)
+        .groupBy(quoteRequests.source)
+        .orderBy(desc(sql`count(*)`)),
+      db.query.quoteRequests.findMany({
+        orderBy: [desc(quoteRequests.createdAt)],
+        limit: 5,
+      }),
+    ]);
 
     const totalInquiries = kpiRow?.totalAll ?? 0;
     const totalNewEnquiries = kpiRow?.totalNew ?? 0;
@@ -44,25 +78,6 @@ export const analyticsService = {
     };
 
     // 2. Monthly Trend Data (Last 6 months)
-    const monthlyRaw = await db
-      .select({
-        monthKey: sql<string>`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
-        monthLabel: sql<string>`to_char(${quoteRequests.createdAt}, 'Mon YYYY')`,
-        shortLabel: sql<string>`to_char(${quoteRequests.createdAt}, 'Mon')`,
-        inquiries: sql<number>`count(*)::int`,
-        completed: sql<number>`count(*) filter (where ${quoteRequests.status} = 'completed')::int`,
-        revenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
-      })
-      .from(quoteRequests)
-      .groupBy(
-        sql`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
-        sql`to_char(${quoteRequests.createdAt}, 'Mon YYYY')`,
-        sql`to_char(${quoteRequests.createdAt}, 'Mon')`,
-        sql`date_trunc('month', ${quoteRequests.createdAt})`,
-      )
-      .orderBy(sql`date_trunc('month', ${quoteRequests.createdAt}) asc`)
-      .limit(6);
-
     // Ensure we always have at least a 6-month timeline structure
     const monthlyTrends: MonthlyTrendItem[] = [];
     const now = new Date();
@@ -95,26 +110,13 @@ export const analyticsService = {
     }
 
     // 3. Channels Distribution
-    const channelsRaw = await db
-      .select({
-        source: quoteRequests.source,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(quoteRequests)
-      .groupBy(quoteRequests.source)
-      .orderBy(desc(sql`count(*)`));
-
     const channels: ChannelBreakdownItem[] = channelsRaw.map((c) => ({
       source: c.source || 'website',
       count: c.count,
       percentage: totalInquiries > 0 ? Math.round((c.count / totalInquiries) * 100) : 0,
     }));
 
-    // 4. Recent Leads
-    const recentLeads = await db.query.quoteRequests.findMany({
-      orderBy: [desc(quoteRequests.createdAt)],
-      limit: 5,
-    });
+    // 4. Recent Leads (fetched above alongside the other 3 independent queries)
 
     return {
       kpis,

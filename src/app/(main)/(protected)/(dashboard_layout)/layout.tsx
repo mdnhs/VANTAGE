@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils';
 import { getSession } from '@/lib/permission/server-utils';
 import { PermissionsProvider } from '@/lib/permission/permissions-provider';
 import { Sidebar } from '@/components/layout/sidebar';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { inter } from '@/lib/font';
 
 // Every route under this layout reads the session cookie per request (auth check +
 // permission-filtered nav) — inherently dynamic, so it must not be prerendered.
@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <PermissionsProvider permissions={session.permissions}>
-      <SidebarProvider className={`${inter.variable} font-(family-name:--font-inter)`}>
+      <SidebarProvider className='font-sans'>
         <Sidebar />
         <SidebarInset className='h-svh overflow-y-auto md:peer-data-[variant=inset]:h-[calc(100svh-1rem)]'>
           <header className='sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b border-border bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60'>
@@ -40,13 +40,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
+            <ThemeToggle className='ml-auto' />
             <Link
               href='/'
               target='_blank'
               rel='noopener noreferrer'
               aria-label='View live site (opens in a new tab)'
               title='View live site'
-              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'mr-4 ml-auto')}
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'mr-4')}
             >
               <Globe className='size-4' />
             </Link>

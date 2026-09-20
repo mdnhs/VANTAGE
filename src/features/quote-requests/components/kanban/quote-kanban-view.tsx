@@ -1,50 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Car,
-  Clock,
-  ImageIcon,
-  MoreHorizontal,
-  Plus,
-  ChevronRight,
-  UserCheck2,
-  CalendarClock,
-  MapPin,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  defaultDropAnimationSideEffects,
+  type CollisionDetection,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DropAnimation,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { KanbanColumn } from './kanban-column';
+import { KanbanCard } from './kanban-card';
 import { PIPELINE_STATUSES, type PipelineStatus, type QuoteRequest, type QuoteStatus } from '../../types';
 import { STATUS_CONFIG } from '../quote-status-badge';
-import { QuoteSourceBadge } from '../quote-source-badge';
-import { NewEnquiryDialog } from '../inbox/new-enquiry-dialog';
-import { cn } from '@/lib/utils';
 
 interface QuoteKanbanViewProps {
   quotes: QuoteRequest[];
   onSelectQuote: (id: string) => void;
   onStatusChange: (id: string, newStatus: QuoteStatus) => Promise<void>;
   isUpdating?: boolean;
-}
-
-function formatRelativeTime(dateStr: string | Date): string {
-  const d = new Date(dateStr);
-  const diffMs = Date.now() - d.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-IE', { month: 'short', day: 'numeric' });
 }
 
 function normalizeStatus(rawStatus: string): PipelineStatus {
@@ -56,14 +41,294 @@ function normalizeStatus(rawStatus: string): PipelineStatus {
   return 'new';
 }
 
-export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: QuoteKanbanViewProps) {
-  const [draggedQuoteId, setDraggedQuoteId] = useState<string | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<PipelineStatus | null>(null);
+function buildColumnsState(quotesList: QuoteRequest[]): Record<PipelineStatus, QuoteRequest[]> {
+  const initial: Record<PipelineStatus, QuoteRequest[]> = {
+    new: [],
+    contacted: [],
+    waiting_response: [],
+    quote_sent: [],
+    approved: [],
+    in_progress: [],
+    completed: [],
+    cancelled: [],
+  };
 
-  // Group quotes by canonical pipeline status
+  for (const quote of quotesList) {
+    const status = normalizeStatus(quote.status);
+    if (initial[status]) {
+      initial[status].push(quote);
+    } else {
+      initial.new.push(quote);
+    }
+  }
+
+  return initial;
+}
+
+const dropAnimationConfig: DropAnimation = {
+  duration: 220,
+  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.4',
+      },
+    },
+  }),
+};
+
+export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: QuoteKanbanViewProps) {
+  // Local optimistic state for all columns to enable 0ms real-time dragging & displacement
+  const [columns, setColumns] = useState<Record<PipelineStatus, QuoteRequest[]>>(() => buildColumnsState(quotes));
+  const [activeQuote, setActiveQuote] = useState<QuoteRequest | null>(null);
+  const [overColumnStatus, setOverColumnStatus] = useState<PipelineStatus | null>(null);
+
+  // Ref to columns so drag handlers always inspect the latest state (synced after
+  // render/commit, not during render - mutating a ref mid-render is disallowed).
+  const columnsRef = useRef(columns);
+  useEffect(() => {
+    columnsRef.current = columns;
+  }, [columns]);
+
+  // Track the container where the drag started and an immutable snapshot for rollback
+  const initialContainerRef = useRef<PipelineStatus | null>(null);
+  const snapshotRef = useRef<Record<PipelineStatus, QuoteRequest[]> | null>(null);
+
+  // Signature of server data content (not array identity) - refetches give new
+  // array refs w/ identical content, which previously reset columns mid-drag
+  // and broke the first drag attempt after a refetch landed
+  const quotesSignature = quotes.map((q) => `${q.id}:${q.status}`).join('|');
+  const lastSyncedSignatureRef = useRef<string | null>(null);
+
+  // Keep local state in sync only when server data actually changed content-wise,
+  // and never while a drag is in progress
+  useEffect(() => {
+    if (!activeQuote && quotesSignature !== lastSyncedSignatureRef.current) {
+      lastSyncedSignatureRef.current = quotesSignature;
+      setColumns(buildColumnsState(quotes));
+    }
+  }, [quotesSignature, activeQuote, quotes]);
+
+  // Mouse sensor (5px movement threshold prevents accidental drag on click)
+  // Touch sensor (200ms hold delay allows regular vertical scrolling on mobile)
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 6,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Resolves whether an ID is a column status or a card within a column
+  const findContainer = useCallback(
+    (id: string, currentCols: Record<PipelineStatus, QuoteRequest[]>): PipelineStatus | null => {
+      if (PIPELINE_STATUSES.includes(id as PipelineStatus)) {
+        return id as PipelineStatus;
+      }
+      for (const status of PIPELINE_STATUSES) {
+        if (currentCols[status]?.some((item) => item.id === id)) {
+          return status;
+        }
+      }
+      return null;
+    },
+    [],
+  );
+
+  // Hybrid collision detection: pointer-within first, rect intersection second, closest corners fallback
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    const rectCollisions = rectIntersection(args);
+    if (rectCollisions.length > 0) {
+      return rectCollisions;
+    }
+    return closestCorners(args);
+  }, []);
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    const activeId = String(active.id);
+    const startContainer = findContainer(activeId, columnsRef.current);
+    initialContainerRef.current = startContainer;
+    snapshotRef.current = columnsRef.current;
+
+    let foundQuote: QuoteRequest | null = null;
+    if (startContainer && columnsRef.current[startContainer]) {
+      foundQuote = columnsRef.current[startContainer].find((q) => q.id === activeId) ?? null;
+    }
+    setActiveQuote(foundQuote);
+    setOverColumnStatus(startContainer);
+  };
+
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    if (!over) {
+      setOverColumnStatus(null);
+      return;
+    }
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const activeContainer = findContainer(activeId, columnsRef.current);
+    const overContainer = findContainer(overId, columnsRef.current);
+
+    setOverColumnStatus(overContainer);
+
+    if (!activeContainer || !overContainer || activeContainer === overContainer) {
+      return;
+    }
+
+    // Move item across columns optimistically in state so other cards part way smoothly
+    setColumns((prev) => {
+      const activeItems = prev[activeContainer];
+      const overItems = prev[overContainer];
+
+      const activeIndex = activeItems.findIndex((item) => item.id === activeId);
+      if (activeIndex === -1) return prev;
+
+      const activeItem = activeItems[activeIndex];
+      const updatedItem: QuoteRequest = {
+        ...activeItem,
+        status: overContainer,
+      };
+
+      let newIndex: number;
+      if (PIPELINE_STATUSES.includes(overId as PipelineStatus)) {
+        newIndex = overItems.length;
+      } else {
+        const overIndex = overItems.findIndex((item) => item.id === overId);
+        const isBelowOverItem =
+          over &&
+          active.rect.current.translated &&
+          active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+        const modifier = isBelowOverItem ? 1 : 0;
+        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+      }
+
+      return {
+        ...prev,
+        [activeContainer]: activeItems.filter((item) => item.id !== activeId),
+        [overContainer]: [...overItems.slice(0, newIndex), updatedItem, ...overItems.slice(newIndex)],
+      };
+    });
+  };
+
+  const handleDragEnd = async ({ active, over }: DragEndEvent) => {
+    const activeId = String(active.id);
+    const startContainer = initialContainerRef.current;
+    const snapshot = snapshotRef.current;
+
+    setActiveQuote(null);
+    setOverColumnStatus(null);
+    initialContainerRef.current = null;
+    snapshotRef.current = null;
+
+    if (!over) {
+      // Released outside: restore snapshot
+      if (snapshot) setColumns(snapshot);
+      return;
+    }
+
+    const overId = String(over.id);
+    const currentCols = columnsRef.current;
+    const activeContainer = findContainer(activeId, currentCols);
+    const overContainer = findContainer(overId, currentCols);
+
+    if (!activeContainer || !overContainer) {
+      if (snapshot) setColumns(snapshot);
+      return;
+    }
+
+    // Reorder cards inside the same column if dropped on a specific card
+    if (
+      activeContainer === overContainer &&
+      activeId !== overId &&
+      !PIPELINE_STATUSES.includes(overId as PipelineStatus)
+    ) {
+      const items = currentCols[activeContainer];
+      const oldIndex = items.findIndex((q) => q.id === activeId);
+      const newIndex = items.findIndex((q) => q.id === overId);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        setColumns((prev) => ({
+          ...prev,
+          [activeContainer]: arrayMove(prev[activeContainer], oldIndex, newIndex),
+        }));
+      }
+    }
+
+    // If moved to a different column from where it started, sync with backend
+    if (startContainer && activeContainer !== startContainer) {
+      try {
+        await onStatusChange(activeId, activeContainer);
+      } catch (err) {
+        console.error('Failed to update quote status after drag:', err);
+        // Roll back to pre-drag state on failure
+        if (snapshot) {
+          setColumns(snapshot);
+        }
+      }
+    }
+  };
+
+  const handleDragCancel = () => {
+    if (snapshotRef.current) {
+      setColumns(snapshotRef.current);
+    }
+    setActiveQuote(null);
+    setOverColumnStatus(null);
+    initialContainerRef.current = null;
+    snapshotRef.current = null;
+  };
+
+  // Optimistic handler for quick advance chevron and dropdown menu clicks
+  const handleStatusChangeWithOptimistic = useCallback(
+    async (id: string, newStatus: QuoteStatus) => {
+      const targetStatus = normalizeStatus(newStatus);
+      const snapshot = columnsRef.current;
+
+      setColumns((prev) => {
+        let movingQuote: QuoteRequest | null = null;
+        const next = { ...prev };
+        for (const col of PIPELINE_STATUSES) {
+          const idx = next[col].findIndex((q) => q.id === id);
+          if (idx !== -1) {
+            movingQuote = { ...next[col][idx], status: targetStatus };
+            next[col] = next[col].filter((q) => q.id !== id);
+            break;
+          }
+        }
+        if (movingQuote) {
+          next[targetStatus] = [movingQuote, ...next[targetStatus]];
+        }
+        return next;
+      });
+
+      try {
+        await onStatusChange(id, newStatus);
+      } catch (err) {
+        console.error('Failed to advance quote status:', err);
+        setColumns(snapshot);
+      }
+    },
+    [onStatusChange],
+  );
+
+  // Group columns data for render
   const columnsData = PIPELINE_STATUSES.map((status) => {
-    const columnQuotes = quotes.filter((q) => normalizeStatus(q.status) === status);
-    const totalVal = columnQuotes.reduce((sum, q) => {
+    const colQuotes = columns[status] ?? [];
+    const totalVal = colQuotes.reduce((sum, q) => {
       const val = q.estimatedCost ? parseFloat(q.estimatedCost) : 0;
       return sum + (isNaN(val) ? 0 : val);
     }, 0);
@@ -71,300 +336,38 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
     return {
       status,
       config: STATUS_CONFIG[status],
-      quotes: columnQuotes,
+      quotes: colQuotes,
       totalVal,
     };
   });
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
-    setDraggedQuoteId(id);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedQuoteId(null);
-    setDragOverColumn(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent, status: PipelineStatus) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragOverColumn !== status) {
-      setDragOverColumn(status);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent, status: PipelineStatus) => {
-    // Only clear if leaving the column element entirely
-    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-    if (dragOverColumn === status) {
-      setDragOverColumn(null);
-    }
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetStatus: PipelineStatus) => {
-    e.preventDefault();
-    setDragOverColumn(null);
-    const quoteId = e.dataTransfer.getData('text/plain') || draggedQuoteId;
-    if (!quoteId) return;
-
-    const currentQuote = quotes.find((q) => q.id === quoteId);
-    if (currentQuote && normalizeStatus(currentQuote.status) !== targetStatus) {
-      await onStatusChange(quoteId, targetStatus);
-    }
-    setDraggedQuoteId(null);
-  };
-
   return (
-    <div className='flex h-full w-full gap-3.5 overflow-x-auto pt-1 pb-4'>
-      {columnsData.map(({ status, config, quotes: colQuotes, totalVal }) => {
-        const isDropTarget = dragOverColumn === status;
-
-        return (
-          <div
+    <DndContext
+      sensors={sensors}
+      collisionDetection={collisionDetection}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className='flex h-full w-full gap-3.5 overflow-x-auto pt-1 pb-4'>
+        {columnsData.map(({ status, quotes: colQuotes, totalVal }) => (
+          <KanbanColumn
             key={status}
-            onDragOver={(e) => handleDragOver(e, status)}
-            onDragLeave={(e) => handleDragLeave(e, status)}
-            onDrop={(e) => handleDrop(e, status)}
-            className={cn(
-              'flex h-full max-w-[320px] min-w-[290px] flex-1 flex-col rounded-xl border bg-muted/25 transition-colors',
-              config.borderClassName ? `border-t-2 ${config.borderClassName}` : 'border-border',
-              isDropTarget && 'border-primary/50 bg-primary/5 ring-2 ring-primary/40',
-            )}
-          >
-            {/* Column Header */}
-            <div className='flex flex-col gap-1.5 rounded-t-xl border-b border-border/80 bg-background/50 p-3'>
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
-                  <span className={cn('size-2 rounded-full', config.dotClassName)} />
-                  <h3 className='text-xs font-semibold tracking-wider text-foreground uppercase'>{config.label}</h3>
-                  <span className='flex size-5 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground'>
-                    {colQuotes.length}
-                  </span>
-                </div>
+            status={status}
+            quotes={colQuotes}
+            totalVal={totalVal}
+            onSelectQuote={onSelectQuote}
+            onStatusChange={handleStatusChangeWithOptimistic}
+            isOverColumn={overColumnStatus === status}
+          />
+        ))}
+      </div>
 
-                <NewEnquiryDialog
-                  defaultStatus={status}
-                  trigger={
-                    <button
-                      type='button'
-                      title={`Add lead in ${config.label}`}
-                      className='flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'
-                    >
-                      <Plus className='size-3.5' />
-                    </button>
-                  }
-                />
-              </div>
-
-              {/* Column Value Summary */}
-              {totalVal > 0 && (
-                <div className='flex items-center gap-1 text-[11px] font-medium text-muted-foreground'>
-                  <span>Pipeline value:</span>
-                  <span className='font-semibold text-foreground'>
-                    €{totalVal.toLocaleString('en-IE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Cards Container */}
-            <div className='flex flex-1 flex-col gap-2.5 overflow-y-auto p-2.5'>
-              {colQuotes.length === 0 ? (
-                <div
-                  className={cn(
-                    'flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-border/70 p-6 text-center text-xs text-muted-foreground/70 transition-all',
-                    isDropTarget && 'border-primary/60 bg-primary/10 text-primary',
-                  )}
-                >
-                  <p>Drop cards here</p>
-                </div>
-              ) : (
-                colQuotes.map((quote) => {
-                  const isBeingDragged = draggedQuoteId === quote.id;
-                  const hasPhotos = Boolean(quote.photoUrls && quote.photoUrls.length > 0);
-                  const vehicleText = [quote.year, quote.make, quote.model].filter(Boolean).join(' ');
-
-                  // Determine next logical pipeline stage for quick advance
-                  const currentIdx = PIPELINE_STATUSES.indexOf(normalizeStatus(quote.status));
-                  const nextStatus =
-                    currentIdx >= 0 && currentIdx < PIPELINE_STATUSES.length - 1
-                      ? PIPELINE_STATUSES[currentIdx + 1]
-                      : null;
-
-                  return (
-                    <div
-                      key={quote.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, quote.id)}
-                      onDragEnd={handleDragEnd}
-                      onClick={() => onSelectQuote(quote.id)}
-                      className={cn(
-                        'group relative flex cursor-grab flex-col gap-2.5 rounded-lg border border-border/80 bg-card p-3 shadow-xs transition-all hover:border-border hover:shadow-md active:cursor-grabbing',
-                        isBeingDragged && 'scale-95 border-dashed border-primary opacity-40',
-                      )}
-                    >
-                      {/* Card Header: Source & Time */}
-                      <div className='flex items-center justify-between gap-2'>
-                        <QuoteSourceBadge source={quote.source} />
-                        <span className='flex items-center gap-1 text-[10px] text-muted-foreground'>
-                          <Clock className='size-2.5' />
-                          {formatRelativeTime(quote.createdAt)}
-                        </span>
-                      </div>
-
-                      {/* Customer Name & Service */}
-                      <div>
-                        <h4 className='text-sm leading-tight font-semibold text-foreground transition-colors group-hover:text-red-600'>
-                          {quote.name}
-                        </h4>
-                        {quote.serviceType && (
-                          <p className='mt-0.5 line-clamp-1 text-xs text-muted-foreground'>{quote.serviceType}</p>
-                        )}
-                      </div>
-
-                      {/* Vehicle Badge */}
-                      {(vehicleText || quote.registration) && (
-                        <div className='flex items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1 font-mono text-[11px] text-foreground'>
-                          <Car className='size-3 shrink-0 text-muted-foreground' />
-                          {quote.registration && (
-                            <span className='font-bold tracking-wider text-red-600 uppercase dark:text-red-400'>
-                              {quote.registration}
-                            </span>
-                          )}
-                          {quote.registration && vehicleText && <span>•</span>}
-                          {vehicleText && <span className='truncate'>{vehicleText}</span>}
-                        </div>
-                      )}
-
-                      {/* Phase 3 Meta: Location, Assigned Staff & Inspection */}
-                      {(quote.city || quote.assignedAdmin || quote.inspectionDate) && (
-                        <div className='flex flex-wrap items-center gap-1.5 pt-0.5'>
-                          {quote.city && (
-                            <span className='inline-flex items-center gap-1 text-[10px] text-muted-foreground'>
-                              <MapPin className='size-2.5 shrink-0 text-blue-500' />
-                              <span>{quote.city}</span>
-                            </span>
-                          )}
-                          {quote.assignedAdmin && (
-                            <span className='inline-flex items-center gap-1 rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-400'>
-                              <UserCheck2 className='size-2.5' />
-                              <span>{quote.assignedAdmin.name.split(' ')[0]}</span>
-                            </span>
-                          )}
-                          {quote.inspectionDate && (
-                            <span
-                              title={`Inspection: ${new Date(quote.inspectionDate).toLocaleString('en-IE')}`}
-                              className='inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400'
-                            >
-                              <CalendarClock className='size-2.5' />
-                              <span>
-                                {new Date(quote.inspectionDate).toLocaleDateString('en-IE', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </span>
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Card Footer: Pricing, Payment Status, Photos count & Actions */}
-                      <div className='flex items-center justify-between border-t border-border/50 pt-1 text-xs'>
-                        <div className='flex items-center gap-1.5'>
-                          {quote.estimatedCost ? (
-                            <span className='font-semibold text-emerald-600 dark:text-emerald-400'>
-                              €{parseFloat(quote.estimatedCost).toLocaleString('en-IE', { minimumFractionDigits: 0 })}
-                            </span>
-                          ) : (
-                            <span className='text-[11px] text-muted-foreground/60 italic'>Unpriced</span>
-                          )}
-
-                          {/* Payment Status Pill */}
-                          {quote.paymentStatus === 'paid_in_full' && (
-                            <span className='rounded bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-emerald-600 uppercase dark:text-emerald-400'>
-                              Paid
-                            </span>
-                          )}
-                          {quote.paymentStatus === 'partially_paid' && (
-                            <span className='rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-amber-600 uppercase dark:text-amber-400'>
-                              Partial
-                            </span>
-                          )}
-                          {quote.paymentStatus === 'unpaid' &&
-                            ['approved', 'in_progress', 'completed'].includes(normalizeStatus(quote.status)) && (
-                              <span className='rounded bg-red-500/15 px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-red-500 uppercase'>
-                                Unpaid
-                              </span>
-                            )}
-
-                          {hasPhotos && (
-                            <span
-                              title={`${quote.photoUrls?.length} damage photos`}
-                              className='ml-1 flex items-center gap-1 text-[10px] text-muted-foreground'
-                            >
-                              <ImageIcon className='size-3' />
-                              {quote.photoUrls?.length}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Quick Status Menu */}
-                        <div className='flex items-center gap-1' onClick={(e) => e.stopPropagation()}>
-                          {nextStatus && (
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='icon'
-                              className='size-6 text-muted-foreground hover:bg-muted hover:text-foreground'
-                              title={`Advance to ${STATUS_CONFIG[nextStatus]?.label}`}
-                              onClick={() => void onStatusChange(quote.id, nextStatus)}
-                            >
-                              <ChevronRight className='size-3.5' />
-                            </Button>
-                          )}
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button
-                                  variant='ghost'
-                                  size='icon'
-                                  className='size-6 text-muted-foreground hover:bg-muted hover:text-foreground'
-                                >
-                                  <MoreHorizontal className='size-3.5' />
-                                </Button>
-                              }
-                            />
-                            <DropdownMenuContent align='end' className='w-48'>
-                              <DropdownMenuLabel className='text-[11px] font-semibold text-muted-foreground uppercase'>
-                                Move pipeline stage
-                              </DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              {PIPELINE_STATUSES.map((st) => (
-                                <DropdownMenuItem
-                                  key={st}
-                                  disabled={normalizeStatus(quote.status) === st}
-                                  onClick={() => void onStatusChange(quote.id, st)}
-                                  className='gap-2 text-xs'
-                                >
-                                  <span className={cn('size-2 rounded-full', STATUS_CONFIG[st]?.dotClassName)} />
-                                  <span>{STATUS_CONFIG[st]?.label}</span>
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+      {/* Smooth, elevated DragOverlay while moving cards across columns */}
+      <DragOverlay dropAnimation={dropAnimationConfig}>
+        {activeQuote ? <KanbanCard quote={activeQuote} isOverlay /> : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

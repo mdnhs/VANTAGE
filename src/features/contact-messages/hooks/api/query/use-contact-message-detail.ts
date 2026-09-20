@@ -9,5 +9,6 @@ export function useContactMessageDetail(id: string) {
     queryKey: contactMessageKeys.detail(id),
     queryFn: () => fetchContactMessageDetail(id),
     enabled: Boolean(id),
+    staleTime: 60 * 1000,
   });
 }
