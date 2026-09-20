@@ -83,25 +83,27 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className='text-xs text-muted-foreground'>Theme</DropdownMenuLabel>
-            {/* `theme` (not resolvedTheme) so 'System' shows as the selected option when it is. */}
-            <DropdownMenuRadioGroup
-              value={theme ?? 'system'}
-              onValueChange={(value: unknown) => setTheme(String(value))}
-            >
-              <DropdownMenuRadioItem value='light'>
-                <SunIcon />
-                Light
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value='dark'>
-                <MoonIcon />
-                Dark
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value='system'>
-                <MonitorIcon />
-                System
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className='text-xs text-muted-foreground'>Theme</DropdownMenuLabel>
+              {/* `theme` (not resolvedTheme) so 'System' shows as the selected option when it is. */}
+              <DropdownMenuRadioGroup
+                value={theme ?? 'system'}
+                onValueChange={(value: unknown) => setTheme(String(value))}
+              >
+                <DropdownMenuRadioItem value='light'>
+                  <SunIcon />
+                  Light
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value='dark'>
+                  <MoonIcon />
+                  Dark
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value='system'>
+                  <MonitorIcon />
+                  System
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} disabled={logout.isPending}>
               <LogOutIcon />

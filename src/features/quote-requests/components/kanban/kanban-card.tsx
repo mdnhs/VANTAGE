@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -228,9 +229,11 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
                 }
               />
               <DropdownMenuContent align='end' className='w-48'>
-                <DropdownMenuLabel className='text-[11px] font-semibold text-muted-foreground uppercase'>
-                  Move pipeline stage
-                </DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className='text-[11px] font-semibold text-muted-foreground uppercase'>
+                    Move pipeline stage
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 {PIPELINE_STATUSES.map((st) => (
                   <DropdownMenuItem
