@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
+  // Prefetches one reusable App Shell per route instead of one prefetch per visible link —
+  // the recommended pairing with cacheComponents for instant navigation. Requires
+  // cacheComponents to be enabled.
+  partialPrefetching: true,
   cacheLife: {
     // Projects/testimonials: fresher than the 'hours' preset because admins add these
     // regularly, but on-demand revalidateTag() on every mutation already guarantees
