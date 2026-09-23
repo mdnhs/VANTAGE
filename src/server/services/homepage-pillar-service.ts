@@ -9,7 +9,6 @@ import type {
 } from '@/validations/homepage-pillar-schema';
 
 const LIST_TAG = CACHE_TAGS.all('homepage-pillars');
-const detailTag = (id: string) => CACHE_TAGS.detail('homepage-pillars', id);
 
 async function listEnabledUncached() {
   return homepagePillarRepository.listEnabled();
@@ -46,14 +45,12 @@ export const homepagePillarService = {
   async update(id: string, data: UpdateHomepagePillarInput) {
     const row = await homepagePillarRepository.update(id, data);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await homepagePillarRepository.remove(id);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderHomepagePillarsInput) {

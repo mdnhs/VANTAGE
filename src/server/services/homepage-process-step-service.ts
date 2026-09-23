@@ -9,7 +9,6 @@ import type {
 } from '@/validations/homepage-process-step-schema';
 
 const LIST_TAG = CACHE_TAGS.all('homepage-process-steps');
-const detailTag = (id: string) => CACHE_TAGS.detail('homepage-process-steps', id);
 
 async function listEnabledUncached() {
   return homepageProcessStepRepository.listEnabled();
@@ -46,14 +45,12 @@ export const homepageProcessStepService = {
   async update(id: string, data: UpdateHomepageProcessStepInput) {
     const row = await homepageProcessStepRepository.update(id, data);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await homepageProcessStepRepository.remove(id);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderHomepageProcessStepsInput) {

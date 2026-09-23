@@ -11,7 +11,13 @@ import type {
 
 const LIST_TAG = CACHE_TAGS.all('testimonials');
 const FEATURED_TAG = CACHE_TAGS.list('testimonials-featured');
-const detailTag = (id: string) => CACHE_TAGS.detail('testimonials', id);
+
+// listPublishedCached only shows published rows, and listFeaturedCached only shows
+// published + featured rows — a row that was never published (or never featured) can't be
+// in either cached list, so a mutation to it never needs to bust that tag.
+type ListedRow = { status: string; isFeatured: boolean } | null | undefined;
+const isListed = (row: ListedRow) => row?.status === 'published';
+const isFeaturedListed = (row: ListedRow) => isListed(row) && !!row?.isFeatured;
 
 async function listPublishedUncached() {
   return testimonialRepository.listPublished();
@@ -54,32 +60,39 @@ export const testimonialService = {
 
   async create(data: CreateTestimonialInput) {
     const row = await testimonialRepository.create(data);
+    // A hidden, unfeatured create can't appear in either cached list — nothing to bust.
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    revalidateTag(LIST_TAG, 'content');
-    revalidateTag(FEATURED_TAG, 'content');
+    if (isListed(row)) revalidateTag(LIST_TAG, 'content');
+    if (isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'content');
     return row;
   },
 
   async update(id: string, data: UpdateTestimonialInput) {
+    const before = await testimonialRepository.byId(id);
     const row = await testimonialRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'content');
-    revalidateTag(FEATURED_TAG, 'content');
-    revalidateTag(detailTag(id), 'content');
+    if (!row) return undefined;
+    // Bust a list if the row was in it before the edit, is in it after, or both — covers a
+    // content edit to an already-listed row and a status/featured change that adds or
+    // removes it.
+    if (isListed(before) || isListed(row)) revalidateTag(LIST_TAG, 'content');
+    if (isFeaturedListed(before) || isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'content');
     return row;
   },
 
   async remove(id: string) {
+    const before = await testimonialRepository.byId(id);
     await testimonialRepository.remove(id);
-    revalidateTag(LIST_TAG, 'content');
-    revalidateTag(FEATURED_TAG, 'content');
-    revalidateTag(detailTag(id), 'content');
+    if (isListed(before)) revalidateTag(LIST_TAG, 'content');
+    if (isFeaturedListed(before)) revalidateTag(FEATURED_TAG, 'content');
   },
 
   async updateStatus(id: string, data: TestimonialStatusInput) {
     const row = await testimonialRepository.updateStatus(id, data.status);
+    if (!row) return undefined;
+    // Status just changed, so LIST_TAG membership necessarily flipped either way. Featured
+    // status didn't change here, so only bust FEATURED_TAG if this row is (or was) featured.
     revalidateTag(LIST_TAG, 'content');
-    revalidateTag(FEATURED_TAG, 'content');
-    revalidateTag(detailTag(id), 'content');
+    if (row.isFeatured) revalidateTag(FEATURED_TAG, 'content');
     return row;
   },
 

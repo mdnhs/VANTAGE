@@ -9,7 +9,6 @@ import type {
 } from '@/validations/service-schema';
 
 const LIST_TAG = CACHE_TAGS.all('services');
-const detailTag = (id: string) => CACHE_TAGS.detail('services', id);
 
 async function listPublishedUncached() {
   return serviceRepository.listPublished();
@@ -46,14 +45,12 @@ export const serviceService = {
   async update(id: string, data: UpdateServiceInput) {
     const row = await serviceRepository.update(id, data);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await serviceRepository.remove(id);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderServicesInput) {

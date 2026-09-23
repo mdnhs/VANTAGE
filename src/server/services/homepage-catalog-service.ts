@@ -9,7 +9,6 @@ import type {
 } from '@/validations/homepage-catalog-schema';
 
 const LIST_TAG = CACHE_TAGS.all('homepage-catalogs');
-const detailTag = (id: string) => CACHE_TAGS.detail('homepage-catalogs', id);
 
 async function listEnabledUncached() {
   return homepageCatalogRepository.listEnabled();
@@ -42,14 +41,12 @@ export const homepageCatalogService = {
   async update(id: string, data: UpdateHomepageCatalogInput) {
     const row = await homepageCatalogRepository.update(id, data);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await homepageCatalogRepository.remove(id);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderHomepageCatalogsInput) {

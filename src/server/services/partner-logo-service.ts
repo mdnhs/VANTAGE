@@ -9,7 +9,6 @@ import type {
 } from '@/validations/partner-logo-schema';
 
 const LIST_TAG = CACHE_TAGS.all('partner-logos');
-const detailTag = (id: string) => CACHE_TAGS.detail('partner-logos', id);
 
 async function listEnabledUncached() {
   return partnerLogoRepository.listEnabled();
@@ -46,14 +45,12 @@ export const partnerLogoService = {
   async update(id: string, data: UpdatePartnerLogoInput) {
     const row = await partnerLogoRepository.update(id, data);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await partnerLogoRepository.remove(id);
     revalidateTag(LIST_TAG, 'hours');
-    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderPartnerLogosInput) {
