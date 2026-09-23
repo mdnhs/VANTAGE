@@ -16,8 +16,9 @@ import {
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const homepageCatalogs = new Hono<AuthEnv>()
+  // Public read — unused by the marketing frontend today (it reads homepageCatalogService
+  // directly), kept for external API consumers.
   .get('/', async (c) => {
-    c.header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     const data = await homepageCatalogService.listEnabled();
     return ok(c, data);
   })

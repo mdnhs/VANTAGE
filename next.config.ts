@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
+  cacheLife: {
+    // Projects/testimonials: fresher than the 'hours' preset because admins add these
+    // regularly, but on-demand revalidateTag() on every mutation already guarantees
+    // read-your-own-writes freshness — the 1-minute background revalidate of the built-in
+    // 'minutes' preset added little beyond that and drove background regenerations (ISR
+    // writes) far more often than the content actually changes.
+    content: {
+      stale: 300, // 5 minutes
+      revalidate: 600, // 10 minutes
+      expire: 3600, // 1 hour
+    },
+  },
   // Vercel Image Optimization stays off — Cloudinary is the optimiser now, so Next.js only
   // lays out the element. This should keep the Vercel image-optimization meter at 0.
   images: {

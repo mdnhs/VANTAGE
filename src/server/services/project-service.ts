@@ -22,19 +22,21 @@ async function listFeaturedUncached() {
 }
 
 // Public "Our Work" page reads this. Projects change more often than services/site
-// settings (new jobs finished regularly), so this profile is 'minutes' rather than
-// services'/settings' 'hours' — fresher without going all the way to per-request.
+// settings (new jobs finished regularly), so this profile is the custom 'content' profile
+// (10 min) rather than services'/settings' 'hours' — fresher without going all the way to
+// per-request. Every mutation below also revalidates on demand, so this window is just the
+// backstop between edits, not the only freshness guarantee.
 async function listPublishedCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('minutes');
+  cacheLife('content');
   return listPublishedUncached();
 }
 
 async function listFeaturedCached() {
   'use cache';
   cacheTag(FEATURED_TAG);
-  cacheLife('minutes');
+  cacheLife('content');
   return listFeaturedUncached();
 }
 
@@ -58,37 +60,37 @@ export const projectService = {
   async create(data: CreateProjectInput) {
     const row = await projectRepository.create(data);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
     return row;
   },
 
   async update(id: string, data: UpdateProjectInput) {
     const row = await projectRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
     return row;
   },
 
   async remove(id: string) {
     await projectRepository.remove(id);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
   },
 
   async updateStatus(id: string, data: ProjectStatusInput) {
     const row = await projectRepository.updateStatus(id, data.status);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
     return row;
   },
 
   async reorder(data: ReorderProjectsInput) {
     await projectRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
   },
 };

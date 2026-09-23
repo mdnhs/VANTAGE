@@ -21,19 +21,21 @@ async function listFeaturedUncached() {
   return testimonialRepository.listFeatured();
 }
 
-// Content changes moderately often (new reviews added regularly) — 'minutes' matches the
-// projects cache profile rather than services'/settings' 'hours'.
+// Content changes moderately often (new reviews added regularly) — the custom 'content'
+// profile (10 min) matches the projects cache profile rather than services'/settings'
+// 'hours'. Every mutation below also revalidates on demand, so this window is just the
+// backstop between edits, not the only freshness guarantee.
 async function listPublishedCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('minutes');
+  cacheLife('content');
   return listPublishedUncached();
 }
 
 async function listFeaturedCached() {
   'use cache';
   cacheTag(FEATURED_TAG);
-  cacheLife('minutes');
+  cacheLife('content');
   return listFeaturedUncached();
 }
 
@@ -53,37 +55,37 @@ export const testimonialService = {
   async create(data: CreateTestimonialInput) {
     const row = await testimonialRepository.create(data);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
     return row;
   },
 
   async update(id: string, data: UpdateTestimonialInput) {
     const row = await testimonialRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
     return row;
   },
 
   async remove(id: string) {
     await testimonialRepository.remove(id);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
   },
 
   async updateStatus(id: string, data: TestimonialStatusInput) {
     const row = await testimonialRepository.updateStatus(id, data.status);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
-    revalidateTag(detailTag(id), 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(detailTag(id), 'content');
     return row;
   },
 
   async reorder(data: ReorderTestimonialsInput) {
     await testimonialRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'minutes');
-    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(LIST_TAG, 'content');
+    revalidateTag(FEATURED_TAG, 'content');
   },
 };

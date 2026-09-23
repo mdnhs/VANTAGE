@@ -17,15 +17,14 @@ import {
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const projects = new Hono<AuthEnv>()
-  // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
+  // Public read — unused by the marketing frontend today (it reads projectService
+  // directly), kept for external API consumers.
   .get('/', async (c) => {
-    c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     const data = await projectService.listPublished();
     return ok(c, data);
   })
 
   .get('/featured', async (c) => {
-    c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     const data = await projectService.listFeatured();
     return ok(c, data);
   })
