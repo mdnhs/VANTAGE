@@ -28,6 +28,15 @@ export const siteSettings = new Hono<AuthEnv>()
     return ok(c, data);
   })
 
+  // Versioned by `?v=<updatedAt>` from getPublic, so any settings save yields a new URL.
+  .get('/logo-lottie', async (c) => {
+    const json = await siteSettingsService.getLogoLottieJson();
+    if (!json) return c.body(null, 404);
+    c.header('Content-Type', 'application/json');
+    c.header('Cache-Control', 'public, max-age=31536000, immutable');
+    return c.body(json);
+  })
+
   .get('/admin', requireAuth, requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
     const data = await siteSettingsService.getAdmin();
     return ok(c, data);

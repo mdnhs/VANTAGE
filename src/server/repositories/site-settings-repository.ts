@@ -9,6 +9,13 @@ export const siteSettingsRepository = {
     return db.query.siteSettings.findFirst({ where: eq(siteSettings.id, 1) });
   },
 
+  getLogoLottie() {
+    return db.query.siteSettings.findFirst({
+      where: eq(siteSettings.id, 1),
+      columns: { logoLottieJson: true, logoUseLottie: true },
+    });
+  },
+
   // Settings is edited section-by-section, so any single call may carry only a few
   // columns — e.g. the Social links tab never touches businessName/phone/email/address/
   // openingHours. Those five are NOT NULL, so the *first-ever* save (row doesn't exist yet)

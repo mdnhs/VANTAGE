@@ -22,7 +22,7 @@ interface StitchHeaderProps {
   phone: string;
   businessName: string;
   logoPublicId: string | null;
-  logoLottieJson?: string | null;
+  logoLottieUrl?: string | null;
   logoUseLottie?: boolean;
 }
 
@@ -30,7 +30,7 @@ export function StitchHeader({
   phone,
   businessName,
   logoPublicId,
-  logoLottieJson,
+  logoLottieUrl,
   logoUseLottie = false,
 }: StitchHeaderProps) {
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
@@ -45,9 +45,9 @@ export function StitchHeader({
       <div className='container mx-auto flex items-center justify-between gap-3 px-4 py-1 sm:gap-6 sm:px-6 sm:py-1.5 md:py-2 lg:px-12'>
         {/* Logo */}
         <Link href='/' className='flex shrink-0 items-center'>
-          {logoUseLottie && logoLottieJson ? (
+          {logoUseLottie && logoLottieUrl ? (
             <LottieLogo
-              data={logoLottieJson}
+              data={logoLottieUrl}
               alt={businessName}
               className='h-12 w-auto max-w-[220px] sm:h-16 sm:max-w-[280px] md:h-20 md:max-w-[340px] lg:h-[88px] lg:max-w-[380px]'
               fallback={

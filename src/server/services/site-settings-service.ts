@@ -18,6 +18,7 @@ import type {
 } from '@/validations/site-settings-schema';
 
 const SETTINGS_TAG = CACHE_TAGS.all('site-settings');
+const LOGO_LOTTIE_PATH = '/api/v1/site-settings/logo-lottie';
 
 // Fallback mirrors today's hardcoded marketing copy (footer.tsx / hero-section.tsx /
 // header.tsx) so the public site's visible content does not change until an admin edits
@@ -37,7 +38,6 @@ const FALLBACK_SETTINGS = {
   linkedinUrl: null,
   logoPublicId: null,
   faviconPublicId: null,
-  logoLottieJson: null,
   logoUseLottie: false,
   heroVideoPublicId: null,
   heroFallbackImagePublicId: null,
@@ -79,9 +79,14 @@ const FALLBACK_SETTINGS = {
 
 export type PublicSiteSettings = Awaited<ReturnType<typeof getPublicUncached>>;
 
+// The Lottie JSON can be hundreds of KB; inlined here it lands in every page's HTML, RSC and
+// prefetch segments, multiplying ISR write units. Pages get a versioned URL to fetch it instead.
 async function getPublicUncached() {
   const row = await siteSettingsRepository.get();
-  return row ?? FALLBACK_SETTINGS;
+  if (!row) return { ...FALLBACK_SETTINGS, logoLottieUrl: null };
+  const { logoLottieJson, ...rest } = row;
+  const logoLottieUrl = row.logoUseLottie && logoLottieJson ? `${LOGO_LOTTIE_PATH}?v=${row.updatedAt.getTime()}` : null;
+  return { ...rest, logoLottieUrl };
 }
 
 // Public marketing pages read this — safe to serve stale for a while since settings change
@@ -119,6 +124,12 @@ async function updateSection(
 
 export const siteSettingsService = {
   getPublic: getPublicCached,
+
+  // Uncached on purpose: served behind a versioned URL with long CDN caching, not ISR.
+  async getLogoLottieJson() {
+    const row = await siteSettingsRepository.getLogoLottie();
+    return row?.logoUseLottie ? row.logoLottieJson : null;
+  },
 
   // Uncached: feeds the admin settings form pre-fill directly, always fresh for the editor.
   async getAdmin() {

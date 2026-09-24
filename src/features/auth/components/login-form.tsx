@@ -16,16 +16,16 @@ import { LottieLogo } from '@/components/ui/lottie-logo';
 interface LoginFormProps {
   businessName: string;
   logoPublicId: string | null;
-  logoLottieJson?: string | null;
+  logoLottieUrl?: string | null;
   logoUseLottie?: boolean;
 }
 
-function Brand({ businessName, logoPublicId, logoLottieJson, logoUseLottie }: LoginFormProps) {
+function Brand({ businessName, logoPublicId, logoLottieUrl, logoUseLottie }: LoginFormProps) {
   return (
     <div className='flex items-center gap-3'>
-      {logoUseLottie && logoLottieJson ? (
+      {logoUseLottie && logoLottieUrl ? (
         <LottieLogo
-          data={logoLottieJson}
+          data={logoLottieUrl}
           alt={businessName}
           className='size-10 object-contain'
           fallback={
@@ -65,7 +65,7 @@ function Brand({ businessName, logoPublicId, logoLottieJson, logoUseLottie }: Lo
   );
 }
 
-export function LoginForm({ businessName, logoPublicId, logoLottieJson, logoUseLottie }: LoginFormProps) {
+export function LoginForm({ businessName, logoPublicId, logoLottieUrl, logoUseLottie }: LoginFormProps) {
   const router = useRouter();
   const login = useLogin();
   const [email, setEmail] = useState('');
@@ -103,7 +103,7 @@ export function LoginForm({ businessName, logoPublicId, logoLottieJson, logoUseL
           <Brand
             businessName={businessName}
             logoPublicId={logoPublicId}
-            logoLottieJson={logoLottieJson}
+            logoLottieUrl={logoLottieUrl}
             logoUseLottie={logoUseLottie}
           />
         </div>
@@ -125,7 +125,7 @@ export function LoginForm({ businessName, logoPublicId, logoLottieJson, logoUseL
           <Brand
             businessName={businessName}
             logoPublicId={logoPublicId}
-            logoLottieJson={logoLottieJson}
+            logoLottieUrl={logoLottieUrl}
             logoUseLottie={logoUseLottie}
           />
         </div>

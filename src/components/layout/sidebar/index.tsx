@@ -95,7 +95,7 @@ export async function Sidebar() {
   const [session, settings] = await Promise.all([getSession(), siteSettingsService.getPublic()]);
   const businessName = settings.businessName?.trim() || 'Vantage Admin';
   const logoPublicId = 'logoPublicId' in settings ? settings.logoPublicId : null;
-  const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
+  const logoLottieUrl = settings.logoLottieUrl;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
   const checker = session ? createPermissionChecker(session.permissions) : null;
 
@@ -125,9 +125,9 @@ export async function Sidebar() {
                   !logoPublicId && !logoUseLottie && 'rounded-lg bg-sidebar-primary',
                 )}
               >
-                {logoUseLottie && logoLottieJson ? (
+                {logoUseLottie && logoLottieUrl ? (
                   <LottieLogo
-                    data={logoLottieJson}
+                    data={logoLottieUrl}
                     alt={businessName}
                     className='size-8 object-contain'
                     fallback={
