@@ -19,7 +19,7 @@ async function listEnabledUncached() {
 async function listEnabledCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('hours');
+  cacheLife('days');
   return listEnabledUncached();
 }
 
@@ -38,23 +38,23 @@ export const partnerLogoService = {
   async create(data: CreatePartnerLogoInput) {
     const row = await partnerLogoRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async update(id: string, data: UpdatePartnerLogoInput) {
     const row = await partnerLogoRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async remove(id: string) {
     await partnerLogoRepository.remove(id);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 
   async reorder(data: ReorderPartnerLogosInput) {
     await partnerLogoRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 };

@@ -93,6 +93,7 @@ export async function MarketingFooter() {
                 <Link
                   key={link.label}
                   href={link.href}
+                  prefetch={false}
                   className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
                 >
                   {link.label}
@@ -108,6 +109,7 @@ export async function MarketingFooter() {
                 <Link
                   key={link.label}
                   href={link.href}
+                  prefetch={false}
                   className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
                 >
                   {link.label}
@@ -182,8 +184,10 @@ export async function MarketingFooter() {
             >
               Terms of Service
             </Link>
+            {/* Footer links skip prefetch: header nav already covers these routes, and /login would run the proxy on every view. */}
             <Link
               href='/login'
+              prefetch={false}
               className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
             >
               Login

@@ -19,7 +19,7 @@ async function listEnabledUncached() {
 async function listEnabledCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('hours');
+  cacheLife('days');
   return listEnabledUncached();
 }
 
@@ -38,23 +38,23 @@ export const homepagePillarService = {
   async create(data: CreateHomepagePillarInput) {
     const row = await homepagePillarRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async update(id: string, data: UpdateHomepagePillarInput) {
     const row = await homepagePillarRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async remove(id: string) {
     await homepagePillarRepository.remove(id);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 
   async reorder(data: ReorderHomepagePillarsInput) {
     await homepagePillarRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 };

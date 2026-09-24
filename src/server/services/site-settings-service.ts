@@ -94,7 +94,7 @@ async function getPublicUncached() {
 async function getPublicCached() {
   'use cache';
   cacheTag(SETTINGS_TAG);
-  cacheLife('hours');
+  cacheLife('days');
   return getPublicUncached();
 }
 
@@ -118,7 +118,7 @@ async function updateSection(
 ) {
   const row = await siteSettingsRepository.upsert(data);
   // Second arg must match the `cacheLife` profile used in getPublicCached above.
-  revalidateTag(SETTINGS_TAG, 'hours');
+  revalidateTag(SETTINGS_TAG, 'days');
   return row;
 }
 

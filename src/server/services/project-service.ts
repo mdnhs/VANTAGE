@@ -27,22 +27,19 @@ async function listFeaturedUncached() {
   return projectRepository.listFeatured();
 }
 
-// Public "Our Work" page reads this. Projects change more often than services/site
-// settings (new jobs finished regularly), so this profile is the custom 'content' profile
-// (10 min) rather than services'/settings' 'hours' — fresher without going all the way to
-// per-request. Every mutation below also revalidates on demand, so this window is just the
-// backstop between edits, not the only freshness guarantee.
+// Every mutation below revalidates on demand, so the long 'days' window is only a backstop —
+// a shorter one just triggers background regenerations (ISR writes) without fresher content.
 async function listPublishedCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('content');
+  cacheLife('days');
   return listPublishedUncached();
 }
 
 async function listFeaturedCached() {
   'use cache';
   cacheTag(FEATURED_TAG);
-  cacheLife('content');
+  cacheLife('days');
   return listFeaturedUncached();
 }
 
@@ -67,8 +64,8 @@ export const projectService = {
     const row = await projectRepository.create(data);
     // A draft, unfeatured create can't appear in either cached list — nothing to bust.
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    if (isListed(row)) revalidateTag(LIST_TAG, 'content');
-    if (isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'content');
+    if (isListed(row)) revalidateTag(LIST_TAG, 'days');
+    if (isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
     return row;
   },
 
@@ -79,16 +76,16 @@ export const projectService = {
     // Bust a list if the row was in it before the edit, is in it after, or both — covers a
     // content edit to an already-listed row and a status/featured change that adds or
     // removes it.
-    if (isListed(before) || isListed(row)) revalidateTag(LIST_TAG, 'content');
-    if (isFeaturedListed(before) || isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'content');
+    if (isListed(before) || isListed(row)) revalidateTag(LIST_TAG, 'days');
+    if (isFeaturedListed(before) || isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
     return row;
   },
 
   async remove(id: string) {
     const before = await projectRepository.byId(id);
     await projectRepository.remove(id);
-    if (isListed(before)) revalidateTag(LIST_TAG, 'content');
-    if (isFeaturedListed(before)) revalidateTag(FEATURED_TAG, 'content');
+    if (isListed(before)) revalidateTag(LIST_TAG, 'days');
+    if (isFeaturedListed(before)) revalidateTag(FEATURED_TAG, 'days');
   },
 
   async updateStatus(id: string, data: ProjectStatusInput) {
@@ -96,14 +93,14 @@ export const projectService = {
     if (!row) return undefined;
     // Status just changed, so LIST_TAG membership necessarily flipped either way. Featured
     // status didn't change here, so only bust FEATURED_TAG if this row is (or was) featured.
-    revalidateTag(LIST_TAG, 'content');
-    if (row.isFeatured) revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(LIST_TAG, 'days');
+    if (row.isFeatured) revalidateTag(FEATURED_TAG, 'days');
     return row;
   },
 
   async reorder(data: ReorderProjectsInput) {
     await projectRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'content');
-    revalidateTag(FEATURED_TAG, 'content');
+    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(FEATURED_TAG, 'days');
   },
 };

@@ -19,7 +19,7 @@ async function listEnabledUncached() {
 async function listEnabledCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('hours');
+  cacheLife('days');
   return listEnabledUncached();
 }
 
@@ -38,23 +38,23 @@ export const homepageProcessStepService = {
   async create(data: CreateHomepageProcessStepInput) {
     const row = await homepageProcessStepRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async update(id: string, data: UpdateHomepageProcessStepInput) {
     const row = await homepageProcessStepRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async remove(id: string) {
     await homepageProcessStepRepository.remove(id);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 
   async reorder(data: ReorderHomepageProcessStepsInput) {
     await homepageProcessStepRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 };

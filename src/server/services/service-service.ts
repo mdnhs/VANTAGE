@@ -19,7 +19,7 @@ async function listPublishedUncached() {
 async function listPublishedCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('hours');
+  cacheLife('days');
   return listPublishedUncached();
 }
 
@@ -38,23 +38,23 @@ export const serviceService = {
   async create(data: CreateServiceInput) {
     const row = await serviceRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listPublishedCached above.
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async update(id: string, data: UpdateServiceInput) {
     const row = await serviceRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
     return row;
   },
 
   async remove(id: string) {
     await serviceRepository.remove(id);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 
   async reorder(data: ReorderServicesInput) {
     await serviceRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(LIST_TAG, 'days');
   },
 };
