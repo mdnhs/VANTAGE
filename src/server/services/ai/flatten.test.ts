@@ -29,6 +29,19 @@ describe('flattenValue', () => {
     expect(flattenValue({ body: 'y'.repeat(50) }, 10)).toHaveLength(10);
   });
 
+  it('drops lone paths and anchors but keeps prose that starts with them', () => {
+    const text = flattenValue({
+      a: '/quote',
+      b: '#top',
+      c: 'https://x.ie/a',
+      d: '/ our work is great',
+      e: '#1 body shop in Dublin',
+    });
+    expect(text).not.toMatch(/\/quote|#top|https/);
+    expect(text).toContain('/ our work is great');
+    expect(text).toContain('#1 body shop in Dublin');
+  });
+
   it('tolerates junk', () => {
     expect(flattenValue(null)).toBe('');
     expect(flattenValue(42)).toBe('');

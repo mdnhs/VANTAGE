@@ -4,7 +4,9 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { projectService } from '@/server/services/project-service';
 import {
   createProjectSchema,
@@ -43,21 +45,43 @@ export const projects = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createProjectSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await projectService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'project.create', entityType: 'project', summary: 'Project created' }),
+    zValidator('json', createProjectSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await projectService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderProjectsSchema), async (c) => {
-    const input = c.req.valid('json');
-    await projectService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'project.reorder', entityType: 'project', summary: 'Projects reordered' }),
+    zValidator('json', reorderProjectsSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await projectService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id/status',
     can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'project.update',
+      entityType: 'project',
+      summary: 'Project updated',
+      fields: ['status'],
+      load: projectService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', projectStatusSchema),
     async (c) => {
@@ -72,6 +96,13 @@ export const projects = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'project.update',
+      entityType: 'project',
+      summary: 'Project updated',
+      load: projectService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateProjectSchema),
     async (c) => {
@@ -83,8 +114,15 @@ export const projects = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await projectService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'project.delete', entityType: 'project', summary: 'Project deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await projectService.remove(id);
+      return ok(c, { success: true });
+    },
+  );
