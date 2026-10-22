@@ -6,7 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepagePillarService } from '@/server/services/homepage-pillar-service';
 import {
   createHomepagePillarSchema,
@@ -14,8 +14,6 @@ import {
   reorderHomepagePillarsSchema,
   updateHomepagePillarSchema,
 } from '@/validations/homepage-pillar-schema';
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -43,7 +41,7 @@ export const homepagePillars = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'homepage_pillar.create', entityType: 'homepage_pillar', summary: 'Homepage pillar created' }),
     zValidator('json', createHomepagePillarSchema),
     async (c) => {
@@ -56,7 +54,7 @@ export const homepagePillars = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'homepage_pillar.reorder',
       entityType: 'homepage_pillar',
@@ -73,7 +71,7 @@ export const homepagePillars = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'homepage_pillar.update',
       entityType: 'homepage_pillar',
@@ -94,7 +92,7 @@ export const homepagePillars = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'homepage_pillar.delete', entityType: 'homepage_pillar', summary: 'Homepage pillar deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

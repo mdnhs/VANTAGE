@@ -7,7 +7,7 @@ import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import {
@@ -15,8 +15,6 @@ import {
   contactMessageListQuerySchema,
   updateContactMessageSchema,
 } from '@/validations/contact-message-schema';
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -56,7 +54,7 @@ export const contacts = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ contact: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'contact.update',
       entityType: 'contact',
@@ -80,7 +78,7 @@ export const contacts = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ contact: ['delete'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'contact.delete', entityType: 'contact', summary: 'Contact message deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

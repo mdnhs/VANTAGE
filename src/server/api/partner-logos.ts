@@ -6,7 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 import {
   createPartnerLogoSchema,
@@ -14,8 +14,6 @@ import {
   reorderPartnerLogosSchema,
   updatePartnerLogoSchema,
 } from '@/validations/partner-logo-schema';
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -43,7 +41,7 @@ export const partnerLogos = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'partner_logo.create', entityType: 'partner_logo', summary: 'Partner logo created' }),
     zValidator('json', createPartnerLogoSchema),
     async (c) => {
@@ -56,7 +54,7 @@ export const partnerLogos = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'partner_logo.reorder', entityType: 'partner_logo', summary: 'Partner logos reordered' }),
     zValidator('json', reorderPartnerLogosSchema),
     async (c) => {
@@ -69,7 +67,7 @@ export const partnerLogos = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'partner_logo.update',
       entityType: 'partner_logo',
@@ -90,7 +88,7 @@ export const partnerLogos = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'partner_logo.delete', entityType: 'partner_logo', summary: 'Partner logo deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

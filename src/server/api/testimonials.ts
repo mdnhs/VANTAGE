@@ -6,7 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { testimonialService } from '@/server/services/testimonial-service';
 import {
   createTestimonialSchema,
@@ -15,8 +15,6 @@ import {
   testimonialStatusSchema,
   updateTestimonialSchema,
 } from '@/validations/testimonial-schema';
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -50,7 +48,7 @@ export const testimonials = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'testimonial.create', entityType: 'testimonial', summary: 'Testimonial created' }),
     zValidator('json', createTestimonialSchema),
     async (c) => {
@@ -63,7 +61,7 @@ export const testimonials = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'testimonial.reorder', entityType: 'testimonial', summary: 'Testimonials reordered' }),
     zValidator('json', reorderTestimonialsSchema),
     async (c) => {
@@ -76,7 +74,7 @@ export const testimonials = new Hono<AppEnv>()
   .patch(
     '/:id/status',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'testimonial.update',
       entityType: 'testimonial',
@@ -98,7 +96,7 @@ export const testimonials = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({
       action: 'testimonial.update',
       entityType: 'testimonial',
@@ -120,7 +118,7 @@ export const testimonials = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     auditRoute({ action: 'testimonial.delete', entityType: 'testimonial', summary: 'Testimonial deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

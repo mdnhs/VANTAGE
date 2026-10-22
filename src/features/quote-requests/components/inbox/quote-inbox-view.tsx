@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -130,6 +131,9 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
         ]);
       } catch (err) {
         console.error('Failed to move quote status:', err);
+        toast.error(err instanceof Error ? err.message : 'Could not move the quote');
+        // Rethrow so the kanban rolls its optimistic move back.
+        throw err;
       } finally {
         setIsUpdatingStatus(false);
       }
