@@ -12,6 +12,7 @@ import { analyticsService } from '@/server/services/analytics-service';
 import { readEffectiveGlobal } from '@/server/services/globals-service';
 
 import { clip, flattenValue } from './flatten';
+import { firstNameOf } from './prompt';
 import type { AiStored } from './settings';
 
 // Every result names what was looked at ("Looked at: About page").
@@ -27,7 +28,6 @@ const MESSAGE_MAX = 500;
 const allowed = (actor: Actor, ...options: Permissions[]) => options.some((p) => hasPermission(actor.roles, p));
 const refuse = (label: string): ToolResult => ({ label, error: NO_ACCESS });
 
-const firstNameOf = (name: string) => name.trim().split(/\s+/)[0] ?? '';
 const irishDate = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Dublin' }).format(date);
 const escapeLike = (text: string) => text.replace(/[\\%_]/g, '\\$&');
 
@@ -193,7 +193,7 @@ export async function quoteStats(
   // V9-R8: details need the owner's opt-in AND quote.read.
   if (settings.shareEnquiryDetails.enabled && allowed(actor, { quote: ['read'] })) {
     const rows = await db.select().from(quoteRequests).where(where).orderBy(desc(quoteRequests.createdAt)).limit(20);
-    result.recent = rows.map(quoteView);
+    result.recent = rows.map((r) => ({ id: r.id, ...quoteView(r) }));
   }
   return result;
 }
@@ -256,7 +256,8 @@ export async function contactStats(
       .orderBy(desc(contactMessages.createdAt))
       .limit(20);
     result.recent = rows.map((r) => ({
-      firstName: r.firstName.trim(),
+      id: r.id,
+      firstName: firstNameOf(r.firstName),
       service: r.service || 'unspecified',
       status: r.status,
       createdAt: irishDate(r.createdAt),

@@ -81,8 +81,10 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
     // Rows whose enquiry has since been deleted are dropped, so page through the log until the
     // feed is full of live rows (or the log runs out) rather than shrinking below the limit.
     const BATCH = 50;
+    const MAX_PAGES = 10;
     let live = 0;
-    for (let offset = 0; live < NOTIFICATION_LIMIT; offset += BATCH) {
+    for (let page = 0; page < MAX_PAGES && live < NOTIFICATION_LIMIT; page += 1) {
+      const offset = page * BATCH;
       const rows = await db
         .select({
           id: auditLogs.id,

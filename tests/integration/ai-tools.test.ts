@@ -163,11 +163,14 @@ describe('enquiry data', () => {
       'createdAt',
       'description',
       'firstName',
+      'id',
       'serviceType',
       'status',
       'vehicle',
     ]);
     expect((jane.description as string).length).toBeLessThanOrEqual(500);
+    // The id makes getQuoteRequest reachable from the stats list.
+    expect(await quoteRequest(owner, on, jane.id as string)).toMatchObject({ found: true, firstName: 'Jane' });
     expect(jane.vehicle).toBe('Ford Focus 2019');
     const sharedJson = JSON.stringify([shared, await contactStats(owner, on, '30d')]);
     for (const secret of [
@@ -183,7 +186,14 @@ describe('enquiry data', () => {
       expect(sharedJson).not.toContain(secret);
     }
     const contactRecent = (await contactStats(owner, on, '30d')).recent as Record<string, unknown>[];
-    expect(Object.keys(contactRecent[0]!).sort()).toEqual(['createdAt', 'firstName', 'message', 'service', 'status']);
+    expect(Object.keys(contactRecent[0]!).sort()).toEqual([
+      'createdAt',
+      'firstName',
+      'id',
+      'message',
+      'service',
+      'status',
+    ]);
   });
 
   it('shows details only with the opt-in and the read permission', async () => {
