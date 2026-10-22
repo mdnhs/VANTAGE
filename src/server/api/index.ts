@@ -4,9 +4,13 @@ import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
 import { account } from './account';
+import { adminAi } from './admin-ai';
+import { adminAudit } from './admin-audit';
 import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
+import { adminNotifications } from './admin-notifications';
 import { adminSearch } from './admin-search';
+import { adminTheme } from './admin-theme';
 import { adminUsers } from './admin-users';
 import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
@@ -16,6 +20,7 @@ import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { media } from './media';
 import { partnerLogos } from './partner-logos';
+import { preview } from './preview';
 import { projects } from './projects';
 import { quoteRequests } from './quote-requests';
 import { services } from './services';
@@ -56,7 +61,12 @@ export const api = app
   .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
+  .route('/admin/ai', adminAi)
+  .route('/admin/theme', adminTheme)
+  .route('/preview', preview)
   .route('/account', account)
+  .route('/admin/notifications', adminNotifications)
+  .route('/admin/audit', adminAudit)
   .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)
   .route('/services', services)

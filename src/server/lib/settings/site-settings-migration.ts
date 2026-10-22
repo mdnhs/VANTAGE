@@ -9,7 +9,7 @@ import { cloudinaryImage } from '@/lib/content/image-ref';
 import type { SiteSettings } from '@/server/db/schema';
 import { audit } from '@/server/lib/audit';
 import {
-  composePublicSettings,
+  composeLegacyView,
   FALLBACK_SETTINGS,
   PUBLIC_SETTINGS_KEYS,
   type PublicGlobals,
@@ -445,7 +445,7 @@ export async function verifySiteSettingsMigration(): Promise<VerifyResult> {
     if (!stored && row) problems.push(`${key}: not migrated`);
     docs[key] = parseGlobal(key, stored?.value);
   }
-  const composed = composePublicSettings(docs as PublicGlobals);
+  const composed = composeLegacyView(docs as PublicGlobals);
   // No legacy row: the public site showed the built-in copy.
   const before = visibleView((row ?? FALLBACK_SETTINGS) as unknown as View);
   const after = visibleView(composed);
