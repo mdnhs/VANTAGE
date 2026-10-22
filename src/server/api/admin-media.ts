@@ -1,11 +1,22 @@
 import { Hono, type Context } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { ERROR_CODES, ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { requireAuth, type AuthEnv } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
+import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 import { mediaIdParamSchema, mediaListQuerySchema, mediaPatchSchema } from '@/validations/media-schema';
+
+// Refuse oversized bodies before they are buffered by parseBody. The slack
+// covers multipart framing around a file of up to MAX_VIDEO_BYTES.
+const uploadBodyLimit = bodyLimit({
+  maxSize: MAX_VIDEO_BYTES + 1_048_576,
+  onError: () => {
+    throw ApiError.payloadTooLarge('Files can be up to 100 MB');
+  },
+});
 
 // The client's Content-Type and filename are never trusted: the service sniffs the bytes.
 async function fileFrom(c: Context) {
@@ -36,7 +47,7 @@ export const adminMedia = new Hono<AuthEnv>()
     return ok(c, await mediaLibraryService.usageOf(c.req.valid('param').id));
   })
 
-  .post('/', rateLimit(30, 60_000), async (c) => {
+  .post('/', rateLimit(30, 60_000), uploadBodyLimit, async (c) => {
     const item = await mediaLibraryService.upload(c.get('user').id, await fileFrom(c));
     return ok(c, item, { status: 201 });
   })
@@ -45,7 +56,7 @@ export const adminMedia = new Hono<AuthEnv>()
     return ok(c, await mediaLibraryService.update(c.req.valid('param').id, c.req.valid('json')));
   })
 
-  .post('/:id/replace', rateLimit(30, 60_000), zValidator('param', mediaIdParamSchema), async (c) => {
+  .post('/:id/replace', rateLimit(30, 60_000), uploadBodyLimit, zValidator('param', mediaIdParamSchema), async (c) => {
     const item = await mediaLibraryService.replace(c.get('user').id, c.req.valid('param').id, await fileFrom(c));
     return ok(c, item);
   })

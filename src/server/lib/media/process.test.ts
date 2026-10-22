@@ -36,6 +36,29 @@ describe('withProcessingSlot', () => {
   });
 });
 
+describe('processUpload concurrency', () => {
+  it('bounds video processing with the shared slot pool', async () => {
+    const gates: (() => void)[] = [];
+    const held = Array.from({ length: 10 }, () =>
+      withProcessingSlot(() => new Promise<void>((resolve) => gates.push(resolve))),
+    );
+    try {
+      const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(64)]);
+      await expect(processUpload(mp4, 'clip.mp4', NOW)).rejects.toMatchObject({ status: 503 });
+      const pdf = Buffer.from('%PDF-1.7\nhello');
+      await expect(processUpload(pdf, 'a.pdf', NOW)).rejects.toMatchObject({ status: 503 });
+    } finally {
+      let settled = 0;
+      void Promise.all(held).then(() => (settled = held.length));
+      while (settled === 0) {
+        gates.shift()?.();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    await Promise.all(held);
+  });
+});
+
 describe('processUpload', () => {
   const png = () =>
     sharp({ create: { width: 40, height: 20, channels: 3, background: { r: 10, g: 200, b: 10 } } })

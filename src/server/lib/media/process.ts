@@ -126,26 +126,32 @@ export async function processUpload(input: Buffer, filename: string, now = new D
   if (input.length > (isVideo ? MAX_VIDEO_BYTES : MAX_UPLOAD_BYTES)) {
     throw ApiError.payloadTooLarge(isVideo ? 'Videos can be up to 100 MB' : 'Files can be up to 20 MB');
   }
-  let body = input;
-  let probe = {
+  const noProbe = {
     width: null as number | null,
     height: null as number | null,
     blurDataUrl: null as string | null,
     dominantColor: null as string | null,
   };
-  if (!isVideo && type.ext !== 'pdf') {
-    try {
-      ({ body, probe } = await withProcessingSlot(async () => {
-        const normalised = await normalise(input, type);
-        return { body: normalised, probe: await probeImage(normalised) };
-      }));
-    } catch (error) {
-      if (error instanceof ApiError) throw error;
-      throw unreadable();
-    }
+  let body: Buffer;
+  let probe: typeof noProbe;
+  let hash: string;
+  try {
+    // Every type holds a slot, so concurrent large uploads (a 100 MB video is
+    // hashed here) are bounded too. Content-hashed and immutable: a replace
+    // gets a new key.
+    ({ body, probe, hash } = await withProcessingSlot(async () => {
+      const isImage = !isVideo && type.ext !== 'pdf';
+      const out = isImage ? await normalise(input, type) : input;
+      return {
+        body: out,
+        probe: isImage ? await probeImage(out) : noProbe,
+        hash: createHash('sha256').update(out).digest('hex').slice(0, 16),
+      };
+    }));
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw unreadable();
   }
-  // Content-hashed and immutable: a replace gets a new key.
-  const hash = createHash('sha256').update(body).digest('hex').slice(0, 16);
   const slug =
     slugify(cleanFilename(filename).replace(/\.[^.]*$/, ''))
       .slice(0, 60)

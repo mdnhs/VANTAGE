@@ -7,6 +7,8 @@
 #     --build-arg NEXT_PUBLIC_APP_URL=https://example.com \
 #     [--build-arg MEDIA_PUBLIC_URL=https://media.example.com] \
 #     -t vantage .
+# Behind a reverse proxy, allow uploads of up to ~101 MB (nginx: client_max_body_size 101m);
+# the app itself rejects larger bodies with 413.
 # Build args live in the builder stage only; the runner stage gets runtime env from the host.
 FROM node:24-alpine AS base
 RUN apk add --no-cache libc6-compat
