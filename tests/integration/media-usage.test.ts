@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
 import {
@@ -13,10 +13,18 @@ import {
 } from '@/server/db/schema';
 import { ApiError } from '@/server/lib/errors';
 import { assertMediaExists } from '@/server/lib/media/assert-media';
+import { loadPublicImages } from '@/server/lib/media/resolve';
 import { mediaUsage } from '@/server/lib/media/usage';
 
+// `'use cache'` has no runtime outside Next: the cache hooks become no-ops.
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  cacheTag: vi.fn(),
+  cacheLife: vi.fn(),
+}));
+
 let n = 0;
-async function insertMedia(deletedAt: Date | null = null) {
+async function insertMedia(deletedAt: Date | null = null, scope: 'library' | 'enquiry' = 'library') {
   n += 1;
   const [row] = await db
     .insert(media)
@@ -28,6 +36,7 @@ async function insertMedia(deletedAt: Date | null = null) {
       mimeType: 'image/png',
       sizeBytes: 1,
       deletedAt,
+      scope,
     })
     .returning();
   return row!;
@@ -99,6 +108,13 @@ describe('assertMediaExists', () => {
     await expect(assertMediaExists([])).resolves.toBeUndefined();
   });
 
+  it('rejects enquiry-scoped uploads', async () => {
+    const photo = await insertMedia(null, 'enquiry');
+    const error = await assertMediaExists([photo.id]).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).causes?._media).toEqual([`Image ${photo.id} no longer exists`]);
+  });
+
   it('lists a soft-deleted, a random and a malformed id with a 422', async () => {
     const gone = await insertMedia(new Date());
     const random = '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11';
@@ -113,5 +129,15 @@ describe('assertMediaExists', () => {
       `Image ${random} no longer exists`,
       'Image nope no longer exists',
     ]);
+  });
+});
+
+describe('loadPublicImages', () => {
+  it('drops malformed ids instead of failing the query', async () => {
+    const row = await insertMedia();
+    const out = await loadPublicImages([row.id, 'not-a-uuid', '', row.id.toUpperCase()]);
+    expect(Object.keys(out)).toEqual([row.id]);
+    expect(out[row.id]?.src).toBe(row.url);
+    await expect(loadPublicImages(['nope'])).resolves.toEqual({});
   });
 });

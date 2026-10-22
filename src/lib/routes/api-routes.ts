@@ -100,4 +100,26 @@ export const API_ROUTES = {
     revisions: (key: string) => `/admin/globals/${key}/revisions`,
     restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
   },
+  ai: {
+    status: '/admin/ai/status',
+    settings: '/admin/ai/settings',
+    models: '/admin/ai/settings/models',
+    test: '/admin/ai/settings/test',
+    chat: '/admin/ai/chat',
+    conversations: '/admin/ai/conversations',
+    conversation: (id: string) => `/admin/ai/conversations/${id}`,
+  },
+  theme: {
+    detail: '/admin/theme',
+    draft: '/admin/theme/draft',
+    publish: '/admin/theme/publish',
+    reset: '/admin/theme/reset',
+    discard: '/admin/theme/discard',
+    revisions: '/admin/theme/revisions',
+    restore: (revisionId: string) => `/admin/theme/revisions/${revisionId}/restore`,
+  },
+  preview: {
+    enter: (path: string) => `/preview?path=${encodeURIComponent(path)}`,
+    exit: (path: string) => `/preview/exit?path=${encodeURIComponent(path)}`,
+  },
 } as const;

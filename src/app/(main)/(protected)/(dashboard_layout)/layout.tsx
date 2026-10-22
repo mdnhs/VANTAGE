@@ -5,9 +5,12 @@ import { AdminShell } from '@/components/admin/shell/admin-shell';
 import { SIDEBAR_COOKIE } from '@/components/admin/shell/constants';
 import { Toaster } from '@/components/ui/sonner';
 import { ActorProvider } from '@/contexts/actor-provider';
+import { AdminThemeStyle } from '@/features/appearance/components/admin-theme-style';
+import { DefaultMode } from '@/features/appearance/components/default-mode';
 import { ViewAsBanner } from '@/features/users/components/view-as-banner';
 import { toMePayload } from '@/lib/auth/me';
 import { requireActor } from '@/server/lib/auth/session';
+import { getPublishedTheme } from '@/server/queries/get-theme';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // Every route under this layout reads the session cookie per request (auth check +
@@ -18,16 +21,17 @@ export const instant = false;
 // the database-checked Better Auth session and redirects (to /login) when it is missing,
 // expired, or belongs to a site customer (role "user").
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const [actor, settings, cookieStore] = await Promise.all([
+  const [actor, settings, cookieStore, theme] = await Promise.all([
     requireActor(),
     siteSettingsService.getPublic(),
     cookies(),
+    getPublishedTheme(),
   ]);
   // Only an explicit "false" collapses; a first visit starts open.
   const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false';
   const brand = {
     name: settings.businessName?.trim() || 'Vantage',
-    logoPublicId: 'logoPublicId' in settings ? settings.logoPublicId : null,
+    logo: settings.logo,
     logoLottieJson: 'logoLottieJson' in settings ? (settings.logoLottieJson ?? null) : null,
     logoUseLottie: 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false,
   };
@@ -35,6 +39,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   return (
     <div data-admin-root className='font-sans'>
+      <AdminThemeStyle theme={theme} />
+      <DefaultMode mode={theme.admin.mode} />
       <ActorProvider actor={toMePayload(actor)}>
         <AdminShell defaultOpen={sidebarOpen} siteUrl={siteUrl} brand={brand}>
           {children}
