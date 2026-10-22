@@ -62,7 +62,10 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       description: 'Off by default: email copies leave the admin.',
     },
     autoReply: { label: 'Auto-reply to the customer' },
-    'autoReply.enabled': { label: 'Send an auto-reply' },
+    'autoReply.enabled': {
+      label: 'Send an auto-reply',
+      description: 'Auto-replies go to whatever address is typed into the form.',
+    },
     'autoReply.body': { description: 'The enquiry text is never added to the auto-reply.' },
   },
   seo: {
@@ -71,7 +74,14 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     twitterHandle: { label: 'X / Twitter handle' },
   },
   privacy: {
-    enquiryRetentionMonths: { label: 'Keep enquiries for (months)' },
-    spamRetentionDays: { label: 'Keep spam for (days)' },
+    enquiryRetentionMonths: {
+      label: 'Keep enquiries for (months)',
+      description:
+        'Only finished enquiries are deleted, counted from their last update: completed, cancelled or archived quotes with no invoice or payment, and replied or archived contact messages. New and in-progress enquiries are never deleted.',
+    },
+    spamRetentionDays: {
+      label: 'Keep spam for (days)',
+      description: 'Applies to enquiries marked as spam (none until spam marking ships).',
+    },
   },
 };

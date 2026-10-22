@@ -66,8 +66,11 @@ export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome
   const reply = notifications.autoReply;
   if (address && reply.enabled && reply.subject) {
     // Never the enquiry text: the customer's own message is not echoed back.
-    const subject = headerText(fillName(reply.subject, name));
-    const paragraphs = fillName(reply.body, enquiry.name)
+    // Customer text never reaches the subject (the form lets anyone type any address), and the
+    // greeting name is trimmed and capped; renderEmail escapes it.
+    const subject = headerText(reply.subject.replaceAll('{name}', '').replace(/\s+/g, ' '));
+    const greeting = headerText(enquiry.name).slice(0, 60);
+    const paragraphs = fillName(reply.body, greeting)
       .split(/\n{2,}/)
       .map((p) => p.trim())
       .filter(Boolean);
@@ -107,12 +110,25 @@ const contactEnquiry = (row: ContactMessage): Enquiry => ({
 
 // Runs after the response when Next provides a request scope, else as a detached promise.
 // Errors are logged and never reach the caller: the enquiry is already saved.
+const pending = new Set<Promise<void>>();
+
+// Tests await this instead of sleeping: resolves once every queued notification has finished.
+export const settleNotifications = async () => {
+  await Promise.all([...pending]);
+};
+
 export function runAfterResponse(task: () => Promise<unknown>): void {
+  let finish!: () => void;
+  const done = new Promise<void>((resolve) => (finish = resolve));
+  pending.add(done);
   const guarded = async () => {
     try {
       await task();
     } catch (error) {
       console.error('[enquiry-notify] failed:', error instanceof Error ? error.message : 'unknown error');
+    } finally {
+      pending.delete(done);
+      finish();
     }
   };
   try {

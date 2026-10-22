@@ -82,12 +82,15 @@ export async function MarketingFooter() {
           </div>
 
           {/* Link columns (Settings > Footer) */}
-          {footer.columns.map((column) => (
-            <div key={column.title} className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+          {footer.columns.map((column, index) => (
+            <div
+              key={`${column.title}-${index}`}
+              className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'
+            >
               <h4 className={headingClass}>{column.title}</h4>
               <nav className='flex flex-col items-start gap-[14px]'>
-                {column.links.map((link) => (
-                  <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
+                {column.links.map((link, i) => (
+                  <Link key={`${link.label}-${link.href}-${i}`} href={link.href} className={linkClass}>
                     {link.label}
                   </Link>
                 ))}

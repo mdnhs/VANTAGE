@@ -173,7 +173,7 @@ export const FooterGlobal = z.object({
 export const QuoteFormGlobal = z.object({
   steps: z
     .array(z.object({ label: s(40), short: s(20) }))
-    .max(3)
+    .length(3)
     .default([
       { label: 'Vehicle & Service', short: 'Vehicle' },
       { label: 'Damage & Photos', short: 'Damage' },

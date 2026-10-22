@@ -7,7 +7,7 @@ import { contactMessages, quoteRequests } from '@/server/db/schema';
 import { resetMailerForTests } from '@/server/lib/email/mailer';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 import { contactMessageService } from '@/server/services/contact-message-service';
-import { sendEnquiryEmails } from '@/server/services/enquiry-notify';
+import { sendEnquiryEmails, settleNotifications } from '@/server/services/enquiry-notify';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 
 import { call, createTestUser, signInCookie } from '../support/session';
@@ -105,7 +105,8 @@ describe('SMTP configured (injected transport)', () => {
       autoReply: { enabled: true, subject: 'Thanks {name}', body: 'Hi {name},\n\nWe will be in touch soon.' },
     });
     await quoteRequestService.create(QUOTE);
-    await vi.waitFor(() => expect(sent).toHaveLength(2));
+    await settleNotifications();
+    expect(sent).toHaveLength(2);
 
     const note = sent.find((m) => m.to.includes('staff@example.com'))!;
     expect(note.to).toEqual(['staff@example.com', 'boss@example.com']);
@@ -116,7 +117,7 @@ describe('SMTP configured (injected transport)', () => {
     expect(note.text + note.html).not.toContain('SECRET-DAMAGE-TEXT');
 
     const reply = sent.find((m) => m.to.includes('pat@example.com'))!;
-    expect(reply.subject).toBe('Thanks Pat Murphy');
+    expect(reply.subject).toBe('Thanks');
     expect(reply.text).toContain('Hi Pat Murphy,');
     expect(reply.text + reply.html).not.toContain('SECRET-DAMAGE-TEXT');
     expect(reply.text + reply.html).not.toContain('scrape');
@@ -130,7 +131,8 @@ describe('SMTP configured (injected transport)', () => {
       autoReply: { enabled: true, subject: 'Thanks', body: 'We got it.' },
     });
     await quoteRequestService.create(QUOTE);
-    await vi.waitFor(() => expect(sent).toHaveLength(2));
+    await settleNotifications();
+    expect(sent).toHaveLength(2);
     const note = sent.find((m) => m.to.includes('staff@example.com'))!;
     const reply = sent.find((m) => m.to.includes('pat@example.com'))!;
     expect(note.text).toContain('SECRET-DAMAGE-TEXT');
@@ -148,8 +150,9 @@ describe('SMTP configured (injected transport)', () => {
       message: 'CONTACT-BODY please call',
       source: 'contact_page',
     } as never);
-    await vi.waitFor(() => expect(sent).toHaveLength(1));
-    await new Promise((r) => setTimeout(r, 50));
+    await settleNotifications();
+    expect(sent).toHaveLength(1);
+    await settleNotifications();
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toEqual(['hello@shop.ie']);
     expect(sent[0]!.subject).toBe('New enquiry from Ann Byrne');
@@ -185,7 +188,8 @@ describe('SMTP configured (injected transport)', () => {
       body: { name: 'Pat', email: 'pat@example.com', phone: '0871234567' },
     });
     expect(res.status).toBe(201);
-    await vi.waitFor(() => expect(t.sendMail).toHaveBeenCalled());
+    await settleNotifications();
+    expect(t.sendMail).toHaveBeenCalled();
   });
 
   it('staff-entered quotes (/quotes/admin) send nothing', async () => {
@@ -197,8 +201,31 @@ describe('SMTP configured (injected transport)', () => {
       body: { name: 'Walk In', email: 'w@example.com', phone: '0871234567' },
     });
     expect(res.status).toBe(201);
-    await new Promise((r) => setTimeout(r, 100));
+    await settleNotifications();
     expect(sent).toHaveLength(0);
+  });
+});
+
+describe('auto-reply relay safety', () => {
+  beforeEach(smtp);
+  it('keeps customer text out of the subject and caps the greeting at 60 characters', async () => {
+    const sent = transport();
+    await saveSetting('notifications', { autoReply: { enabled: true, subject: 'Hello {name}', body: 'Hi {name}' } });
+    const long = 'A'.repeat(100);
+    const outcome = await sendEnquiryEmails({
+      kind: 'quote',
+      name: `${long}<b>`,
+      email: 'v@example.com',
+      phone: '1',
+      details: [],
+      message: null,
+      adminPath: '/x',
+    });
+    expect(outcome.autoReply).toMatchObject({ delivered: true });
+    const reply = sent.find((m) => m.to.includes('v@example.com'))!;
+    expect(reply.subject).toBe('Hello');
+    expect(reply.text).toContain(`Hi ${'A'.repeat(60)}`);
+    expect(reply.text).not.toContain('A'.repeat(61));
   });
 });
 

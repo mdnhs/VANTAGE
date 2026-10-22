@@ -9,8 +9,8 @@ async function main() {
   const r = await runRetention({ dryRun });
   console.log(
     `${dryRun ? 'DRY RUN: would delete' : 'deleted'} ` +
-      `quotes: ${r.quotes.expired} past ${r.windows.enquiryRetentionMonths} months + ${r.quotes.spam} closed-out past ${r.windows.spamRetentionDays} days; ` +
-      `contacts: ${r.contacts.expired} + ${r.contacts.spam}`,
+      `quotes: ${r.quotes.expired} past ${r.windows.enquiryRetentionMonths} months + ${r.quotes.spam} spam past ${r.windows.spamRetentionDays} days; ` +
+      `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos}`,
   );
   process.exit(0);
 }

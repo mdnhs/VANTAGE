@@ -1,10 +1,10 @@
 import { sql } from 'drizzle-orm';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
 import { auditLogs, contactMessages, quoteRequests } from '@/server/db/schema';
 import { settingsRepository } from '@/server/repositories/settings-repository';
-import { runRetention } from '@/server/services/retention-service';
+import { cloudinaryPublicId, runRetention } from '@/server/services/retention-service';
 
 const NOW = new Date('2026-10-22T12:00:00Z');
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000);
@@ -13,6 +13,7 @@ const monthsAgo = (n: number) => {
   d.setUTCMonth(d.getUTCMonth() - n);
   return d;
 };
+const photo = (n: string) => `https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/${n}.jpg`;
 
 const quote = (name: string, over: Record<string, unknown> = {}) => ({
   name,
@@ -28,6 +29,7 @@ const contact = (name: string, over: Record<string, unknown> = {}) => ({
   message: `PRIVATE-${name}`,
   ...over,
 });
+const old = { createdAt: monthsAgo(14), updatedAt: monthsAgo(13) };
 
 const names = async () => ({
   q: (await db.select({ n: quoteRequests.name }).from(quoteRequests)).map((r) => r.n).sort(),
@@ -43,60 +45,84 @@ beforeEach(async () => {
     null,
   );
   await db.insert(quoteRequests).values([
-    quote('qfresh', { createdAt: daysAgo(1), updatedAt: daysAgo(1) }),
-    quote('qold', { createdAt: monthsAgo(13), updatedAt: monthsAgo(13) }),
-    quote('qedge', { createdAt: monthsAgo(11), updatedAt: monthsAgo(11) }),
-    // closed out long ago -> spam window
-    quote('qspam', { status: 'cancelled', createdAt: daysAgo(40), updatedAt: daysAgo(20) }),
-    // old row but closed out yesterday -> kept until the spam window passes
-    quote('qspamnew', { status: 'archived', createdAt: daysAgo(40), updatedAt: daysAgo(1) }),
-    // archived long ago but never "spam"-aged and also young: kept
-    quote('qdone', { status: 'completed', createdAt: daysAgo(40), updatedAt: daysAgo(20) }),
+    // survive: young
+    quote('qfresh', { status: 'completed', createdAt: daysAgo(1), updatedAt: daysAgo(1) }),
+    quote('qedge', { status: 'completed', createdAt: monthsAgo(12), updatedAt: monthsAgo(11) }),
+    // survive: old but not finished
+    quote('qnew', { status: 'new', ...old }),
+    quote('qprogress', { status: 'in_progress', ...old }),
+    quote('qsent', { status: 'quote_sent', ...old }),
+    // survive: finished but carries invoice / payment data
+    quote('qinvoiced', { status: 'completed', invoiceNumber: 'INV-1', ...old }),
+    quote('qpaid', { status: 'completed', paymentStatus: 'paid_in_full', paidAmount: '500.00', ...old }),
+    quote('qpartial', { status: 'archived', paymentStatus: 'partially_paid', ...old }),
+    // deleted: finished, unbilled, old
+    quote('qdone', { status: 'completed', photoUrls: [photo('a'), photo('b')], ...old }),
+    quote('qcancel', { status: 'cancelled', ...old }),
+    quote('qarch', { status: 'archived', ...old }),
+    // spam
+    quote('qspam', { status: 'spam', createdAt: daysAgo(40), updatedAt: daysAgo(20) }),
+    quote('qspamnew', { status: 'spam', createdAt: daysAgo(40), updatedAt: daysAgo(1) }),
   ]);
   await db
     .insert(contactMessages)
     .values([
-      contact('cfresh', { createdAt: daysAgo(2), updatedAt: daysAgo(2) }),
-      contact('cold', { createdAt: monthsAgo(14), updatedAt: monthsAgo(14) }),
-      contact('cspam', { status: 'archived', createdAt: daysAgo(40), updatedAt: daysAgo(15) }),
-      contact('creplied', { status: 'replied', createdAt: daysAgo(40), updatedAt: daysAgo(20) }),
+      contact('cfresh', { status: 'archived', createdAt: daysAgo(2), updatedAt: daysAgo(2) }),
+      contact('cnew', { status: 'new', ...old }),
+      contact('cread', { status: 'read', ...old }),
+      contact('creplied', { status: 'replied', photoUrls: [photo('c')], ...old }),
+      contact('carch', { status: 'archived', ...old }),
+      contact('cspam', { status: 'spam', createdAt: daysAgo(40), updatedAt: daysAgo(15) }),
     ]);
 });
 
 describe('runRetention', () => {
-  it('dry run counts but deletes and audits nothing', async () => {
+  it('dry run counts (including photos) but deletes and audits nothing', async () => {
     const r = await runRetention({ dryRun: true, now: NOW });
     expect(r).toMatchObject({
       dryRun: true,
       windows: { enquiryRetentionMonths: 12, spamRetentionDays: 10 },
-      quotes: { expired: 1, spam: 1 },
-      contacts: { expired: 1, spam: 1 },
+      quotes: { expired: 3, spam: 1 },
+      contacts: { expired: 2, spam: 1 },
+      photos: 3,
     });
-    expect((await names()).q).toHaveLength(6);
-    expect((await names()).c).toHaveLength(4);
+    expect((await names()).q).toHaveLength(13);
+    expect((await names()).c).toHaveLength(6);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
 
-  it('real run deletes exactly what the dry run counted and audits counts only', async () => {
-    const r = await runRetention({ now: NOW });
-    expect(r).toMatchObject({ dryRun: false, quotes: { expired: 1, spam: 1 }, contacts: { expired: 1, spam: 1 } });
+  it('real run deletes exactly what the dry run counted, keeps open and billed rows', async () => {
+    const dry = await runRetention({ dryRun: true, now: NOW });
+    const deletePhotos = vi.fn(async (_urls: string[]) => {});
+    const r = await runRetention({ now: NOW, deletePhotos });
+    expect(r).toMatchObject({ quotes: dry.quotes, contacts: dry.contacts, photos: dry.photos });
     expect(await names()).toEqual({
-      q: ['qdone', 'qedge', 'qfresh', 'qspamnew'],
-      c: ['cfresh', 'creplied'],
+      q: ['qedge', 'qfresh', 'qinvoiced', 'qnew', 'qpaid', 'qpartial', 'qprogress', 'qsent', 'qspamnew'].sort(),
+      c: ['cfresh', 'cnew', 'cread'],
     });
+    expect(deletePhotos).toHaveBeenCalledWith(expect.arrayContaining([photo('a'), photo('b'), photo('c')]));
+    expect(deletePhotos.mock.calls[0]![0]).toHaveLength(3);
 
     const audit = await db.select().from(auditLogs);
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ action: 'privacy.retention', actorId: null });
-    const flat = JSON.stringify(audit[0]);
-    expect(flat).not.toMatch(/PRIVATE|example\.com|qold|qspam|cold|cspam/);
-    expect(flat).toContain('1 quotes and 1 contact messages');
+    expect(JSON.stringify(audit[0])).not.toMatch(/PRIVATE|example\.com|cloudinary|qdone|cspam/);
+  });
+
+  it('a photo deletion failure never fails the purge', async () => {
+    const r = await runRetention({
+      now: NOW,
+      deletePhotos: async () => {
+        throw new Error('cloud down');
+      },
+    });
+    expect(r.quotes.expired).toBe(3);
   });
 
   it('a second run finds nothing and writes no audit row', async () => {
-    await runRetention({ now: NOW });
+    await runRetention({ now: NOW, deletePhotos: async () => {} });
     await db.execute(sql`truncate table audit_logs`);
-    const r = await runRetention({ now: NOW });
+    const r = await runRetention({ now: NOW, deletePhotos: async () => {} });
     expect(r.quotes).toEqual({ expired: 0, spam: 0 });
     expect(r.contacts).toEqual({ expired: 0, spam: 0 });
     expect(await db.select().from(auditLogs)).toHaveLength(0);
@@ -106,8 +132,20 @@ describe('runRetention', () => {
     await db.execute(sql`truncate table settings`);
     const r = await runRetention({ dryRun: true, now: NOW });
     expect(r.windows).toEqual({ enquiryRetentionMonths: 24, spamRetentionDays: 30 });
-    // 13/14 months are inside 24; 20/15 days are inside 30.
     expect(r.quotes).toEqual({ expired: 0, spam: 0 });
     expect(r.contacts).toEqual({ expired: 0, spam: 0 });
+  });
+
+  it('archived is no longer treated as spam: a young archived row survives', async () => {
+    const r = await runRetention({ dryRun: true, now: NOW });
+    expect(r.contacts.spam).toBe(1); // only the status 'spam' row
+  });
+});
+
+describe('cloudinaryPublicId', () => {
+  it('extracts the public id and ignores foreign urls', () => {
+    expect(cloudinaryPublicId(photo('a'))).toBe('vantage/quotes/a');
+    expect(cloudinaryPublicId('https://evil.example/image/upload/v1/x.jpg')).toBeNull();
+    expect(cloudinaryPublicId('not a url')).toBeNull();
   });
 });
