@@ -15,15 +15,27 @@ import { userName } from '@/server/lib/conflict';
 import { ApiError } from '@/server/lib/errors';
 import { findRevision, listRevisions } from '@/server/lib/revisions';
 import { invalid } from '@/server/lib/validator';
+import { buildDocs } from '@/server/lib/settings/site-settings-migration';
+import { PUBLIC_SETTINGS_KEYS, type PublicSettingsKey } from '@/server/lib/settings/public-settings';
 import { settingsRepository } from '@/server/repositories/settings-repository';
+import { siteSettingsRepository } from '@/server/repositories/site-settings-repository';
 
-// Drift-safe read: a missing or malformed row yields the defaults at the stored
-// version (0 = never saved), so the next save heals it.
+const isLegacyKey = (key: string): key is PublicSettingsKey =>
+  (PUBLIC_SETTINGS_KEYS as readonly string[]).includes(key);
+
+// Drift-safe read: a malformed row yields the defaults at the stored version, so the next
+// save heals it. A key that was never saved (version 0) shows what the public site shows:
+// the legacy site_settings copy until the migration has run, else the defaults.
 export async function getGlobal<K extends EditableGlobalKey>(key: K) {
   const row = await settingsRepository.get(key);
+  let source: unknown = row?.value;
+  if (!row && isLegacyKey(key)) {
+    const legacy = await siteSettingsRepository.get();
+    if (legacy) source = buildDocs(legacy).docs[key];
+  }
   return {
     key,
-    value: parseGlobal(key, row?.value),
+    value: parseGlobal(key, source),
     version: row?.version ?? 0,
     updatedAt: row?.updatedAt ?? null,
     updatedBy: await userName(db, row?.updatedBy ?? null),

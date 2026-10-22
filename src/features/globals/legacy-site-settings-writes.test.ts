@@ -92,7 +92,8 @@ describe('legacy site-settings write path is gone', () => {
     for (const [rel, key] of Object.entries(pages)) {
       const text = readFileSync(path.join(SRC, rel), 'utf8');
       expect(text, rel).toContain('GlobalEditor');
-      expect(text, rel).toContain(`'${key}'`);
+      const escaped = key.replace(/\./g, '\\.');
+      expect(text, rel).toMatch(new RegExp(`keys=\\{\\[\\s*'${escaped}'\\s*\\]\\}`));
     }
   });
 });

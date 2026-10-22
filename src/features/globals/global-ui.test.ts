@@ -30,6 +30,35 @@ describe('GLOBAL_FIELD_UI', () => {
   });
 });
 
+const flat = (fields: FormField[]): FormField[] =>
+  fields.flatMap((f) => [f, ...flat(f.fields ?? []), ...(f.item ? flat([f.item]) : [])]);
+
+// Dotted paths of every string in a value that contains a line break ("$" for list items).
+const multilinePaths = (value: unknown, path = ''): string[] => {
+  if (typeof value === 'string') return value.includes('\n') ? [path] : [];
+  if (Array.isArray(value)) return value.flatMap((item) => multilinePaths(item, `${path}.$`));
+  if (value && typeof value === 'object') {
+    return Object.entries(value).flatMap(([k, v]) => multilinePaths(v, path ? `${path}.${k}` : k));
+  }
+  return [];
+};
+
+describe('multiline copy', () => {
+  it('about standards.title is a textarea', () => {
+    const field = flat(toFields(GLOBALS['page.about'], GLOBAL_FIELD_UI['page.about'])).find(
+      (f) => f.name === 'standards.title',
+    );
+    expect(field?.widget).toBe('textarea');
+  });
+
+  it.each(EDITABLE_GLOBAL_KEYS)('%s: every default containing a line break is edited in a textarea', (key) => {
+    const fields = flat(toFields(GLOBALS[key], GLOBAL_FIELD_UI[key]));
+    for (const path of multilinePaths(parseGlobal(key, {}))) {
+      expect(fields.find((f) => f.name === path)?.widget, `${key}: ${path}`).toBe('textarea');
+    }
+  });
+});
+
 describe('settings pages', () => {
   it('every page has a label and only editable keys', () => {
     for (const [slug, keys] of Object.entries(SETTINGS_PAGES)) {

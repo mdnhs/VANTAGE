@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
+import { siteSettings } from '@/server/db/schema';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 import { call, createTestUser, signInCookie } from '../support/session';
@@ -81,6 +82,88 @@ describe('page.update saves website page copy that the public adapter serves', (
     const value = parseGlobal('page.process', {});
     expect((await put('page.process', cookies.owner, { version: 0, value })).status).toBe(200);
     expect((await put('page.process', cookies.owner, { version: 0, value })).status).toBe(409);
+  });
+});
+
+describe('page.our-work and page.insurance reach the adapter', () => {
+  it('saves hero copy, lists and the disclaimer; blank list items are dropped', async () => {
+    const ourWork = parseGlobal('page.our-work', {});
+    ourWork.hero.eyebrow = 'Case studies';
+    ourWork.hero.accent = 'Rebuilt.';
+    expect((await put('page.our-work', cookies.editor, { version: 0, value: ourWork })).status).toBe(200);
+
+    const insurance = parseGlobal('page.insurance', {});
+    insurance.hero.line3 = 'Stress.';
+    insurance.coordination.features = [
+      { title: 'One call', description: 'We ring the insurer.' },
+      { title: '', description: 'blank card' },
+    ];
+    insurance.steps.items = [
+      { label: 'Drop off', description: 'Bring it in.' },
+      { label: ' ', description: 'blank step' },
+    ];
+    insurance.disclaimer = 'Custom disclaimer text.';
+    expect((await put('page.insurance', cookies.editor, { version: 0, value: insurance })).status).toBe(200);
+
+    const settings = await siteSettingsService.getPublic();
+    expect(settings.ourWorkHeroEyebrow).toBe('Case studies');
+    expect(settings.ourWorkHeroHeadlineAccent).toBe('Rebuilt.');
+    expect(settings.insuranceHeroLine3).toBe('Stress.');
+    expect(settings.insuranceFeatures).toEqual([{ title: 'One call', description: 'We ring the insurer.' }]);
+    expect(settings.insuranceSteps).toEqual([{ label: 'Drop off', description: 'Bring it in.' }]);
+    expect(settings.insuranceDisclaimer).toBe('Custom disclaimer text.');
+  });
+});
+
+describe('never-saved keys show the legacy copy until the migration has run', () => {
+  const legacy = {
+    id: 1,
+    businessName: 'Legacy Co',
+    phone: '',
+    email: '',
+    address: '',
+    openingHours: '',
+    heroEyebrow: 'Legacy eyebrow',
+    heroHeadlineLine1: 'Legacy line',
+  };
+
+  it('GET shows the legacy values at version 0 and the first save creates version 1', async () => {
+    await db.insert(siteSettings).values(legacy);
+
+    const res = await call('/admin/globals/page.home', cookies.editor);
+    expect(res.status).toBe(200);
+    const { data } = (await res.json()) as { data: { version: number; value: { hero: Record<string, string> } } };
+    expect(data.version).toBe(0);
+    expect(data.value.hero.eyebrow).toBe('Legacy eyebrow');
+    expect(data.value.hero.line1).toBe('Legacy line');
+    // The public site agrees with the editor.
+    expect((await siteSettingsService.getPublic()).heroEyebrow).toBe('Legacy eyebrow');
+
+    const saved = await put('page.home', cookies.editor, { version: 0, value: data.value });
+    expect(saved.status).toBe(200);
+    expect(((await saved.json()) as { data: { version: number } }).data.version).toBe(1);
+
+    const again = await call('/admin/globals/page.home', cookies.editor);
+    const body = (await again.json()) as { data: { version: number; value: { hero: Record<string, string> } } };
+    expect(body.data.version).toBe(1);
+    expect(body.data.value.hero.eyebrow).toBe('Legacy eyebrow');
+  });
+
+  it('a stored key wins over the legacy row, and keys with no legacy row show the defaults', async () => {
+    await db.insert(siteSettings).values(legacy);
+    const value = parseGlobal('page.home', {});
+    value.hero.eyebrow = 'Saved eyebrow';
+    await put('page.home', cookies.editor, { version: 0, value });
+    const res = await call('/admin/globals/page.home', cookies.editor);
+    expect(((await res.json()) as { data: { value: { hero: Record<string, string> } } }).data.value.hero.eyebrow).toBe(
+      'Saved eyebrow',
+    );
+
+    await db.execute(sql`truncate table settings, revisions, site_settings`);
+    const empty = await call('/admin/globals/page.home', cookies.editor);
+    expect(
+      ((await empty.json()) as { data: { value: { hero: Record<string, string> } } }).data.value.hero.eyebrow,
+    ).toBe(parseGlobal('page.home', {}).hero.eyebrow);
   });
 });
 

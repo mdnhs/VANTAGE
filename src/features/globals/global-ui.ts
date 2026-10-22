@@ -113,6 +113,10 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'hero.line1': { label: 'Headline line 1' },
     'hero.line2': { label: 'Headline line 2' },
     'hero.line3': { label: 'Headline line 3' },
+    'hero.subtext': {
+      label: 'Description',
+      description: 'Partner logos on this page are managed under Home page > Partner logos.',
+    },
     coordination: { label: 'Coordination cards' },
     'coordination.features': {
       label: 'Cards',
@@ -133,6 +137,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'hero.accent2': { label: 'Headline accent 2' },
     'hero.image': { label: 'Hero image', description: 'Empty shows the bundled photo.' },
     heritage: { label: 'Heritage' },
+    'heritage.text': { label: 'Story' },
     'heritage.image': { label: 'Heritage image', description: 'Empty shows the bundled photo.' },
     'heritage.stat1': { label: 'First figure' },
     'heritage.stat2': { label: 'Second figure' },
@@ -141,7 +146,12 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'team.members.$.image': { label: 'Photo', description: 'Empty shows the bundled photo.' },
     standards: { label: 'Standards' },
     'standards.image': { label: 'Standards image', description: 'Empty shows the bundled photo.' },
-    'standards.items': { label: 'Standards' },
+    'standards.title': {
+      label: 'Title',
+      widget: 'textarea',
+      description: 'A line break is shown as a space; the last word is red.',
+    },
+    'standards.items': { label: 'Items' },
   },
   'page.process': {
     eyebrow: { label: 'Eyebrow text' },

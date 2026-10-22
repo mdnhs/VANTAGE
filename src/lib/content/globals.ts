@@ -365,7 +365,7 @@ const heroTitled = (fallback: { eyebrow: string; line1: string; accent: string; 
       eyebrow: s(200, fallback.eyebrow),
       line1: s(100, fallback.line1),
       accent: s(100, fallback.accent),
-      subtext: s(600, fallback.subtext),
+      subtext: s(2000, fallback.subtext),
     })
     .prefault({});
 
@@ -377,7 +377,7 @@ export const HomePageGlobal = z.object({
       line2: s(100, 'Your Car'),
       accent: s(100, 'To Its Best.'),
       subtext: s(
-        600,
+        2000,
         'Manufacturer-standard accident repair, computerized laser chassis realignment, certified spray painting, and bespoke automotive restoration in Dublin. Your vehicle, our obsession.',
       ),
       video: video(),
@@ -387,6 +387,7 @@ export const HomePageGlobal = z.object({
     .prefault({}),
   trustBadges: z
     .array(z.object({ title: s(100), subtitle: s(150) }))
+    .min(4)
     .max(4)
     .default([
       { title: '4.9★ Google Rated', subtitle: '180+ Dublin Reviews' },
@@ -431,7 +432,7 @@ export const InsurancePageGlobal = z.object({
       line2: s(100, 'Without The'),
       line3: s(100, 'Headache.'),
       subtext: s(
-        600,
+        2000,
         'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
       ),
     })
@@ -440,7 +441,7 @@ export const InsurancePageGlobal = z.object({
     .object({
       title: s(160, 'Seamless Coordination'),
       subtext: s(
-        400,
+        2000,
         'Our concierge-level claims service is designed to eliminate friction at every step of the repair journey.',
       ),
       features: z
@@ -494,13 +495,13 @@ export const InsurancePageGlobal = z.object({
       line1: s(100, 'Ready to Hand Over'),
       accent: s(100, 'The Keys?'),
       subtext: s(
-        400,
+        2000,
         "Connect with our claims team. We'll outline your options in five minutes and set the gears in motion immediately.",
       ),
     })
     .prefault({}),
   disclaimer: s(
-    800,
+    2000,
     "Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms. Vantage Autobody operates independently and is legally entitled to repair vehicles insured by all major providers under the 'Right to Choose' directive. Terms and conditions apply.",
   ),
 });
@@ -520,14 +521,14 @@ export const AboutPageGlobal = z.object({
     .object({
       title: s(160, 'Our Heritage'),
       text: s(
-        1000,
+        2000,
         "Founded in 1998, Vantage Autobody began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
       ),
       stat1: z.object({ value: s(40, '1998'), label: s(80, 'Est.') }).prefault({}),
       stat2: z.object({ value: s(40, '25+'), label: s(80, 'Years of Precision') }).prefault({}),
       image: image(),
       quote: s(
-        400,
+        2000,
         "We don't just fix cars; we restore the engineering integrity and aesthetic perfection of every vehicle that crosses our threshold.",
       ),
     })
@@ -536,7 +537,7 @@ export const AboutPageGlobal = z.object({
     .object({
       title: s(160, 'The Precision Team'),
       subtext: s(
-        500,
+        2000,
         'Our facility is only as good as the hands that operate it. We employ master technicians, ATA-accredited painters, and certified chassis alignment specialists.',
       ),
       members: z
@@ -583,7 +584,7 @@ export const ProcessPageGlobal = z.object({
   // `{count}` is replaced with the number of enabled steps.
   title: s(160, 'The {count}-Step Vantage Standard'),
   subtext: s(
-    400,
+    2000,
     'From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.',
   ),
 });
