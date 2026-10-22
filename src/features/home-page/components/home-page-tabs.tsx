@@ -2,7 +2,9 @@
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCan } from '@/contexts/actor-provider';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
+import { PageSeoTab } from '@/features/seo/components/page-seo-tab';
 import { PillarsPanel } from './sections/pillars-panel';
 import { CatalogPanel } from './sections/catalog-panel';
 import { ProcessPanel } from './sections/process-panel';
@@ -21,9 +23,9 @@ const SECTIONS = [
   { value: 'process', label: 'Process' },
   { value: 'testimonials', label: 'Testimonials' },
   { value: 'partner-logos', label: 'Partner logos' },
+  { value: 'seo', label: 'SEO' },
 ] as const;
 
-const SECTION_VALUES = SECTIONS.map((section) => section.value);
 
 interface HomePageTabsProps {
   pillars: { data: HomepagePillar[]; total: number };
@@ -38,17 +40,20 @@ interface HomePageTabsProps {
 // testimonials/partner logos are each their own CRUD tables. Tab is kept in the URL (?tab=...)
 // via nuqs.
 export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials, partnerLogos }: HomePageTabsProps) {
+  const canSeo = useCan({ seo: ['read'] });
+  const sections = SECTIONS.filter((section) => section.value !== 'seo' || canSeo);
+  const values = sections.map((section) => section.value);
   const [tab, setTab] = useQueryState(
     'tab',
-    parseAsStringLiteral(SECTION_VALUES).withDefault('copy').withOptions({ clearOnDefault: true }),
+    parseAsStringLiteral(values).withDefault('copy').withOptions({ clearOnDefault: true }),
   );
 
   return (
-    <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof SECTION_VALUES)[number])} className='gap-6'>
+    <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof values)[number])} className='gap-6'>
       {/* Horizontal here: the outer "Website pages" menu already owns the left column. */}
       <div className='border-b border-border'>
         <TabsList variant='line' className='h-auto w-fit max-w-full flex-wrap justify-start'>
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <TabsTrigger key={section.value} value={section.value}>
               {section.label}
             </TabsTrigger>
@@ -75,6 +80,11 @@ export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials
         <TabsContent value='partner-logos'>
           <PartnerLogosPanel initialData={partnerLogos} />
         </TabsContent>
+        {canSeo ? (
+          <TabsContent value='seo'>
+            <PageSeoTab id='home' />
+          </TabsContent>
+        ) : null}
       </div>
     </Tabs>
   );

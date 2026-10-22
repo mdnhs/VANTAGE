@@ -7,6 +7,7 @@ import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { PageTabs } from '@/components/layout/page-tabs';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { serviceService } from '@/server/services/service-service';
+import { seoTab } from '@/features/seo/components/seo-tab';
 import { ServiceTable } from '@/features/services/components/list/service-table';
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ServicesListPage() {
-  await requirePermission(permissionFor('/dashboard/services'));
+  const actor = await requirePermission(permissionFor('/dashboard/services'));
   const { rows, total } = await serviceService.listAdmin({ page: 1, limit: 50 });
 
   return (
@@ -51,6 +52,7 @@ export default async function ServicesListPage() {
               </>
             ),
           },
+          ...seoTab(actor, 'services'),
         ]}
       />
     </div>

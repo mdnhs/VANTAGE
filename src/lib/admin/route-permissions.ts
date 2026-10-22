@@ -28,6 +28,7 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
 
   ['/dashboard/quotes/[id]', { quote: ['read'] }],
   ['/dashboard/contacts/[id]', { contact: ['read'] }],
+  ['/dashboard/seo/pages/[id]', { seo: ['read'] }],
 
   // Content records: list / create / edit.
   ...(

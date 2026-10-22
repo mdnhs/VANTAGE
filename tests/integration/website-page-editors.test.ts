@@ -4,10 +4,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
-import { siteSettings } from '@/server/db/schema';
+import { media, siteSettings } from '@/server/db/schema';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
 
 // Cache directives and invalidation need the Next.js runtime; the save path and the
 // public adapter are what is under test.
@@ -28,7 +28,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(sql`truncate table audit_logs, users cascade`);
+  await db.execute(sql`truncate table audit_logs, users, media cascade`);
 });
 
 beforeEach(async () => {
@@ -187,5 +187,73 @@ describe('roles without page.update', () => {
     }
     expect((await call('/site-settings/admin', cookies.owner)).status).toBe(404);
     expect((await call('/site-settings')).status).toBe(200);
+  });
+});
+
+describe('per-page SEO (seo.page.*)', () => {
+  it('an author cannot read it', async () => {
+    expect((await call('/admin/globals/seo.page.home', cookies.author)).status).toBe(403);
+  });
+
+  it('a marketer edits page SEO but not page copy', async () => {
+    const seo = parseGlobal('seo.page.home', {});
+    seo.title = 'Dublin crash repair';
+    expect((await put('seo.page.home', cookies.marketer, { version: 0, value: seo })).status).toBe(200);
+    expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('settings:seo.page.home', { expire: 0 });
+    const copy = parseGlobal('page.home', {});
+    expect((await put('page.home', cookies.marketer, { version: 0, value: copy })).status).toBe(403);
+  });
+
+  it('View-as is read-only', async () => {
+    const editor = await createTestUser('editor');
+    const viewing = await viewAsCookie(cookies.owner, editor.id);
+    const seo = parseGlobal('seo.page.home', {});
+    expect((await put('seo.page.home', viewing, { version: 0, value: seo })).status).toBe(403);
+  });
+});
+
+describe('share image size on save', () => {
+  let n = 0;
+  async function image(over: Partial<typeof media.$inferInsert>) {
+    n += 1;
+    const [row] = await db
+      .insert(media)
+      .values({
+        driver: 'local',
+        key: `vantage/media/2026/10/${String(n).padStart(16, '0')}-s.png`,
+        url: `/uploads/s${n}.png`,
+        filename: 's.png',
+        mimeType: 'image/png',
+        sizeBytes: 1,
+        ...over,
+      })
+      .returning();
+    return row!;
+  }
+  const withImage = (key: 'seo.page.home' | 'seo', id: string) => {
+    const value = parseGlobal(key, {}) as Record<string, unknown>;
+    value[key === 'seo' ? 'defaultOgImage' : 'ogImage'] = { kind: 'media', id };
+    return value;
+  };
+
+  it('rejects a small image on a page and on the site default with the message under the field', async () => {
+    const small = await image({ width: 800, height: 400 });
+    const page = await put('seo.page.home', cookies.marketer, { version: 0, value: withImage('seo.page.home', small.id) });
+    expect(page.status).toBe(422);
+    const body = (await page.json()) as { error: { causes: Record<string, string[]> } };
+    expect(body.error.causes.ogImage).toEqual(['Use an image at least 1200×630 (1.91:1)']);
+
+    const site = await put('seo', cookies.marketer, { version: 0, value: withImage('seo', small.id) });
+    expect(site.status).toBe(422);
+    expect(((await site.json()) as { error: { causes: Record<string, string[]> } }).error.causes.defaultOgImage).toEqual([
+      'Use an image at least 1200×630 (1.91:1)',
+    ]);
+  });
+
+  it('accepts a right-sized image and one with unknown dimensions', async () => {
+    const good = await image({ width: 1200, height: 630 });
+    expect((await put('seo.page.home', cookies.marketer, { version: 0, value: withImage('seo.page.home', good.id) })).status).toBe(200);
+    const unknown = await image({ width: null, height: null });
+    expect((await put('seo', cookies.marketer, { version: 0, value: withImage('seo', unknown.id) })).status).toBe(200);
   });
 });
