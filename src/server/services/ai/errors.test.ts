@@ -31,6 +31,13 @@ describe('sanitise', () => {
   });
 });
 
+describe('sanitise addresses', () => {
+  it('hides bare IPv4 addresses with or without a port', () => {
+    const out = sanitise('connect ECONNREFUSED 10.0.0.5:8080 and 169.254.169.254', []);
+    expect(out).toBe('connect ECONNREFUSED [address] and [address]');
+  });
+});
+
 describe('providerMessage', () => {
   it("reads the provider's JSON error message", () => {
     const body = JSON.stringify({

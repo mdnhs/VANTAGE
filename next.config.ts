@@ -47,6 +47,8 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the VPS Docker image (sharp is externalized by default).
   output: 'standalone',
   poweredByHeader: false,
+  // undici is imported at runtime by the AI base-URL guard; keep it out of the bundle.
+  serverExternalPackages: ['undici'],
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
   // Media is served as stored (R2 or /uploads); Next optimises it. res.cloudinary.com is the legacy

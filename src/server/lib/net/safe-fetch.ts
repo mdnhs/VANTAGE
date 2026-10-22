@@ -74,11 +74,14 @@ export function isPrivateAddress(address: string): boolean {
   if (!net.isIPv6(bare)) return true;
   const g = v6Groups(bare);
   if (!g) return true;
-  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) {
-    return isPrivateAddress(`${g[6]! >> 8}.${g[6]! & 255}.${g[7]! >> 8}.${g[7]! & 255}`);
-  }
-  if (g.every((x) => x === 0)) return true; // ::
-  if (g.slice(0, 7).every((x) => x === 0) && g[7] === 1) return true; // ::1
+  const embedded = (hi: number, lo: number) => isPrivateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+  const zeros = (from: number, to: number) => g.slice(from, to).every((x) => x === 0);
+  if (zeros(0, 5) && g[5] === 0xffff) return embedded(g[6]!, g[7]!); // ::ffff:a.b.c.d
+  if (zeros(0, 8)) return true; // ::
+  if (zeros(0, 7) && g[7] === 1) return true; // ::1
+  if (zeros(0, 6)) return embedded(g[6]!, g[7]!); // ::a.b.c.d (IPv4-compatible)
+  if (g[0] === 0x64 && g[1] === 0xff9b && zeros(2, 6)) return embedded(g[6]!, g[7]!); // NAT64
+  if (g[0] === 0x2002) return embedded(g[1]!, g[2]!); // 6to4
   const first = g[0]!;
   return (first & 0xfe00) === 0xfc00 || (first & 0xffc0) === 0xfe80 || (first & 0xff00) === 0xff00;
 }
@@ -122,8 +125,10 @@ const guardedFetch: typeof fetch = async (input, init) => {
   }
 };
 
+const noRedirectGlobalFetch: typeof fetch = (url, init) => globalThis.fetch(url, { ...init, redirect: 'error' });
+
 // MK R6 (DNS rebinding): with `allowPrivate` false, the connection itself is
 // checked against the resolved addresses, not just the URL text.
 export function fetchFor(allowPrivate: boolean): typeof fetch {
-  return allowPrivate ? globalThis.fetch : guardedFetch;
+  return allowPrivate ? noRedirectGlobalFetch : guardedFetch;
 }

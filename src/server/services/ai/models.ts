@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { normaliseBaseUrl, type AiProvider } from '@/lib/ai/schema';
-
 import { fetchFor } from '@/server/lib/net/safe-fetch';
 
 import { ProviderHttpError } from './errors';

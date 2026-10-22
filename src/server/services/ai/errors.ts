@@ -49,6 +49,7 @@ export function sanitise(text: string, secrets: readonly string[]) {
   for (const secret of secrets) if (secret.length >= 4) out = out.split(secret).join('[hidden]');
   return out
     .replace(/https?:\/\/\S+/g, '[address]')
+    .replace(/\b\d{1,3}(?:\.\d{1,3}){3}(?::\d+)?\b/g, '[address]')
     .replace(/\b(key|token|api[_-]?key)=\S+/gi, '$1=[hidden]')
     .replace(/\b(?:sk|AIza|gsk|xai|pk)[-_A-Za-z0-9]{8,}/g, '[hidden]')
     .replace(/\s+/g, ' ')
