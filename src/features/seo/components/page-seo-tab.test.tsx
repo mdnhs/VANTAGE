@@ -26,6 +26,9 @@ beforeEach(() => {
       puts.push(`PUT ${url.split('/api/v1')[1]}`);
       return Promise.resolve(new Response(JSON.stringify({ success: true, data: { key: 'x', version: 2, value: {} } })));
     }
+    if (url.endsWith('/site-settings')) {
+      return Promise.resolve(new Response(JSON.stringify({ success: true, data: { businessName: 'Vantage Autobody' } })));
+    }
     const key = url.split('/admin/globals/')[1];
     const value =
       key === 'site'

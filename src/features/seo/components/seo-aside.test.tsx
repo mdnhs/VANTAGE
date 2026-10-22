@@ -8,18 +8,25 @@ import { parseGlobal } from '@/lib/content/globals';
 import { SeoAside } from './seo-aside';
 
 let globalsDenied = false;
+let siteGlobalDenied = false;
 beforeEach(() => {
   globalsDenied = false;
+  siteGlobalDenied = false;
   vi.stubEnv('NEXT_PUBLIC_API_PREFIX', '/api');
   vi.stubEnv('NEXT_PUBLIC_API_VERSION', '/v1');
   vi.stubGlobal('fetch', (url: string) => {
-    if (globalsDenied && url.includes('/admin/globals/')) {
+    if ((globalsDenied && url.includes('/admin/globals/')) || (siteGlobalDenied && url.endsWith('/admin/globals/site')) || (globalsDenied && url.endsWith('/site-settings'))) {
       return Promise.resolve(
         new Response(JSON.stringify({ success: false, error: { code: 'FORBIDDEN', message: 'No' } }), { status: 403 }),
       );
     }
+    if (url.endsWith('/site-settings')) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true, data: { businessName: 'Vantage Autobody' } })),
+      );
+    }
     const key = url.split('/admin/globals/')[1];
-    const value = key === 'site' ? { ...parseGlobal('site', {}), name: 'Vantage Autobody' } : parseGlobal('seo', {});
+    const value = parseGlobal('seo', {});
     return Promise.resolve(new Response(JSON.stringify({ success: true, data: { key, version: 1, value } })));
   });
 });
@@ -52,6 +59,18 @@ describe('SeoAside', () => {
   it('says so when the page is hidden from search engines', async () => {
     renderAside({ noindex: true });
     expect(await screen.findByText('Hidden from search engines')).toBeTruthy();
+  });
+
+  it('shows the shipped title even when the site global is not readable (site name from the public settings)', async () => {
+    siteGlobalDenied = true;
+    renderAside({});
+    expect((await screen.findAllByText('Services | Vantage Autobody')).length).toBeGreaterThan(0);
+  });
+
+  it('shows a placeholder and skips the size check for a legacy image', async () => {
+    renderAside({ ogImage: { kind: 'cloudinary', publicId: 'old/pic' } });
+    expect(await screen.findByText('Legacy image — no preview')).toBeTruthy();
+    expect((await screen.findByText('Legacy image — size not checked')).closest('li')?.textContent).toContain('Not checked:');
   });
 
   it('still renders from the page label when the defaults cannot be read', async () => {

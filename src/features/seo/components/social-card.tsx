@@ -3,6 +3,7 @@ export function SocialCard({
   title,
   description,
   imageSrc,
+  legacyImage,
   siteName,
 }: {
   siteHost: string;
@@ -10,6 +11,8 @@ export function SocialCard({
   description: string;
   // An uploaded image URL; without one the generated card is drawn here.
   imageSrc?: string;
+  // A legacy (Cloudinary) image is set: it has no preview here.
+  legacyImage?: boolean;
   siteName: string;
 }) {
   return (
@@ -17,6 +20,14 @@ export function SocialCard({
       {imageSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageSrc} alt='Share image preview' className='aspect-[1.91/1] w-full bg-muted object-cover' />
+      ) : legacyImage ? (
+        <div
+          role='img'
+          aria-label='Share image preview'
+          className='flex aspect-[1.91/1] w-full items-center justify-center bg-muted text-sm text-muted-foreground'
+        >
+          Legacy image — no preview
+        </div>
       ) : (
         <div
           role='img'

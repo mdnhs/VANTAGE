@@ -15,15 +15,18 @@ import { SeoAside } from './seo-aside';
 export function PageSeoTab({ id }: { id: PublicPageId }) {
   const key = seoPageKey(id);
   const stored = useGlobal(key);
-  const [live, setLive] = useState<GlobalValue<SeoPageKey> | undefined>();
-  const values = live ?? (stored.data?.value as GlobalValue<SeoPageKey> | undefined);
+  // Live values belong to the stored version they were typed against.
+  const [live, setLive] = useState<{ version: number | undefined; value: GlobalValue<SeoPageKey> } | undefined>();
+  // A conflict reload or a restore changes the stored version: show what is stored again.
+  const version = stored.data?.version;
+  const values = (live && live.version === version ? live.value : undefined) ?? (stored.data?.value as GlobalValue<SeoPageKey> | undefined);
   return (
     <div className='grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]'>
       <GlobalEditor
         title={`${PUBLIC_PAGES[id].label} SEO`}
         keys={[key]}
         embedded
-        onValuesChange={(next) => setLive(next as GlobalValue<SeoPageKey>)}
+        onValuesChange={(next) => setLive({ version, value: next as GlobalValue<SeoPageKey> })}
       />
       <SeoAside id={id} values={values} />
     </div>
