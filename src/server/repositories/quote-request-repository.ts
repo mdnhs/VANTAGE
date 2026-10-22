@@ -9,7 +9,7 @@ import type {
 import type { QuoteRequestStats } from '@/features/quote-requests/types';
 
 export const quoteRequestRepository = {
-  async list({ page, limit, status, search, assignedAdminId }: QuoteRequestListQuery) {
+  async list({ page, limit, status, search, assignedUserId }: QuoteRequestListQuery) {
     const offset = (page - 1) * limit;
     const conditions = [];
 
@@ -17,8 +17,8 @@ export const quoteRequestRepository = {
       conditions.push(eq(quoteRequests.status, status));
     }
 
-    if (assignedAdminId) {
-      conditions.push(eq(quoteRequests.assignedAdminId, assignedAdminId));
+    if (assignedUserId) {
+      conditions.push(eq(quoteRequests.assignedUserId, assignedUserId));
     }
 
     if (search && search.trim()) {
@@ -45,7 +45,7 @@ export const quoteRequestRepository = {
         where: whereClause,
         orderBy: [desc(quoteRequests.createdAt)],
         with: {
-          assignedAdmin: {
+          assignedUser: {
             columns: {
               id: true,
               name: true,
@@ -104,7 +104,7 @@ export const quoteRequestRepository = {
     return db.query.quoteRequests.findFirst({
       where: eq(quoteRequests.id, id),
       with: {
-        assignedAdmin: {
+        assignedUser: {
           columns: {
             id: true,
             name: true,
@@ -134,7 +134,7 @@ export const quoteRequestRepository = {
         photoUrls: data.photoUrls || [],
         source: data.source || 'website',
         status: data.status || 'new',
-        assignedAdminId: data.assignedAdminId || null,
+        assignedUserId: data.assignedUserId || null,
         inspectionDate: data.inspectionDate ?? null,
         estimatedCost:
           data.estimatedCost !== undefined && data.estimatedCost !== null ? String(data.estimatedCost) : null,
@@ -155,7 +155,7 @@ export const quoteRequestRepository = {
     if (data.address !== undefined) patch.address = data.address;
     if (data.city !== undefined) patch.city = data.city;
     if (data.eircode !== undefined) patch.eircode = data.eircode;
-    if (data.assignedAdminId !== undefined) patch.assignedAdminId = data.assignedAdminId;
+    if (data.assignedUserId !== undefined) patch.assignedUserId = data.assignedUserId;
     if (data.inspectionDate !== undefined) patch.inspectionDate = data.inspectionDate;
     if (data.estimatedCost !== undefined)
       patch.estimatedCost = data.estimatedCost !== null ? String(data.estimatedCost) : null;

@@ -57,7 +57,7 @@ export const createQuoteRequestSchema = z.object({
   photoUrls: z.array(z.string()).max(6).optional(),
   source: z.enum(QUOTE_SOURCES).optional().default('website'),
   status: z.enum(ALL_QUOTE_STATUSES).optional().default('new'),
-  assignedAdminId: z.string().uuid().nullable().optional(),
+  assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional().default('unpaid'),
@@ -73,7 +73,7 @@ export const updateQuoteRequestSchema = z.object({
   address: z.string().max(500).nullable().optional(),
   city: z.string().max(80).nullable().optional(),
   eircode: z.string().max(20).nullable().optional(),
-  assignedAdminId: z.string().uuid().nullable().optional(),
+  assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
@@ -89,7 +89,7 @@ export const quoteRequestListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: z.enum([...ALL_QUOTE_STATUSES, 'all']).default('all'),
   search: z.string().optional(),
-  assignedAdminId: z.string().uuid().optional(),
+  assignedUserId: z.string().min(1).optional(),
 });
 
 export type CreateQuoteRequestInput = z.input<typeof createQuoteRequestSchema>;

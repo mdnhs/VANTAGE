@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import type { AppEnv } from '@/server/api/types';
+import { can } from '@/server/middleware/auth';
 import { projectService } from '@/server/services/project-service';
 import {
   createProjectSchema,
@@ -16,7 +16,7 @@ import {
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const projects = new Hono<AuthEnv>()
+export const projects = new Hono<AppEnv>()
   // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
   .get('/', async (c) => {
     c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
@@ -30,59 +30,34 @@ export const projects = new Hono<AuthEnv>()
     return ok(c, data);
   })
 
-  .get(
-    '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
-    zValidator('query', projectListQuerySchema),
-    async (c) => {
-      const { page, limit } = c.req.valid('query');
-      const { rows, total } = await projectService.listAdmin({ page, limit });
-      return ok(c, rows, { pagination: buildPagination(total, page, limit) });
-    },
-  )
+  .get('/admin/list', can({ content: ['read'] }), zValidator('query', projectListQuerySchema), async (c) => {
+    const { page, limit } = c.req.valid('query');
+    const { rows, total } = await projectService.listAdmin({ page, limit });
+    return ok(c, rows, { pagination: buildPagination(total, page, limit) });
+  })
 
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await projectService.byId(id);
-      if (!row) throw ApiError.notFound('Project not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ content: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await projectService.byId(id);
+    if (!row) throw ApiError.notFound('Project not found');
+    return ok(c, row);
+  })
 
-  .post(
-    '/',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
-    zValidator('json', createProjectSchema),
-    async (c) => {
-      const input = c.req.valid('json');
-      const row = await projectService.create(input);
-      return ok(c, row, { status: 201 });
-    },
-  )
+  .post('/', can({ content: ['create'] }), zValidator('json', createProjectSchema), async (c) => {
+    const input = c.req.valid('json');
+    const row = await projectService.create(input);
+    return ok(c, row, { status: 201 });
+  })
 
-  .patch(
-    '/reorder',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
-    zValidator('json', reorderProjectsSchema),
-    async (c) => {
-      const input = c.req.valid('json');
-      await projectService.reorder(input);
-      return ok(c, { success: true });
-    },
-  )
+  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderProjectsSchema), async (c) => {
+    const input = c.req.valid('json');
+    await projectService.reorder(input);
+    return ok(c, { success: true });
+  })
 
   .patch(
     '/:id/status',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
+    can({ content: ['update'] }),
     zValidator('param', idParamSchema),
     zValidator('json', projectStatusSchema),
     async (c) => {
@@ -96,8 +71,7 @@ export const projects = new Hono<AuthEnv>()
 
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
+    can({ content: ['update'] }),
     zValidator('param', idParamSchema),
     zValidator('json', updateProjectSchema),
     async (c) => {
@@ -109,14 +83,8 @@ export const projects = new Hono<AuthEnv>()
     },
   )
 
-  .delete(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROJECTS_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      await projectService.remove(id);
-      return ok(c, { success: true });
-    },
-  );
+  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    await projectService.remove(id);
+    return ok(c, { success: true });
+  });

@@ -118,7 +118,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const [address, setAddress] = useState<string>(quote.address ?? '');
   const [city, setCity] = useState<string>(quote.city ?? '');
   const [eircode, setEircode] = useState<string>(quote.eircode ?? '');
-  const [assignedAdminId, setAssignedAdminId] = useState<string>(quote.assignedAdminId ?? 'unassigned');
+  const [assignedUserId, setAssignedUserId] = useState<string>(quote.assignedUserId ?? 'unassigned');
   const [inspectionDate, setInspectionDate] = useState<string>(toDatetimeLocal(quote.inspectionDate));
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>((quote.paymentStatus as PaymentStatus) ?? 'unpaid');
   const [paidAmount, setPaidAmount] = useState<string>(quote.paidAmount ?? '0.00');
@@ -143,9 +143,9 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
 
   // Quick Staff Assignment
   const handleStaffChange = async (newStaffId: string) => {
-    setAssignedAdminId(newStaffId);
+    setAssignedUserId(newStaffId);
     await updateQuote.mutateAsync({
-      assignedAdminId: newStaffId === 'unassigned' ? null : newStaffId,
+      assignedUserId: newStaffId === 'unassigned' ? null : newStaffId,
     });
   };
 
@@ -191,7 +191,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
       address: address.trim() ? address.trim() : null,
       city: city.trim() ? city.trim() : null,
       eircode: eircode.trim() ? eircode.trim().toUpperCase() : null,
-      assignedAdminId: assignedAdminId === 'unassigned' ? null : assignedAdminId,
+      assignedUserId: assignedUserId === 'unassigned' ? null : assignedUserId,
       inspectionDate: inspectionDate ? new Date(inspectionDate).toISOString() : null,
       paymentStatus,
       paidAmount: paidAmount !== '' ? parseFloat(paidAmount) : 0,
@@ -228,7 +228,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const hasAddress = Boolean(address || quote.address || city || quote.city || eircode || quote.eircode);
 
   // Assigned staff representation
-  const currentAssignedStaff = adminUsers?.find((u) => u.id === assignedAdminId) || quote.assignedAdmin;
+  const currentAssignedStaff = adminUsers?.find((u) => u.id === assignedUserId) || quote.assignedUser;
 
   return (
     <div className='@container flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
@@ -499,7 +499,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             </div>
 
             <Select
-              value={assignedAdminId}
+              value={assignedUserId}
               onValueChange={(val) => {
                 if (val) handleStaffChange(val);
               }}

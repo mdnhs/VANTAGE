@@ -65,7 +65,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [eircode, setEircode] = useState('');
-  const [assignedAdminId, setAssignedAdminId] = useState<string>('unassigned');
+  const [assignedUserId, setAssignedUserId] = useState<string>('unassigned');
   const [inspectionDate, setInspectionDate] = useState('');
   const [registration, setRegistration] = useState('');
   const [make, setMake] = useState('');
@@ -86,7 +86,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
     setAddress('');
     setCity('');
     setEircode('');
-    setAssignedAdminId('unassigned');
+    setAssignedUserId('unassigned');
     setInspectionDate('');
     setRegistration('');
     setMake('');
@@ -126,7 +126,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
         eircode: eircode.trim() ? eircode.trim().toUpperCase() : null,
         source,
         status,
-        assignedAdminId: assignedAdminId && assignedAdminId !== 'unassigned' ? assignedAdminId : null,
+        assignedUserId: assignedUserId && assignedUserId !== 'unassigned' ? assignedUserId : null,
         inspectionDate: inspectionDate ? new Date(inspectionDate).toISOString() : null,
         registration: registration.trim() ? registration.trim().toUpperCase() : null,
         make: make.trim() || null,
@@ -415,9 +415,9 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
                   Assigned Technician / Staff
                 </Label>
                 <Select
-                  value={assignedAdminId}
+                  value={assignedUserId}
                   onValueChange={(val) => {
-                    if (val) setAssignedAdminId(val);
+                    if (val) setAssignedUserId(val);
                   }}
                 >
                   <SelectTrigger id='lead-technician'>

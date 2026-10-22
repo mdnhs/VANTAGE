@@ -6,7 +6,9 @@ import { ok } from '@/server/lib/response';
 import { ApiError } from '@/server/lib/errors';
 import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
-import { requireAuth, type AuthEnv } from '@/server/middleware/auth';
+import type { AppEnv } from '@/server/api/types';
+import { actorOf, signedIn } from '@/server/middleware/auth';
+import { toMePayload } from '@/lib/auth/me';
 import { adminUserRepository } from '@/server/repositories/admin-user-repository';
 import { createSessionToken, SESSION_COOKIE, SESSION_TTL_SECONDS } from '@/server/lib/session';
 import { decompressPermissions } from '@/lib/permission/utils';
@@ -18,8 +20,8 @@ const loginSchema = z.object({
 });
 
 // Keep this path DB-free except for the two required lookups on login — everything else
-// (requireAuth on every other route) resolves purely from the signed cookie.
-export const auth = new Hono<AuthEnv>()
+// (the guards on every other route) read the Better Auth session.
+export const auth = new Hono<AppEnv>()
   .post('/login', rateLimit(10, 60_000), zValidator('json', loginSchema), async (c) => {
     const { email, password } = c.req.valid('json');
 
@@ -60,4 +62,4 @@ export const auth = new Hono<AuthEnv>()
     return ok(c, null);
   })
 
-  .get('/me', requireAuth, async (c) => ok(c, c.get('user')));
+  .get('/me', signedIn, async (c) => ok(c, toMePayload(actorOf(c))));

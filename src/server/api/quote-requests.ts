@@ -4,8 +4,8 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import type { AppEnv } from '@/server/api/types';
+import { can } from '@/server/middleware/auth';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
@@ -16,7 +16,7 @@ import {
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const quoteRequests = new Hono<AuthEnv>()
+export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), zValidator('json', createQuoteRequestSchema), async (c) => {
     const input = c.req.valid('json');
@@ -26,43 +26,30 @@ export const quoteRequests = new Hono<AuthEnv>()
   })
 
   // Admin list with pagination, search, and status filtering
-  .get(
-    '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
-    zValidator('query', quoteRequestListQuerySchema),
-    async (c) => {
-      const query = c.req.valid('query');
-      const { rows, total } = await quoteRequestService.list(query);
-      return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
-    },
-  )
+  .get('/admin/list', can({ quote: ['read'] }), zValidator('query', quoteRequestListQuerySchema), async (c) => {
+    const query = c.req.valid('query');
+    const { rows, total } = await quoteRequestService.list(query);
+    return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
+  })
 
   // Status count stats for dashboard badges/tabs
-  .get('/admin/stats', requireAuth, requirePermission(PERMISSIONS.QUOTES_MANAGE), async (c) => {
+  .get('/admin/stats', can({ quote: ['read'] }), async (c) => {
     const stats = await quoteRequestService.stats();
     return ok(c, stats);
   })
 
   // Get specific quote request details
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await quoteRequestService.byId(id);
-      if (!row) throw ApiError.notFound('Quote request not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ quote: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await quoteRequestService.byId(id);
+    if (!row) throw ApiError.notFound('Quote request not found');
+    return ok(c, row);
+  })
 
   // Update status, notes, or estimated cost
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
+    can({ quote: ['update'] }),
     zValidator('param', idParamSchema),
     zValidator('json', updateQuoteRequestSchema),
     async (c) => {
@@ -75,14 +62,8 @@ export const quoteRequests = new Hono<AuthEnv>()
   )
 
   // Delete quote request
-  .delete(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      await quoteRequestService.remove(id);
-      return ok(c, { success: true });
-    },
-  );
+  .delete('/:id', can({ quote: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    await quoteRequestService.remove(id);
+    return ok(c, { success: true });
+  });

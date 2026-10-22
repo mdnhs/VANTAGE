@@ -1,13 +1,19 @@
-import { createSessionToken, SESSION_COOKIE, type SessionUser } from '@/server/lib/session';
+import { randomUUID } from 'node:crypto';
 
-// A `Cookie` header value carrying a valid session for tests.
-export async function sessionCookie(user: Partial<SessionUser> = {}): Promise<string> {
-  const token = await createSessionToken({
-    id: 'user_test_1',
-    email: 'tester@example.com',
-    name: 'Tester',
-    permissions: [],
-    ...user,
+import type { RoleName } from '@/lib/auth/permissions';
+import { getAuth } from '@/server/lib/auth';
+
+const PASSWORD = 'Test-Password-2026!';
+
+// A `Cookie` header value carrying a real Better Auth session for a freshly
+// created user with the given role (`user` is the non-admin customer role).
+export async function sessionCookie(role: RoleName | 'user' = 'owner'): Promise<string> {
+  const email = `${role}-${randomUUID()}@session.test`;
+  await getAuth().api.createUser({
+    body: { email, password: PASSWORD, name: `Test ${role}`, role: role as never },
   });
-  return `${SESSION_COOKIE}=${token}`;
+  const response = await getAuth().api.signInEmail({ body: { email, password: PASSWORD }, asResponse: true });
+  const cookies = response.headers.getSetCookie().map((cookie) => cookie.split(';')[0]);
+  if (cookies.length === 0) throw new Error('sign-in returned no session cookie');
+  return cookies.join('; ');
 }

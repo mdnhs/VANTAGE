@@ -3,7 +3,8 @@ import { bodyLimit } from 'hono/body-limit';
 import { ERROR_CODES, ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
-import { requireAuth, type AuthEnv } from '@/server/middleware/auth';
+import type { AppEnv } from '@/server/api/types';
+import { actorOf, can } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { mediaLibraryService } from '@/server/services/media-library-service';
@@ -29,39 +30,49 @@ async function fileFrom(c: Context) {
   return file;
 }
 
-// Phase 2 swaps `requireAuth` for RBAC `media.*` permissions.
-export const adminMedia = new Hono<AuthEnv>()
-  .use('*', requireAuth)
-
-  .get('/', zValidator('query', mediaListQuerySchema), async (c) => {
+export const adminMedia = new Hono<AppEnv>()
+  .get('/', can({ media: ['read'] }), zValidator('query', mediaListQuerySchema), async (c) => {
     const query = c.req.valid('query');
     const { items, total } = await mediaLibraryService.list(query);
     return ok(c, items, { pagination: buildPagination(total, query.page, query.limit) });
   })
 
-  .get('/:id', zValidator('param', mediaIdParamSchema), async (c) => {
+  .get('/:id', can({ media: ['read'] }), zValidator('param', mediaIdParamSchema), async (c) => {
     return ok(c, await mediaLibraryService.get(c.req.valid('param').id));
   })
 
-  .get('/:id/usage', zValidator('param', mediaIdParamSchema), async (c) => {
+  .get('/:id/usage', can({ media: ['read'] }), zValidator('param', mediaIdParamSchema), async (c) => {
     return ok(c, await mediaLibraryService.usageOf(c.req.valid('param').id));
   })
 
-  .post('/', rateLimit(30, 60_000), uploadBodyLimit, async (c) => {
-    const item = await mediaLibraryService.upload(c.get('user').id, await fileFrom(c));
+  .post('/', can({ media: ['upload'] }), rateLimit(30, 60_000), uploadBodyLimit, async (c) => {
+    const item = await mediaLibraryService.upload(actorOf(c).userId, await fileFrom(c));
     return ok(c, item, { status: 201 });
   })
 
-  .patch('/:id', zValidator('param', mediaIdParamSchema), zValidator('json', mediaPatchSchema), async (c) => {
-    return ok(c, await mediaLibraryService.update(c.req.valid('param').id, c.req.valid('json')));
-  })
+  .patch(
+    '/:id',
+    can({ media: ['update'] }),
+    zValidator('param', mediaIdParamSchema),
+    zValidator('json', mediaPatchSchema),
+    async (c) => {
+      return ok(c, await mediaLibraryService.update(c.req.valid('param').id, c.req.valid('json')));
+    },
+  )
 
-  .post('/:id/replace', rateLimit(30, 60_000), uploadBodyLimit, zValidator('param', mediaIdParamSchema), async (c) => {
-    const item = await mediaLibraryService.replace(c.get('user').id, c.req.valid('param').id, await fileFrom(c));
-    return ok(c, item);
-  })
+  .post(
+    '/:id/replace',
+    can({ media: ['upload'] }),
+    rateLimit(30, 60_000),
+    uploadBodyLimit,
+    zValidator('param', mediaIdParamSchema),
+    async (c) => {
+      const item = await mediaLibraryService.replace(actorOf(c).userId, c.req.valid('param').id, await fileFrom(c));
+      return ok(c, item);
+    },
+  )
 
-  .delete('/:id', zValidator('param', mediaIdParamSchema), async (c) => {
+  .delete('/:id', can({ media: ['delete'] }), zValidator('param', mediaIdParamSchema), async (c) => {
     await mediaLibraryService.remove(c.req.valid('param').id);
     return ok(c, { success: true });
   });

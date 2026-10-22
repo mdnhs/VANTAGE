@@ -1,4 +1,4 @@
-import type { QuoteRequest as DbQuoteRequest, NewQuoteRequest, AdminUser } from '@/server/db/schema';
+import type { QuoteRequest as DbQuoteRequest, NewQuoteRequest, User } from '@/server/db/schema';
 import {
   QUOTE_STATUSES,
   PIPELINE_STATUSES,
@@ -19,7 +19,7 @@ import {
 export { QUOTE_STATUSES, PIPELINE_STATUSES, ALL_QUOTE_STATUSES, QUOTE_SOURCES, PAYMENT_STATUSES, PAYMENT_METHODS };
 
 export type QuoteRequest = DbQuoteRequest & {
-  assignedAdmin?: Pick<AdminUser, 'id' | 'name' | 'email'> | null;
+  assignedUser?: Pick<User, 'id' | 'name' | 'email'> | null;
 };
 
 export type QuoteRequestWithStaff = QuoteRequest;

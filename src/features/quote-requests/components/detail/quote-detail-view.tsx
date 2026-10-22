@@ -111,7 +111,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
   const [address, setAddress] = useState<string>(initialQuote.address ?? '');
   const [city, setCity] = useState<string>(initialQuote.city ?? '');
   const [eircode, setEircode] = useState<string>(initialQuote.eircode ?? '');
-  const [assignedAdminId, setAssignedAdminId] = useState<string>(initialQuote.assignedAdminId ?? 'unassigned');
+  const [assignedUserId, setAssignedUserId] = useState<string>(initialQuote.assignedUserId ?? 'unassigned');
   const [inspectionDate, setInspectionDate] = useState<string>(toDatetimeLocal(initialQuote.inspectionDate));
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
     (initialQuote.paymentStatus as PaymentStatus) ?? 'unpaid',
@@ -173,7 +173,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
       address: address.trim() ? address.trim() : null,
       city: city.trim() ? city.trim() : null,
       eircode: eircode.trim() ? eircode.trim().toUpperCase() : null,
-      assignedAdminId: assignedAdminId === 'unassigned' ? null : assignedAdminId,
+      assignedUserId: assignedUserId === 'unassigned' ? null : assignedUserId,
       inspectionDate: inspectionDate ? new Date(inspectionDate).toISOString() : null,
       paymentStatus,
       paidAmount: paidAmount !== '' ? parseFloat(paidAmount) : 0,
@@ -388,9 +388,9 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
             <div className='flex flex-col gap-1.5 border-b border-border pb-2'>
               <span className='text-xs font-medium text-muted-foreground'>Assigned Technician / Staff</span>
               <Select
-                value={assignedAdminId}
+                value={assignedUserId}
                 onValueChange={(v) => {
-                  if (v) setAssignedAdminId(v);
+                  if (v) setAssignedUserId(v);
                 }}
               >
                 <SelectTrigger className='h-8 text-xs'>

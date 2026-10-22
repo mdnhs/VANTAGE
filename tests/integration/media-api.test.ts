@@ -38,7 +38,7 @@ const json = async (res: Response) => (await res.json()) as { data: MediaItem & 
 
 describe('admin media API', () => {
   beforeAll(async () => {
-    cookie = await sessionCookie();
+    cookie = await sessionCookie('owner');
     resetStorageForTests();
   });
 
