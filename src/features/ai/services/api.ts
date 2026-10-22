@@ -1,3 +1,4 @@
+import type { AiUIMessage } from '@/lib/ai/messages';
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { ConflictCurrent, ErrorCode } from '@/server/lib/errors';
 
@@ -36,6 +37,9 @@ export const send = (path: string, method: 'GET' | 'PUT' | 'POST' | 'DELETE', js
     ...(json === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(json) }),
   });
 
+export type ConversationSummary = { id: string; title: string; model: string; updatedAt: string };
+export type ConversationDetail = { id: string; title: string; model: string; messages: AiUIMessage[] };
+
 export const aiApi = {
   async status(): Promise<AiStatus> {
     return parseOrThrow<AiStatus>(await send(API_ROUTES.ai.status, 'GET'));
@@ -51,5 +55,14 @@ export const aiApi = {
   },
   async testConnection(): Promise<{ ok: boolean; message: string }> {
     return parseOrThrow<{ ok: boolean; message: string }>(await send(API_ROUTES.ai.test, 'POST'));
+  },
+  async conversations(): Promise<ConversationSummary[]> {
+    return (await parseOrThrow<{ items: ConversationSummary[] }>(await send(API_ROUTES.ai.conversations, 'GET'))).items;
+  },
+  async conversation(id: string): Promise<ConversationDetail> {
+    return parseOrThrow<ConversationDetail>(await send(API_ROUTES.ai.conversation(id), 'GET'));
+  },
+  async deleteConversation(id: string): Promise<{ ok: true }> {
+    return parseOrThrow<{ ok: true }>(await send(API_ROUTES.ai.conversation(id), 'DELETE'));
   },
 };
