@@ -1,3 +1,4 @@
+import { sizedSrc } from '@/lib/media/public-image';
 import type { Metadata } from 'next';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
@@ -51,14 +52,14 @@ export default async function ServicesPage() {
                   key={service.id}
                   index={index}
                   reverse={index % 2 === 1}
-                  image={service.image ? service.image.src : FALLBACK_IMAGE}
+                  image={service.image ? sizedSrc(service.image, 'w_1200,h_900,c_fill') : FALLBACK_IMAGE}
                   imagePosition={
                     service.image ? `${service.image.focal.x * 100}% ${service.image.focal.y * 100}%` : undefined
                   }
                   heading={service.name}
                   description={service.description}
                   checklist={service.checklist}
-                  iconSrc={service.icon?.src}
+                  iconSrc={service.icon ? sizedSrc(service.icon, 'w_48,h_48') : undefined}
                   startingPrice={service.startingPrice}
                 />
               ))}

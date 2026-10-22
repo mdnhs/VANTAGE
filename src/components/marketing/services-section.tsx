@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { ServicePublic } from '@/features/services/types';
 
 // Fallback icon for services created without an uploaded icon — matches the first icon the
@@ -48,7 +49,13 @@ export function ServicesSection({ services }: ServicesSectionProps) {
             className={`group intersect-once relative flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-red-500/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
           >
             <div className='flex size-12 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop'>
-              <Image src={service.icon?.src ?? DEFAULT_ICON} alt='' width={18} height={18} className='size-[18px]' />
+              <Image
+                src={service.icon ? sizedSrc(service.icon, 'w_36,h_36') : DEFAULT_ICON}
+                alt=''
+                width={18}
+                height={18}
+                className='size-[18px]'
+              />
             </div>
 
             <div className='flex flex-1 flex-col justify-end gap-2 pt-3'>

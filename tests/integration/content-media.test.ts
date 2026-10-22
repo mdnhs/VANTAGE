@@ -91,6 +91,14 @@ describe('services', () => {
     expect(await db.select().from(services)).toHaveLength(0);
   });
 
+  it('refuses an enquiry-scope media id with 422 _media', async () => {
+    const lead = await insertMedia({ scope: 'enquiry' });
+    const error = await serviceService.create(service({ iconMediaId: lead.id })).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(422);
+    expect((error as ApiError).causes?._media).toEqual([`Image ${lead.id} no longer exists`]);
+  });
+
   it('falls back to the legacy Cloudinary URL for a legacy-only row', async () => {
     await db.insert(services).values({ ...service(), iconPublicId: 'vantage/legacy-icon' });
     const [listed] = await serviceRepository.listPublished();

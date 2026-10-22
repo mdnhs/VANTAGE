@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { ProjectPublic } from '@/features/projects/types';
 
 type FeaturedProject = Pick<
@@ -71,7 +72,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                 <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
                   {current && (
                     <Image
-                      src={current.src}
+                      src={sizedSrc(current, 'w_800,h_512,c_fill')}
                       style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
                       alt={`${project.title} ${currentMode}`}
                       fill

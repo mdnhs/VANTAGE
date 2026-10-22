@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
 import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 
@@ -23,7 +24,7 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
               if (!logo.logo) return null;
               const image = (
                 <Image
-                  src={logo.logo.src}
+                  src={sizedSrc(logo.logo, 'w_320,h_160,c_fit')}
                   alt={logo.companyName}
                   width={120}
                   height={60}

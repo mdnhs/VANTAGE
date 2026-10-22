@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { ProjectPublic } from '@/features/projects/types';
 import { ALL_FILTER, DEFAULT_FILTERS, PortfolioFilters } from '@/components/marketing/portfolio-filters';
 import { BUTTON_SECONDARY } from '@/components/marketing/ui/landing-primitives';
@@ -25,7 +26,7 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
       <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
         {current && (
           <Image
-            src={current.src}
+            src={sizedSrc(current, 'w_800,h_512,c_fill')}
             style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
             alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
             fill

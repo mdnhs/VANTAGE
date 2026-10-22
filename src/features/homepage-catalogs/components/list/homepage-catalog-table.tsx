@@ -8,6 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { sizedSrc } from '@/lib/media/public-image';
 import { useHomepageCatalogList } from '../../hooks/api/query/use-homepage-catalog-list';
 import { useUpdateHomepageCatalog } from '../../hooks/api/mutation/use-update-homepage-catalog';
 import { useDeleteHomepageCatalog } from '../../hooks/api/mutation/use-delete-homepage-catalog';
@@ -107,7 +108,12 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
               <td className='px-4 py-2.5'>
                 {item.iconImage ? (
                   <div className='relative size-6 overflow-hidden rounded bg-muted'>
-                    <Image src={item.iconImage.src} alt={item.title} fill className='object-contain' />
+                    <Image
+                      src={sizedSrc(item.iconImage, 'w_48,h_48')}
+                      alt={item.title}
+                      fill
+                      className='object-contain'
+                    />
                   </div>
                 ) : (
                   <span className='inline-flex items-center rounded border border-border bg-muted/50 px-2 py-0.5 text-xs font-medium'>

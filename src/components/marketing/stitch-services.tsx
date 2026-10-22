@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import {
   CarFront,
   Bandage,
@@ -171,7 +172,7 @@ function toCard(service: ServicePublic, index: number): ServiceCard {
     badge: service.startingPrice != null ? `From €${service.startingPrice}` : null,
     footnote: 'Free Estimate',
     icon: fallbackIcon(index),
-    iconSrc: service.icon?.src ?? null,
+    iconSrc: service.icon ? sizedSrc(service.icon, 'w_48,h_48') : null,
   };
 }
 
@@ -183,7 +184,7 @@ function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceC
     badge: item.badge,
     footnote: item.footnote || 'Free Estimate',
     icon: resolveIcon(item.icon, index),
-    iconSrc: item.iconImage?.src ?? null,
+    iconSrc: item.iconImage ? sizedSrc(item.iconImage, 'w_48,h_48') : null,
   };
 }
 

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import { Star } from 'lucide-react';
 import type { TestimonialPublic } from '@/features/testimonials/types';
 
@@ -63,7 +64,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             <div className='flex items-center gap-3 border-t border-white/10 pt-6'>
               {testimonial.avatar ? (
                 <Image
-                  src={testimonial.avatar.src}
+                  src={sizedSrc(testimonial.avatar, 'w_88,h_88,c_fill,g_face')}
                   style={{
                     objectPosition: `${testimonial.avatar.focal.x * 100}% ${testimonial.avatar.focal.y * 100}%`,
                   }}
