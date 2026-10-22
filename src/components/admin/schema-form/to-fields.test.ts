@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { imageRefSchema, videoRefSchema } from '@/lib/content/image-ref';
 
 import { ui } from './registry';
-import { emptyValueFor, rebase, toFields } from './to-fields';
+import { emptyValue, emptyValueFor, rebase, toFields } from './to-fields';
 
 const Schema = z
   .object({
@@ -107,6 +107,48 @@ describe('image and video refs', () => {
     const fields = toFields(z.object({ photo: imageRefSchema, clip: videoRefSchema }));
     expect(fields[0]).toMatchObject({ name: 'photo', widget: 'image', required: false });
     expect(fields[1]).toMatchObject({ name: 'clip', widget: 'video', required: false });
+  });
+
+  it('survive .register(ui, { label }) on the shared instance', () => {
+    // Registering replaces the ui entry; the widget must not be lost.
+    const labelled = imageRefSchema.register(ui, { label: 'Hero' });
+    const [field] = toFields(z.object({ hero: labelled }));
+    expect(field).toMatchObject({ widget: 'image', label: 'Hero', required: false });
+    // restore a plain entry for the remaining tests
+    ui.remove(imageRefSchema);
+  });
+
+  it('survive .optional() and .default(null)', () => {
+    const fields = toFields(
+      z.object({
+        a: imageRefSchema.optional(),
+        b: imageRefSchema.default(null),
+        c: videoRefSchema.optional(),
+        d: videoRefSchema.default(null),
+      }),
+    );
+    expect(fields.map((f) => f.widget)).toEqual(['image', 'image', 'video', 'video']);
+    expect(fields.every((f) => !f.required)).toBe(true);
+  });
+
+  it('survive nesting in objects and arrays', () => {
+    const [group, list] = toFields(
+      z.object({
+        card: z.object({ photo: imageRefSchema, title: z.string() }),
+        slides: z.array(z.object({ clip: videoRefSchema })),
+        gallery: z.array(imageRefSchema),
+      }),
+    ).filter((f) => f.name !== 'gallery');
+    expect(group!.fields![0]).toMatchObject({ name: 'card.photo', widget: 'image' });
+    expect(list!.item!.fields![0]).toMatchObject({ name: 'slides.$.clip', widget: 'video' });
+    const gallery = toFields(z.object({ gallery: z.array(imageRefSchema) }))[0]!;
+    expect(gallery.item).toMatchObject({ name: 'gallery.$', widget: 'image' });
+  });
+
+  it('keep an explicit widget override and still start unset', () => {
+    const [field] = toFields(z.object({ clip: videoRefSchema }), { clip: { widget: 'image' } });
+    expect(field!.widget).toBe('image');
+    expect(emptyValue(field!.node)).toBeNull();
   });
 });
 

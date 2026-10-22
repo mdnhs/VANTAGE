@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm, type DefaultValues, type FieldValues, type Resolver } from 'react-hook-form';
 import type * as z from 'zod';
 
@@ -13,10 +13,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { toFields, type FieldOverrides } from './to-fields';
 import { FieldWidget } from './widgets';
 
-export type SubmitResult = void | {
-  formError?: string;
-  fieldErrors?: Record<string, string[]>;
-};
+import { submitResultErrors, type SubmitResult } from './helpers';
+
+export type { SubmitResult };
 
 // docs/brief.md §9.4: the form is generated from the schema's JSON Schema
 // (with x-ui hints) and validated by the same Zod schema via zodResolver.
@@ -39,7 +38,16 @@ export function SchemaForm<S extends z.ZodObject>({
   // Called on every change, for live previews next to the form.
   onValuesChange?: (values: z.input<S>) => void;
 }) {
-  const fields = useMemo(() => toFields(schema, overrides), [schema, overrides]);
+  // Callers pass inline `overrides` literals and unstable callbacks: key the
+  // field tree on the overrides' content and read the callback through a ref,
+  // so neither recomputes the JSON Schema or resubscribes every render.
+  const overridesKey = JSON.stringify(overrides ?? {});
+  const fields = useMemo(() => toFields(schema, JSON.parse(overridesKey) as FieldOverrides), [schema, overridesKey]);
+  const onValuesChangeRef = useRef(onValuesChange);
+  useEffect(() => {
+    onValuesChangeRef.current = onValuesChange;
+  });
+  const watching = Boolean(onValuesChange);
   const form = useForm<FieldValues, unknown, FieldValues>({
     resolver: zodResolver(schema as unknown as z.ZodType<FieldValues, FieldValues>) as Resolver<
       FieldValues,
@@ -51,11 +59,11 @@ export function SchemaForm<S extends z.ZodObject>({
   });
 
   useEffect(() => {
-    if (!onValuesChange) return;
+    if (!watching) return;
     // eslint-disable-next-line react-hooks/incompatible-library
-    const sub = form.watch((values) => onValuesChange(values as z.input<S>));
+    const sub = form.watch((values) => onValuesChangeRef.current?.(values as z.input<S>));
     return () => sub.unsubscribe();
-  }, [form, onValuesChange]);
+  }, [form, watching]);
 
   const submit = form.handleSubmit(async (values) => {
     let result: SubmitResult;
@@ -66,12 +74,11 @@ export function SchemaForm<S extends z.ZodObject>({
       console.error('SchemaForm onSubmit failed', error);
       result = { formError: 'Something went wrong. Try again.' };
     }
-    if (result?.fieldErrors) {
-      for (const [name, messages] of Object.entries(result.fieldErrors)) {
-        if (messages[0]) form.setError(name, { message: messages[0] });
-      }
-    }
-    if (result?.formError) form.setError('root', { message: result.formError });
+    const errors = submitResultErrors(result);
+    for (const { name, message } of errors.fields) form.setError(name, { message });
+    if (errors.root) form.setError('root', { message: errors.root });
+    // Same as MK: reset to the form's initial values (the caller re-keys or
+    // passes new defaultValues when it wants to show what was saved).
     if (!result && resetOnSuccess) form.reset(defaultValues as FieldValues);
   });
 

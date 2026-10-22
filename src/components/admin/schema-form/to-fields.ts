@@ -1,7 +1,7 @@
 import * as z from 'zod';
 
 import './field-ui';
-import { ui, type UiMeta, type Widget } from './registry';
+import { refKind, ui, type UiMeta, type Widget } from './registry';
 
 export type FieldOverrides = Readonly<Record<string, Partial<UiMeta>>>;
 
@@ -24,6 +24,7 @@ export type JsonNode = {
   maximum?: number;
   exclusiveMinimum?: number;
   'x-ui'?: UiMeta;
+  'x-ref'?: 'image' | 'video';
 };
 
 export type FormField = {
@@ -59,6 +60,8 @@ export function toJsonSchema(schema: z.ZodType): JsonNode {
     override: ({ zodSchema, jsonSchema }) => {
       const meta = ui.get(zodSchema);
       if (meta) (jsonSchema as Record<string, unknown>)['x-ui'] = meta;
+      const ref = refKind.get(zodSchema);
+      if (ref) (jsonSchema as Record<string, unknown>)['x-ref'] = ref;
     },
   }) as JsonNode;
 }
@@ -71,7 +74,7 @@ function unwrap(node: JsonNode): { node: JsonNode; nullable: boolean } {
     if (rest.length === 1) return { node: { ...node, type: rest[0] }, nullable: true };
   }
   const options = node.anyOf ?? node.oneOf;
-  if (!options || node['x-ui']) return { node, nullable: false };
+  if (!options || node['x-ui'] || node['x-ref']) return { node, nullable: false };
   const rest = options.filter((option) => option.type !== 'null');
   if (rest.length === 1 && rest.length < options.length) {
     return {
@@ -115,7 +118,7 @@ function toField(raw: JsonNode, name: string, required: boolean, overrides: Fiel
   const unwrapped = unwrap(raw);
   const node = unwrapped.node;
   const meta: Partial<UiMeta> = { ...node['x-ui'], ...overrides[name] };
-  const widget = meta.widget ?? inferWidget(node);
+  const widget = overrides[name]?.widget ?? node['x-ref'] ?? meta.widget ?? inferWidget(node);
   const nullable = unwrapped.nullable;
   // Image and video widgets take null themselves (no on/off switch).
   const optionalRef = widget === 'image' || widget === 'video';
@@ -130,7 +133,8 @@ function toField(raw: JsonNode, name: string, required: boolean, overrides: Fiel
     inputType: meta.inputType,
     autoComplete: meta.autoComplete,
     folder: meta.folder,
-    node,
+    // An image/video widget (inferred or overridden) always starts unset.
+    node: optionalRef ? { ...node, 'x-ref': widget } : node,
   };
   if (widget === 'group') return { ...base, fields: fieldsOf(node, name, overrides) };
   if (widget === 'list') {
@@ -191,7 +195,7 @@ export function rebase(field: FormField, from: string, to: string): FormField {
 export function emptyValue(raw: JsonNode): unknown {
   if (raw.default !== undefined) return structuredClone(raw.default);
   // Image and video refs start unset.
-  if (raw['x-ui']?.widget === 'image' || raw['x-ui']?.widget === 'video') return null;
+  if (raw['x-ref']) return null;
   const { node, nullable } = unwrap(raw);
   if (nullable) return null;
   const options = node.anyOf ?? node.oneOf;

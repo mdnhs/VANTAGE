@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
-import { WidgetShell, type WidgetProps } from './shell';
+import { GroupShell, type WidgetProps } from './shell';
 
 export type WeeklyDay = { day: string; open: string; close: string; closed: boolean };
 
@@ -19,13 +19,8 @@ export function WeeklyHoursWidget({ field, value, onChange, onBlur, error }: Wid
   const update = (index: number, patch: Partial<WeeklyDay>) =>
     onChange(days.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   return (
-    <WidgetShell id={id} field={field} error={error}>
-      <div
-        id={id}
-        role='group'
-        aria-label={field.label}
-        className='divide-y divide-border/60 overflow-hidden rounded-lg border border-border bg-card'
-      >
+    <GroupShell id={id} field={field} error={error}>
+      <div className='divide-y divide-border/60 overflow-hidden rounded-lg border border-border bg-card'>
         {days.map((item, index) => (
           <div
             key={item.day}
@@ -50,6 +45,7 @@ export function WeeklyHoursWidget({ field, value, onChange, onBlur, error }: Wid
                   type='time'
                   value={item.open}
                   onBlur={onBlur}
+                  aria-invalid={error ? true : undefined}
                   onChange={(event) => update(index, { open: event.target.value })}
                   className='h-7 w-[98px] px-2 font-mono text-xs'
                   aria-label={`${item.day} open time`}
@@ -59,6 +55,7 @@ export function WeeklyHoursWidget({ field, value, onChange, onBlur, error }: Wid
                   type='time'
                   value={item.close}
                   onBlur={onBlur}
+                  aria-invalid={error ? true : undefined}
                   onChange={(event) => update(index, { close: event.target.value })}
                   className='h-7 w-[98px] px-2 font-mono text-xs'
                   aria-label={`${item.day} close time`}
@@ -68,6 +65,6 @@ export function WeeklyHoursWidget({ field, value, onChange, onBlur, error }: Wid
           </div>
         ))}
       </div>
-    </WidgetShell>
+    </GroupShell>
   );
 }

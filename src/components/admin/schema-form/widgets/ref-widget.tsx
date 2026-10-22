@@ -5,7 +5,7 @@ import { useId } from 'react';
 import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
 import { type ImageRef, type VideoRef } from '@/lib/content/image-ref';
 
-import { describedBy, WidgetShell, type WidgetProps } from './shell';
+import { GroupShell, type WidgetProps } from './shell';
 
 type Ref = ImageRef | VideoRef;
 
@@ -25,19 +25,26 @@ export function RefWidget({
 }) {
   const id = useId();
   const current = value ?? null;
+  const name = `${field.label} ${mode === 'video' ? 'video' : 'image'}`;
   return (
-    <WidgetShell id={id} field={field} error={error}>
-      <div id={id} aria-describedby={describedBy(id, field, error)}>
+    <GroupShell id={id} field={field} error={error}>
+      <div>
         {current?.kind === 'media' ? (
           <div className='flex items-center gap-3 text-sm text-muted-foreground'>
             <span>Media library item</span>
-            <button type='button' className='underline underline-offset-2' onClick={() => onChange(null)}>
+            <button
+              type='button'
+              className='underline underline-offset-2'
+              aria-label={`Remove ${name}`}
+              onClick={() => onChange(null)}
+            >
               Remove
             </button>
           </div>
         ) : (
           <CloudinaryUpload
             mode={mode}
+            label={name}
             folder={field.folder ?? defaultFolder}
             value={current?.publicId ?? null}
             onChange={(next) =>
@@ -46,6 +53,6 @@ export function RefWidget({
           />
         )}
       </div>
-    </WidgetShell>
+    </GroupShell>
   );
 }

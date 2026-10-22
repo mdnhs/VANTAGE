@@ -32,3 +32,8 @@ export type UiMeta = {
 };
 
 export const ui = z.registry<UiMeta>();
+
+// Structural marker for the shared image/video ref schemas. Kept apart from
+// `ui` on purpose: a later `.register(ui, { label })` on the same instance
+// replaces its `ui` entry, but cannot touch this one.
+export const refKind = new WeakMap<object, 'image' | 'video'>();

@@ -42,43 +42,82 @@ const defaults = {
   ],
 };
 
-describe('SchemaForm', () => {
-  const html = renderToStaticMarkup(
+const overrides = {
+  weekly: { widget: 'weekly-hours' as const, label: 'Opening hours' },
+  photo: { label: 'Hero' },
+};
+
+const render = (extra: Record<string, unknown> = {}) =>
+  renderToStaticMarkup(
     <SchemaForm
       schema={Schema}
-      defaultValues={defaults}
+      defaultValues={{ ...defaults, ...extra }}
       submitLabel='Save settings'
       onSubmit={vi.fn()}
-      overrides={{ weekly: { widget: 'weekly-hours', label: 'Opening hours' } }}
+      overrides={overrides}
     />,
   );
 
+// The element carrying `id` and its text content.
+const labelFor = (html: string, id: string) =>
+  new RegExp(`id="${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"[^>]*>([^<]*)<`).exec(html)?.[1];
+
+describe('SchemaForm', () => {
   it('renders every widget kind with its label and value', () => {
-    for (const text of ['Full name', 'As on your ID', 'Newsletter', 'Tone', 'Bio', 'Age', 'Tags', 'City', 'Photo']) {
+    const html = render();
+    for (const text of ['Full name', 'As on your ID', 'Newsletter', 'Tone', 'Bio', 'Age', 'Tags', 'City']) {
       expect(html).toContain(text);
     }
     expect(html).toContain('value="Magda"');
     expect(html).toContain('5/20');
-    expect(html).toContain('Save settings');
+    expect(html).toContain('>Save settings</button>');
   });
 
   it('renders list items, a link pair, radio options and a switch', () => {
+    const html = render();
     expect(html).toContain('aria-label="Tags 1"');
-    expect(html).toContain('Move Tags 1 down');
+    expect(html).toContain('aria-label="Move Tags 1 down"');
+    expect(html).toContain('aria-label="Remove Tags 2"');
     expect(html).toContain('Link text');
     expect(html).toContain('value="/contact"');
     expect(html).toContain('role="radiogroup"');
     expect(html).toContain('role="switch"');
   });
 
-  it('renders the weekly-hours widget when selected by override', () => {
-    expect(html).toContain('Opening hours');
-    expect(html).toContain('Monday open time');
+  it('renders the weekly-hours widget as a named group when selected by override', () => {
+    const html = render();
+    const group = /role="group"[^>]*aria-labelledby="([^"]+)"/g;
+    const ids = [...html.matchAll(group)].map((m) => m[1]!);
+    expect(ids.map((id) => labelFor(html, id))).toContain('Opening hours');
+    expect(html).toContain('aria-label="Monday open time"');
+    expect(html).toContain('aria-label="Monday close time"');
     expect(html).toContain('value="09:00"');
-    expect(html).toContain('Closed');
+    // Sunday is closed: label and no time inputs for it.
+    expect(html).toContain('Closed</span>');
+    expect(html).not.toContain('aria-label="Sunday open time"');
   });
 
-  it('shows the image widget upload control', () => {
-    expect(html).toContain('Upload');
+  it('renders the image widget as a group named by its label, with named buttons', () => {
+    const html = render();
+    const ids = [...html.matchAll(/role="group"[^>]*aria-labelledby="([^"]+)"/g)].map((m) => m[1]!);
+    expect(ids.map((id) => labelFor(html, id))).toContain('Hero');
+    expect(html).toContain('aria-label="Upload Hero image"');
+    expect(html).toContain('aria-label="Remove Hero image"');
+    expect(html).not.toContain('Photo');
+  });
+
+  it('describes the image group by its description', () => {
+    const html = renderToStaticMarkup(
+      <SchemaForm
+        schema={Schema}
+        defaultValues={defaults}
+        submitLabel='Save'
+        onSubmit={vi.fn()}
+        overrides={{ photo: { label: 'Hero', description: 'Shown at the top' } }}
+      />,
+    );
+    const describedby = /aria-labelledby="([^"]+)" aria-describedby="([^"]+)"/.exec(html);
+    expect(describedby).not.toBeNull();
+    expect(labelFor(html, describedby![2]!)).toBe('Shown at the top');
   });
 });

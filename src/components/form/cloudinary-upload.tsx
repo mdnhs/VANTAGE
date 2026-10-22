@@ -56,12 +56,14 @@ interface CloudinaryUploadProps {
   // Only meaningful for mode='gallery' — caps how many images the picker will accept.
   // 'before-after' is implicitly capped at 2 (before + after slots).
   maxFiles?: number;
+  // Names the buttons for assistive tech ("Upload Hero image", "Remove Hero image").
+  label?: string;
 }
 
 // Single component covering every upload shape used across the CMS. Signs via /media/sign
 // and uploads directly to Cloudinary — no file bytes ever pass through our own server, and
 // only the returned `public_id` is stored.
-export function CloudinaryUpload({ mode, folder, value, onChange, maxFiles }: CloudinaryUploadProps) {
+export function CloudinaryUpload({ mode, folder, value, onChange, maxFiles, label }: CloudinaryUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -135,7 +137,7 @@ export function CloudinaryUpload({ mode, folder, value, onChange, maxFiles }: Cl
                 type='button'
                 onClick={() => removeAt(publicId)}
                 className='absolute top-1 right-1 rounded-full bg-background/80 p-0.5 text-foreground'
-                aria-label='Remove'
+                aria-label={label ? `Remove ${label}` : 'Remove'}
               >
                 <X className='size-3.5' />
               </button>
@@ -158,6 +160,7 @@ export function CloudinaryUpload({ mode, folder, value, onChange, maxFiles }: Cl
         variant='outline'
         size='sm'
         disabled={isUploading || remainingSlots === 0}
+        aria-label={label ? `Upload ${label}` : undefined}
         onClick={() => inputRef.current?.click()}
       >
         <UploadCloud className='size-4' data-icon='inline-start' />

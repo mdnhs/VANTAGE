@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
+import { moveItem, parseNumberInput } from './helpers';
 import { emptyValue, rebase, type FormField } from './to-fields';
 import { ImageWidget } from './widgets/image-widget';
 import { LinkWidget } from './widgets/link-widget';
@@ -145,12 +146,7 @@ function ListWidget({ field, control }: Props) {
   const min = field.minItems ?? 0;
   const max = field.maxItems ?? Number.POSITIVE_INFINITY;
   const set = (next: unknown[]) => input.onChange(next);
-  const move = (from: number, to: number) => {
-    const next = [...items];
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    set(next);
-  };
+  const move = (from: number, to: number) => set(moveItem(items, from, to));
   const error =
     fieldState.error?.message ?? (fieldState.error as { root?: { message?: string } } | undefined)?.root?.message;
   const controls = (index: number) => (
@@ -382,13 +378,7 @@ function ScalarWidget({
         placeholder={field.placeholder}
         value={input.value ?? ''}
         onBlur={input.onBlur}
-        onChange={(event) =>
-          // Partial input ("-", "1e") reads as NaN: treat it as empty so
-          // Zod reports "required", not a confusing type error.
-          input.onChange(
-            Number.isNaN(event.target.valueAsNumber) ? (field.nullable ? null : undefined) : event.target.valueAsNumber,
-          )
-        }
+        onChange={(event) => input.onChange(parseNumberInput(event.target.valueAsNumber, field.nullable))}
         {...aria}
       />
     );
