@@ -80,7 +80,7 @@ export function StitchCta({ phone }: { phone: string }) {
           <div className='relative flex w-full flex-col items-stretch gap-[12px] sm:w-auto sm:flex-row sm:items-center'>
             <Link
               href='/#estimator'
-              className='flex items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgba(219,38,38,0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+              className='flex items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
             >
               <span>Get free quote online</span>
               <span className='relative block size-[24px] shrink-0 overflow-clip'>

@@ -39,8 +39,8 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
     >
       <div className='intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up-sm'>
         <div className='flex items-center gap-4'>
-          <span className='h-px w-8 bg-red-500/50' />
-          <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>Client Feedback</span>
+          <span className='h-px w-8 bg-brand/50' />
+          <span className='text-xs font-semibold tracking-[1.2px] text-brand uppercase'>Client Feedback</span>
         </div>
         <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
           Trusted By
@@ -53,7 +53,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
         {testimonials.map((testimonial, index) => (
           <div
             key={testimonial.id}
-            className={`intersect-once flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-red-500/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
+            className={`intersect-once flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-brand/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
           >
             <RatingStars rating={testimonial.rating} />
 

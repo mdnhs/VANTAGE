@@ -411,7 +411,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
 // Shown instead of the spinner when MapLibre cannot start (no WebGL). Links out when the
 // centre is a [lng, lat] pair; otherwise it is simply an empty muted box.
 function MapUnavailable({ center }: { center?: unknown }) {
-  const hasCenter = Array.isArray(center) && center.length === 2 && center.every((n) => typeof n === 'number');
+  const hasCenter = Array.isArray(center) && center.length === 2 && center.every((n) => Number.isFinite(n));
   return (
     <div className='absolute inset-0 flex items-center justify-center bg-muted/40 p-4 text-center text-sm text-muted-foreground'>
       {hasCenter && (

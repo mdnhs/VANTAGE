@@ -20,7 +20,10 @@ const FILES = ROOTS.flatMap((root) => sources(join(process.cwd(), root)));
 
 const HARD_CODED = [
   /#(dc2626|b91c1c|fca5a5|f0605f|ffd9d9)\b/i,
-  /rgba\(\s*220\s*,\s*38\s*,\s*38/,
+  // Any red-ish rgb()/rgba(): R 200-255 with G and B below 80 (catches near-miss 219,38,38).
+  /rgba?\(\s*(?:2\d\d)\s*,\s*(?:[0-7]?\d)\s*,\s*(?:[0-7]?\d)\b/,
+  // Tailwind palette reds follow the brand family instead (red-500 -> brand, red-700 -> brand-hover).
+  /\bred-\d{2,3}\b/,
   /var\(--font-(inter|manrope)\)/,
 ];
 
