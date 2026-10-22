@@ -56,7 +56,7 @@ async function Brand() {
   return (
     <AuthBrand
       businessName={settings.businessName?.trim() || 'Vantage Admin'}
-      logoPublicId={'logoPublicId' in settings ? settings.logoPublicId : null}
+      logo={settings.logo}
       logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
       logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
     />

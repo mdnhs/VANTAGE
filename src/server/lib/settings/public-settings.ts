@@ -1,9 +1,11 @@
 import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
 import type { GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
+import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
+import { toPublicImage } from '@/server/lib/media/resolve';
 
-// Pure (no DB, no Next): turns the versioned setting documents into the flat shape the
+// Turns the versioned setting documents into the flat shape the
 // public site was built against (`site_settings` columns), so marketing components keep
 // their props. Phase 11 retires this shape together with the legacy table.
 
@@ -22,7 +24,37 @@ export type PublicSettingsKey = (typeof PUBLIC_SETTINGS_KEYS)[number];
 
 export type PublicGlobals = { [K in PublicSettingsKey]: GlobalValue<K> };
 
-export type PublicSiteSettings = Omit<SiteSettings, 'id' | 'updatedAt'>;
+// The flat shape the site was built against, image columns still as Cloudinary public ids.
+// Kept for the Phase 4 migration verifier (it compares against the legacy row).
+export type LegacySiteView = Omit<SiteSettings, 'id' | 'updatedAt'>;
+
+const LEGACY_IMAGE_COLUMNS = [
+  'logoPublicId',
+  'faviconPublicId',
+  'heroVideoPublicId',
+  'heroFallbackImagePublicId',
+  'ogImagePublicId',
+  'aboutHeroImagePublicId',
+  'aboutHeritageImagePublicId',
+  'aboutStandardsImagePublicId',
+  'aboutTeamMembers',
+] as const;
+
+export type PublicTeamMember = { name: string; role: string; image: PublicImage | null };
+
+// What public pages read: the legacy flat shape with every image column replaced by a
+// ready-to-render PublicImage (R2 row, or the legacy Cloudinary URL until Phase 11).
+export type PublicSiteSettings = Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUMNS)[number]> & {
+  logo: PublicImage | null;
+  favicon: PublicImage | null;
+  heroVideo: PublicImage | null;
+  heroFallbackImage: PublicImage | null;
+  ogImage: PublicImage | null;
+  aboutHeroImage: PublicImage | null;
+  aboutHeritageImage: PublicImage | null;
+  aboutStandardsImage: PublicImage | null;
+  aboutTeamMembers: PublicTeamMember[];
+};
 
 // What the public site showed before any row existed (footer.tsx / hero-section.tsx / header.tsx).
 export const FALLBACK_SETTINGS = {
@@ -80,7 +112,7 @@ export const FALLBACK_SETTINGS = {
     'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.',
 } as const;
 
-// Only Cloudinary refs have a public id; media-library refs arrive with Phase 5.
+// Only Cloudinary refs have a public id.
 const publicId = (ref: ImageRef) => (ref?.kind === 'cloudinary' ? ref.publicId : null);
 const orNull = (v: string) => v.trim() || null;
 
@@ -104,7 +136,7 @@ function hoursText(hours: PublicGlobals['contact']['hours']): string {
   return formatOpeningHoursSummary(schedule);
 }
 
-export function composePublicSettings(g: PublicGlobals): PublicSiteSettings {
+export function composeLegacyView(g: PublicGlobals): LegacySiteView {
   const { site, contact, seo } = g;
   const home = g['page.home'];
   const services = g['page.services'];
@@ -215,5 +247,39 @@ export function composePublicSettings(g: PublicGlobals): PublicSiteSettings {
     processPageEyebrow: process.eyebrow,
     processPageTitle: process.title,
     processPageSubtext: process.subtext,
+  };
+}
+
+// A media ref reads the preloaded row (missing or soft-deleted: no image); a Cloudinary ref
+// becomes its legacy URL until Phase 11.
+function resolveRef(
+  ref: ImageRef,
+  images: Record<string, PublicImage>,
+  resourceType: 'image' | 'video' = 'image',
+): PublicImage | null {
+  if (!ref) return null;
+  if (ref.kind === 'media') return images[ref.id.toLowerCase()] ?? null;
+  return toPublicImage(null, { publicId: ref.publicId, resourceType });
+}
+
+export function composePublicSettings(g: PublicGlobals, images: Record<string, PublicImage>): PublicSiteSettings {
+  const flat = composeLegacyView(g);
+  const rest = Object.fromEntries(
+    Object.entries(flat).filter(([k]) => !(LEGACY_IMAGE_COLUMNS as readonly string[]).includes(k)),
+  ) as Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUMNS)[number]>;
+  const about = g['page.about'];
+  return {
+    ...rest,
+    logo: resolveRef(g.site.logo, images),
+    favicon: resolveRef(g.site.favicon, images),
+    heroVideo: resolveRef(g['page.home'].hero.video, images, 'video'),
+    heroFallbackImage: resolveRef(g['page.home'].hero.fallbackImage, images),
+    ogImage: resolveRef(g.seo.defaultOgImage, images),
+    aboutHeroImage: resolveRef(about.hero.image, images),
+    aboutHeritageImage: resolveRef(about.heritage.image, images),
+    aboutStandardsImage: resolveRef(about.standards.image, images),
+    aboutTeamMembers: about.team.members
+      .filter((m) => m.name.trim())
+      .map((m) => ({ name: m.name, role: m.role, image: resolveRef(m.image, images) })),
   };
 }

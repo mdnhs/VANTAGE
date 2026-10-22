@@ -52,8 +52,8 @@ export default async function Home() {
       <main className='grow'>
         <StitchHero
           heroVideoEnabled={settings.heroVideoEnabled}
-          heroVideoPublicId={settings.heroVideoPublicId}
-          heroFallbackImagePublicId={settings.heroFallbackImagePublicId}
+          heroVideo={settings.heroVideo}
+          heroFallbackImage={settings.heroFallbackImage}
           eyebrow={settings.heroEyebrow}
           headlineLine1={settings.heroHeadlineLine1}
           headlineLine2={settings.heroHeadlineLine2}

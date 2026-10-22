@@ -26,6 +26,7 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/users',
   '/dashboard/account',
   '/dashboard/appearance',
+  '/dashboard/activity',
 ]);
 
 export type SectionParams = { section: string; rest: string[] };

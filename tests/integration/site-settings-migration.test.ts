@@ -9,6 +9,7 @@ import { GLOBALS, parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
 import { auditLogs, revisions, siteSettings } from '@/server/db/schema';
 import {
+  composeLegacyView,
   composePublicSettings,
   FALLBACK_SETTINGS,
   PUBLIC_SETTINGS_KEYS,
@@ -134,7 +135,7 @@ async function seed(over: Partial<typeof siteSettings.$inferInsert> = {}) {
 async function composeFromKeys() {
   const docs: Record<string, unknown> = {};
   for (const key of PUBLIC_SETTINGS_KEYS) docs[key] = parseGlobal(key, (await settingsRepository.get(key))?.value);
-  return composePublicSettings(docs as PublicGlobals);
+  return composeLegacyView(docs as PublicGlobals);
 }
 
 // The complete flat shape of an untouched site: built-in copy for every column.
@@ -444,7 +445,7 @@ describe('site_settings -> versioned keys', () => {
       heroVideoEnabled: false,
     });
     const parsed = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((k) => [k, parseGlobal(k, docs[k])]));
-    expect(composePublicSettings(parsed as PublicGlobals)).toEqual(DEFAULT_PUBLIC);
+    expect(composeLegacyView(parsed as PublicGlobals)).toEqual(DEFAULT_PUBLIC);
   });
 
   describe('deploy before migrate', () => {
@@ -455,7 +456,7 @@ describe('site_settings -> versioned keys', () => {
     it('with no key rows, the public output deep-equals the legacy output', async () => {
       const legacy = await seed();
       const { id: _id, updatedAt: _updatedAt, ...expected } = legacy;
-      expect(composePublicSettings(resolvePublicGlobals(none, legacy))).toEqual(expected);
+      expect(composeLegacyView(resolvePublicGlobals(none, legacy))).toEqual(expected);
     });
 
     it('structured hours, a newline address and blank optional columns still match', async () => {
@@ -483,7 +484,7 @@ describe('site_settings -> versioned keys', () => {
         aboutTeamMembers: null,
         heroEyebrow: '',
       });
-      const fromLegacy = composePublicSettings(resolvePublicGlobals(none, legacy));
+      const fromLegacy = composeLegacyView(resolvePublicGlobals(none, legacy));
       await migrateSiteSettings();
       const fromKeys = await composeFromKeys();
       expect(fromKeys).toEqual(fromLegacy);
@@ -492,10 +493,18 @@ describe('site_settings -> versioned keys', () => {
       expect((await verifySiteSettingsMigration()).ok).toBe(true);
     });
 
+    it('a never-saved key resolves the legacy logo to its Cloudinary URL', async () => {
+      const legacy = await seed();
+      const composed = composePublicSettings(resolvePublicGlobals(none, legacy), {});
+      expect(composed.logo?.src).toBe(
+        `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/vantage/branding/logo`,
+      );
+    });
+
     it('a stored key always wins over the legacy row', async () => {
       const legacy = await seed();
       const stored = { ...none, site: parseGlobal('site', { name: 'From keys' }) };
-      const composed = composePublicSettings(resolvePublicGlobals(stored, legacy));
+      const composed = composeLegacyView(resolvePublicGlobals(stored, legacy));
       expect(composed.businessName).toBe('From keys');
       expect(composed.phone).toBe(legacy.phone);
     });
