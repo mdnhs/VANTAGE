@@ -28,3 +28,11 @@ it('does not crash the page when WebGL is unavailable', () => {
   expect(container.textContent).not.toContain('child');
   expect(warn).toHaveBeenCalled();
 });
+
+it('shows a Google Maps link instead of the spinner when the centre is known', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const { container, findByText } = render(<Map center={[-6.2603, 53.3498]} zoom={14} />);
+  const link = await findByText('Open in Google Maps');
+  expect(link.getAttribute('href')).toBe('https://www.google.com/maps/search/?api=1&query=53.3498,-6.2603');
+  expect(container.querySelector('.animate-pulse')).toBeNull();
+});

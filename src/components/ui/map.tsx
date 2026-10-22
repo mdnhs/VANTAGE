@@ -239,6 +239,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<MapLibreGL.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [isStyleLoaded, setIsStyleLoaded] = useState(false);
   const [pendingStyle, setPendingStyle] = useState<MapStyleOption | null>(null);
   const currentStyleRef = useRef<MapStyleOption | null>(null);
@@ -294,6 +295,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       });
     } catch (error) {
       console.warn('Map unavailable (WebGL could not start):', error);
+      setFailed(true);
       return;
     }
 
@@ -397,13 +399,34 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
   return (
     <MapContext.Provider value={contextValue}>
       <div ref={containerRef} className={cn('relative h-full w-full', className)}>
-        {(!isLoaded || loading) && <DefaultLoader />}
+        {failed && <MapUnavailable center={props.center} />}
+        {!failed && (!isLoaded || loading) && <DefaultLoader />}
         {/* SSR-safe: children render only when map is loaded on client */}
         {mapInstance && children}
       </div>
     </MapContext.Provider>
   );
 });
+
+// Shown instead of the spinner when MapLibre cannot start (no WebGL). Links out when the
+// centre is a [lng, lat] pair; otherwise it is simply an empty muted box.
+function MapUnavailable({ center }: { center?: unknown }) {
+  const hasCenter = Array.isArray(center) && center.length === 2 && center.every((n) => typeof n === 'number');
+  return (
+    <div className='absolute inset-0 flex items-center justify-center bg-muted/40 p-4 text-center text-sm text-muted-foreground'>
+      {hasCenter && (
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${center[1]},${center[0]}`}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='underline underline-offset-2'
+        >
+          Open in Google Maps
+        </a>
+      )}
+    </div>
+  );
+}
 
 type MarkerContextValue = {
   marker: MapLibreGL.Marker;
