@@ -84,8 +84,10 @@ export function InviteDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && close()}>
-      <DialogContent className='sm:max-w-md'>
+    // The link is shown once: while it is on screen, Done is the only way out
+    // (no Esc, outside click or corner close).
+    <Dialog open={open} onOpenChange={(next) => !next && !manual && close()}>
+      <DialogContent className='sm:max-w-md' showCloseButton={!manual}>
         {manual ? (
           <>
             <DialogHeader>

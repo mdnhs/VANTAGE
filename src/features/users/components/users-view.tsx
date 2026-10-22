@@ -47,15 +47,13 @@ export function UsersView() {
   const [q, setQ] = useState('');
   const [role, setRole] = useState<RoleName | null>(null);
   const [status, setStatus] = useState<UserStatusFilter | null>(null);
-  const [requestedPage, setPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [inviting, setInviting] = useState(false);
   const [open, setOpen] = useState<Open>(null);
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
   const [manualLink, setManualLink] = useState<ManualLink | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const [lastKnownPage, setLastKnownPage] = useState<number | undefined>(undefined);
-  const page = lastKnownPage === undefined ? requestedPage : Math.min(requestedPage, lastKnownPage);
   const list = useUserList({
     page,
     pageSize: PAGE_SIZE,
@@ -75,8 +73,6 @@ export function UsersView() {
 
   const total = list.data?.total;
   const lastPage = total === undefined ? undefined : Math.max(1, Math.ceil(total / PAGE_SIZE));
-  // Fall back to the last real page when a delete or filter empties the current one.
-  if (lastPage !== lastKnownPage && lastPage !== undefined) setLastKnownPage(lastPage);
 
   const unban = useUnbanUser();
   const resend = useResendInvite();
@@ -120,6 +116,8 @@ export function UsersView() {
     mutation.mutate(user.id, {
       onSuccess: () => {
         done(action === 'delete' ? `${user.name} was deleted` : `${user.name} is signed out everywhere`);
+        // Deleting the last person on a page leaves that page empty: step back.
+        if (action === 'delete' && page > 1 && list.data?.items.length === 1) setPage(page - 1);
         setOpen(null);
       },
       onError: (error) => setActionError(error.message),
@@ -229,9 +227,14 @@ export function UsersView() {
               </Button>
             </div>
           ) : list.data.items.length === 0 ? (
-            <p className='rounded-lg border p-6 text-center text-sm text-muted-foreground'>
-              Nobody matches these filters. Try a different search or clear the filters.
-            </p>
+            <div className='flex flex-col items-center gap-3 rounded-lg border p-6 text-center text-sm text-muted-foreground'>
+              <p>Nobody matches these filters. Try a different search or clear the filters.</p>
+              {page > 1 ? (
+                <Button variant='outline' size='sm' onClick={() => setPage(1)}>
+                  Back to the first page
+                </Button>
+              ) : null}
+            </div>
           ) : (
             <>
               <div aria-busy={list.isFetching || undefined} className={cn(list.isFetching && 'opacity-70')}>
