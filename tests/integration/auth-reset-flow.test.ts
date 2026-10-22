@@ -5,7 +5,7 @@ import { db } from '@/server/db';
 import { getAuth, resetAuthForTests } from '@/server/lib/auth';
 import { captureAuthLinks } from '@/server/lib/auth/email';
 
-import { createTestUser, PASSWORD } from '../support/session';
+import { authCall, call, createTestUser, PASSWORD, sessionCookie, signInCookie } from '../support/session';
 
 const NEW_PASSWORD = 'A-brand-new-passphrase-2026';
 
@@ -54,5 +54,26 @@ describe('reset-password token flow', () => {
       }),
     );
     expect(links).toEqual([]);
+  });
+
+  it('invite without SMTP: manual link, 11-char password refused, 12-char accepted, then sign in', async () => {
+    const owner = await sessionCookie('owner');
+    const invited = await call('/admin/users/invite', owner, {
+      method: 'POST',
+      body: { email: 'invitee@example.com', name: 'Ines', role: 'editor' },
+    });
+    expect(invited.status).toBe(201);
+    const { manualLink } = ((await invited.json()) as { data: { manualLink: string } }).data;
+    const token = new URL(manualLink).pathname.split('/').pop()!;
+
+    const short = await authCall('/reset-password', undefined, { newPassword: 'Eleven-char', token });
+    expect(short.status).toBe(400);
+    expect(await short.json()).toMatchObject({ code: 'PASSWORD_TOO_SHORT' });
+    await expect(signInCookie('invitee@example.com', 'Eleven-char')).rejects.toThrow();
+
+    // The refused attempt did not burn the token.
+    const ok = await authCall('/reset-password', undefined, { newPassword: 'Twelve-chars', token });
+    expect(ok.status).toBe(200);
+    await expect(signInCookie('invitee@example.com', 'Twelve-chars')).resolves.toMatch(/session_token=/);
   });
 });
