@@ -120,8 +120,8 @@ export function ProjectForm({
       // Left out when empty so a media-backed image on the row stays as it is.
       beforeImagePublicId: form.beforeImagePublicId || undefined,
       afterImagePublicId: form.afterImagePublicId || undefined,
-      galleryImagePublicIds:
-        hasMediaGallery && form.galleryImagePublicIds.length === 0 ? undefined : form.galleryImagePublicIds,
+      // A gallery with media rows is managed in the new editor; the old form leaves it alone.
+      galleryImagePublicIds: hasMediaGallery ? undefined : form.galleryImagePublicIds,
     });
   };
 
@@ -217,13 +217,19 @@ export function ProjectForm({
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label>Gallery (up to 10 images)</Label>
-            <CloudinaryUpload
-              mode='gallery'
-              folder='vantage/projects'
-              maxFiles={10}
-              value={form.galleryImagePublicIds}
-              onChange={(value) => setField('galleryImagePublicIds', Array.isArray(value) ? value : [])}
-            />
+            {hasMediaGallery ? (
+              <p className='text-sm text-muted-foreground'>
+                This gallery is managed in the new media editor and is not changed by this form.
+              </p>
+            ) : (
+              <CloudinaryUpload
+                mode='gallery'
+                folder='vantage/projects'
+                maxFiles={10}
+                value={form.galleryImagePublicIds}
+                onChange={(value) => setField('galleryImagePublicIds', Array.isArray(value) ? value : [])}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

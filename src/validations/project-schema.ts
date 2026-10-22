@@ -36,10 +36,12 @@ export const createProjectSchema = projectBase
     path: ['afterImageMediaId'],
   });
 
-// A project always keeps both images, so a media id can be replaced but not cleared.
+// A project always keeps both images, so an image can be replaced but not cleared.
 export const updateProjectSchema = projectBase.partial().extend({
   beforeImageMediaId: z.string().uuid().optional(),
   afterImageMediaId: z.string().uuid().optional(),
+  beforeImagePublicId: z.string().min(1).max(255).optional(),
+  afterImagePublicId: z.string().min(1).max(255).optional(),
 });
 
 export const projectListQuerySchema = z.object({

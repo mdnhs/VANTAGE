@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
@@ -9,14 +9,28 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type GalleryInput = { mediaIds?: string[]; publicIds?: string[] };
 
 // Runs inside the caller's transaction so the project row and its gallery rows commit atomically.
-// Media ids (when given) win; a media row never carries a legacy id.
+// Media ids (when given) replace the whole gallery; a media row never carries a legacy id.
+// Legacy ids alone replace only the legacy rows: media-backed rows are kept, so an old
+// form save can never wipe them.
 async function replaceGalleryImages(tx: Tx, projectId: string, { mediaIds, publicIds }: GalleryInput) {
-  await tx.delete(projectGalleryImages).where(eq(projectGalleryImages.projectId, projectId));
-  const rows = mediaIds
-    ? mediaIds.map((mediaId, index) => ({ projectId, mediaId, imagePublicId: null, displayOrder: index }))
-    : (publicIds ?? []).map((imagePublicId, index) => ({ projectId, imagePublicId, displayOrder: index }));
-  if (rows.length === 0) return;
-  await tx.insert(projectGalleryImages).values(rows);
+  const mine = eq(projectGalleryImages.projectId, projectId);
+  if (mediaIds) {
+    await tx.delete(projectGalleryImages).where(mine);
+    if (mediaIds.length === 0) return;
+    await tx
+      .insert(projectGalleryImages)
+      .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, imagePublicId: null, displayOrder: index })));
+    return;
+  }
+  await tx.delete(projectGalleryImages).where(and(mine, isNull(projectGalleryImages.mediaId)));
+  if (!publicIds || publicIds.length === 0) return;
+  const [{ kept }] = await tx
+    .select({ kept: sql<number>`coalesce(max(${projectGalleryImages.displayOrder}) + 1, 0)::int` })
+    .from(projectGalleryImages)
+    .where(mine);
+  await tx
+    .insert(projectGalleryImages)
+    .values(publicIds.map((imagePublicId, index) => ({ projectId, imagePublicId, displayOrder: kept + index })));
 }
 
 const withMedia = {

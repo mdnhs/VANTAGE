@@ -20,11 +20,12 @@ const partnerLogoBase = z.object({
 // Until Phase 11 drops the legacy column a logo needs a media id or a legacy id.
 export const createPartnerLogoSchema = partnerLogoBase.refine((v) => v.logoMediaId || v.logoPublicId, {
   message: 'Choose a logo',
-  path: ['logoMediaId'],
+  path: ['logoPublicId'],
 });
 
 export const updatePartnerLogoSchema = partnerLogoBase.partial().extend({
   logoMediaId: z.string().uuid().optional(),
+  logoPublicId: z.string().min(1).max(255).optional(),
 });
 
 export const partnerLogoListQuerySchema = z.object({
