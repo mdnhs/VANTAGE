@@ -7,7 +7,8 @@ import { CACHE_TAGS } from '@/lib/cache/tags';
 import { seoPageKey } from '@/lib/content/globals-seo';
 import { PUBLIC_PAGE_LIST } from '@/lib/seo/public-pages';
 import { settingTag } from '@/server/lib/cache/settings-tags';
-import { computeSeoHealth, type SeoHealth } from '@/server/services/seo-health-service';
+import type { SeoHealth } from '@/lib/seo/health-types';
+import { computeSeoHealth } from '@/server/services/seo-health-service';
 
 const ENTITY_TAGS = ['services', 'projects', 'testimonials', 'partner-logos', 'homepage-catalogs'].map((r) =>
   CACHE_TAGS.all(r),

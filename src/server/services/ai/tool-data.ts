@@ -10,7 +10,7 @@ import { contactMessages, projects, quoteRequests, services } from '@/server/db/
 import type { Actor } from '@/server/lib/auth/actor';
 import { analyticsService } from '@/server/services/analytics-service';
 import { readEffectiveGlobal } from '@/server/services/globals-service';
-import { computeSeoHealth } from '@/server/services/seo-health-service';
+import { getSeoHealth } from '@/server/queries/get-seo-health';
 
 import { clip, flattenValue } from './flatten';
 import { firstNameOf } from './prompt';
@@ -103,7 +103,7 @@ export async function readPage(actor: Actor, key: PageKey): Promise<ToolResult> 
 // { label, score, issues[{ where, problem }] }.
 export async function seoHealth(actor: Actor): Promise<ToolResult> {
   if (!allowed(actor, { seo: ['read'] })) return refuse('SEO health');
-  const report = await computeSeoHealth();
+  const report = await getSeoHealth();
   const issues = report.issues.map((i) => ({
     where: i.kind === 'page' && i.path ? `${i.title} (${i.path})` : i.title,
     problem: i.message,

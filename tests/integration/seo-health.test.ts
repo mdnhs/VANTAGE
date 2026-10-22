@@ -109,6 +109,23 @@ describe('computeSeoHealth', () => {
     expect(og?.message).toBe('Share image should be at least 1200×630 (1.91:1)');
   });
 
+  it('grades the description that ships for home', async () => {
+    const home = (h: Awaited<ReturnType<typeof computeSeoHealth>>) =>
+      forPage(h, 'home').find((i) => i.check === 'description');
+    expect(home(await computeSeoHealth())?.message).toBe('Description is 180 characters (aim for 70–160)');
+    await put('seo', {
+      defaultDescription: 'A good site description for the Dublin body shop, comfortably inside the range.',
+    });
+    expect(home(await computeSeoHealth())).toBeUndefined();
+  });
+
+  it('fails a share image whose size is unknown', async () => {
+    const m = await insertImage({ alt: 'x', width: null, height: null });
+    await put('seo.page.about', { ogImage: ref(m.id) });
+    const og = forPage(await computeSeoHealth(), 'about').find((i) => i.check === 'og-image');
+    expect(og?.message).toBe('Share image should be at least 1200×630 (1.91:1)');
+  });
+
   it('flags noindex', async () => {
     await put('seo', { robots: 'noindex' });
     expect((await computeSeoHealth()).issues.filter((i) => i.check === 'indexable')).toHaveLength(8);

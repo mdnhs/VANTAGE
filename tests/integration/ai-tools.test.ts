@@ -21,6 +21,12 @@ import {
 } from '@/server/services/ai/tool-data';
 import { computeSeoHealth } from '@/server/services/seo-health-service';
 
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  cacheTag: vi.fn(),
+  cacheLife: vi.fn(),
+}));
+
 const actorFor = (role: RoleName): Actor => ({
   userId: `u-${role}`,
   email: `${role}@example.test`,

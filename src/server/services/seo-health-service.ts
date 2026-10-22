@@ -6,7 +6,8 @@ import { collectMediaIds } from '@/lib/content/image-ref';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import { seoPageKey } from '@/lib/content/globals-seo';
 import { pageDescription } from '@/lib/seo/metadata';
-import { runChecks, type CheckId } from '@/lib/seo/checks';
+import { runChecks } from '@/lib/seo/checks';
+import type { SeoHealth, SeoIssue } from '@/lib/seo/health-types';
 import { PUBLIC_PAGE_LIST, seoFixHref, type PublicPageId } from '@/lib/seo/public-pages';
 import { documentTitle } from '@/lib/seo/title';
 import { db as defaultDb, type DbLike } from '@/server/db';
@@ -21,24 +22,7 @@ import {
   testimonials,
 } from '@/server/db/schema';
 
-export type SeoIssue = {
-  kind: 'page' | 'media';
-  id: string;
-  title: string;
-  path: string | null;
-  check: CheckId;
-  message: string;
-  fixHref: string;
-};
-
-export type SeoHealth = {
-  score: number;
-  passed: number;
-  total: number;
-  entities: number;
-  issues: SeoIssue[];
-  alt: { images: number; described: number; decorative: number; missing: number };
-};
+export type { SeoHealth, SeoIssue } from '@/lib/seo/health-types';
 
 const ids = (list: (string | null)[]): string[] => list.filter((v): v is string => !!v);
 
@@ -47,7 +31,7 @@ function internalHrefs(value: unknown, out = new Set<string>()): Set<string> {
   if (Array.isArray(value)) value.forEach((v) => internalHrefs(v, out));
   else if (value && typeof value === 'object') {
     for (const [k, v] of Object.entries(value)) {
-      if (k === 'href' && typeof v === 'string' && /^(\/(?!\/)|#)/.test(v.trim())) out.add(v.trim());
+      if (k === 'href' && typeof v === 'string' && /^\/(?!\/)/.test(v.trim())) out.add(v.trim());
       else internalHrefs(v, out);
     }
   }
@@ -61,10 +45,17 @@ async function readValue<K extends Parameters<typeof parseGlobal>[0]>(dbLike: Db
 
 // Media rows each page shows: its `page.*` document plus the public list reads (same filters
 // as the services' public list queries). Library scope only is applied when rows are loaded.
-export async function pageMediaIds(dbLike: DbLike = defaultDb): Promise<Record<PublicPageId, string[]>> {
+// `docs` are the already-parsed `page.*` documents (read here when not given).
+export async function pageMediaIds(
+  dbLike: DbLike = defaultDb,
+  docs?: Partial<Record<PublicPageId, unknown>>,
+): Promise<Record<PublicPageId, string[]>> {
   const [pageDocs, catalogs, logos, featuredTestimonials, publishedProjects, gallery, serviceRows] = await Promise.all([
     Promise.all(
-      PUBLIC_PAGE_LIST.map(async (p) => [p.id, p.pageKey ? (await readValue(dbLike, p.pageKey)).value : null] as const),
+      PUBLIC_PAGE_LIST.map(
+        async (p) =>
+          [p.id, docs ? (docs[p.id] ?? null) : p.pageKey ? (await readValue(dbLike, p.pageKey)).value : null] as const,
+      ),
     ),
     dbLike
       .select({ icon: homepageCatalogs.iconMediaId })
@@ -133,8 +124,12 @@ export async function pageMediaIds(dbLike: DbLike = defaultDb): Promise<Record<P
   return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, [...v]])) as Record<PublicPageId, string[]>;
 }
 
+// Reports lag edits to services, projects, testimonials, logos and catalogs by one read: their
+// writes expire tags with revalidateTag(tag, 'hours' | 'minutes') (stale-while-revalidate), so the
+// cached getSeoHealth serves the old report once before refreshing. Settings and media edits
+// expire at once.
 export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoHealth> {
-  const [defaults, site, perPage, mediaByPage] = await Promise.all([
+  const [defaults, site, perPage] = await Promise.all([
     readValue(dbLike, 'seo'),
     readValue(dbLike, 'site'),
     Promise.all(
@@ -146,11 +141,12 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
         return { page: p, seo: seo.value as GlobalValue<`seo.page.${PublicPageId}`>, doc: doc?.value ?? null };
       }),
     ),
-    pageMediaIds(dbLike),
   ]);
+  const mediaByPage = await pageMediaIds(
+    dbLike,
+    Object.fromEntries(perPage.map((p) => [p.page.id, p.doc])) as Partial<Record<PublicPageId, unknown>>,
+  );
   const seoDefaults = defaults.value;
-  // MK: the site-wide default description does not count towards a page passing.
-  const seoForDescription = { ...seoDefaults, defaultDescription: '' };
 
   const ogIds = ids([
     seoDefaults.defaultOgImage?.kind === 'media' ? seoDefaults.defaultOgImage.id : null,
@@ -195,11 +191,11 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
       description: pageDescription({
         id: page.id,
         seo: p.seo,
-        defaults: seoForDescription,
+        defaults: seoDefaults,
         siteName: site.value.name,
         ogImage: null,
       }),
-      ogImage: ogRow && ogRow.width && ogRow.height ? { width: ogRow.width, height: ogRow.height } : null,
+      ogImage: ogRow ? { width: ogRow.width ?? 0, height: ogRow.height ?? 0 } : null,
       imagesMissingAlt: pageImages.filter((r) => isMissing(r!)).length,
       hasH1: page.hasH1,
       noindex: p.seo.noindex || seoDefaults.robots === 'noindex',
