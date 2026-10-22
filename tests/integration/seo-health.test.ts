@@ -1,10 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { hasPermission, ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
 import { media, partnerLogos, settings } from '@/server/db/schema';
+import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 import { computeSeoHealth } from '@/server/services/seo-health-service';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
 import { call, createTestUser, signInCookie } from '../support/session';
 
@@ -126,9 +128,49 @@ describe('computeSeoHealth', () => {
     expect(og?.message).toBe('Share image should be at least 1200×630 (1.91:1)');
   });
 
+  it('grades the same home description the page ships when the saved default equals the derived one', async () => {
+    const pub = await siteSettingsService.getPublic();
+    const derived = `${pub.businessName} — ${formatOpeningHoursSummary(pub.openingHours)}`;
+    await put('seo', { defaultDescription: derived });
+    const msg = forPage(await computeSeoHealth(), 'home').find((i) => i.check === 'description')?.message;
+    // The shipped page drops the derived default and uses the registry text (180 characters).
+    expect(msg).toBe('Description is 180 characters (aim for 70–160)');
+  });
+
   it('flags noindex', async () => {
     await put('seo', { robots: 'noindex' });
     expect((await computeSeoHealth()).issues.filter((i) => i.check === 'indexable')).toHaveLength(8);
+  });
+});
+
+describe('production without SITE_ENV', () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const prod = (siteEnv: string) => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('SITE_ENV', siteEnv);
+    vi.stubEnv('VERCEL_ENV', '');
+  };
+
+  it('reports that search engines are blocked, and no page is indexable', async () => {
+    prod('');
+    const h = await computeSeoHealth();
+    expect(h.issues.find((i) => i.kind === 'site')).toMatchObject({
+      id: 'site',
+      check: 'indexable',
+      message: 'Search engines are blocked: SITE_ENV is not set to production',
+      fixHref: null,
+    });
+    expect(h.issues.filter((i) => i.kind === 'page' && i.check === 'indexable')).toHaveLength(8);
+  });
+
+  it('is silent once SITE_ENV is production, and outside a production build', async () => {
+    prod('production');
+    const h = await computeSeoHealth();
+    expect(h.issues.some((i) => i.kind === 'site')).toBe(false);
+    expect(h.issues.some((i) => i.check === 'indexable')).toBe(false);
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('SITE_ENV', '');
+    expect((await computeSeoHealth()).issues.some((i) => i.kind === 'site')).toBe(false);
   });
 });
 

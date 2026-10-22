@@ -9,6 +9,7 @@ import { globalKeys } from '@/features/globals/utils/query-keys';
 import { useMediaByIds } from '@/features/media/hooks/use-media';
 import type { GlobalValue } from '@/lib/content/globals';
 import type { SeoPageKey } from '@/lib/content/globals-seo';
+import { withLegacyMeta } from '@/lib/seo/legacy-meta';
 import { blank, pageDescription } from '@/lib/seo/metadata';
 import { PUBLIC_PAGES, type PublicPageId } from '@/lib/seo/public-pages';
 import { documentTitle } from '@/lib/seo/title';
@@ -17,8 +18,9 @@ import { SeoChecklist } from './seo-checklist';
 import { SerpPreview, serpUrl } from './serp-preview';
 import { SocialCard } from './social-card';
 
-// Defaults come from the `seo` global and the public site name; a failed read settles as
-// "unknown" and falls back to the page's own label and registry text.
+// Defaults come from the `seo` global and the public site settings; a failed read settles as
+// "unknown" and falls back to the page's own label and registry text. The public settings also
+// carry the legacy meta values, so the defaults pass through the same withLegacyMeta as the shipped page.
 function useDefaults() {
   const seo = useQuery({
     queryKey: globalKeys.detail('seo'),
@@ -26,19 +28,28 @@ function useDefaults() {
     retry: false,
   });
   // The public site settings answer for every role, unlike the `site` global (settings.read).
-  const site = useQuery({ queryKey: ['seo', 'site-name'], queryFn: fetchSiteName, retry: false });
+  const site = useQuery({ queryKey: ['seo', 'site-meta'], queryFn: fetchSiteMeta, retry: false });
+  const raw = seo.data?.value as GlobalValue<'seo'> | undefined;
   return {
-    seo: seo.data?.value as GlobalValue<'seo'> | undefined,
-    siteName: site.data ?? '',
+    seo: raw && site.data ? withLegacyMeta(raw, site.data) : raw,
+    siteName: site.data?.businessName ?? '',
     settled: !seo.isPending && !site.isPending,
   };
 }
 
-async function fetchSiteName(): Promise<string> {
+type SiteMeta = { businessName: string; metaTitle: string | null; metaDescription: string | null; twitterHandle: string | null };
+
+async function fetchSiteMeta(): Promise<SiteMeta> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/site-settings`);
   const body = await res.json().catch(() => null);
   if (!res.ok || !body?.success) throw new Error('Site name unavailable');
-  return String(body.data?.businessName ?? '');
+  const d = body.data ?? {};
+  return {
+    businessName: String(d.businessName ?? ''),
+    metaTitle: d.metaTitle ?? null,
+    metaDescription: d.metaDescription ?? null,
+    twitterHandle: d.twitterHandle ?? null,
+  };
 }
 
 type Ref = { kind: string; id?: string } | null | undefined;
@@ -104,7 +115,7 @@ export function SeoAside({ id, values }: { id: PublicPageId; values: GlobalValue
             ogImage: image?.width && image.height ? { width: image.width, height: image.height } : null,
             imagesMissingAlt: 0,
             hasH1: page.hasH1,
-            noindex: values?.noindex ?? false,
+            noindex: (values?.noindex ?? false) || seo?.robots === 'noindex',
             internalLinks: page.codeLinks,
           }}
         />

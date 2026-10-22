@@ -5,7 +5,9 @@ import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { collectMediaIds } from '@/lib/content/image-ref';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import { seoPageKey } from '@/lib/content/globals-seo';
+import { withLegacyMeta } from '@/lib/seo/legacy-meta';
 import { pageDescription } from '@/lib/seo/metadata';
+import { siteEnvFrom } from '@/lib/seo/robots';
 import { runChecks } from '@/lib/seo/checks';
 import type { SeoHealth, SeoIssue } from '@/lib/seo/health-types';
 import { PUBLIC_PAGE_LIST, seoFixHref, type PublicPageId } from '@/lib/seo/public-pages';
@@ -21,6 +23,7 @@ import {
   settings,
   testimonials,
 } from '@/server/db/schema';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
 export type { SeoHealth, SeoIssue } from '@/lib/seo/health-types';
 
@@ -129,9 +132,10 @@ export async function pageMediaIds(
 // cached getSeoHealth serves the old report once before refreshing. Settings and media edits
 // expire at once.
 export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoHealth> {
-  const [defaults, site, perPage] = await Promise.all([
+  // Grade what the pages ship: the same legacy-aware defaults and site name as getPageMetadata.
+  const [defaults, publicSettings, perPage] = await Promise.all([
     readValue(dbLike, 'seo'),
-    readValue(dbLike, 'site'),
+    siteSettingsService.getPublic(),
     Promise.all(
       PUBLIC_PAGE_LIST.map(async (p) => {
         const [seo, doc] = await Promise.all([
@@ -146,7 +150,10 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
     dbLike,
     Object.fromEntries(perPage.map((p) => [p.page.id, p.doc])) as Partial<Record<PublicPageId, unknown>>,
   );
-  const seoDefaults = defaults.value;
+  const seoDefaults = withLegacyMeta(defaults.value, publicSettings);
+  const siteName = publicSettings.businessName;
+  // robots.txt is prerendered from SITE_ENV: a production server without it disallows everything.
+  const blockedByEnv = process.env.NODE_ENV === 'production' && siteEnvFrom({ SITE_ENV: process.env.SITE_ENV, VERCEL_ENV: process.env.VERCEL_ENV }) !== 'production';
 
   const ogIds = ids([
     seoDefaults.defaultOgImage?.kind === 'media' ? seoDefaults.defaultOgImage.id : null,
@@ -167,7 +174,7 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
   const titleOf = (p: (typeof perPage)[number]) =>
     documentTitle(
       { id: p.page.id, seoTitle: p.seo.title },
-      { titleTemplate: seoDefaults.titleTemplate, siteName: site.value.name },
+      { titleTemplate: seoDefaults.titleTemplate, siteName },
     );
   const titles = perPage.map(titleOf);
   const tally = new Map<string, number>();
@@ -176,6 +183,18 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
   const issues: SeoIssue[] = [];
   let passed = 0;
   let total = 0;
+  if (blockedByEnv) {
+    issues.push({
+      kind: 'site',
+      id: 'site',
+      title: 'Whole site',
+      path: null,
+      check: 'indexable',
+      message: 'Search engines are blocked: SITE_ENV is not set to production',
+      // A server setting, not an admin field: nothing in the admin fixes it.
+      fixHref: null,
+    });
+  }
   perPage.forEach((p, i) => {
     const { page } = p;
     const title = titles[i]!;
@@ -192,13 +211,13 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
         id: page.id,
         seo: p.seo,
         defaults: seoDefaults,
-        siteName: site.value.name,
+        siteName,
         ogImage: null,
       }),
       ogImage: ogRow ? { width: ogRow.width ?? 0, height: ogRow.height ?? 0 } : null,
       imagesMissingAlt: pageImages.filter((r) => isMissing(r!)).length,
       hasH1: page.hasH1,
-      noindex: p.seo.noindex || seoDefaults.robots === 'noindex',
+      noindex: p.seo.noindex || seoDefaults.robots === 'noindex' || blockedByEnv,
       internalLinks: links,
     });
     for (const r of results) {
