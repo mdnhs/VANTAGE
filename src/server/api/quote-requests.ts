@@ -48,8 +48,9 @@ export const quoteRequests = new Hono<AppEnv>()
         ip: clientIp(c.req.raw.headers),
         userAgent: c.req.header('user-agent') ?? '',
       });
+    if (!row) throw new Error('The quote request was not saved');
     // Visitors never get the stored photo URLs back.
-    const { photos: _photos, ...echo } = row!;
+    const { photos: _photos, ...echo } = row;
     return ok(c, echo, { status: 201 });
   })
 

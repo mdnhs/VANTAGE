@@ -1,11 +1,16 @@
 import { isDeepStrictEqual } from 'node:util';
 
+import { inArray } from 'drizzle-orm';
+
+import { db } from '@/server/db';
+import { media } from '@/server/db/schema/media';
+
 import { formatOpeningHoursSummary, parseOpeningHours, type DaySchedule } from '@/lib/content/opening-hours';
 import { resolveAboutContent } from '@/features/about-page/defaults';
 import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
 import { resolveProcessPageContent } from '@/features/process-page/defaults';
 import { GLOBALS, parseGlobal, type GlobalKey } from '@/lib/content/globals';
-import { cloudinaryImage } from '@/lib/content/image-ref';
+import { cloudinaryImage, collectMediaIds, mapRefs } from '@/lib/content/image-ref';
 import type { SiteSettings } from '@/server/db/schema';
 import { audit } from '@/server/lib/audit';
 import {
@@ -436,6 +441,17 @@ function visibleView(s: View): Record<string, unknown> {
 
 export type VerifyResult = { ok: boolean; checked: number; problems: string[] };
 
+async function legacySourcesFor(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db.select({ id: media.id, source: media.legacySource }).from(media).where(inArray(media.id, ids));
+  return new Map(
+    rows.flatMap((r) => {
+      const m = r.source ? /^cloudinary:(?:image|video):(.+)$/.exec(r.source) : null;
+      return m ? [[r.id, m[1]!] as const] : [];
+    }),
+  );
+}
+
 export async function verifySiteSettingsMigration(): Promise<VerifyResult> {
   const row = await siteSettingsRepository.get();
   const problems: string[] = [];
@@ -444,6 +460,17 @@ export async function verifySiteSettingsMigration(): Promise<VerifyResult> {
     const stored = await settingsRepository.get(key);
     if (!stored && row) problems.push(`${key}: not migrated`);
     docs[key] = parseGlobal(key, stored?.value);
+  }
+  // After media:migrate the documents name media rows. Map each row that came from Cloudinary
+  // back to its source id so the legacy view still compares; a media row picked later has no
+  // source and stays a genuine mismatch.
+  const sources = await legacySourcesFor(collectMediaIds(docs));
+  for (const key of PUBLIC_SETTINGS_KEYS) {
+    docs[key] = mapRefs(docs[key], (ref) => {
+      if (ref.kind !== 'media') return ref;
+      const publicId = sources.get(ref.id);
+      return publicId ? { kind: 'cloudinary' as const, publicId } : ref;
+    });
   }
   const composed = composeLegacyView(docs as PublicGlobals);
   // No legacy row: the public site showed the built-in copy.

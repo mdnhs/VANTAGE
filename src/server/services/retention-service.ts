@@ -133,7 +133,7 @@ export async function runRetention({
     // then delete only those rows, still under the shared predicate.
     const del = async (table: Table, where: SQL) => {
       const targets = (await tx.select({ id: table.id }).from(table).where(where).for('update')).map((r) => r.id);
-      let count = 0;
+      let purged = 0;
       for (const batch of chunk(targets)) {
         const links = await tx
           .select({ parent: parentColumn(table), mediaId: enquiryPhotos.mediaId })
@@ -146,9 +146,9 @@ export async function runRetention({
         const gone = new Set(deleted.map((r) => r.id));
         for (const l of links) if (l.parent && gone.has(l.parent)) mediaIds.push(l.mediaId);
         legacyPhotos += legacyPhotoCount(deleted);
-        count += deleted.length;
+        purged += deleted.length;
       }
-      return count;
+      return purged;
     };
     // Spam first, then the finished rows: the two counts never overlap.
     const quotes = { spam: await del(quoteRequests, quoteSpam), expired: await del(quoteRequests, quoteExpired) };
@@ -176,24 +176,26 @@ export async function runRetention({
 
   // After the commit, best effort: a failure leaves unlinked files the next sweep picks up.
   // Counts are what the delete reports it removed, not what was selected.
-  const removeAll = async (ids: string[]) => {
+  // A failing batch is logged and skipped; the total keeps what the other batches removed.
+  const removeAll = async (ids: string[], failure: string) => {
     let removed = 0;
-    for (const batch of chunk(ids)) removed += Number(await deleteMedia(batch));
+    for (const batch of chunk(ids)) {
+      try {
+        removed += Number(await deleteMedia(batch));
+      } catch {
+        console.error(failure);
+      }
+    }
     return removed;
   };
-  let photos = 0;
-  try {
-    photos = await removeAll(mediaIds);
-  } catch {
-    console.error('[retention] photo deletion failed');
-  }
+  const photos = await removeAll(mediaIds, '[retention] photo deletion failed');
   let orphanPhotos = 0;
   try {
     const purged = new Set(mediaIds);
     const orphanIds = (await db.select({ id: media.id }).from(media).where(orphanWhere(now)))
       .map((r) => r.id)
       .filter((id) => !purged.has(id));
-    orphanPhotos = await removeAll(orphanIds);
+    orphanPhotos = await removeAll(orphanIds, '[retention] orphan photo sweep failed');
   } catch {
     console.error('[retention] orphan photo sweep failed');
   }
