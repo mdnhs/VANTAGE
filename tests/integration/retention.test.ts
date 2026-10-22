@@ -225,7 +225,7 @@ describe('runRetention', () => {
   it('a media deletion failure never fails the purge', async () => {
     const r = await runRetention({
       now: NOW,
-      deleteMedia: async () => {
+      deleteMedia: async (): Promise<number> => {
         throw new Error('storage down');
       },
     });

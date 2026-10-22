@@ -5,6 +5,8 @@ import { asc, eq, inArray } from 'drizzle-orm';
 import type { EnquiryPhoto } from '@/lib/media/enquiry-photo';
 import { db } from '@/server/db';
 import { enquiryPhotos, media } from '@/server/db/schema';
+import { ApiError } from '@/server/lib/errors';
+import { sniff } from '@/server/lib/media/sniff';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 
 type Db = typeof db;
@@ -23,35 +25,40 @@ export async function storeEnquiryPhotos(dataUrls: string[] | undefined): Promis
   const candidates = (dataUrls ?? []).slice(0, MAX_ENQUIRY_PHOTOS);
   const ids: string[] = [];
   let skipped = 0;
+  let busy = 0;
   for (const dataUrl of candidates) {
     const match = DATA_URL.exec(dataUrl);
-    if (!match) {
+    const base64 = match ? dataUrl.slice(match[0].length) : '';
+    if (!match || Math.floor((base64.length * 3) / 4) > MAX_ENQUIRY_PHOTO_BYTES) {
       skipped++;
       continue;
     }
-    const base64 = dataUrl.slice(match[0].length);
-    if (Math.floor((base64.length * 3) / 4) > MAX_ENQUIRY_PHOTO_BYTES) {
+    const bytes = Buffer.from(base64, 'base64');
+    // The real bytes decide: an image of the declared type, never a renamed PDF or video.
+    const real = bytes.length > 0 && bytes.length <= MAX_ENQUIRY_PHOTO_BYTES ? sniff(bytes) : null;
+    if (!real || real.ext !== EXT[match[1]!]) {
       skipped++;
       continue;
     }
+    const input = { bytes, filename: `enquiry-photo.${real.ext}`, actorId: null, scope: 'enquiry' as const };
     try {
-      const bytes = Buffer.from(base64, 'base64');
-      if (bytes.length === 0 || bytes.length > MAX_ENQUIRY_PHOTO_BYTES) {
-        skipped++;
-        continue;
+      let row;
+      try {
+        row = await mediaLibraryService.ingest(input);
+      } catch (error) {
+        // Busy processing slot (503): one retry, then skip.
+        if (!(error instanceof ApiError) || error.status !== 503) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        row = await mediaLibraryService.ingest(input);
       }
-      const row = await mediaLibraryService.ingest({
-        bytes,
-        filename: `enquiry-photo.${EXT[match[1]!]}`,
-        actorId: null,
-        scope: 'enquiry',
-      });
       ids.push(row.id);
-    } catch {
-      skipped++;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 503) busy++;
+      else skipped++;
     }
   }
   if (skipped > 0) console.error(`[enquiry-photos] ${skipped} of ${candidates.length} photos skipped`);
+  if (busy > 0) console.error(`[enquiry-photos] ${busy} of ${candidates.length} photos skipped: server busy`);
   return ids;
 }
 

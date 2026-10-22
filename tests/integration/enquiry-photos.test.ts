@@ -92,6 +92,36 @@ describe('enquiry photos through the media pipeline', () => {
     expect(await db.select().from(media)).toHaveLength(1);
   });
 
+  it('skips renamed PDFs and videos and oversized photos; nothing is stored for them', async () => {
+    const as = (type: string, bytes: Buffer) => `data:image/${type};base64,${bytes.toString('base64')}`;
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n%%EOF');
+    const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(40)]);
+    const big = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(21 * 1024 * 1024)]);
+    const res = await post('/quotes', {
+      ...quote,
+      photoUrls: [as('jpeg', pdf), as('png', mp4), as('jpeg', big)],
+    });
+    expect(res.status).toBe(201);
+    expect(await db.select().from(quoteRequests)).toHaveLength(1);
+    expect(await db.select().from(media)).toHaveLength(0);
+    expect(await db.select().from(enquiryPhotos)).toHaveLength(0);
+  });
+
+  it('skips a real image whose bytes do not match the declared type', async () => {
+    const png = await sharp({ create: { width: 8, height: 8, channels: 3, background: '#111' } })
+      .png()
+      .toBuffer();
+    const res = await post('/quotes', { ...quote, photoUrls: [`data:image/jpeg;base64,${png.toString('base64')}`] });
+    expect(res.status).toBe(201);
+    expect(await db.select().from(media)).toHaveLength(0);
+  });
+
+  it('validates the enquiry before storing any photo', async () => {
+    const res = await post('/quotes', { name: '', email: 'x', phone: '1', photoUrls: [await dataUrl('#c33')] });
+    expect(res.status).toBe(422);
+    expect(await db.select().from(media)).toHaveLength(0);
+  });
+
   it('takes the same path for contact messages', async () => {
     const res = await post('/contacts', { ...contact, photoUrls: [await dataUrl('#c33'), await dataUrl('#33c')] });
     expect(res.status).toBe(201);

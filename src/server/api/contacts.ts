@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
@@ -16,11 +17,19 @@ import {
   updateContactMessageSchema,
 } from '@/validations/contact-message-schema';
 
+// 4 photos of up to 20 MB as base64 data URLs, plus the form fields.
+const PUBLIC_BODY_LIMIT = bodyLimit({
+  maxSize: 110 * 1024 * 1024,
+  onError: () => {
+    throw ApiError.payloadTooLarge('Photos are too large');
+  },
+});
+
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const contacts = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), zValidator('json', createContactMessageSchema), async (c) => {
+  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', createContactMessageSchema), async (c) => {
     const input = c.req.valid('json');
 
     const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);

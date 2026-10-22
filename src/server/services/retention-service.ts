@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, count, eq, inArray, isNull, lt, not, notExists, notInArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, lt, not, notExists, or, sql, type SQL } from 'drizzle-orm';
 
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
@@ -9,6 +9,9 @@ import { audit } from '@/server/lib/audit';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 
 const DAY = 86_400_000;
+const BATCH = 1000;
+const chunk = <T>(items: T[]): T[][] =>
+  Array.from({ length: Math.ceil(items.length / BATCH) }, (_, i) => items.slice(i * BATCH, (i + 1) * BATCH));
 
 // Only rows the team has finished with, and that carry no money, are ever purged.
 // Quotes: finished status, no invoice number, 'unpaid', nothing paid, no payment method. Contacts: replied or archived.
@@ -71,7 +74,7 @@ export async function runRetention({
   dryRun = false,
   now = new Date(),
   deleteMedia = defaultDeleteMedia,
-}: { dryRun?: boolean; now?: Date; deleteMedia?: (ids: string[]) => Promise<unknown> } = {}): Promise<RetentionResult> {
+}: { dryRun?: boolean; now?: Date; deleteMedia?: (ids: string[]) => Promise<number> } = {}): Promise<RetentionResult> {
   const privacy = parseGlobal('privacy', (await settingsRepository.get('privacy'))?.value);
   const windows = {
     enquiryRetentionMonths: privacy.enquiryRetentionMonths,
@@ -130,19 +133,22 @@ export async function runRetention({
     // then delete only those rows, still under the shared predicate.
     const del = async (table: Table, where: SQL) => {
       const targets = (await tx.select({ id: table.id }).from(table).where(where).for('update')).map((r) => r.id);
-      if (targets.length === 0) return 0;
-      const links = await tx
-        .select({ parent: parentColumn(table), mediaId: enquiryPhotos.mediaId })
-        .from(enquiryPhotos)
-        .where(inArray(parentColumn(table), targets));
-      const deleted = await tx
-        .delete(table)
-        .where(and(where, inArray(table.id, targets)))
-        .returning({ id: table.id, photoUrls: table.photoUrls });
-      const gone = new Set(deleted.map((r) => r.id));
-      for (const l of links) if (l.parent && gone.has(l.parent)) mediaIds.push(l.mediaId);
-      legacyPhotos += legacyPhotoCount(deleted);
-      return deleted.length;
+      let count = 0;
+      for (const batch of chunk(targets)) {
+        const links = await tx
+          .select({ parent: parentColumn(table), mediaId: enquiryPhotos.mediaId })
+          .from(enquiryPhotos)
+          .where(inArray(parentColumn(table), batch));
+        const deleted = await tx
+          .delete(table)
+          .where(and(where, inArray(table.id, batch)))
+          .returning({ id: table.id, photoUrls: table.photoUrls });
+        const gone = new Set(deleted.map((r) => r.id));
+        for (const l of links) if (l.parent && gone.has(l.parent)) mediaIds.push(l.mediaId);
+        legacyPhotos += legacyPhotoCount(deleted);
+        count += deleted.length;
+      }
+      return count;
     };
     // Spam first, then the finished rows: the two counts never overlap.
     const quotes = { spam: await del(quoteRequests, quoteSpam), expired: await del(quoteRequests, quoteExpired) };
@@ -169,25 +175,27 @@ export async function runRetention({
   });
 
   // After the commit, best effort: a failure leaves unlinked files the next sweep picks up.
+  // Counts are what the delete reports it removed, not what was selected.
+  const removeAll = async (ids: string[]) => {
+    let removed = 0;
+    for (const batch of chunk(ids)) removed += Number(await deleteMedia(batch));
+    return removed;
+  };
+  let photos = 0;
   try {
-    await deleteMedia(mediaIds);
+    photos = await removeAll(mediaIds);
   } catch {
     console.error('[retention] photo deletion failed');
   }
   let orphanPhotos = 0;
   try {
-    const orphanIds = (
-      await db
-        .select({ id: media.id })
-        .from(media)
-        .where(and(orphanWhere(now), mediaIds.length > 0 ? notInArray(media.id, mediaIds) : undefined))
-    ).map((r) => r.id);
-    if (orphanIds.length > 0) {
-      await deleteMedia(orphanIds);
-      orphanPhotos = orphanIds.length;
-    }
+    const purged = new Set(mediaIds);
+    const orphanIds = (await db.select({ id: media.id }).from(media).where(orphanWhere(now)))
+      .map((r) => r.id)
+      .filter((id) => !purged.has(id));
+    orphanPhotos = await removeAll(orphanIds);
   } catch {
     console.error('[retention] orphan photo sweep failed');
   }
-  return { dryRun, windows, photos: mediaIds.length, legacyPhotos, orphanPhotos, ...result };
+  return { dryRun, windows, photos, legacyPhotos, orphanPhotos, ...result };
 }
