@@ -60,24 +60,32 @@ const COLUMNS = [
 ];
 
 export async function exportAuditCsv(actor: Actor, query: AuditExportQuery): Promise<string> {
-  const rows = await repo.exportAudit(toFilters(query));
-  const csv = toCsv(
-    rows.map((row) => ({
-      when: row.createdAt,
-      who: row.actorName ?? row.actorEmail ?? 'System',
-      email: row.actorEmail,
-      viewingAsBy: row.impersonatorName,
-      action: row.action,
-      entity: row.entityType,
-      entityId: row.entityId,
-      summary: row.summary,
-    })),
-    COLUMNS,
-  );
+  const fetched = await repo.exportAudit(toFilters(query));
+  const capped = fetched.length > repo.EXPORT_LIMIT;
+  const rows = capped ? fetched.slice(0, repo.EXPORT_LIMIT) : fetched;
+  const data: Record<string, unknown>[] = rows.map((row) => ({
+    when: row.createdAt,
+    who: row.actorName ?? row.actorEmail ?? 'System',
+    email: row.actorEmail,
+    viewingAsBy: row.impersonatorName,
+    action: row.action,
+    entity: row.entityType,
+    entityId: row.entityId,
+    summary: row.summary,
+  }));
+  // A final row says the export stopped early, so a partial file is never mistaken for the whole log.
+  if (capped) {
+    data.push({
+      who: 'System',
+      action: 'export.capped',
+      summary: `Export capped at ${repo.EXPORT_LIMIT} entries. Narrow the filters to see the rest.`,
+    });
+  }
+  const csv = toCsv(data, COLUMNS);
   await audit(actor, {
     action: 'audit.export',
     entityType: 'audit',
-    summary: `Exported ${rows.length} activity ${rows.length === 1 ? 'entry' : 'entries'}`,
+    summary: `Exported ${rows.length} activity ${rows.length === 1 ? 'entry' : 'entries'}${capped ? ` (capped at ${repo.EXPORT_LIMIT})` : ''}`,
   });
   return csv;
 }

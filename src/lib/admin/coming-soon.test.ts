@@ -35,13 +35,23 @@ describe('comingSoonLink', () => {
 describe('comingSoonParams', () => {
   const keys = comingSoonParams().map((p) => [p.section, ...p.rest].join('/'));
   it('lists the placeholder destinations', () => {
-    for (const k of ['media', 'seo', 'seo/redirects', 'marketing/code', 'appearance', 'activity', 'help']) {
+    for (const k of ['media', 'seo', 'seo/redirects', 'marketing/code', 'appearance', 'help']) {
       expect(keys).toContain(k);
     }
   });
   it('excludes the dashboard root and real routes', () => {
     expect(keys).not.toContain('');
-    for (const k of ['home-page', 'services', 'quotes', 'contacts', 'settings', 'users', 'account', 'seo/defaults']) {
+    for (const k of [
+      'home-page',
+      'services',
+      'quotes',
+      'contacts',
+      'settings',
+      'users',
+      'account',
+      'seo/defaults',
+      'activity',
+    ]) {
       expect(keys).not.toContain(k);
     }
   });

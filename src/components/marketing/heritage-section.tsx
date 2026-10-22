@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Quote } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES } from '@/features/about-page/defaults';
 import {
   BODY_TEXT,
@@ -16,7 +16,7 @@ interface HeritageSectionProps {
   text: string;
   stat1: { value: string; label: string };
   stat2: { value: string; label: string };
-  imagePublicId: string | null;
+  image: PublicImage | null;
   quote: string;
 }
 
@@ -27,7 +27,7 @@ function splitAccent(title: string) {
   return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
 }
 
-export function HeritageSection({ title, text, stat1, stat2, imagePublicId, quote }: HeritageSectionProps) {
+export function HeritageSection({ title, text, stat1, stat2, image, quote }: HeritageSectionProps) {
   const { head, accent } = splitAccent(title);
 
   return (
@@ -56,7 +56,7 @@ export function HeritageSection({ title, text, stat1, stat2, imagePublicId, quot
         <div className='flex flex-col lg:col-span-6 lg:col-start-7'>
           <div className='relative h-[280px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[400px] lg:h-[500px]'>
             <Image
-              src={imagePublicId ? cldUrl(imagePublicId, { width: 1200 }) : ABOUT_FALLBACK_IMAGES.heritage}
+              src={image ? sizedSrc(image, 'w_1200') : ABOUT_FALLBACK_IMAGES.heritage}
               alt='Craftsman working on vehicle bodywork'
               fill
               sizes='(min-width: 1024px) 600px, 100vw'

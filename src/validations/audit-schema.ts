@@ -2,13 +2,18 @@ import * as z from 'zod';
 
 const RANGE_MESSAGE = 'The end date must be on or after the start date';
 
+// Keeps the Irish-day maths (Date.UTC maps years 0-99 to 1900-1999) well inside sane bounds.
+const day = z.iso
+  .date()
+  .refine((d) => d >= '1900-01-01' && d <= '2100-12-31', { message: 'Choose a date between 1900 and 2100' });
+
 const filters = {
   actor: z.string().min(1).max(64).optional(),
   action: z.string().max(64).optional(),
   entityType: z.string().max(32).optional(),
   entityId: z.string().max(64).optional(),
-  from: z.iso.date().optional(),
-  to: z.iso.date().optional(),
+  from: day.optional(),
+  to: day.optional(),
 };
 
 const rangeOk = (q: { from?: string; to?: string }) => !q.from || !q.to || q.from <= q.to;

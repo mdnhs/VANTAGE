@@ -1,29 +1,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 interface HeroSectionProps {
   heroVideoEnabled?: boolean;
-  heroVideoPublicId?: string | null;
-  heroFallbackImagePublicId?: string | null;
+  heroVideo?: PublicImage | null;
+  heroFallbackImage?: PublicImage | null;
 }
 
 export function HeroSection({
   heroVideoEnabled = false,
-  heroVideoPublicId = null,
-  heroFallbackImagePublicId = null,
+  heroVideo = null,
+  heroFallbackImage = null,
 }: HeroSectionProps) {
-  const showVideo = heroVideoEnabled && Boolean(heroVideoPublicId);
-  const fallbackImageSrc = heroFallbackImagePublicId
-    ? cldUrl(heroFallbackImagePublicId, { width: 1920 })
-    : '/assets/marketing/hero.jpg';
+  const showVideo = heroVideoEnabled && Boolean(heroVideo);
+  const fallbackImageSrc = heroFallbackImage ? sizedSrc(heroFallbackImage, 'w_1920') : '/assets/marketing/hero.jpg';
 
   return (
     <section className='relative container mx-auto flex min-h-[580px] items-center overflow-hidden px-4 pt-28 pb-20 sm:min-h-[700px] sm:px-6 sm:pt-36 sm:pb-28 md:px-12 lg:min-h-[790px] lg:pt-40 lg:pb-40'>
       <div className='absolute inset-0 z-0'>
-        {showVideo ? (
+        {showVideo && heroVideo ? (
           <video autoPlay muted loop playsInline poster={fallbackImageSrc} className='h-full w-full object-cover'>
-            <source src={cldUrl(heroVideoPublicId as string, { resourceType: 'video' })} type='video/mp4' />
+            <source src={heroVideo.src} type={heroVideo.mimeType ?? 'video/mp4'} />
           </video>
         ) : (
           <Image

@@ -27,7 +27,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false';
   const brand = {
     name: settings.businessName?.trim() || 'Vantage',
-    logoPublicId: 'logoPublicId' in settings ? settings.logoPublicId : null,
+    logo: settings.logo,
     logoLottieJson: 'logoLottieJson' in settings ? (settings.logoLottieJson ?? null) : null,
     logoUseLottie: 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false,
   };
