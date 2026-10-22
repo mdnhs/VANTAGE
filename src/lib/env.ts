@@ -41,6 +41,22 @@ const serverEnvSchema = serverSchema.superRefine((env, ctx) => {
       ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required when MEDIA_DRIVER=s3` });
     }
   }
+  if (!env.MEDIA_PUBLIC_URL) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['MEDIA_PUBLIC_URL'],
+      message: 'MEDIA_PUBLIC_URL is required when MEDIA_DRIVER=s3',
+    });
+  }
+  if (!env.S3_ACCOUNT_ID && !env.S3_ENDPOINT) {
+    for (const key of ['S3_ACCOUNT_ID', 'S3_ENDPOINT'] as const) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [key],
+        message: 'S3_ACCOUNT_ID or S3_ENDPOINT is required when MEDIA_DRIVER=s3',
+      });
+    }
+  }
   if (env.MEDIA_PUBLIC_URL && !env.MEDIA_PUBLIC_URL.startsWith('https://')) {
     ctx.addIssue({
       code: 'custom',

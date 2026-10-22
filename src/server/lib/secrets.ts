@@ -6,6 +6,8 @@ import { serverEnv } from '@/lib/env';
 
 // v1.<iv>.<tag>.<ciphertext>, base64url, AES-256-GCM with a 12-byte IV and the
 // purpose as additional authenticated data.
+const TAG_BYTES = 16;
+
 export const CAPI_TOKEN_PURPOSE = 'tracking.capiToken';
 export const AI_KEY_PURPOSE = 'ai.apiKey';
 export const SMTP_PASS_PURPOSE = 'smtp.pass';
@@ -40,7 +42,7 @@ export function encryptSecret(plain: string, purpose: string): string {
   const k = key();
   if (!k) throw new SecretKeyMissingError();
   const iv = randomBytes(12);
-  const cipher = createCipheriv('aes-256-gcm', k, iv);
+  const cipher = createCipheriv('aes-256-gcm', k, iv, { authTagLength: TAG_BYTES });
   cipher.setAAD(Buffer.from(purpose));
   const body = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
   return ['v1', iv.toString('base64url'), cipher.getAuthTag().toString('base64url'), body.toString('base64url')].join(
@@ -50,12 +52,17 @@ export function encryptSecret(plain: string, purpose: string): string {
 
 export function decryptSecret(payload: string, purpose: string): string | null {
   const k = key();
-  const [version, iv, tag, body] = payload.split('.');
-  if (!k || version !== 'v1' || !iv || !tag || !body) return null;
+  const [version, ivPart, tagPart, body] = payload.split('.');
+  // An empty plaintext seals to an empty body, so only undefined is invalid.
+  if (!k || version !== 'v1' || !ivPart || !tagPart || body === undefined) return null;
+  const iv = Buffer.from(ivPart, 'base64url');
+  const tag = Buffer.from(tagPart, 'base64url');
+  // Pin the tag length: GCM otherwise accepts truncated tags.
+  if (iv.length !== 12 || tag.length !== TAG_BYTES) return null;
   try {
-    const decipher = createDecipheriv('aes-256-gcm', k, Buffer.from(iv, 'base64url'));
+    const decipher = createDecipheriv('aes-256-gcm', k, iv, { authTagLength: TAG_BYTES });
     decipher.setAAD(Buffer.from(purpose));
-    decipher.setAuthTag(Buffer.from(tag, 'base64url'));
+    decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(Buffer.from(body, 'base64url')), decipher.final()]).toString('utf8');
   } catch {
     return null;

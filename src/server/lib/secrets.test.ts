@@ -57,6 +57,16 @@ describe('secrets (AES-256-GCM, purpose as AAD)', () => {
     expect(() => encryptSecret('x', 'p')).toThrow(SecretKeyMissingError);
     expect(decryptSecret('v1.a.b.c', 'p')).toBeNull();
   });
+  it('rejects a payload whose auth tag is truncated', () => {
+    useKey(KEY_A);
+    const parts = encryptSecret('token', 'p').split('.');
+    parts[2] = Buffer.from(parts[2]!, 'base64url').subarray(0, 4).toString('base64url');
+    expect(decryptSecret(parts.join('.'), 'p')).toBeNull();
+  });
+  it('round-trips an empty string', () => {
+    useKey(KEY_A);
+    expect(decryptSecret(encryptSecret('', 'p'), 'p')).toBe('');
+  });
   it('reports availability when the key is set', () => {
     useKey(KEY_A);
     expect(secretsAvailable()).toBe(true);

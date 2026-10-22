@@ -19,6 +19,31 @@ describe('parseServerEnv', () => {
     expect(() => parseServerEnv({ ...base, MEDIA_DRIVER: 's3' })).toThrow(/S3_BUCKET/);
   });
 
+  const s3 = {
+    ...base,
+    MEDIA_DRIVER: 's3',
+    S3_BUCKET: 'b',
+    S3_ACCESS_KEY_ID: 'k',
+    S3_SECRET_ACCESS_KEY: 's',
+    S3_ACCOUNT_ID: 'acct',
+    MEDIA_PUBLIC_URL: 'https://cdn.example.com',
+  };
+
+  it('accepts a complete s3 env', () => {
+    expect(parseServerEnv(s3).MEDIA_DRIVER).toBe('s3');
+    expect(parseServerEnv({ ...s3, S3_ACCOUNT_ID: undefined, S3_ENDPOINT: 'https://s3.example.com' }).S3_ENDPOINT).toBe(
+      'https://s3.example.com',
+    );
+  });
+
+  it('requires MEDIA_PUBLIC_URL when MEDIA_DRIVER=s3', () => {
+    expect(() => parseServerEnv({ ...s3, MEDIA_PUBLIC_URL: undefined })).toThrow(/MEDIA_PUBLIC_URL is required/);
+  });
+
+  it('requires S3_ACCOUNT_ID or S3_ENDPOINT when MEDIA_DRIVER=s3', () => {
+    expect(() => parseServerEnv({ ...s3, S3_ACCOUNT_ID: undefined })).toThrow(/S3_ACCOUNT_ID or S3_ENDPOINT/);
+  });
+
   it('requires an https MEDIA_PUBLIC_URL when MEDIA_DRIVER=s3', () => {
     expect(() =>
       parseServerEnv({
