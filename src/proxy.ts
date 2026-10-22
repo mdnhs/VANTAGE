@@ -26,7 +26,7 @@ const noindex = <T extends NextResponse>(response: T): T => {
   return response;
 };
 
-const REDIRECT_TIMEOUT_MS = 300;
+export const REDIRECT_TIMEOUT_MS = 300;
 const REDIRECT_STATUSES = [301, 302, 307, 308];
 // Next's draft-mode cookie: an editor previewing a draft page must reach it.
 const DRAFT_COOKIE = '__prerender_bypass';
