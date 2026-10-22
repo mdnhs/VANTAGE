@@ -21,7 +21,14 @@ vi.mock('@/contexts/actor-provider', () => ({
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'light' }) }));
 // happy-dom cannot load or reload a frame.
-vi.mock('./site-preview-pane', () => ({ SitePreviewPane: () => null }));
+const nav = vi.hoisted(() => ({ refresh: vi.fn(), keys: [] as (number | null)[] }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: nav.refresh }) }));
+vi.mock('./site-preview-pane', () => ({
+  SitePreviewPane: ({ refreshKey }: { refreshKey: number | null }) => {
+    nav.keys.push(refreshKey);
+    return null;
+  },
+}));
 // The upload widget needs the Cloudinary client; it is not under test here.
 vi.mock('@/components/admin/schema-form/widgets/image-widget', () => ({ ImageWidget: () => null }));
 
@@ -43,6 +50,7 @@ beforeEach(() => {
   can.publish = true;
   can.viewAs = false;
   calls = [];
+  nav.keys = [];
   doc = docFor({});
   publishStatus = 200;
   revisions = [];
@@ -148,6 +156,9 @@ describe('AppearanceView', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Publish' }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Theme published'));
     expect(calls.find((c) => c.url.endsWith('/admin/theme/publish'))?.body).toEqual({ version: 3 });
+    // The admin layout re-reads the published theme, and the site preview reloads.
+    expect(nav.refresh).toHaveBeenCalledOnce();
+    expect(nav.keys.at(-1)).toBeGreaterThan(0);
     // Nothing left to publish: the button disables again.
     await waitFor(() =>
       expect((screen.getByRole('button', { name: 'Publish' }) as HTMLButtonElement).disabled).toBe(true),
@@ -181,6 +192,9 @@ describe('AppearanceView', () => {
     const post = calls.find((c) => c.method === 'POST' && c.url.endsWith('/restore'));
     expect(post?.url).toContain('/admin/theme/revisions/0b2c3b1e-6f0a-4a63-9d64-0d4d3f4f6a11/restore');
     expect(post?.body).toEqual({ version: 3 });
+    // The draft changed without an autosave, so the site preview must reload.
+    expect(nav.keys.at(-1)).toBeGreaterThan(0);
+    expect(nav.refresh).not.toHaveBeenCalled();
   });
 
   it('shows "Nothing published yet." when there is no history', async () => {

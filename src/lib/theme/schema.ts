@@ -57,7 +57,9 @@ export type AdminThemeConfig = ThemeConfigValue['admin'];
 export const DEFAULT_THEME: ThemeConfigValue = ThemeConfig.parse({});
 
 // Stored data can drift from the schema; rendering must never throw.
+// No stored row yet is normal (fresh install), not drift, so it stays quiet.
 export function parseTheme(value: unknown): ThemeConfigValue {
+  if (value == null) return structuredClone(DEFAULT_THEME);
   const parsed = ThemeConfig.safeParse(value);
   if (parsed.success) return parsed.data;
   console.warn('Invalid stored theme, using defaults', parsed.error.message);

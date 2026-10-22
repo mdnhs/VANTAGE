@@ -58,11 +58,16 @@ export function applyCookies(cookie: string, setCookies: string[]): string {
 }
 
 // A call to the Hono API under /api/v1.
-export function call(path: string, cookie?: string, init: { method?: string; body?: unknown } = {}) {
+export function call(
+  path: string,
+  cookie?: string,
+  init: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+) {
   return api.request(`/api/v1${path}`, {
     method: init.method ?? 'GET',
     headers: {
       origin: ORIGIN,
+      ...init.headers,
       ...(cookie ? { cookie } : {}),
       ...(init.body === undefined ? {} : { 'content-type': 'application/json' }),
     },

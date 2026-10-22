@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 
 import { PRESET_IDS } from '@/lib/theme/presets';
 import type { AppEnv } from '@/server/api/types';
+import { ApiError } from '@/server/lib/errors';
 import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorOf, can } from '@/server/middleware/auth';
@@ -16,6 +18,14 @@ import {
   saveThemeDraft,
   themeRevisions,
 } from '@/server/services/theme-service';
+
+// A theme draft is a few hundred bytes; cap the body before it is parsed.
+const DRAFT_BODY_LIMIT = bodyLimit({
+  maxSize: 32 * 1024,
+  onError: () => {
+    throw ApiError.payloadTooLarge('The theme is too large');
+  },
+});
 
 const Version = z.object({ version: z.number().int().min(0) });
 const DraftInput = Version.extend({ draft: z.unknown() });
@@ -32,6 +42,7 @@ export const adminTheme = new Hono<AppEnv>()
     '/draft',
     can({ appearance: ['update'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
+    DRAFT_BODY_LIMIT,
     zValidator('json', DraftInput),
     async (c) => ok(c, await saveThemeDraft(actorOf(c), c.req.valid('json'))),
   )
