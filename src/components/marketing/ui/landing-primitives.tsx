@@ -15,7 +15,7 @@ export const SECTION_PADDING = 'py-16 sm:py-24 xl:py-[120px]';
 // Alternating section backgrounds used down the homepage.
 export const SECTION_BG = { base: 'bg-[#111113]', raised: 'bg-[#16161a]' } as const;
 export const CARD = 'rounded-2xl border border-[#2a2a30] bg-[#1b1b20]';
-export const BODY_TEXT = 'font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#b5b5b5]';
+export const BODY_TEXT = 'font-site-body text-base leading-[26px] text-[#b5b5b5]';
 
 export function Eyebrow({ children, tone = 'section' }: { children: ReactNode; tone?: 'section' | 'hero' }) {
   const surface = tone === 'hero' ? 'border-[#252525] bg-[#16161a]' : 'border-[#2a2a30] bg-[#1b1b20]';
@@ -24,7 +24,7 @@ export function Eyebrow({ children, tone = 'section' }: { children: ReactNode; t
       className={`inline-flex w-fit max-w-full items-center gap-2.5 rounded-full border py-[7px] pr-4 pl-3.5 ${surface}`}
     >
       <img src={DOT_SRC} alt='' width={6} height={6} className='size-1.5 shrink-0' />
-      <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
+      <span className='font-site-body text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
         {children}
       </span>
     </span>
@@ -64,12 +64,12 @@ export function SectionHeader({
     >
       <div className={`flex flex-col gap-5 ${centered ? 'items-center' : 'items-start'}`}>
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <Tag className='max-w-[560px] font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+        <Tag className='max-w-[560px] font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
           {title}
           {accent && (
             <>
               {' '}
-              <span className='text-[#dc2626]'>{accent}</span>
+              <span className='text-brand'>{accent}</span>
             </>
           )}
         </Tag>
@@ -94,9 +94,9 @@ function Arrow() {
 }
 
 const BUTTON_BASE =
-  'group inline-flex items-center justify-center gap-2.5 rounded-[8px] font-[family-name:var(--font-inter)] text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none';
-export const BUTTON_PRIMARY = `${BUTTON_BASE} bg-[#dc2626] py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgba(220,38,38,0.35)] hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60`;
-export const BUTTON_SECONDARY = `${BUTTON_BASE} border border-[#34343a] bg-[#16161a] px-6 py-4 hover:border-[#dc2626] hover:bg-[#1d1d22]`;
+  'group inline-flex items-center justify-center gap-2.5 rounded-[8px] font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none';
+export const BUTTON_PRIMARY = `${BUTTON_BASE} bg-brand py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60`;
+export const BUTTON_SECONDARY = `${BUTTON_BASE} border border-[#34343a] bg-[#16161a] px-6 py-4 hover:border-brand hover:bg-[#1d1d22]`;
 
 type ButtonLinkProps = ComponentProps<typeof Link> & {
   variant?: 'primary' | 'secondary';
@@ -147,18 +147,18 @@ export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', chi
       <div className='relative z-10 mx-auto flex w-full max-w-[1200px] flex-col px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-[120px] lg:pb-[100px] xl:px-0'>
         <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-6 lg:gap-8'>
           <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
-          <h1 className='font-[family-name:var(--font-manrope)] text-[40px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>
+          <h1 className='font-site-heading text-[40px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>
             {lines.map((line, index) => (
               <span
                 key={index}
-                className={`block ${index === accentIndex && lines.length > 1 ? 'text-[#dc2626]' : 'text-white'}`}
+                className={`block ${index === accentIndex && lines.length > 1 ? 'text-brand' : 'text-white'}`}
               >
                 {line}
               </span>
             ))}
           </h1>
           {subtext && (
-            <p className='max-w-[600px] font-[family-name:var(--font-inter)] text-base leading-[1.6] text-[#d4d4d4] sm:text-[18px] sm:leading-[29px]'>
+            <p className='max-w-[600px] font-site-body text-base leading-[1.6] text-[#d4d4d4] sm:text-[18px] sm:leading-[29px]'>
               {subtext}
             </p>
           )}

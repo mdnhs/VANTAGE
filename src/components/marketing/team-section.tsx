@@ -39,7 +39,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
             return (
               <article
                 key={`${member.name}-${index}`}
-                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-[#dc2626]/50'
+                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'
               >
                 <div className='relative h-[340px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
                   {photo && (
@@ -56,10 +56,10 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
                 </div>
 
                 <div className='flex flex-col items-start gap-2 p-6'>
-                  <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.88px] text-[#dc2626] uppercase'>
+                  <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-brand uppercase'>
                     {member.role}
                   </span>
-                  <h3 className='font-[family-name:var(--font-manrope)] text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
+                  <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
                     {member.name}
                   </h3>
                 </div>

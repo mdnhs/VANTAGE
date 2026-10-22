@@ -33,7 +33,7 @@ type QuoteCopy = GlobalValue<'quoteForm'>;
 // Field classes copied from the homepage estimator so both forms read identically.
 const FIELD_LABEL = 'block text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-[#dc2626] focus:outline-none';
+  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-brand focus:outline-none';
 const BACK_LINK =
   'self-start text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none';
 
@@ -101,7 +101,7 @@ function SubmitRow({
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-[#dc2626] py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgba(220,38,38,0.35)] transition-colors hover:bg-[#b91c1c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+        className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
       >
         {busy ? (
           <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-white' />
@@ -294,7 +294,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
               <>
                 <span
                   className={`flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] leading-normal font-medium ${
-                    isReached ? 'bg-[#dc2626] text-white' : 'border border-[#404040] text-[#a1a1a1]'
+                    isReached ? 'bg-brand text-white' : 'border border-[#404040] text-[#a1a1a1]'
                   }`}
                 >
                   {s.step}
@@ -316,7 +316,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
                   <button
                     type='button'
                     onClick={() => setCurrentStep(s.step)}
-                    className='group flex shrink-0 items-center gap-[6px] rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626] sm:gap-[10px]'
+                    className='group flex shrink-0 items-center gap-[6px] rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:gap-[10px]'
                   >
                     {content}
                   </button>
@@ -333,7 +333,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
             <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
               <CheckIcon size={28} />
             </span>
-            <h2 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+            <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
               {copy.success.title}
             </h2>
             <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
@@ -346,7 +346,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
             <button
               type='button'
               onClick={handleReset}
-              className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626]'
+              className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
             >
               {buttons.another}
             </button>
@@ -355,7 +355,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
           <>
             {/* Registration plate */}
             <FieldGroup label={labels.registration} htmlFor='quote-reg'>
-              <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#323232] bg-[#111113] transition-colors focus-within:border-[#dc2626]'>
+              <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#323232] bg-[#111113] transition-colors focus-within:border-brand'>
                 <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch bg-[#2a2a2a] px-[14px] py-[12px] select-none'>
                   <span className='flex items-start gap-[2px]'>
                     <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
@@ -369,7 +369,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
                   value={registration}
                   onChange={(e) => setRegistration(e.target.value.toUpperCase())}
                   placeholder={placeholders.registration}
-                  className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-[family-name:var(--font-manrope)] text-[18px] leading-normal font-bold tracking-[0.66px] text-white uppercase placeholder:text-[#737373] focus:outline-none sm:px-[18px] sm:text-[22px]'
+                  className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-site-heading text-[18px] leading-normal font-bold tracking-[0.66px] text-white uppercase placeholder:text-[#737373] focus:outline-none sm:px-[18px] sm:text-[22px]'
                 />
               </div>
               <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#737373]'>
@@ -416,7 +416,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
                       role='radio'
                       aria-checked={isSelected}
                       onClick={() => setSelectedService(service.name)}
-                      className={`flex min-w-0 flex-col items-center justify-center gap-[10px] rounded-[12px] border px-[12px] py-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626] ${
+                      className={`flex min-w-0 flex-col items-center justify-center gap-[10px] rounded-[12px] border px-[12px] py-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                         isSelected
                           ? 'border-white bg-white text-black'
                           : 'border-[#323232] bg-[#111113] text-white hover:border-[#454545] hover:bg-[#16161a]'
@@ -460,7 +460,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
 
             {/* Photo dropzone */}
             <FieldGroup label={labels.photos}>
-              <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed border-[#454545] px-[20px] py-[28px] text-center transition-colors focus-within:border-[#dc2626] hover:border-[#dc2626]/70 hover:bg-[#1a1a1d]'>
+              <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed border-[#454545] px-[20px] py-[28px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#1a1a1d]'>
                 <input
                   type='file'
                   accept='image/jpeg,image/png,image/heic'
@@ -530,7 +530,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
               {buttons.backToDamage}
             </button>
             {errorMessage && (
-              <p role='alert' className='text-[12px] text-[#dc2626]'>
+              <p role='alert' className='text-[12px] text-brand'>
                 {errorMessage}
               </p>
             )}

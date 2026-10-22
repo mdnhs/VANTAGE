@@ -134,24 +134,20 @@ export function StitchProcess({
           <span className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#1b1b20] py-[7px] pr-4 pl-3.5'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={DOT_ICON} alt='' width={6} height={6} className='block size-1.5' />
-            <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
+            <span className='font-site-body text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
               {eyebrow}
             </span>
           </span>
-          <h2 className='max-w-[560px] font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+          <h2 className='max-w-[560px] font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
             {headLine}
             {accentLine && (
               <>
                 <br />
-                <span className='text-[#dc2626]'>{accentLine}</span>
+                <span className='text-brand'>{accentLine}</span>
               </>
             )}
           </h2>
-          {subtext && (
-            <p className='max-w-[560px] font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#b5b5b5]'>
-              {subtext}
-            </p>
-          )}
+          {subtext && <p className='max-w-[560px] font-site-body text-base leading-[26px] text-[#b5b5b5]'>{subtext}</p>}
         </div>
 
         <div className='hidden shrink-0 gap-3 sm:flex'>
@@ -161,7 +157,7 @@ export function StitchProcess({
             disabled={!canScroll.prev}
             aria-label='Previous step'
             aria-controls='process-track'
-            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-[#dc2626] focus-visible:border-[#dc2626] focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
+            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
           >
             <span className='flex rotate-180'>
               <ArrowIcon />
@@ -173,7 +169,7 @@ export function StitchProcess({
             disabled={!canScroll.next}
             aria-label='Next step'
             aria-controls='process-track'
-            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-[#dc2626] focus-visible:border-[#dc2626] focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
+            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
           >
             <ArrowIcon />
           </button>
@@ -215,7 +211,7 @@ export function StitchProcess({
                   </span>
                 </div>
                 <span
-                  className={`font-[family-name:var(--font-manrope)] text-[56px] leading-normal font-extrabold tracking-[-1.68px] whitespace-nowrap transition-colors duration-300 ${
+                  className={`font-site-heading text-[56px] leading-normal font-extrabold tracking-[-1.68px] whitespace-nowrap transition-colors duration-300 ${
                     isActive ? 'text-[#dedede]' : 'text-[#434343]'
                   }`}
                 >
@@ -223,12 +219,8 @@ export function StitchProcess({
                 </span>
               </div>
               <div className='flex flex-col gap-3'>
-                <h3 className='font-[family-name:var(--font-manrope)] text-[22px] leading-normal font-bold text-white'>
-                  {step.title}
-                </h3>
-                <p className='font-[family-name:var(--font-inter)] text-sm leading-[22px] text-[#b5b5b5]'>
-                  {step.description}
-                </p>
+                <h3 className='font-site-heading text-[22px] leading-normal font-bold text-white'>{step.title}</h3>
+                <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{step.description}</p>
               </div>
             </article>
           );
@@ -239,7 +231,7 @@ export function StitchProcess({
       <div className='mx-auto mt-10 w-full max-w-[1200px] px-4 sm:mt-12 sm:px-6 xl:px-0'>
         <div className='h-0.5 w-full bg-[#252525]' role='presentation'>
           <div
-            className='h-0.5 bg-gradient-to-r from-[#dc2626] to-[#f0605f] transition-[width] duration-200'
+            className='h-0.5 bg-gradient-to-r from-brand to-brand-mid transition-[width] duration-200'
             style={{ width: `${fill}%` }}
           />
         </div>

@@ -67,7 +67,7 @@ export function ServiceFeatureBlock({
           className='object-cover transition-transform duration-700 group-hover:scale-[1.03]'
         />
         <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(17,17,19,0)_45%,rgba(17,17,19,0.85)_100%)]' />
-        <span className='absolute bottom-4 left-6 font-[family-name:var(--font-manrope)] text-[56px] leading-none font-extrabold tracking-[-1.68px] text-white/25 sm:bottom-6 sm:left-8 lg:text-[96px]'>
+        <span className='absolute bottom-4 left-6 font-site-heading text-[56px] leading-none font-extrabold tracking-[-1.68px] text-white/25 sm:bottom-6 sm:left-8 lg:text-[96px]'>
           {number}
         </span>
       </div>
@@ -88,14 +88,14 @@ export function ServiceFeatureBlock({
             )}
           </div>
           {startingPrice != null && (
-            <span className='rounded-full border border-[#2a2a30] px-2.5 py-1 font-[family-name:var(--font-inter)] text-[10px] leading-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
+            <span className='rounded-full border border-[#2a2a30] px-2.5 py-1 font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
               From €{startingPrice}
             </span>
           )}
         </div>
 
         <div className='flex flex-col gap-3'>
-          <h3 className='font-[family-name:var(--font-manrope)] text-[26px] leading-[32px] font-extrabold tracking-[-0.52px] text-white uppercase sm:text-[32px] sm:leading-[38px]'>
+          <h3 className='font-site-heading text-[26px] leading-[32px] font-extrabold tracking-[-0.52px] text-white uppercase sm:text-[32px] sm:leading-[38px]'>
             {heading}
           </h3>
           <p className={BODY_TEXT}>{description}</p>
@@ -114,9 +114,7 @@ export function ServiceFeatureBlock({
                     </span>
                   </span>
                 </span>
-                <span className='pt-0.5 font-[family-name:var(--font-inter)] text-[15px] leading-[22px] text-white'>
-                  {label}
-                </span>
+                <span className='pt-0.5 font-site-body text-[15px] leading-[22px] text-white'>{label}</span>
               </li>
             ))}
           </ul>

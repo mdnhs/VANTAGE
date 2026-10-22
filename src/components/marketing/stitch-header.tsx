@@ -98,7 +98,7 @@ export function StitchHeader({
         <Link
           href='/'
           aria-label={businessName}
-          className='flex shrink-0 items-center rounded-[8px] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none'
+          className='flex shrink-0 items-center rounded-[8px] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
         >
           {logoUseLottie && logoLottieJson ? (
             <LottieLogo
@@ -135,7 +135,7 @@ export function StitchHeader({
         <div className='flex items-center gap-3 sm:gap-[32px]'>
           <a
             href={phoneHref}
-            className='hidden items-center gap-[10px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:text-[#dc2626] focus-visible:text-[#dc2626] focus-visible:outline-none md:flex'
+            className='hidden items-center gap-[10px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:text-brand focus-visible:text-brand focus-visible:outline-none md:flex'
           >
             <PhoneIcon />
             <span>{phone}</span>
@@ -144,7 +144,7 @@ export function StitchHeader({
           {cta.href && (
             <Link
               href={cta.href}
-              className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
+              className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-brand py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
             >
               <span>
                 <span className='hidden sm:inline'>{cta.label}</span>
@@ -158,7 +158,7 @@ export function StitchHeader({
           <button
             type='button'
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className='flex size-[42px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none lg:hidden'
+            className='flex size-[42px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none lg:hidden'
             aria-label='Toggle navigation menu'
             aria-expanded={mobileMenuOpen}
           >
@@ -184,7 +184,7 @@ export function StitchHeader({
                   }`}
                 >
                   {link.label}
-                  {active && <span className='size-[6px] rounded-full bg-[#dc2626]' />}
+                  {active && <span className='size-[6px] rounded-full bg-brand' />}
                 </Link>
               );
             })}
@@ -193,7 +193,7 @@ export function StitchHeader({
                 <Link
                   href={cta.mobileHref}
                   onClick={() => setMobileMenuOpen(false)}
-                  className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-[#b91c1c]'
+                  className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
                 >
                   <span>{cta.mobileLabel}</span>
                   <ArrowIcon />

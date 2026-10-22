@@ -16,7 +16,7 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
     <section className={SECTION_BG.base}>
       <div className={`${SECTION_CONTAINER} gap-6 py-10 sm:gap-8 sm:py-14`}>
         <div className='flex flex-col gap-6 border-t border-[#232328] pt-10 sm:gap-8'>
-          <p className='text-center font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.44px] text-[#737373] uppercase'>
+          <p className='text-center font-site-body text-[11px] leading-normal tracking-[0.44px] text-[#737373] uppercase'>
             Trusted By Leading Insurance Providers
           </p>
           <div className='flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-12 sm:gap-y-6'>
@@ -39,7 +39,7 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
                   target='_blank'
                   rel='noopener noreferrer'
                   aria-label={logo.companyName}
-                  className='group shrink-0 rounded-[8px] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:ring-offset-4 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+                  className='group shrink-0 rounded-[8px] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
                 >
                   {image}
                 </a>

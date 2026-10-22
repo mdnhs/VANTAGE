@@ -71,15 +71,15 @@ export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
           <div className='flex flex-col items-start gap-5'>
             <div className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#232323] py-[7px] pr-4 pl-3.5'>
               <Image src={EYEBROW_DOT} alt='' unoptimized width={6} height={6} className='block size-1.5 shrink-0' />
-              <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
+              <span className='font-site-body text-[11px] leading-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
                 What Dublin Drivers Say
               </span>
             </div>
-            <h2 className='max-w-[499px] font-[family-name:var(--font-manrope)] text-[34px] leading-[40px] font-extrabold tracking-[-0.68px] text-white uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
-              Trusted by <span className='text-[#dc2626]'>180+ local drivers.</span>
+            <h2 className='max-w-[499px] font-site-heading text-[34px] leading-[40px] font-extrabold tracking-[-0.68px] text-white uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
+              Trusted by <span className='text-brand'>180+ local drivers.</span>
             </h2>
           </div>
-          <p className='max-w-[440px] font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#b5b5b5]'>
+          <p className='max-w-[440px] font-site-body text-base leading-[26px] text-[#b5b5b5]'>
             Rated 4.9 on Google for craftsmanship, communication and a hassle-free insurance process.
           </p>
         </div>
@@ -106,19 +106,17 @@ export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
                     </span>
                   ))}
                 </div>
-                <p className='font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#c6c6c6]'>
-                  {review.text}
-                </p>
+                <p className='font-site-body text-base leading-[26px] text-[#c6c6c6]'>{review.text}</p>
               </div>
 
               <div className='flex items-center justify-between gap-3 border-t border-[#2a2a30] pt-5'>
-                <div className='flex min-w-0 flex-col gap-[3px] font-[family-name:var(--font-inter)] leading-normal'>
+                <div className='flex min-w-0 flex-col gap-[3px] font-site-body leading-normal'>
                   <span className='truncate text-sm font-semibold text-white'>{review.name}</span>
                   {review.meta && (
                     <span className='truncate text-[10px] tracking-[0.4px] text-[#999] uppercase'>{review.meta}</span>
                   )}
                 </div>
-                <span className='shrink-0 rounded-full border border-white/12 bg-white/6 px-2.5 py-[5px] font-[family-name:var(--font-inter)] text-[10px] leading-normal tracking-[0.4px] whitespace-nowrap text-[#a1a1aa] uppercase'>
+                <span className='shrink-0 rounded-full border border-white/12 bg-white/6 px-2.5 py-[5px] font-site-body text-[10px] leading-normal tracking-[0.4px] whitespace-nowrap text-[#a1a1aa] uppercase'>
                   {review.badge}
                 </span>
               </div>

@@ -38,7 +38,7 @@ export function ServiceSplitCards() {
           </div>
 
           <div className='flex flex-col items-start gap-4 p-6 sm:p-8'>
-            <h3 className='font-[family-name:var(--font-manrope)] text-xl font-semibold text-[#e5e2e1] uppercase sm:text-2xl'>
+            <h3 className='font-site-heading text-xl font-semibold text-[#e5e2e1] uppercase sm:text-2xl'>
               {service.title}
             </h3>
             <p className='text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>{service.description}</p>

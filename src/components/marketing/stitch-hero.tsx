@@ -53,7 +53,7 @@ export function StitchHero({
     : '/assets/marketing/stitch-hero.jpg';
 
   return (
-    <section className='relative w-full overflow-hidden bg-[#111113] font-[family-name:var(--font-inter)]'>
+    <section className='relative w-full overflow-hidden bg-[#111113] font-site-body'>
       {/* Background media */}
       <div className='absolute inset-0 z-0'>
         {showVideo && heroVideo ? (
@@ -92,10 +92,10 @@ export function StitchHero({
           </div>
 
           {/* Heading */}
-          <h1 className='font-[family-name:var(--font-manrope)] text-[44px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[64px] lg:text-[84px] lg:leading-[88px]'>
+          <h1 className='font-site-heading text-[44px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[64px] lg:text-[84px] lg:leading-[88px]'>
             <span className='block text-white'>{headlineLine1}</span>
             <span className='block text-white'>{headlineLine2}</span>
-            <span className='block text-[#dc2626]'>{headlineAccent}</span>
+            <span className='block text-brand'>{headlineAccent}</span>
           </h1>
 
           {/* Subheading */}
@@ -107,7 +107,7 @@ export function StitchHero({
           <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center'>
             <a
               href='#estimator'
-              className='group flex items-center justify-center gap-2.5 rounded-[8px] bg-[#dc2626] py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgba(220,38,38,0.35)] transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+              className='group flex items-center justify-center gap-2.5 rounded-[8px] bg-brand py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
             >
               <span className='flex size-[18px] shrink-0 items-center justify-center'>
                 <img
@@ -134,7 +134,7 @@ export function StitchHero({
 
             <a
               href='#work'
-              className='flex items-center justify-center gap-2.5 rounded-[8px] border border-[#34343a] bg-[#16161a] px-6 py-4 transition-colors hover:border-[#dc2626] hover:bg-[#1d1d22] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+              className='flex items-center justify-center gap-2.5 rounded-[8px] border border-[#34343a] bg-[#16161a] px-6 py-4 transition-colors hover:border-brand hover:bg-[#1d1d22] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
             >
               <span className='flex size-[18px] shrink-0 items-center justify-center'>
                 <img

@@ -45,12 +45,12 @@ export function HeroSection({
             </span>
           </div>
 
-          <h1 className='xs:text-4xl font-[family-name:var(--font-manrope)] text-3xl leading-[1.1] font-extrabold tracking-tight text-white uppercase sm:text-5xl sm:tracking-[-1.28px] lg:text-[64px] lg:leading-[72px]'>
+          <h1 className='xs:text-4xl font-site-heading text-3xl leading-[1.1] font-extrabold tracking-tight text-white uppercase sm:text-5xl sm:tracking-[-1.28px] lg:text-[64px] lg:leading-[72px]'>
             We Restore
             <br />
             Your Car
             <br />
-            <span className='text-[#dc2626]'>To Its Best.</span>
+            <span className='text-brand'>To Its Best.</span>
           </h1>
 
           <p className='max-w-[576px] text-sm leading-relaxed text-neutral-300 sm:text-lg sm:leading-7'>
@@ -62,14 +62,14 @@ export function HeroSection({
         <div className='flex w-full flex-col flex-wrap gap-4 pt-2 sm:w-auto sm:flex-row sm:pt-4'>
           <Link
             href='/get-a-quote'
-            className='group relative flex w-full items-center justify-center overflow-hidden bg-[#dc2626] px-8 py-4 text-center text-xs font-bold tracking-[1.2px] text-white uppercase shadow-[0_4px_20px_rgba(220,38,38,0.3)] transition-all hover:-translate-y-1 hover:bg-red-700 sm:w-auto'
+            className='group relative flex w-full items-center justify-center overflow-hidden bg-brand px-8 py-4 text-center text-xs font-bold tracking-[1.2px] text-white uppercase shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.3)] transition-all hover:-translate-y-1 hover:bg-red-700 sm:w-auto'
           >
             <span className='absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-shimmer' />
             <span className='relative'>Get a Free Quote</span>
           </Link>
           <Link
             href='#our-work'
-            className='flex w-full items-center justify-center border border-white/20 px-8 py-4 text-center text-xs font-semibold tracking-[1.2px] text-white uppercase transition-all hover:border-red-500/50 hover:bg-white/5 hover:shadow-[0_4px_20px_rgba(220,38,38,0.15)] sm:w-auto'
+            className='flex w-full items-center justify-center border border-white/20 px-8 py-4 text-center text-xs font-semibold tracking-[1.2px] text-white uppercase transition-all hover:border-red-500/50 hover:bg-white/5 hover:shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.15)] sm:w-auto'
           >
             View Our Work
           </Link>

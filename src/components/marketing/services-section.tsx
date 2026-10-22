@@ -26,10 +26,10 @@ export function ServicesSection({ services }: ServicesSectionProps) {
             <span className='h-px w-8 bg-red-500/50' />
             <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>Core Capabilities</span>
           </div>
-          <h2 className='xs:text-3xl font-[family-name:var(--font-manrope)] text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+          <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
             Engineered To
             <br />
-            <span className='text-[#dc2626]'>Perfection.</span>
+            <span className='text-brand'>Perfection.</span>
           </h2>
         </div>
 
@@ -59,9 +59,7 @@ export function ServicesSection({ services }: ServicesSectionProps) {
             </div>
 
             <div className='flex flex-1 flex-col justify-end gap-2 pt-3'>
-              <h3 className='font-[family-name:var(--font-manrope)] text-2xl leading-8 font-semibold text-[#e5e2e1]'>
-                {service.name}
-              </h3>
+              <h3 className='font-site-heading text-2xl leading-8 font-semibold text-[#e5e2e1]'>{service.name}</h3>
               <p className='text-base leading-6 text-neutral-400'>{service.description}</p>
             </div>
 

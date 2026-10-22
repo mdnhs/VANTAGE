@@ -42,10 +42,10 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
           <span className='h-px w-8 bg-red-500/50' />
           <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>Client Feedback</span>
         </div>
-        <h2 className='xs:text-3xl font-[family-name:var(--font-manrope)] text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+        <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
           Trusted By
           <br />
-          <span className='text-[#dc2626]'>Our Customers.</span>
+          <span className='text-brand'>Our Customers.</span>
         </h2>
       </div>
 
@@ -74,12 +74,12 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
                   className='size-11 shrink-0 rounded-full object-cover'
                 />
               ) : (
-                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] font-[family-name:var(--font-manrope)] text-sm font-semibold text-[#e5e2e1]'>
+                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] font-site-heading text-sm font-semibold text-[#e5e2e1]'>
                   {initials(testimonial.customerName)}
                 </div>
               )}
               <div className='flex flex-col'>
-                <span className='font-[family-name:var(--font-manrope)] text-sm font-semibold text-[#e5e2e1]'>
+                <span className='font-site-heading text-sm font-semibold text-[#e5e2e1]'>
                   {testimonial.customerName}
                 </span>
                 {testimonial.serviceReceived && (

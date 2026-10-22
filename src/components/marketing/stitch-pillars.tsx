@@ -53,10 +53,10 @@ export function StitchPillars({ pillars }: StitchPillarsProps) {
           return (
             <div
               key={pillar.id}
-              className={`intersect-once flex flex-col gap-2 rounded-lg border border-white/5 bg-[#1c1b1b]/90 p-5 transition-all hover:border-[#dc2626]/40 intersect:motion-preset-slide-up-sm ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
+              className={`intersect-once flex flex-col gap-2 rounded-lg border border-white/5 bg-[#1c1b1b]/90 p-5 transition-all hover:border-brand/40 intersect:motion-preset-slide-up-sm ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
             >
               <div className='flex items-center justify-between'>
-                <Icon className='size-6 text-[#dc2626]' />
+                <Icon className='size-6 text-brand' />
                 <span className='font-mono text-[10px] text-neutral-500 uppercase'>
                   Pillar {String(index + 1).padStart(2, '0')}
                 </span>
