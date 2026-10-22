@@ -89,7 +89,12 @@ export const partnerLogos = new Hono<AppEnv>()
     '/:id',
     can({ content: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'partner_logo.delete', entityType: 'partner_logo', summary: 'Partner logo deleted' }),
+    auditRoute({
+      action: 'partner_logo.delete',
+      entityType: 'partner_logo',
+      summary: 'Partner logo deleted',
+      load: partnerLogoService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

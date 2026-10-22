@@ -12,7 +12,7 @@ export type AuditRouteSpec = {
   action: string;
   entityType: string;
   summary: string;
-  // Loads the record before the handler runs so the change can be diffed (updates only).
+  // Loads the record before the handler runs so the change can be diffed (updates; on delete only to confirm the record existed).
   load?: (id: string) => Promise<object | null | undefined>;
   // Allowlist of keys to compare; default is every key except id and timestamps.
   fields?: readonly string[];
@@ -74,9 +74,12 @@ export const auditRoute = (spec: AuditRouteSpec) =>
       const entityId = paramId ?? (typeof data?.id === 'string' ? data.id : null);
       let diff: Diff | null = null;
       if (spec.load) {
+        // Deleting something that was never there changed nothing: no row. A delete has no diff.
         if (!before) return;
-        diff = auditDiff(before, data, spec);
-        if (!diff) return;
+        if (c.req.method !== 'DELETE') {
+          diff = auditDiff(before, data, spec);
+          if (!diff) return;
+        }
       }
       await audit(c.get('actor'), {
         action: spec.action,

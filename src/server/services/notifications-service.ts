@@ -105,16 +105,22 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
         .limit(BATCH)
         .offset(offset);
       if (!rows.length) break;
-      // One lookup per entity type; a live id is only live for its own type.
+      // One lookup per entity type; a live id is only live for its own type. Spam is hidden from the feed, so its failures are too.
       const idsOf = (type: string) => rows.filter((r) => r.entityType === type && r.entityId).map((r) => r.entityId!);
       const quoteIds = idsOf('quote');
       const contactIds = idsOf('contact');
       const [liveQuotes, liveContacts] = await Promise.all([
         quoteIds.length
-          ? db.select({ id: quoteRequests.id }).from(quoteRequests).where(inArray(quoteRequests.id, quoteIds))
+          ? db
+              .select({ id: quoteRequests.id })
+              .from(quoteRequests)
+              .where(and(inArray(quoteRequests.id, quoteIds), ne(quoteRequests.status, SPAM_STATUS)))
           : [],
         contactIds.length
-          ? db.select({ id: contactMessages.id }).from(contactMessages).where(inArray(contactMessages.id, contactIds))
+          ? db
+              .select({ id: contactMessages.id })
+              .from(contactMessages)
+              .where(and(inArray(contactMessages.id, contactIds), ne(contactMessages.status, SPAM_STATUS)))
           : [],
       ]);
       const liveKeys = new Set([

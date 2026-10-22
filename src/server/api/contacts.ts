@@ -90,7 +90,12 @@ export const contacts = new Hono<AppEnv>()
     '/:id',
     can({ contact: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'contact.delete', entityType: 'contact', summary: 'Contact message deleted' }),
+    auditRoute({
+      action: 'contact.delete',
+      entityType: 'contact',
+      summary: 'Contact message deleted',
+      load: contactMessageService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

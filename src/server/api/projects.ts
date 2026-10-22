@@ -118,7 +118,12 @@ export const projects = new Hono<AppEnv>()
     '/:id',
     can({ content: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'project.delete', entityType: 'project', summary: 'Project deleted' }),
+    auditRoute({
+      action: 'project.delete',
+      entityType: 'project',
+      summary: 'Project deleted',
+      load: projectService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

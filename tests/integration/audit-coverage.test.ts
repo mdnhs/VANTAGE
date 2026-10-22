@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/server/db';
 import { auditLogs, contactMessages, quoteRequests } from '@/server/db/schema';
 import * as auditModule from '@/server/lib/audit';
+import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import { sql } from 'drizzle-orm';
 
 import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
@@ -120,6 +121,17 @@ describe('quote and contact mutations', () => {
     expect(await rows('quote.create')).toHaveLength(0);
   });
 
+  it('writes no delete row for an id that does not exist', async () => {
+    const missing = '00000000-0000-4000-8000-000000000000';
+    for (const path of [`/contacts/${missing}`, `/services/${missing}`, `/quotes/${missing}`]) {
+      const res = await call(path, owner, { method: 'DELETE' });
+      expect(res.status).toBe(200);
+    }
+    for (const action of ['contact.delete', 'service.delete', 'quote.delete']) {
+      expect(await rows(action), action).toHaveLength(0);
+    }
+  });
+
   it('records a contact delete with its id', async () => {
     const [c] = await db
       .insert(contactMessages)
@@ -215,6 +227,17 @@ describe('failure and attribution', () => {
     const res = await call(`/quotes/${q.id}`, owner, { method: 'PATCH', body: { status: 'contacted' } });
     expect(res.status).toBe(200);
     expect(err).toHaveBeenCalledWith('[audit-route] failed', 'quote.update');
+  });
+
+  it('a failing before-load writes no row and the edit still succeeds', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = vi.spyOn(quoteRequestRepository, 'byId').mockRejectedValueOnce(new Error('load boom'));
+    const q = await seedQuote();
+    const res = await call(`/quotes/${q.id}`, owner, { method: 'PATCH', body: { status: 'contacted' } });
+    expect(res.status).toBe(200);
+    expect(spy).toHaveBeenCalled();
+    expect(await rows('quote.update')).toHaveLength(0);
+    expect(err).toHaveBeenCalledWith('[audit-route] load failed', 'quote.update');
   });
 
   it('refuses writes during View-as and records nothing', async () => {

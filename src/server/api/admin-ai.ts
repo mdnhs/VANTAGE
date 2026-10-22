@@ -6,7 +6,7 @@ import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorLimit } from '@/server/middleware/actor-limit';
 import { actorOf, can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import {
   deleteConversation,
   getConversation,
@@ -20,8 +20,6 @@ export const AI_CHAT_LIMIT = { limit: 30, windowMs: 600_000 };
 export const AI_TEST_LIMIT = { limit: 5, windowMs: 60_000 };
 export const AI_MODELS_LIMIT = { limit: 10, windowMs: 60_000 };
 
-const READ_ONLY_VIEW_AS = 'View-as is read-only: AI assistant settings cannot be changed';
-
 export const adminAi = new Hono<AppEnv>()
   .get('/status', can({ ai: ['use'] }), async (c) => ok(c, await getAiStatus(actorOf(c))))
 
@@ -30,7 +28,7 @@ export const adminAi = new Hono<AppEnv>()
   .put(
     '/settings',
     can({ ai: ['manage'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', AiSettingsUpdate),
     async (c) => ok(c, await saveAiSettings(actorOf(c), c.req.valid('json'))),
   )
@@ -38,7 +36,7 @@ export const adminAi = new Hono<AppEnv>()
   .post(
     '/settings/models',
     can({ ai: ['manage'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     actorLimit('ai-models', AI_MODELS_LIMIT),
     zValidator('json', ListModelsInput),
     async (c) => ok(c, await listModelsFor(actorOf(c), c.req.valid('json'))),
@@ -47,7 +45,7 @@ export const adminAi = new Hono<AppEnv>()
   .post(
     '/settings/test',
     can({ ai: ['manage'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     actorLimit('ai-test', AI_TEST_LIMIT),
     async (c) => ok(c, await testConnection(actorOf(c))),
   )

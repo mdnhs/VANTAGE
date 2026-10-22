@@ -6,7 +6,7 @@ import type { AppEnv } from '@/server/api/types';
 import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorOf, can } from '@/server/middleware/auth';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import {
   discardThemeDraft,
   getThemeAdmin,
@@ -25,15 +25,13 @@ const ResetInput = Version.extend({
 });
 const RevisionParam = z.object({ rev: z.uuid() });
 
-const READ_ONLY_VIEW_AS = 'View-as is read-only: the theme cannot be changed';
-
 export const adminTheme = new Hono<AppEnv>()
   .get('/', can({ appearance: ['read'] }), async (c) => ok(c, await getThemeAdmin()))
 
   .put(
     '/draft',
     can({ appearance: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', DraftInput),
     async (c) => ok(c, await saveThemeDraft(actorOf(c), c.req.valid('json'))),
   )
@@ -41,7 +39,7 @@ export const adminTheme = new Hono<AppEnv>()
   .post(
     '/publish',
     can({ appearance: ['publish'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', Version),
     async (c) => ok(c, await publishTheme(actorOf(c), c.req.valid('json'))),
   )
@@ -49,7 +47,7 @@ export const adminTheme = new Hono<AppEnv>()
   .post(
     '/reset',
     can({ appearance: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', ResetInput),
     async (c) => ok(c, await resetThemeDraft(actorOf(c), c.req.valid('json'))),
   )
@@ -57,7 +55,7 @@ export const adminTheme = new Hono<AppEnv>()
   .post(
     '/discard',
     can({ appearance: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', Version),
     async (c) => ok(c, await discardThemeDraft(actorOf(c), c.req.valid('json'))),
   )
@@ -67,7 +65,7 @@ export const adminTheme = new Hono<AppEnv>()
   .post(
     '/revisions/:rev/restore',
     can({ appearance: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('param', RevisionParam),
     zValidator('json', Version),
     async (c) => ok(c, await restoreThemeRevision(actorOf(c), c.req.valid('param').rev, c.req.valid('json').version)),

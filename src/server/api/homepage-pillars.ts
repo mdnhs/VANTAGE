@@ -93,7 +93,12 @@ export const homepagePillars = new Hono<AppEnv>()
     '/:id',
     can({ content: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'homepage_pillar.delete', entityType: 'homepage_pillar', summary: 'Homepage pillar deleted' }),
+    auditRoute({
+      action: 'homepage_pillar.delete',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillar deleted',
+      load: homepagePillarService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

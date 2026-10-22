@@ -89,7 +89,12 @@ export const services = new Hono<AppEnv>()
     '/:id',
     can({ content: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'service.delete', entityType: 'service', summary: 'Service deleted' }),
+    auditRoute({
+      action: 'service.delete',
+      entityType: 'service',
+      summary: 'Service deleted',
+      load: serviceService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

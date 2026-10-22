@@ -5,11 +5,9 @@ import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorOf, can } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { getTrackingAdmin, saveTracking, sendTestEvent } from '@/server/services/tracking-service';
 import { TrackingUpdate } from '@/validations/tracking-schema';
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 export const adminTracking = new Hono<AppEnv>()
   .get('/', can({ tracking: ['read'] }), async (c) => ok(c, await getTrackingAdmin()))
@@ -17,7 +15,7 @@ export const adminTracking = new Hono<AppEnv>()
   .put(
     '/',
     can({ tracking: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('json', TrackingUpdate),
     async (c) => ok(c, await saveTracking(actorOf(c), c.req.valid('json'))),
   )
@@ -26,7 +24,7 @@ export const adminTracking = new Hono<AppEnv>()
   .post(
     '/test-capi',
     can({ tracking: ['update'] }),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     rateLimit(5, 60_000, 'Too many test events. Wait a minute and try again.'),
     async (c) => ok(c, await sendTestEvent(actorOf(c))),
   );

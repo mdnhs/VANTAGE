@@ -100,6 +100,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
       action: 'homepage_catalog.delete',
       entityType: 'homepage_catalog',
       summary: 'Homepage catalog deleted',
+      load: homepageCatalogService.byId,
     }),
     zValidator('param', idParamSchema),
     async (c) => {
