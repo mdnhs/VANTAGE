@@ -102,6 +102,7 @@ export function SeoAside({ id, values }: { id: PublicPageId; values: GlobalValue
           description={ogDescription}
           imageSrc={image?.url}
           legacyImage={legacy}
+          pageId={id}
         />
       </DashboardCard>
       <DashboardCard title='Checks'>
