@@ -168,7 +168,7 @@ export async function getConversation(userId: string, id: string) {
 export async function deleteConversation(actor: AuditActor, id: string) {
   await ownConversation(actor.userId, id);
   await db.transaction(async (tx) => {
-    await tx.delete(aiConversations).where(eq(aiConversations.id, id));
+    await tx.delete(aiConversations).where(and(eq(aiConversations.id, id), eq(aiConversations.userId, actor.userId)));
     // The title is message text, so it stays out of the log.
     await audit(
       actor,
