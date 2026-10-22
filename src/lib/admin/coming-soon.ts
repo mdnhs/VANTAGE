@@ -25,6 +25,7 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   // settings/ai-assistant is its own folder (Phase 9).
   '/dashboard/settings/ai-assistant',
   '/dashboard/seo/defaults',
+  '/dashboard/seo/redirects',
   '/dashboard/users',
   '/dashboard/account',
   '/dashboard/appearance',

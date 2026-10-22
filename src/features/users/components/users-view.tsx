@@ -23,7 +23,7 @@ import { useViewAs } from '../hooks/api/mutation/use-view-as';
 import { useUserList } from '../hooks/api/query/use-user-list';
 import type { UserAction, UserDto, UserStatusFilter } from '../types';
 import { BanDialog } from './ban-dialog';
-import { ConfirmDialog } from './confirm-dialog';
+import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 import { InviteDialog } from './invite-dialog';
 import { ManualLinkDialog, type ManualLink } from './manual-link-dialog';
 import { PermissionMatrix } from './permission-matrix';
