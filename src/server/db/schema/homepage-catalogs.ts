@@ -1,4 +1,5 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { media } from './media';
 
 export const homepageCatalogs = pgTable(
   'homepage_catalogs',
@@ -10,6 +11,7 @@ export const homepageCatalogs = pgTable(
     footnote: varchar('footnote', { length: 80 }).default('Free Estimate'),
     icon: varchar('icon', { length: 40 }).notNull().default('car-front'),
     iconPublicId: varchar('icon_public_id', { length: 255 }),
+    iconMediaId: uuid('icon_media_id').references(() => media.id, { onDelete: 'restrict' }),
     displayOrder: integer('display_order').notNull().default(0),
     isEnabled: boolean('is_enabled').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

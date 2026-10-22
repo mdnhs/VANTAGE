@@ -25,6 +25,8 @@ export class ApiError extends Error {
     readonly status: number = 400,
     readonly causes?: Record<string, string[]>,
     readonly current?: ConflictCurrent,
+    // Structured payload for clients (e.g. the usage list of a 409).
+    readonly details?: unknown,
   ) {
     super(message);
     this.name = 'ApiError';

@@ -7,6 +7,12 @@ export const media = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     driver: text('driver', { enum: ['local', 's3'] }).notNull(),
     key: text('key').notNull().unique(),
+    // 'enquiry' rows are anonymous public-form photos: never listed in the library.
+    scope: text('scope', { enum: ['library', 'enquiry'] })
+      .notNull()
+      .default('library'),
+    // Idempotency key of the Cloudinary migration, e.g. cloudinary:image:vantage/projects/abc.
+    legacySource: text('legacy_source').unique(),
     url: text('url').notNull(),
     filename: text('filename').notNull(),
     mimeType: text('mime_type').notNull(),
@@ -27,7 +33,11 @@ export const media = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (t) => [index('media_created_at_idx').on(t.createdAt.desc()), index('media_mime_type_idx').on(t.mimeType)],
+  (t) => [
+    index('media_created_at_idx').on(t.createdAt.desc()),
+    index('media_mime_type_idx').on(t.mimeType),
+    index('media_scope_idx').on(t.scope),
+  ],
 );
 
 export type MediaRow = typeof media.$inferSelect;

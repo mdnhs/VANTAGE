@@ -23,7 +23,7 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
             {logos.map((logo) => {
               const image = (
                 <Image
-                  src={cldUrl(logo.logoPublicId, { width: 320, height: 160, crop: 'fit' })}
+                  src={cldUrl(logo.logoPublicId ?? '', { width: 320, height: 160, crop: 'fit' })}
                   alt={logo.companyName}
                   width={120}
                   height={60}

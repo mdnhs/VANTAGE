@@ -15,7 +15,7 @@ async function insertUser() {
 
 describe('auth schema (admin, audit, quote assignment)', () => {
   afterEach(async () => {
-    await db.execute(sql`truncate table audit_logs, quote_requests`);
+    await db.execute(sql`truncate table audit_logs, enquiry_photos, quote_requests`);
     await db.delete(users).where(eq(users.id, USER_ID));
   });
 

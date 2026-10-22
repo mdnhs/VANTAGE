@@ -1,4 +1,5 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { media } from './media';
 
 // Money convention: site-settings has no money fields to establish a precedent, so this
 // stores `startingPrice` as a whole-unit integer (euros), not cents — simplest for a
@@ -11,8 +12,10 @@ export const services = pgTable(
     slug: varchar('slug', { length: 140 }).notNull().unique(),
     description: text('description').notNull(),
     iconPublicId: varchar('icon_public_id', { length: 255 }),
+    iconMediaId: uuid('icon_media_id').references(() => media.id, { onDelete: 'restrict' }),
     // Hero image + bullet list for the public /services page feature blocks.
     imagePublicId: varchar('image_public_id', { length: 255 }),
+    imageMediaId: uuid('image_media_id').references(() => media.id, { onDelete: 'restrict' }),
     checklist: text('checklist').array().notNull().default([]),
     startingPrice: integer('starting_price'),
     displayOrder: integer('display_order').notNull().default(0),

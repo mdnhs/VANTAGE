@@ -19,7 +19,13 @@ export interface SuccessBody<T> {
 
 export interface ErrorBody {
   success: false;
-  error: { code: ErrorCode; message: string; causes?: Record<string, string[]>; current?: ConflictCurrent };
+  error: {
+    code: ErrorCode;
+    message: string;
+    causes?: Record<string, string[]>;
+    current?: ConflictCurrent;
+    details?: unknown;
+  };
 }
 
 export const ok = <T>(c: Context, data: T, init?: { status?: ContentfulStatusCode; pagination?: PaginationMeta }) =>
@@ -35,9 +41,19 @@ export const fail = (
   status: ContentfulStatusCode = 500,
   causes?: Record<string, string[]>,
   current?: ConflictCurrent,
+  details?: unknown,
 ) =>
   c.json<ErrorBody>(
-    { success: false, error: { code, message, ...(causes ? { causes } : {}), ...(current ? { current } : {}) } },
+    {
+      success: false,
+      error: {
+        code,
+        message,
+        ...(causes ? { causes } : {}),
+        ...(current ? { current } : {}),
+        ...(details === undefined ? {} : { details }),
+      },
+    },
     status,
   );
 
