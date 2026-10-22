@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { ContactInfo } from '@/components/marketing/contact-info';
 import { ContactForm } from '@/components/marketing/contact-form';
 import { VisitUsSection } from '@/components/marketing/visit-us-section';
+import { PageHero, SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 import { serviceService } from '@/server/services/service-service';
+import { PageAnimations } from '@/components/marketing/page-animations';
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -15,15 +17,25 @@ export default async function ContactPage() {
   const services = await serviceService.listPublished();
 
   return (
-    <>
-      <main className='container mx-auto flex flex-col gap-10 px-4 py-12 sm:gap-16 sm:px-6 sm:py-16 md:px-12 lg:py-24'>
-        <div className='grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16'>
-          <ContactInfo />
-          <ContactForm services={services} />
-        </div>
+    <main className='grow'>
+      <PageHero
+        eyebrow='Visit · Call · Message'
+        lines={['Get in', 'touch.']}
+        subtext='We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.'
+      />
 
-        <VisitUsSection />
-      </main>
-    </>
+      {/* Same bg as the hero, so only bottom padding — the hero already supplies the top rhythm. */}
+      <section className={SECTION_BG.base}>
+        <div className={`${SECTION_CONTAINER} pb-16 sm:pb-24 xl:pb-[120px]`}>
+          <div className='grid grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-[80px]'>
+            <ContactInfo />
+            <ContactForm services={services} />
+          </div>
+        </div>
+      </section>
+
+      <VisitUsSection />
+      <PageAnimations />
+    </main>
   );
 }

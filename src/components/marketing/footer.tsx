@@ -5,24 +5,59 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 
 const SERVICES_LINKS = [
-  { label: 'Collision Repair', href: '/services' },
-  { label: 'Precision Respraying', href: '/services' },
-  { label: 'Classic Restoration', href: '/services' },
-  { label: 'Dent Removal', href: '/services' },
+  { label: 'Collision repair', href: '/services' },
+  { label: 'Precision respraying', href: '/services' },
+  { label: 'Classic restoration', href: '/services' },
+  { label: 'Dent removal', href: '/services' },
 ];
 
 const COMPANY_LINKS = [
-  { label: 'Our Process', href: '/process' },
-  { label: 'Insurance Partners', href: '/insurance' },
+  { label: 'Our process', href: '/process' },
+  { label: 'Insurance partners', href: '/insurance' },
   { label: 'Showcase', href: '/our-work' },
-  { label: 'About Us', href: '/about' },
+  { label: 'About us', href: '/about' },
 ];
 
-const SOCIAL_LINKS = [
-  { key: 'facebookUrl', icon: '/assets/marketing/icon-social-1.svg' },
-  { key: 'instagramUrl', icon: '/assets/marketing/icon-social-2.svg' },
-  { key: 'tiktokUrl', icon: '/assets/marketing/icon-social-3.svg' },
-] as const;
+const LEGAL_LINKS = [
+  { label: 'Privacy Policy', href: '#privacy' },
+  { label: 'Terms of Service', href: '#terms' },
+  { label: 'Login', href: '/login' },
+];
+
+// Figma 131:674 assets
+const FALLBACK_LOGO = '/assets/landing/27e96966dcba4218e85dc86d5723b210f88c7f2d.png';
+const ICON_PIN = '/assets/landing/2a03e4d5b74a787cdd702f5fdaceccaad8b01220.svg';
+const ICON_PHONE = '/assets/landing/3b54265d82d0a684fc845549256367dc317ab2f3.svg';
+const ICON_MAIL = '/assets/landing/505ab23bbd9ddac293e2e54e3a46ff892cc018d4.svg';
+
+const linkClass =
+  'text-[14px] leading-[normal] text-[#a1a1a1] transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none';
+const headingClass = 'text-[11px] leading-[normal] font-normal tracking-[0.88px] text-white uppercase';
+
+// 18px icon box; inner insets reproduce Figma's group + stroke-bleed geometry
+function ContactIcon({
+  src,
+  width,
+  height,
+  group,
+  bleed,
+}: {
+  src: string;
+  width: number;
+  height: number;
+  group: string;
+  bleed: string;
+}) {
+  return (
+    <span className='relative block size-[18px] shrink-0 overflow-clip'>
+      <span className={`absolute ${group}`}>
+        <span className={`absolute ${bleed}`}>
+          <Image src={src} alt='' width={width} height={height} unoptimized className='block size-full max-w-none' />
+        </span>
+      </span>
+    </span>
+  );
+}
 
 // Server Component — reads settings via the cached service directly (no client fetch, no
 // prop-drilling required since this is the only place these fields are needed). Rendered
@@ -33,131 +68,105 @@ export async function MarketingFooter() {
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
 
+  const logoImage = (
+    <Image
+      src={settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : FALLBACK_LOGO}
+      alt={settings.businessName}
+      width={240}
+      height={136}
+      className='h-[68px] w-[120px] object-contain'
+    />
+  );
+
   return (
-    <footer className='border-t border-white/5 bg-[#0e0e0e]'>
-      <div className='container mx-auto flex flex-col gap-12 px-4 pt-14 pb-10 sm:gap-16 sm:px-6 sm:pt-20 sm:pb-12 md:px-12 lg:gap-[120px] lg:pt-[121px]'>
-        <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-4'>
-          <div className='flex flex-col gap-6'>
-            {logoUseLottie && logoLottieJson ? (
-              <LottieLogo
-                data={logoLottieJson}
-                alt={settings.businessName}
-                className='h-16 w-auto max-w-[240px] self-start sm:h-20 sm:max-w-[280px]'
-                fallback={
-                  <Image
-                    src={
-                      settings.logoPublicId
-                        ? cldUrl(settings.logoPublicId, { height: 200 })
-                        : '/assets/marketing/logo.jpg'
-                    }
-                    alt={settings.businessName}
-                    width={320}
-                    height={200}
-                    className='h-16 w-auto self-start object-contain sm:h-20'
-                  />
-                }
-              />
-            ) : (
-              <Image
-                src={
-                  settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : '/assets/marketing/logo.jpg'
-                }
-                alt={settings.businessName}
-                width={320}
-                height={200}
-                className='h-16 w-auto self-start object-contain sm:h-20'
-              />
-            )}
-            <p className='max-w-[320px] text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>
+    <footer className='border-t border-[#232328] bg-[#111113]'>
+      <div className='mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-4 pt-16 pb-10 sm:px-6 sm:pt-20 lg:gap-[64px] lg:px-10 lg:pt-[96px] lg:pb-[40px] xl:px-0'>
+        {/* Footer columns */}
+        <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-12 lg:flex lg:items-start lg:gap-[48px]'>
+          {/* Brand */}
+          <div className='flex flex-col items-start gap-[20px] lg:w-[320px] lg:shrink-0'>
+            <Link href='/' aria-label={settings.businessName} className='block'>
+              {logoUseLottie && logoLottieJson ? (
+                <LottieLogo
+                  data={logoLottieJson}
+                  alt={settings.businessName}
+                  className='h-[68px] w-[120px]'
+                  fallback={logoImage}
+                />
+              ) : (
+                logoImage
+              )}
+            </Link>
+            <p className='max-w-[320px] text-[14px] leading-[23px] text-[#a1a1a1]'>
               Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
               obsession.
             </p>
-            <div className='flex gap-4'>
-              {SOCIAL_LINKS.filter((social) => Boolean(settings[social.key])).map((social) => (
-                <Link
-                  key={social.key}
-                  href={settings[social.key] as string}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='flex size-10 items-center justify-center rounded-full bg-[#201f1f] text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white'
-                >
-                  <Image src={social.icon} alt='' width={15} height={15} className='size-[15px]' />
-                </Link>
-              ))}
-            </div>
           </div>
 
-          <div className='flex flex-col gap-4 sm:gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Services</h4>
-            <nav className='flex flex-col gap-3'>
+          {/* Services */}
+          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+            <h4 className={headingClass}>Services</h4>
+            <nav className='flex flex-col items-start gap-[14px]'>
               {SERVICES_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
-                >
+                <Link key={link.label} href={link.href} className={linkClass}>
                   {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className='flex flex-col gap-4 sm:gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Company</h4>
-            <nav className='flex flex-col gap-3'>
+          {/* Company */}
+          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+            <h4 className={headingClass}>Company</h4>
+            <nav className='flex flex-col items-start gap-[14px]'>
               {COMPANY_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className='text-sm text-neutral-400 transition-colors hover:text-white sm:text-base'
-                >
+                <Link key={link.label} href={link.href} className={linkClass}>
                   {link.label}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className='flex flex-col gap-4 sm:gap-6'>
-            <h4 className='text-xs font-semibold tracking-[1.2px] text-white uppercase'>Contact</h4>
-            <div className='flex flex-col gap-4'>
-              <div className='flex items-start gap-3'>
-                <Image
-                  src='/assets/marketing/icon-location.svg'
-                  alt=''
-                  width={16}
-                  height={20}
-                  className='mt-0.5 h-5 w-4 shrink-0'
+          {/* Contact */}
+          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+            <h4 className={headingClass}>Contact</h4>
+            <div className='flex flex-col items-start gap-[14px]'>
+              <div className='flex items-center gap-[12px]'>
+                <ContactIcon
+                  src={ICON_PIN}
+                  width={14.627}
+                  height={16.125}
+                  group='inset-[8.33%_12.49%_8.33%_12.5%]'
+                  bleed='inset-[-3.75%_-4.17%]'
                 />
-                <span className='text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>
-                  {settings.address}
-                </span>
+                <span className='text-[14px] leading-[normal] text-[#d4d4d4]'>{settings.address}</span>
               </div>
-              <div className='flex items-center gap-3'>
-                <Image
-                  src='/assets/marketing/icon-phone.svg'
-                  alt=''
-                  width={18}
-                  height={18}
-                  className='size-[18px] shrink-0'
+              <div className='flex items-center gap-[12px]'>
+                <ContactIcon
+                  src={ICON_PHONE}
+                  width={14.6249}
+                  height={14.625}
+                  group='inset-[12.5%]'
+                  bleed='inset-[-4.17%]'
                 />
                 <Link
                   href={`tel:${settings.phone.replace(/\s+/g, '')}`}
-                  className='text-sm break-all text-neutral-400 transition-colors hover:text-white sm:text-base'
+                  className='text-[14px] leading-[normal] break-all text-[#d4d4d4] transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none'
                 >
                   {settings.phone}
                 </Link>
               </div>
-              <div className='flex items-center gap-3'>
-                <Image
-                  src='/assets/marketing/icon-email.svg'
-                  alt=''
-                  width={20}
-                  height={16}
-                  className='h-4 w-5 shrink-0'
+              <div className='flex items-center gap-[12px]'>
+                <ContactIcon
+                  src={ICON_MAIL}
+                  width={16.1252}
+                  height={13.875}
+                  group='inset-[14.58%_8.33%]'
+                  bleed='inset-[-4.41%_-3.75%]'
                 />
                 <Link
                   href={`mailto:${settings.email}`}
-                  className='text-sm break-all text-neutral-400 transition-colors hover:text-white sm:text-base'
+                  className='text-[14px] leading-[normal] break-all text-[#d4d4d4] transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none'
                 >
                   {settings.email}
                 </Link>
@@ -166,29 +175,17 @@ export async function MarketingFooter() {
           </div>
         </div>
 
-        <div className='flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 text-center sm:flex-row sm:text-left'>
-          <span className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase'>
-            © 2024 {settings.businessName}. Registered in Ireland.
+        {/* Legal bar */}
+        <div className='flex flex-col items-start justify-between gap-4 border-t border-[#232328] pt-[28px] sm:flex-row sm:items-center'>
+          <span className='text-[11px] leading-[normal] tracking-[0.22px] text-[#737373]'>
+            © 2026 {settings.businessName}. Registered in Ireland.
           </span>
-          <div className='flex flex-wrap justify-center gap-6 sm:gap-8'>
-            <Link
-              href='#privacy'
-              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href='#terms'
-              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href='/login'
-              className='text-xs font-semibold tracking-[1.2px] text-neutral-500 uppercase transition-colors hover:text-neutral-300'
-            >
-              Login
-            </Link>
+          <div className='flex flex-wrap gap-x-[28px] gap-y-2'>
+            {LEGAL_LINKS.map((link) => (
+              <Link key={link.label} href={link.href} className={linkClass}>
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

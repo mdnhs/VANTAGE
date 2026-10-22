@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { QuoteHero } from '@/components/marketing/quote-hero';
 import { QuoteForm } from '@/components/marketing/quote-form';
+import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 import { serviceService } from '@/server/services/service-service';
+import { PageAnimations } from '@/components/marketing/page-animations';
 
 export const metadata: Metadata = {
   title: 'Get a Free Quote',
@@ -14,16 +16,15 @@ export default async function GetAQuotePage() {
   const services = await serviceService.listPublished();
 
   return (
-    <>
-      <main className='relative overflow-hidden'>
-        <div className='pointer-events-none absolute top-0 right-0 h-[800px] w-[427px] bg-gradient-to-b from-red-600/10 to-transparent mix-blend-screen' />
-        <div className='pointer-events-none absolute bottom-0 left-0 size-64 rounded-full bg-red-600/10 blur-[50px]' />
-
-        <div className='relative container mx-auto flex flex-col gap-6 px-4 pt-12 pb-20 sm:gap-8 sm:px-6 sm:pt-16 sm:pb-24 md:px-12'>
-          <QuoteHero />
+    <main>
+      <QuoteHero />
+      {/* Hero already carries the top rhythm, so this band only pads the bottom */}
+      <section id='quote-form' className={`w-full ${SECTION_BG.base} pb-16 sm:pb-24 xl:pb-[120px]`}>
+        <div className={SECTION_CONTAINER}>
           <QuoteForm services={services} />
         </div>
-      </main>
-    </>
+      </section>
+      <PageAnimations />
+    </main>
   );
 }

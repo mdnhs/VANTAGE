@@ -1,6 +1,15 @@
 import Image from 'next/image';
+import { Quote } from 'lucide-react';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { ABOUT_FALLBACK_IMAGES } from '@/features/about-page/defaults';
+import {
+  BODY_TEXT,
+  CARD,
+  SECTION_BG,
+  SECTION_CONTAINER,
+  SECTION_PADDING,
+  SectionHeader,
+} from '@/components/marketing/ui/landing-primitives';
 
 interface HeritageSectionProps {
   title: string;
@@ -11,47 +20,58 @@ interface HeritageSectionProps {
   quote: string;
 }
 
+// Last word of the CMS title becomes the red accent, matching the homepage headings.
+function splitAccent(title: string) {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return { head: title, accent: undefined };
+  return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
+}
+
 export function HeritageSection({ title, text, stat1, stat2, imagePublicId, quote }: HeritageSectionProps) {
+  const { head, accent } = splitAccent(title);
+
   return (
-    <section className='container mx-auto grid grid-cols-1 gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-12 lg:gap-6 lg:px-12 lg:py-[120px]'>
-      <div className='intersect-once flex flex-col gap-6 sm:gap-8 lg:col-span-5 intersect:motion-preset-slide-right'>
-        <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-[#e5e2e1] uppercase sm:text-3xl lg:text-[40px] lg:leading-[48px]'>
-          {title}
-        </h2>
+    <section className={`w-full ${SECTION_BG.raised} ${SECTION_PADDING}`}>
+      <div className={`${SECTION_CONTAINER} grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center lg:gap-6`}>
+        <div className='flex flex-col gap-8 lg:col-span-5'>
+          <SectionHeader eyebrow='Who We Are' title={head} accent={accent} />
+          <p className={BODY_TEXT}>{text}</p>
 
-        <p className='text-base leading-relaxed text-neutral-300 sm:text-lg sm:leading-[1.625]'>{text}</p>
-
-        <div className='flex gap-8 pt-2 sm:gap-12'>
-          <div className='flex flex-col gap-2'>
-            <span className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-tight text-[#dc2626] sm:text-4xl'>
-              {stat1.value}
-            </span>
-            <span className='text-xs font-semibold tracking-[1.2px] text-neutral-400 uppercase'>{stat1.label}</span>
-          </div>
-          <div className='flex flex-col gap-2'>
-            <span className='font-[family-name:var(--font-manrope)] text-3xl font-bold tracking-tight text-[#c4c7ca] sm:text-4xl'>
-              {stat2.value}
-            </span>
-            <span className='text-xs font-semibold tracking-[1.2px] text-neutral-400 uppercase'>{stat2.label}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className='intersect-once flex flex-col gap-6 pt-4 sm:pt-14 lg:col-span-6 lg:col-start-7 intersect:motion-preset-slide-left'>
-        <div className='relative h-[280px] w-full overflow-hidden rounded-xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] sm:h-[400px] lg:h-[500px]'>
-          <Image
-            src={imagePublicId ? cldUrl(imagePublicId, { width: 1200 }) : ABOUT_FALLBACK_IMAGES.heritage}
-            alt='Craftsman working on vehicle bodywork'
-            fill
-            className='object-cover'
-          />
+          <dl className='grid grid-cols-2 gap-4'>
+            {[stat1, stat2].map((stat, index) => (
+              <div key={index} className={`${CARD} flex flex-col-reverse justify-end gap-2 p-5 sm:p-6`}>
+                <dt className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.88px] text-[#a1a1a1] uppercase'>
+                  {stat.label}
+                </dt>
+                <dd
+                  className={`font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] sm:text-[40px] sm:leading-[46px] ${index === 0 ? 'text-[#dc2626]' : 'text-white'}`}
+                >
+                  {stat.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <div className='relative mx-2 -mt-10 flex flex-col gap-4 rounded-xl bg-[#2a2a2a]/40 p-5 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),0px_8px_10px_-6px_rgba(0,0,0,0.1)] backdrop-blur-md sm:mx-8 sm:-mt-20 sm:p-8'>
-          <Image src='/assets/marketing/icon-quote.svg' alt='' width={30} height={32} className='h-7 w-auto sm:h-8' />
-          <p className='text-sm leading-relaxed text-neutral-300 italic sm:text-base sm:leading-6'>
-            &quot;{quote}&quot;
-          </p>
+        <div className='flex flex-col lg:col-span-6 lg:col-start-7'>
+          <div className='relative h-[280px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[400px] lg:h-[500px]'>
+            <Image
+              src={imagePublicId ? cldUrl(imagePublicId, { width: 1200 }) : ABOUT_FALLBACK_IMAGES.heritage}
+              alt='Craftsman working on vehicle bodywork'
+              fill
+              sizes='(min-width: 1024px) 600px, 100vw'
+              className='object-cover'
+            />
+          </div>
+
+          <figure className='relative mx-3 -mt-10 flex flex-col gap-4 rounded-2xl border border-[#2a2a30] bg-[#1b1b20]/90 p-6 backdrop-blur-md sm:mx-8 sm:-mt-16 sm:p-7'>
+            <span className='flex size-11 items-center justify-center rounded-xl bg-white'>
+              <Quote aria-hidden className='size-5 fill-[#dc2626] text-[#dc2626]' />
+            </span>
+            <blockquote className='font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#c6c6c6] italic'>
+              &ldquo;{quote}&rdquo;
+            </blockquote>
+          </figure>
         </div>
       </div>
     </section>

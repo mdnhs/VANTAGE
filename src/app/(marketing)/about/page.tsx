@@ -5,6 +5,7 @@ import { TeamSection } from '@/components/marketing/team-section';
 import { StandardsSection } from '@/components/marketing/standards-section';
 import { resolveAboutContent } from '@/features/about-page/defaults';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { PageAnimations } from '@/components/marketing/page-animations';
 
 export const metadata: Metadata = {
   title: 'About',
@@ -44,6 +45,7 @@ export default async function AboutPage() {
           imagePublicId={content.standardsImagePublicId}
           items={content.standardsItems}
         />
+        <PageAnimations />
       </main>
     </>
   );

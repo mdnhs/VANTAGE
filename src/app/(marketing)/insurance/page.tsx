@@ -7,6 +7,8 @@ import { PartnerLogosStrip } from '@/components/marketing/partner-logos-strip';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
+import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
+import { PageAnimations } from '@/components/marketing/page-animations';
 
 export const metadata: Metadata = {
   title: 'Insurance Support',
@@ -40,11 +42,14 @@ export default async function InsurancePage() {
         />
         <ProcessTimeline eyebrow={content.stepsEyebrow} title={content.stepsTitle} steps={content.steps} />
         <InsuranceCta line1={content.ctaLine1} accent={content.ctaAccent} subtext={content.ctaSubtext} />
-        <div className='container mx-auto bg-[#131313] px-4 py-8 sm:px-6 md:px-12'>
-          <p className='mx-auto max-w-[896px] text-center text-[10px] leading-[15px] tracking-[1px] text-neutral-500 uppercase'>
-            {content.disclaimer}
-          </p>
-        </div>
+        <section className={SECTION_BG.raised}>
+          <div className={`${SECTION_CONTAINER} pb-12 sm:pb-16`}>
+            <p className='mx-auto max-w-[896px] border-t border-[#232328] pt-8 text-center font-[family-name:var(--font-inter)] text-[10px] leading-[16px] tracking-[0.4px] text-[#737373] uppercase'>
+              {content.disclaimer}
+            </p>
+          </div>
+        </section>
+        <PageAnimations />
       </main>
     </>
   );
