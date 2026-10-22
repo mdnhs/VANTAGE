@@ -1,5 +1,6 @@
 import type { FieldOverrides } from '@/components/admin/schema-form/to-fields';
 import type { EditableGlobalKey } from '@/lib/content/global-access';
+import { SEO_PAGE_FIELD_UI } from '@/features/seo/seo-field-ui';
 import { MARKETING_FIELD_UI } from '@/features/marketing/marketing-field-ui';
 
 // Admin labels and hints per global, as SchemaForm overrides keyed by dotted
@@ -86,6 +87,20 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     defaultOgImage: { label: 'Default share image' },
     twitterHandle: { label: 'X / Twitter handle' },
+    'verification.google': { label: 'Google Search Console code' },
+    'verification.bing': { label: 'Bing Webmaster code' },
+    business: { label: 'Business details (structured data)' },
+    'business.type': {
+      label: 'Business type',
+      widget: 'select',
+      options: [
+        { value: 'AutoBodyShop', label: 'Auto body shop' },
+        { value: 'AutoRepair', label: 'Auto repair' },
+        { value: 'LocalBusiness', label: 'Local business' },
+      ],
+    },
+    'business.priceRange': { label: 'Price range', placeholder: '€€' },
+    'business.sameAs': { label: 'Other profiles' },
   },
   privacy: {
     enquiryRetentionMonths: {
@@ -182,4 +197,5 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     title: { label: 'Title', description: '"{count}" is replaced with the number of enabled steps.' },
   },
   ...MARKETING_FIELD_UI,
+  ...SEO_PAGE_FIELD_UI,
 };

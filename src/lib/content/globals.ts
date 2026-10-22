@@ -1,6 +1,7 @@
 import * as z from 'zod';
 
 import { imageRefSchema, videoRefSchema } from './image-ref';
+import { SEO_PAGE_GLOBALS, SEO_PAGE_KEYS } from './globals-seo';
 import { MARKETING_GLOBALS, MARKETING_PUBLIC_KEYS } from './globals-marketing';
 
 // One zod schema per versioned global (a row of the `settings` table). Every
@@ -345,6 +346,13 @@ export const PrivacyGlobal = z.object({
   spamRetentionDays: z.number().int().min(1).max(365).default(30),
 });
 
+const SeoToken = z
+  .string()
+  .trim()
+  .max(100)
+  .regex(/^[A-Za-z0-9_-]*$/, 'Paste only the code, not the whole tag')
+  .default('');
+
 export const SeoGlobal = z.object({
   titleTemplate: z
     .string()
@@ -357,6 +365,21 @@ export const SeoGlobal = z.object({
   defaultOgImage: image(),
   twitterHandle: s(50),
   robots: z.enum(['index', 'noindex']).default('index'),
+  // Site-ownership codes: the code only, never the whole <meta> tag.
+  verification: z
+    .object({
+      google: SeoToken,
+      bing: SeoToken,
+    })
+    .prefault({}),
+  // Feeds the business JSON-LD on the home page.
+  business: z
+    .object({
+      type: z.enum(['AutoBodyShop', 'AutoRepair', 'LocalBusiness']).default('AutoBodyShop'),
+      priceRange: s(10),
+      sameAs: z.array(HttpsUrl).max(10).default([]),
+    })
+    .prefault({}),
 });
 
 // ------------------------------------------------------------ website pages
@@ -609,6 +632,7 @@ export const GLOBALS = {
   'page.about': AboutPageGlobal,
   'page.process': ProcessPageGlobal,
   ...MARKETING_GLOBALS,
+  ...SEO_PAGE_GLOBALS,
 } as const;
 
 export type GlobalKey = keyof typeof GLOBALS;
@@ -632,6 +656,7 @@ export const PUBLIC_GLOBAL_KEYS = [
   'page.about',
   'page.process',
   ...MARKETING_PUBLIC_KEYS,
+  ...SEO_PAGE_KEYS,
 ] as const satisfies readonly GlobalKey[];
 export type PublicGlobalKey = (typeof PUBLIC_GLOBAL_KEYS)[number];
 
