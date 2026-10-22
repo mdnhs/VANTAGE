@@ -433,3 +433,24 @@ describe('View-as sessions', () => {
     expect(await idOf(target.email)).toBe(target.id);
   });
 });
+
+describe('customer accounts (role user) are not managed here', () => {
+  it('set-role, ban, delete, resend-invite and impersonate each 404 and leave the row unchanged', async () => {
+    const owner = await actor('owner');
+    const customer = await createTestUser('user');
+    const attempts: Array<[string, string, unknown?]> = [
+      ['PATCH', `/admin/users/${customer.id}/role`, { roles: ['admin'] }],
+      ['POST', `/admin/users/${customer.id}/ban`, {}],
+      ['DELETE', `/admin/users/${customer.id}`],
+      ['POST', `/admin/users/${customer.id}/resend-invite`],
+      ['POST', `/admin/users/${customer.id}/impersonate`],
+    ];
+    for (const [method, path, body] of attempts) {
+      const res = await call(path, owner.cookie, { method, body });
+      expect(res.status, `${method} ${path}`).toBe(404);
+    }
+    const [row] = await db.select().from(users).where(eq(users.id, customer.id));
+    expect(row).toMatchObject({ role: 'user', banned: false });
+    expect(await sessionsOf(customer.id)).toHaveLength(0);
+  });
+});

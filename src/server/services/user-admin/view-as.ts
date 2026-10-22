@@ -6,13 +6,14 @@ import { getAuth } from '@/server/lib/auth';
 import { isBanned } from '@/server/lib/auth/fresh-session';
 import { viewAsRefusal } from '@/server/lib/auth/view-as-limit';
 
-import { loadTarget } from './manage';
+import { loadTarget, NO_ACCOUNT } from './manage';
 
 // Our guard first (owners, self, banned), then Better Auth's own impersonate /
 // impersonate-admins check, then its cookies go back to the browser. The start
 // is audited by databaseHooks.session.create (auth.ts).
 export async function startViewAs(actor: Actor, id: string, headers: Headers) {
   const target = await loadTarget(id);
+  if (target.roles.length === 0) throw ApiError.notFound(NO_ACCOUNT);
   const why = viewAsRefusal(actor, target);
   if (why) throw ApiError.forbidden(why);
   if (isBanned(target)) throw ApiError.conflict('Unban them before viewing as them');

@@ -53,6 +53,9 @@ const lastSession = sql<Date | null>`(select max(s.updated_at) from ${sessions} 
 const lastSignIn = sql<Date | null>`(select max(a.created_at) from ${auditLogs} a where a.entity_type = 'user' and a.entity_id = ${userId} and a.action = 'auth.sign_in')`;
 const pending = sql<boolean>`not exists (select 1 from ${accounts} ac where ac.user_id = ${userId} and ac.provider_id = 'credential')`;
 
+// Customers (role `user`) have no admin role: these tools don't see them.
+export const NO_ACCOUNT = 'That person no longer has an account';
+
 const escapeLike = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 const iso = (d: Date | string | null) => (d ? new Date(d).toISOString() : null);
@@ -186,7 +189,7 @@ export async function underAccessLock<T>(
     if (!me || isBanned(me) || !hasPermission(me.roles, permission)) {
       throw ApiError.forbidden("You don't have permission to do that");
     }
-    if (!target) throw ApiError.notFound('That person no longer has an account');
+    if (!target || target.roles.length === 0) throw ApiError.notFound(NO_ACCOUNT);
     const why = refusal({ userId: me.id, roles: me.roles }, target, action, nextRoles);
     if (why) throw ApiError.forbidden(why);
     if (losesOwner(target, action, nextRoles) && (await activeOwnersExcept(tx, id)) === 0) {
@@ -314,6 +317,7 @@ export async function deleteUser(actor: Actor, id: string) {
 // Without SMTP the new set-password link comes back as `manualLink`.
 export async function resendInvite(actor: Actor, id: string) {
   const target = await loadTarget(id);
+  if (target.roles.length === 0) throw ApiError.notFound(NO_ACCOUNT);
   const why = refusal(actor, target, 'resend');
   if (why) throw ApiError.forbidden(why);
   const { invitePending } = await getUser(id);
