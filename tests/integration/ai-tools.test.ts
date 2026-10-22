@@ -186,14 +186,7 @@ describe('enquiry data', () => {
       expect(sharedJson).not.toContain(secret);
     }
     const contactRecent = (await contactStats(owner, on, '30d')).recent as Record<string, unknown>[];
-    expect(Object.keys(contactRecent[0]!).sort()).toEqual([
-      'createdAt',
-      'firstName',
-      'id',
-      'message',
-      'service',
-      'status',
-    ]);
+    expect(Object.keys(contactRecent[0]!).sort()).toEqual(['createdAt', 'firstName', 'message', 'service', 'status']);
   });
 
   it('shows details only with the opt-in and the read permission', async () => {
