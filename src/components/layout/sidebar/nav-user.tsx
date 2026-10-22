@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { ChevronsUpDownIcon, LogOutIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,8 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
-import { useLogout } from '@/features/auth/hooks/use-logout';
-import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { useSignOut } from '@/features/auth/hooks/use-sign-out';
 
 interface NavUserProps {
   user: {
@@ -37,17 +35,7 @@ const initials = (name: string) =>
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
-  const router = useRouter();
-  const logout = useLogout();
-
-  const handleLogout = () => {
-    logout.mutate(undefined, {
-      onSuccess: () => {
-        router.push(APP_ROUTES.auth.login);
-        router.refresh();
-      },
-    });
-  };
+  const { signOut, pending, error } = useSignOut();
 
   return (
     <SidebarMenu>
@@ -105,9 +93,9 @@ export function NavUser({ user }: NavUserProps) {
               </DropdownMenuRadioGroup>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} disabled={logout.isPending}>
+            <DropdownMenuItem onClick={signOut} disabled={pending}>
               <LogOutIcon />
-              {logout.isPending ? 'Logging out…' : 'Log out'}
+              {pending ? 'Logging out…' : (error ?? 'Log out')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

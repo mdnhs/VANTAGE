@@ -1,6 +1,10 @@
 export const APP_ROUTES = {
   auth: {
     login: '/login',
+    forgotPassword: '/forgot-password',
+    resetPassword: '/reset-password',
+    twoFactor: '/two-factor',
+    twoFactorSetup: '/two-factor-setup',
   },
   dashboard: {
     index: '/dashboard',

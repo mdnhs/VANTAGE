@@ -2,8 +2,6 @@
 // the Hono app in src/server/api. Keep them in sync with the `.route()` chain there.
 export const API_ROUTES = {
   auth: {
-    login: '/auth/login',
-    logout: '/auth/logout',
     me: '/auth/me',
   },
   health: '/health',
