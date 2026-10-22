@@ -1,0 +1,97 @@
+'use client';
+
+import { useState } from 'react';
+
+import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { describeIssue, fixAll, fixIssue, pairRatings, tokenLabel } from '@/lib/theme/checks';
+import type { ThemeConfigValue } from '@/lib/theme/schema';
+import { cn } from '@/lib/utils';
+
+const BADGE = { AAA: 'AAA', AA: 'AA', fail: 'Fails' } as const;
+const MODE = { site: '', 'admin-light': 'Light · ', 'admin-dark': 'Dark · ' };
+
+export function ContrastPanel({
+  config,
+  scope,
+  onChange,
+}: {
+  config: ThemeConfigValue;
+  scope: 'site' | 'admin';
+  onChange(config: ThemeConfigValue): void;
+}) {
+  // "Stuck" marks belong to the config they were found against.
+  const [stuckState, setStuck] = useState<{ at: string; keys: string[] }>({ at: '', keys: [] });
+  const snapshot = JSON.stringify(config);
+  const stuck = stuckState.at === snapshot ? stuckState.keys : [];
+  const rows = pairRatings(config).filter((r) => (scope === 'site' ? r.scope === 'site' : r.scope !== 'site'));
+  const failing = rows.filter((r) => r.rating === 'fail').length;
+  const key = (r: (typeof rows)[number]) => `${r.scope}:${r.text}:${r.surface}`;
+
+  return (
+    <DashboardCard
+      title='Contrast'
+      action={
+        <Button
+          type='button'
+          variant='outline'
+          disabled={failing === 0}
+          onClick={() => {
+            // Repair only this tab's scope; the other keeps its colours.
+            const fixed = fixAll(config).config;
+            onChange(scope === 'site' ? { ...config, site: fixed.site } : { ...config, admin: fixed.admin });
+          }}
+        >
+          Fix all
+        </Button>
+      }
+    >
+      <ul className='flex flex-col divide-y'>
+        {rows.map((row) => {
+          const failed = row.rating === 'fail';
+          return (
+            <li key={key(row)} className='flex flex-col gap-1 py-2 text-sm'>
+              <div className='flex items-center justify-between gap-3'>
+                <span>
+                  {MODE[row.scope]}
+                  {tokenLabel(row.scope, row.text)} on {tokenLabel(row.scope, row.surface)}
+                </span>
+                <span className='flex shrink-0 items-center gap-2'>
+                  <span className='tabular-nums'>{row.ratio.toFixed(2)}</span>
+                  <Badge
+                    variant={failed ? 'destructive' : 'secondary'}
+                    className={cn(!failed && 'bg-success-soft text-success')}
+                  >
+                    {BADGE[row.rating]}
+                  </Badge>
+                </span>
+              </div>
+              {failed ? (
+                <div className='flex flex-wrap items-center justify-between gap-2 text-danger'>
+                  <p>{describeIssue(row)}</p>
+                  {stuck.includes(key(row)) ? (
+                    <span className='text-muted-foreground'>Pick a different colour</span>
+                  ) : (
+                    <Button
+                      type='button'
+                      size='sm'
+                      variant='outline'
+                      onClick={() => {
+                        const next = fixIssue(config, row);
+                        if (next) onChange(next);
+                        else setStuck({ at: snapshot, keys: [...stuck, key(row)] });
+                      }}
+                    >
+                      Fix automatically
+                    </Button>
+                  )}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </DashboardCard>
+  );
+}

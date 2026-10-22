@@ -211,7 +211,7 @@ export const NAV: readonly NavItem[] = [
     label: 'Appearance',
     href: '/dashboard/appearance',
     permission: { appearance: ['read'] },
-    keywords: ['theme', 'colours', 'colors', 'brand', 'logo'],
+    keywords: ['theme', 'colours', 'colors', 'brand', 'logo', 'fonts', 'dark mode'],
   },
   {
     id: 'settings',
