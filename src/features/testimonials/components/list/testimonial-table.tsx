@@ -1,5 +1,7 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Star, Trash2 } from 'lucide-react';
@@ -36,13 +38,14 @@ function RatingStars({ rating }: { rating: number }) {
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function StatusToggle({ testimonial }: { testimonial: Testimonial }) {
+  const authorOnly = useAuthorOnly();
   const toggleStatus = useToggleTestimonialStatus(testimonial.id);
   const isPublished = testimonial.status === 'published';
   return (
     <div className='flex items-center gap-2'>
       <Switch
         checked={isPublished}
-        disabled={toggleStatus.isPending}
+        disabled={authorOnly || toggleStatus.isPending}
         onCheckedChange={(checked) => toggleStatus.mutate(checked ? 'published' : 'hidden')}
         aria-label={`${isPublished ? 'Hide' : 'Publish'} ${testimonial.customerName}`}
       />
@@ -54,6 +57,7 @@ function StatusToggle({ testimonial }: { testimonial: Testimonial }) {
 }
 
 function FeaturedToggle({ testimonial }: { testimonial: Testimonial }) {
+  const authorOnly = useAuthorOnly();
   const updateTestimonial = useUpdateTestimonial(testimonial.id);
   return (
     <Button
@@ -61,7 +65,7 @@ function FeaturedToggle({ testimonial }: { testimonial: Testimonial }) {
       variant='ghost'
       size='icon'
       className={cn('size-8', testimonial.isFeatured ? 'text-amber-500' : 'text-muted-foreground')}
-      disabled={updateTestimonial.isPending}
+      disabled={authorOnly || updateTestimonial.isPending}
       onClick={() => updateTestimonial.mutate({ isFeatured: !testimonial.isFeatured })}
       aria-label={testimonial.isFeatured ? 'Unfeature' : 'Feature on homepage'}
     >
@@ -71,6 +75,8 @@ function FeaturedToggle({ testimonial }: { testimonial: Testimonial }) {
 }
 
 export function TestimonialTable({ initialData }: TestimonialTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useTestimonialList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteTestimonial = useDeleteTestimonial();
@@ -118,7 +124,7 @@ export function TestimonialTable({ initialData }: TestimonialTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderTestimonials.isPending}
+                    disabled={authorOnly || index === 0 || reorderTestimonials.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -129,7 +135,7 @@ export function TestimonialTable({ initialData }: TestimonialTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderTestimonials.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderTestimonials.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -150,28 +156,32 @@ export function TestimonialTable({ initialData }: TestimonialTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.testimonials.edit(testimonial.id)}
-                    aria-label={`Edit ${testimonial.customerName}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === testimonial.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${testimonial.customerName}"? This cannot be undone.`)) {
-                        handleDelete(testimonial.id);
-                      }
-                    }}
-                    aria-label={`Delete ${testimonial.customerName}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.testimonials.edit(testimonial.id)}
+                      aria-label={`Edit ${testimonial.customerName}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === testimonial.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${testimonial.customerName}"? This cannot be undone.`)) {
+                          handleDelete(testimonial.id);
+                        }
+                      }}
+                      aria-label={`Delete ${testimonial.customerName}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

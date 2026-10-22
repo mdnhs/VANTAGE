@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepagePillarService } from '@/server/services/homepage-pillar-service';
 import {
@@ -46,6 +47,7 @@ export const homepagePillars = new Hono<AppEnv>()
     zValidator('json', createHomepagePillarSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'create' });
       const row = await homepagePillarService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -63,6 +65,7 @@ export const homepagePillars = new Hono<AppEnv>()
     zValidator('json', reorderHomepagePillarsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'reorder' });
       await homepagePillarService.reorder(input);
       return ok(c, { success: true });
     },
@@ -83,6 +86,7 @@ export const homepagePillars = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'update' });
       const row = await homepagePillarService.update(id, input);
       if (!row) throw ApiError.notFound('Homepage pillar not found');
       return ok(c, row);

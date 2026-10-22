@@ -1,4 +1,5 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { ApiError } from '@/server/lib/errors';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
@@ -90,7 +91,7 @@ export const projectRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateProjectInput) {
+  async create(data: CreateProjectInput & { createdBy?: string }) {
     const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [inserted] = await tx.insert(projects).values(rest).returning();
@@ -100,14 +101,21 @@ export const projectRepository = {
     return projectRepository.byId(row.id);
   },
 
-  async update(id: string, data: UpdateProjectInput) {
+  // `guard` pins the write to the author's own draft inside the same statement, so a
+  // concurrent publish or reassignment cannot slip between the service's read and this write.
+  async update(id: string, data: UpdateProjectInput, guard?: { ownerId: string }) {
     const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [updated] = await tx
         .update(projects)
         .set({ ...rest, updatedAt: new Date() })
-        .where(eq(projects.id, id))
+        .where(
+          guard
+            ? and(eq(projects.id, id), eq(projects.createdBy, guard.ownerId), eq(projects.status, 'draft'))
+            : eq(projects.id, id),
+        )
         .returning();
+      if (!updated && guard) throw ApiError.forbidden('Authors can only add and edit their own draft projects.');
       if (updated && galleryMediaIds !== undefined) await replaceGalleryImages(tx, id, galleryMediaIds);
       return updated;
     });

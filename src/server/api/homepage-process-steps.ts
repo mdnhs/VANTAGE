@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import {
@@ -55,6 +56,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
     zValidator('json', createHomepageProcessStepSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'create' });
       const row = await homepageProcessStepService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -72,6 +74,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
     zValidator('json', reorderHomepageProcessStepsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'reorder' });
       await homepageProcessStepService.reorder(input);
       return ok(c, { success: true });
     },
@@ -92,6 +95,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'update' });
       const row = await homepageProcessStepService.update(id, input);
       if (!row) throw ApiError.notFound('Homepage process step not found');
       return ok(c, row);

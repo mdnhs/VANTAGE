@@ -1,5 +1,7 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Check, Pencil, Trash2 } from 'lucide-react';
@@ -21,11 +23,12 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function EnabledToggle({ step }: { step: HomepageProcessStep }) {
+  const authorOnly = useAuthorOnly();
   const updateHomepageProcessStep = useUpdateHomepageProcessStep(step.id);
   return (
     <Switch
       checked={step.isEnabled}
-      disabled={updateHomepageProcessStep.isPending}
+      disabled={authorOnly || updateHomepageProcessStep.isPending}
       onCheckedChange={(checked) => updateHomepageProcessStep.mutate({ isEnabled: checked })}
       aria-label={`${step.isEnabled ? 'Disable' : 'Enable'} ${step.title}`}
     />
@@ -33,6 +36,8 @@ function EnabledToggle({ step }: { step: HomepageProcessStep }) {
 }
 
 export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useHomepageProcessStepList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageProcessStep = useDeleteHomepageProcessStep();
@@ -82,7 +87,7 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderHomepageProcessSteps.isPending}
+                    disabled={authorOnly || index === 0 || reorderHomepageProcessSteps.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -93,7 +98,7 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderHomepageProcessSteps.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderHomepageProcessSteps.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -111,28 +116,32 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.homepageProcessSteps.edit(step.id)}
-                    aria-label={`Edit ${step.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === step.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${step.title}"? This cannot be undone.`)) {
-                        handleDelete(step.id);
-                      }
-                    }}
-                    aria-label={`Delete ${step.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.homepageProcessSteps.edit(step.id)}
+                      aria-label={`Edit ${step.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === step.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${step.title}"? This cannot be undone.`)) {
+                          handleDelete(step.id);
+                        }
+                      }}
+                      aria-label={`Delete ${step.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

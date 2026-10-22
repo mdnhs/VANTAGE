@@ -1,3 +1,4 @@
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,9 +13,11 @@ export function PartnerLogosPanel({ initialData }: { initialData: { data: Partne
         <p className='text-sm text-muted-foreground'>
           Insurance and partner company logos shown on the homepage and insurance page, in display order.
         </p>
-        <Link href={APP_ROUTES.content.partnerLogos.create} className={cn(buttonVariants())}>
-          Add logo
-        </Link>
+        <HideForAuthorOnly>
+          <Link href={APP_ROUTES.content.partnerLogos.create} className={cn(buttonVariants())}>
+            Add logo
+          </Link>
+        </HideForAuthorOnly>
       </div>
       <PartnerLogoTable initialData={initialData} />
     </div>

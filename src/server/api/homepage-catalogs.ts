@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import {
@@ -49,6 +50,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
     zValidator('json', createHomepageCatalogSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'catalog', action: 'create' });
       const row = await homepageCatalogService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -66,6 +68,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
     zValidator('json', reorderHomepageCatalogsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'catalog', action: 'reorder' });
       await homepageCatalogService.reorder(input);
       return ok(c, { success: true });
     },
@@ -86,6 +89,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'catalog', action: 'update' });
       const row = await homepageCatalogService.update(id, input);
       if (!row) throw ApiError.notFound('Homepage catalog item not found');
       return ok(c, row);

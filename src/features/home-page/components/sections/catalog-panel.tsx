@@ -1,5 +1,6 @@
 'use client';
 
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,9 +25,11 @@ export function CatalogPanel({ catalogItems }: CatalogPanelProps) {
             Page copy.
           </p>
         </div>
-        <Link href={APP_ROUTES.content.homepageCatalogs.create} className={cn(buttonVariants())}>
-          Add catalog item
-        </Link>
+        <HideForAuthorOnly>
+          <Link href={APP_ROUTES.content.homepageCatalogs.create} className={cn(buttonVariants())}>
+            Add catalog item
+          </Link>
+        </HideForAuthorOnly>
       </div>
 
       <HomepageCatalogTable initialData={catalogItems} />

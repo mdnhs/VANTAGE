@@ -110,7 +110,10 @@ describe('admin API role matrix', () => {
         const allowed = GRANTED[role].includes(e.key);
         it(`${e.method} ${e.path} -> ${allowed ? 'allowed' : '403'}`, async () => {
           const res = await call(e, cookies[role]);
-          if (allowed) {
+          if (role === 'author' && e.path.startsWith('/testimonials')) {
+            // Authors write only their own draft projects; the ownership check follows the guard.
+            expect(res.status).toBe(403);
+          } else if (allowed) {
             // Passed the guard: validation / not-found / 2xx, never auth errors.
             expect([401, 403]).not.toContain(res.status);
             expect(res.status).toBeLessThan(500);

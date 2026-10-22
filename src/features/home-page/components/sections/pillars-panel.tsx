@@ -1,3 +1,4 @@
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,9 +13,11 @@ export function PillarsPanel({ initialData }: { initialData: { data: HomepagePil
         <p className='text-sm text-muted-foreground'>
           The 4 feature-pillar cards shown on the homepage, in display order.
         </p>
-        <Link href={APP_ROUTES.content.homepagePillars.create} className={cn(buttonVariants())}>
-          Add pillar
-        </Link>
+        <HideForAuthorOnly>
+          <Link href={APP_ROUTES.content.homepagePillars.create} className={cn(buttonVariants())}>
+            Add pillar
+          </Link>
+        </HideForAuthorOnly>
       </div>
       <HomepagePillarTable initialData={initialData} />
     </div>

@@ -6,6 +6,7 @@ import type { ProjectWithGallery } from '../types';
 import { ProjectForm } from './project-form';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('@/contexts/actor-provider', () => ({ useActor: () => ({ roles: ['editor'] }) }));
 vi.mock('@/features/media/components/media-field', () => ({
   MediaField: ({ label, value, onChange }: { label: string; value: unknown; onChange(v: unknown): void }) => (
     <div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { useRouter } from 'next/navigation';
 import { HomepageProcessStepForm } from '../homepage-process-step-form';
 import { useUpdateHomepageProcessStep } from '../../hooks/api/mutation/use-update-homepage-process-step';
@@ -12,7 +13,10 @@ interface EditHomepageProcessStepFormProps {
 
 export function EditHomepageProcessStepForm({ step }: EditHomepageProcessStepFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updateHomepageProcessStep = useUpdateHomepageProcessStep(step.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.homepageProcessSteps.index} />;
 
   return (
     <HomepageProcessStepForm

@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { testimonialService } from '@/server/services/testimonial-service';
 import {
@@ -53,6 +54,7 @@ export const testimonials = new Hono<AppEnv>()
     zValidator('json', createTestimonialSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'create' });
       const row = await testimonialService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -66,6 +68,7 @@ export const testimonials = new Hono<AppEnv>()
     zValidator('json', reorderTestimonialsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'reorder' });
       await testimonialService.reorder(input);
       return ok(c, { success: true });
     },
@@ -87,6 +90,7 @@ export const testimonials = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'update' });
       const row = await testimonialService.updateStatus(id, input);
       if (!row) throw ApiError.notFound('Testimonial not found');
       return ok(c, row);
@@ -109,6 +113,7 @@ export const testimonials = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'update' });
       const row = await testimonialService.update(id, input);
       if (!row) throw ApiError.notFound('Testimonial not found');
       return ok(c, row);

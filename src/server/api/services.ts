@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { serviceService } from '@/server/services/service-service';
 import {
@@ -46,6 +47,7 @@ export const services = new Hono<AppEnv>()
     zValidator('json', createServiceSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'service', action: 'create' });
       const row = await serviceService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -59,6 +61,7 @@ export const services = new Hono<AppEnv>()
     zValidator('json', reorderServicesSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'service', action: 'reorder' });
       await serviceService.reorder(input);
       return ok(c, { success: true });
     },
@@ -79,6 +82,7 @@ export const services = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'service', action: 'update' });
       const row = await serviceService.update(id, input);
       if (!row) throw ApiError.notFound('Service not found');
       return ok(c, row);

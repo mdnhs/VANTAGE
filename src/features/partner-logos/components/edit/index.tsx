@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { MediaApiError } from '@/features/media/services/api';
 
 import { useRouter } from 'next/navigation';
@@ -14,7 +15,10 @@ interface EditPartnerLogoFormProps {
 
 export function EditPartnerLogoForm({ partnerLogo }: EditPartnerLogoFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.partnerLogos.index} />;
 
   return (
     <PartnerLogoForm

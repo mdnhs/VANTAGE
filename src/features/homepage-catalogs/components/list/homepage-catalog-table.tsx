@@ -1,5 +1,7 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -22,11 +24,12 @@ interface HomepageCatalogTableProps {
 const FILTERS = { page: 1, limit: 50 };
 
 function EnabledToggle({ item }: { item: HomepageCatalog }) {
+  const authorOnly = useAuthorOnly();
   const updateHomepageCatalog = useUpdateHomepageCatalog(item.id);
   return (
     <Switch
       checked={item.isEnabled}
-      disabled={updateHomepageCatalog.isPending}
+      disabled={authorOnly || updateHomepageCatalog.isPending}
       onCheckedChange={(checked) => updateHomepageCatalog.mutate({ isEnabled: checked })}
       aria-label={`${item.isEnabled ? 'Disable' : 'Enable'} ${item.title}`}
     />
@@ -34,6 +37,8 @@ function EnabledToggle({ item }: { item: HomepageCatalog }) {
 }
 
 export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useHomepageCatalogList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageCatalog = useDeleteHomepageCatalog();
@@ -86,7 +91,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderHomepageCatalogs.isPending}
+                    disabled={authorOnly || index === 0 || reorderHomepageCatalogs.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -97,7 +102,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderHomepageCatalogs.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderHomepageCatalogs.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -136,28 +141,32 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
-                    aria-label={`Edit ${item.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === item.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
-                        handleDelete(item.id);
-                      }
-                    }}
-                    aria-label={`Delete ${item.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
+                      aria-label={`Edit ${item.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === item.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
+                          handleDelete(item.id);
+                        }
+                      }}
+                      aria-label={`Delete ${item.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>
