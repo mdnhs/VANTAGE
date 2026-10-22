@@ -3,6 +3,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(path.join(__dirname, 'admin.css'), 'utf8');
+// Tailwind roots at globals.css: theme variables and utilities must be declared there.
+const globals = readFileSync(path.join(__dirname, '../../../globals.css'), 'utf8');
 
 const SCOPE = ':root:has([data-admin-root])';
 
@@ -46,24 +48,24 @@ const TOKENS = [
 function ruleBlocks(source: string) {
   const blocks: Array<[string, string]> = [];
   const re = /(^|\n)([^@\n{}][^{}]*)\{([^{}]*)\}/g;
-  for (const m of source.matchAll(re)) blocks.push([m[2].trim(), m[3]]);
+  for (const m of source.replace(/\/\*[^]*?\*\//g, '').matchAll(re)) blocks.push([m[2].trim(), m[3]]);
   return blocks;
 }
 
 describe('admin.css', () => {
   it('defines the type scale and card radius as @theme tokens', () => {
-    for (const t of ['--text-title', '--text-card-title', '--text-kpi']) expect(css).toContain(`${t}:`);
-    expect(css).toMatch(/--radius-card:\s*1\.375rem/);
+    for (const t of ['--text-title', '--text-card-title', '--text-kpi']) expect(globals).toContain(`${t}:`);
+    expect(globals).toMatch(/--radius-card:\s*1\.375rem/);
   });
 
   it('maps the status colours and skeleton into the Tailwind palette', () => {
     for (const c of ['success', 'success-soft', 'warning', 'warning-soft', 'danger', 'danger-soft', 'skeleton']) {
-      expect(css).toContain(`--color-${c}: var(--${c})`);
+      expect(globals).toContain(`--color-${c}: var(--${c})`);
     }
   });
 
   it('declares the bg-hero, bg-promo and bg-hatch utilities', () => {
-    for (const u of ['bg-hero', 'bg-promo', 'bg-hatch']) expect(css).toContain(`@utility ${u}`);
+    for (const u of ['bg-hero', 'bg-promo', 'bg-hatch']) expect(globals).toContain(`@utility ${u}`);
   });
 
   it('defines every colour token in a light and a dark block', () => {
