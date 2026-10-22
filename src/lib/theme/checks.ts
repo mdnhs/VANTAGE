@@ -27,6 +27,7 @@ export const SITE_PAIRS: [SiteToken | 'on-brand', SiteToken | 'surface', Min][] 
   ['on-brand', 'brand-hover', 4.5],
   ['brand', 'surface', 3],
   ['brand-soft', 'surface', 4.5],
+  ['brand-mid', 'surface', 4.5],
 ];
 
 // MK's pairs, except primary on sidebar needs 3 (Ruling 5): VANTAGE red

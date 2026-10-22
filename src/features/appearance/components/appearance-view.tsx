@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { ConflictDialog } from '@/components/admin/autosave/conflict-dialog';
@@ -28,7 +28,7 @@ import { usePublishTheme } from '../hooks/api/mutation/use-publish-theme';
 import { useResetTheme } from '../hooks/api/mutation/use-reset-theme';
 import { useRestoreTheme } from '../hooks/api/mutation/use-restore-theme';
 import { useTheme } from '../hooks/api/query/use-theme';
-import { previewHref, saveThemeDraft } from '../services/api';
+import { exitPreviewHref, previewHref, saveThemeDraft } from '../services/api';
 import type { ThemeAdminDoc } from '../types';
 import { themeKeys } from '../utils/query-keys';
 import { AdminControls } from './admin-controls';
@@ -53,6 +53,30 @@ export function AppearanceView({
   const query = useTheme();
   const [generation, setGeneration] = useState(0);
   const { refetch } = query;
+  // Preview on site leaves the draft-mode cookie on purpose; any other way out of
+  // Appearance ends draft mode, so the public site stops showing the draft.
+  // Never reset: the opened tab keeps relying on the cookie for as long as this
+  // mount lives, so once any preview was opened, leaving must not end draft mode.
+  const openedPreview = useRef(false);
+  const markPreviewed = useCallback(() => {
+    openedPreview.current = true;
+  }, []);
+  useEffect(() => {
+    const exitDraftOnLeave = (event?: PageTransitionEvent) => {
+      // A persisted pagehide goes into the back/forward cache and may come back.
+      if (event?.persisted || openedPreview.current) return;
+      void fetch(decodeURIComponent(exitPreviewHref('/')), {
+        keepalive: true,
+        redirect: 'manual',
+        credentials: 'same-origin',
+      }).catch(() => undefined);
+    };
+    window.addEventListener('pagehide', exitDraftOnLeave);
+    return () => {
+      window.removeEventListener('pagehide', exitDraftOnLeave);
+      exitDraftOnLeave();
+    };
+  }, []);
   const reload = useCallback(async () => {
     await refetch();
     setGeneration((g) => g + 1);
@@ -68,7 +92,7 @@ export function AppearanceView({
       </div>
     );
   }
-  return <Editor key={generation} doc={query.data} reload={reload} delay={autosaveDelay} />;
+  return <Editor key={generation} doc={query.data} reload={reload} delay={autosaveDelay} onPreview={markPreviewed} />;
 }
 
 function statusText(state: AutosaveState, hasDraft: boolean) {
@@ -88,7 +112,17 @@ function statusText(state: AutosaveState, hasDraft: boolean) {
   }
 }
 
-function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<void>; delay?: number }) {
+function Editor({
+  doc,
+  reload,
+  delay,
+  onPreview,
+}: {
+  doc: ThemeAdminDoc;
+  reload(): Promise<void>;
+  delay?: number;
+  onPreview(): void;
+}) {
   const queryClient = useQueryClient();
   const router = useRouter();
   // View-as is read-only: the API refuses it, so the controls do not offer it.
@@ -196,6 +230,7 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
 
   // A full navigation (the endpoint sets the draft-mode cookie and redirects).
   const previewOnSite = async () => {
+    onPreview();
     await autosave.flush();
     window.open(previewHref('/'), '_blank', 'noopener');
   };
@@ -276,7 +311,7 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
               <SiteControls draft={draft} update={update} />
               <ContrastPanel config={draft} scope='site' onChange={update} />
             </fieldset>
-            <SitePreviewPane path='/' refreshKey={previewKey} />
+            <SitePreviewPane path='/' refreshKey={previewKey} onPreview={onPreview} />
           </div>
         </TabsContent>
         <TabsContent value='admin' className='pt-2'>

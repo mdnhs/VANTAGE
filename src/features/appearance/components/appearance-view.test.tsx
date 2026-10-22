@@ -112,6 +112,61 @@ function renderView() {
 const themeGets = () => calls.filter((c) => c.method === 'GET' && c.url.endsWith('/admin/theme')).length;
 
 describe('AppearanceView', () => {
+  const exitCalls = () => calls.filter((c) => c.url.includes('/preview/exit'));
+
+  it('leaves draft mode when Appearance unmounts', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <AppearanceView autosaveDelay={0} />
+      </QueryClientProvider>,
+    );
+    await screen.findByRole('tab', { name: 'Site' });
+    expect(exitCalls()).toHaveLength(0);
+    view.unmount();
+    expect(exitCalls()).toHaveLength(1);
+    expect(exitCalls()[0]!.url).toBe('/api/v1/preview/exit?path=/');
+    expect(vi.mocked(fetch).mock.calls.at(-1)![1]).toMatchObject({
+      keepalive: true,
+      redirect: 'manual',
+      credentials: 'same-origin',
+    });
+  });
+
+  it('leaves draft mode on pagehide unless the page is going into the bfcache', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <AppearanceView autosaveDelay={0} />
+      </QueryClientProvider>,
+    );
+    await screen.findByRole('tab', { name: 'Site' });
+    const pagehide = (persisted: boolean) => {
+      const event = new Event('pagehide');
+      Object.defineProperty(event, 'persisted', { value: persisted });
+      window.dispatchEvent(event);
+    };
+    pagehide(true);
+    expect(exitCalls()).toHaveLength(0);
+    pagehide(false);
+    expect(exitCalls()).toHaveLength(1);
+    view.unmount();
+  });
+
+  it('keeps draft mode when Preview on site was clicked during the mount', async () => {
+    vi.stubGlobal('open', vi.fn());
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <AppearanceView autosaveDelay={0} />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Preview on site' }));
+    await waitFor(() => expect(window.open).toHaveBeenCalled());
+    view.unmount();
+    expect(exitCalls()).toHaveLength(0);
+  });
+
   it('renders the Site and Admin tabs and Publish', async () => {
     renderView();
     expect(await screen.findByRole('tab', { name: 'Site' })).toBeTruthy();
