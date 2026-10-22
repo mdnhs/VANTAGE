@@ -11,6 +11,7 @@ import { adminMedia } from './admin-media';
 import { adminNotifications } from './admin-notifications';
 import { adminRedirects } from './admin-redirects';
 import { adminSearch } from './admin-search';
+import { adminSeo } from './admin-seo';
 import { adminTracking } from './admin-tracking';
 import { adminTheme } from './admin-theme';
 import { adminUsers } from './admin-users';
@@ -64,6 +65,7 @@ export const api = app
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
   .route('/admin/tracking', adminTracking)
+  .route('/admin/seo', adminSeo)
   .route('/admin/ai', adminAi)
   .route('/admin/theme', adminTheme)
   .route('/admin/redirects', adminRedirects)

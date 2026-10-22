@@ -11,6 +11,12 @@ import { DECLINED_MESSAGE, LENGTH_EXHAUSTED_MESSAGE } from '@/server/services/ai
 
 import { call, createTestUser, ORIGIN, signInCookie, viewAsCookie } from '../support/session';
 
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  cacheTag: vi.fn(),
+  cacheLife: vi.fn(),
+}));
+
 vi.mock('@/server/repositories/ai-conversation-repository', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/server/repositories/ai-conversation-repository')>();
   return { ...original, historyFor: vi.fn(original.historyFor) };
