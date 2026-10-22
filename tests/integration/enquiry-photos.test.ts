@@ -84,12 +84,29 @@ describe('enquiry photos through the media pipeline', () => {
 
   it('skips a photo that is not a decodable image and still saves the enquiry', async () => {
     const garbage = `data:image/png;base64,${Buffer.from('not an image at all').toString('base64')}`;
-    const heic = `data:image/heic;base64,${Buffer.from('xx').toString('base64')}`;
-    const res = await post('/quotes', { ...quote, photoUrls: [garbage, await dataUrl('#c33'), heic] });
+    const res = await post('/quotes', { ...quote, photoUrls: [garbage, await dataUrl('#c33')] });
     expect(res.status).toBe(201);
     expect(await db.select().from(quoteRequests)).toHaveLength(1);
     expect(await db.select().from(enquiryPhotos)).toHaveLength(1);
     expect(await db.select().from(media)).toHaveLength(1);
+  });
+
+  it('refuses HEIC and GIF photos with a 422 that names the allowed types, and stores nothing', async () => {
+    for (const type of ['heic', 'gif']) {
+      const odd = `data:image/${type};base64,${Buffer.from('xx').toString('base64')}`;
+      for (const [route, body] of [
+        ['/quotes', quote],
+        ['/contacts', contact],
+      ] as const) {
+        const res = await post(route, { ...body, photoUrls: [await dataUrl('#c33'), odd] });
+        expect(res.status).toBe(422);
+        const err = (await res.json()) as { error: { causes?: Record<string, string[]> } };
+        expect(JSON.stringify(err.error.causes)).toMatch(/JPG, PNG, WebP or AVIF/);
+      }
+    }
+    expect(await db.select().from(quoteRequests)).toHaveLength(0);
+    expect(await db.select().from(contactMessages)).toHaveLength(0);
+    expect(await db.select().from(media)).toHaveLength(0);
   });
 
   it('skips renamed PDFs and videos and oversized photos; nothing is stored for them', async () => {
@@ -155,6 +172,26 @@ describe('enquiry photos through the media pipeline', () => {
 
     const list = (await (await get('/quotes/admin/list', cookie)).json()) as { data: { photos: unknown[] }[] };
     expect(list.data[0]!.photos).toHaveLength(2);
+  });
+
+  it('lists a migrated photo once: the legacy photo_urls entry is hidden, left in the database', async () => {
+    await post('/quotes', { ...quote, photoUrls: [await dataUrl('#c33')] });
+    const [row] = await db.select().from(quoteRequests);
+    const [linked] = await db.select().from(media);
+    const migrated = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/old.jpg';
+    const other = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/other.jpg';
+    await db.update(media).set({ legacySource: 'cloudinary:image:vantage/quotes/old' }).where(eq(media.id, linked!.id));
+    await db
+      .update(quoteRequests)
+      .set({ photoUrls: [migrated, other] })
+      .where(eq(quoteRequests.id, row!.id));
+
+    const detail = (await (await get(`/quotes/${row!.id}`, cookie)).json()) as {
+      data: { photos: { id: string | null; url: string }[] };
+    };
+    expect(detail.data.photos.map((p) => p.url)).toEqual([linked!.url, other]);
+    const [after] = await db.select().from(quoteRequests);
+    expect(after!.photoUrls).toEqual([migrated, other]);
   });
 
   it('writes the processed file to storage', async () => {

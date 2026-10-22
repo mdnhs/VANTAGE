@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { photoDataUrlSchema } from '@/validations/photo-url';
+
 export const CONTACT_STATUSES = ['new', 'read', 'replied', 'archived'] as const;
 
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
@@ -11,7 +13,7 @@ export const createContactMessageSchema = z.object({
   phone: z.string().min(5, 'Valid phone number is required').max(50),
   service: z.string().max(120).nullable().optional(),
   message: z.string().min(1, 'Message is required').max(5000),
-  photoUrls: z.array(z.string().startsWith('data:image/').max(30_000_000)).max(4).optional(),
+  photoUrls: z.array(photoDataUrlSchema).max(4).optional(),
   source: z.enum(['contact_page', 'footer', 'general']).optional().default('contact_page'),
 });
 
