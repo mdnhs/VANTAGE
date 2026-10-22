@@ -1,8 +1,8 @@
 import 'server-only';
 
-import { and, count, desc, eq, ilike, isNull, like, or, type SQL } from 'drizzle-orm';
-import { db } from '@/server/db';
-import { media } from '@/server/db/schema';
+import { and, count, desc, eq, ilike, inArray, isNull, like, notExists, or, sql, type SQL } from 'drizzle-orm';
+import { db, type DbLike } from '@/server/db';
+import { enquiryPhotos, media } from '@/server/db/schema';
 import type { MediaListQuery } from '@/validations/media-schema';
 
 type NewMedia = typeof media.$inferInsert;
@@ -12,8 +12,10 @@ const live = isNull(media.deletedAt);
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
 
 export const mediaRepository = {
-  async list({ page, limit, type, missingAlt, q }: MediaListQuery) {
-    const filters: SQL[] = [live];
+  async list({ page, limit, type, missingAlt, q, ids }: MediaListQuery) {
+    // Enquiry photos belong to a lead, never to the library grid.
+    const filters: SQL[] = [live, eq(media.scope, 'library')];
+    if (ids) filters.push(ids.length > 0 ? inArray(media.id, ids) : sql`false`);
     if (q) {
       const pattern = `%${escapeLike(q)}%`;
       filters.push(or(ilike(media.filename, pattern), ilike(media.alt, pattern))!);
@@ -38,8 +40,8 @@ export const mediaRepository = {
     return { rows, total: totalRow?.n ?? 0 };
   },
 
-  async byId(id: string) {
-    const [row] = await db
+  async byId(id: string, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .select()
       .from(media)
       .where(and(eq(media.id, id), live))
@@ -58,6 +60,33 @@ export const mediaRepository = {
     return row!;
   },
 
+  // Any row carrying this migration key, soft-deleted or not.
+  async byLegacySource(legacySource: string) {
+    const [row] = await db.select().from(media).where(eq(media.legacySource, legacySource)).limit(1);
+    return row;
+  },
+
+  // Enquiry-scope rows no lead links to any more; returns their storage keys.
+  async deleteUnlinkedEnquiry(ids: string[]) {
+    if (ids.length === 0) return [];
+    const rows = await db
+      .delete(media)
+      .where(
+        and(
+          inArray(media.id, ids),
+          eq(media.scope, 'enquiry'),
+          notExists(
+            db
+              .select({ one: sql`1` })
+              .from(enquiryPhotos)
+              .where(eq(enquiryPhotos.mediaId, media.id)),
+          ),
+        ),
+      )
+      .returning({ key: media.key });
+    return rows.map((r) => r.key);
+  },
+
   async update(id: string, data: Partial<NewMedia>) {
     const [row] = await db
       .update(media)
@@ -67,8 +96,8 @@ export const mediaRepository = {
     return row;
   },
 
-  async softDelete(id: string) {
-    const [row] = await db
+  async softDelete(id: string, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(media)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
       .where(and(eq(media.id, id), live))

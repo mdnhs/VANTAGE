@@ -102,7 +102,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
               <td className='px-4 py-2.5'>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={cldUrl(partnerLogo.logoPublicId, { width: 96, height: 96, crop: 'fit' })}
+                  src={cldUrl(partnerLogo.logoPublicId ?? '', { width: 96, height: 96, crop: 'fit' })}
                   alt={partnerLogo.companyName}
                   className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
                 />

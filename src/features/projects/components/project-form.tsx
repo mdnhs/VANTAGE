@@ -56,7 +56,7 @@ function toFormState(data: ProjectWithGallery | null): FormState {
     isFeatured: data?.isFeatured ?? false,
     beforeImagePublicId: data?.beforeImagePublicId ?? '',
     afterImagePublicId: data?.afterImagePublicId ?? '',
-    galleryImagePublicIds: data?.galleryImages?.map((g) => g.imagePublicId) ?? [],
+    galleryImagePublicIds: data?.galleryImages?.map((g) => g.imagePublicId ?? '') ?? [],
   };
 }
 

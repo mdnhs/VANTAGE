@@ -1,4 +1,5 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { media } from './media';
 
 // `status` is a plain varchar validated in Zod ('draft' | 'published'), not a DB enum —
 // matches the varchar-status convention already used elsewhere in this repo.
@@ -12,8 +13,10 @@ export const projects = pgTable(
     slug: varchar('slug', { length: 180 }).notNull().unique(),
     vehicleModel: varchar('vehicle_model', { length: 120 }).notNull(),
     serviceCategory: varchar('service_category', { length: 80 }).notNull(),
-    beforeImagePublicId: varchar('before_image_public_id', { length: 255 }).notNull(),
-    afterImagePublicId: varchar('after_image_public_id', { length: 255 }).notNull(),
+    beforeImagePublicId: varchar('before_image_public_id', { length: 255 }),
+    beforeImageMediaId: uuid('before_image_media_id').references(() => media.id, { onDelete: 'restrict' }),
+    afterImagePublicId: varchar('after_image_public_id', { length: 255 }),
+    afterImageMediaId: uuid('after_image_media_id').references(() => media.id, { onDelete: 'restrict' }),
     description: text('description').notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     isFeatured: boolean('is_featured').notNull().default(false),

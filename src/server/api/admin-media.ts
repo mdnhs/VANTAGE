@@ -46,7 +46,7 @@ export const adminMedia = new Hono<AppEnv>()
   })
 
   .post('/', can({ media: ['upload'] }), rateLimit(30, 60_000), uploadBodyLimit, async (c) => {
-    const item = await mediaLibraryService.upload(actorOf(c).userId, await fileFrom(c));
+    const item = await mediaLibraryService.upload(actorOf(c), await fileFrom(c));
     return ok(c, item, { status: 201 });
   })
 
@@ -56,7 +56,7 @@ export const adminMedia = new Hono<AppEnv>()
     zValidator('param', mediaIdParamSchema),
     zValidator('json', mediaPatchSchema),
     async (c) => {
-      return ok(c, await mediaLibraryService.update(c.req.valid('param').id, c.req.valid('json')));
+      return ok(c, await mediaLibraryService.update(actorOf(c), c.req.valid('param').id, c.req.valid('json')));
     },
   )
 
@@ -67,12 +67,12 @@ export const adminMedia = new Hono<AppEnv>()
     uploadBodyLimit,
     zValidator('param', mediaIdParamSchema),
     async (c) => {
-      const item = await mediaLibraryService.replace(actorOf(c).userId, c.req.valid('param').id, await fileFrom(c));
+      const item = await mediaLibraryService.replace(actorOf(c), c.req.valid('param').id, await fileFrom(c));
       return ok(c, item);
     },
   )
 
   .delete('/:id', can({ media: ['delete'] }), zValidator('param', mediaIdParamSchema), async (c) => {
-    await mediaLibraryService.remove(c.req.valid('param').id);
+    await mediaLibraryService.remove(actorOf(c), c.req.valid('param').id);
     return ok(c, { success: true });
   });

@@ -18,7 +18,7 @@ const base = { name: 'Pat', email: 'pat@example.com', phone: '0871234567' };
 
 describe('public quote form', () => {
   beforeEach(async () => {
-    await db.execute(sql`truncate table quote_requests`);
+    await db.execute(sql`truncate table enquiry_photos, quote_requests`);
   });
 
   it('ignores admin-only fields sent by an anonymous caller', async () => {
@@ -57,7 +57,7 @@ describe('public quote form', () => {
 
 describe('public contact form', () => {
   it('ignores admin-only fields', async () => {
-    await db.execute(sql`truncate table contact_messages`);
+    await db.execute(sql`truncate table enquiry_photos, contact_messages`);
     const res = await post('/contacts', {
       firstName: 'Pat',
       lastName: 'Q',

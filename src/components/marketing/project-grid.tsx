@@ -25,7 +25,7 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
       {/* Photo with Before/After toggle */}
       <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
         <Image
-          src={cldUrl(publicId, { width: 800, height: 512, crop: 'fill' })}
+          src={cldUrl(publicId ?? '', { width: 800, height: 512, crop: 'fill' })}
           alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
           fill
           sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
