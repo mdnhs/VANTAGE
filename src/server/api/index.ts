@@ -7,6 +7,7 @@ import { account } from './account';
 import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
 import { adminSearch } from './admin-search';
+import { adminTheme } from './admin-theme';
 import { adminUsers } from './admin-users';
 import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
@@ -16,6 +17,7 @@ import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { media } from './media';
 import { partnerLogos } from './partner-logos';
+import { preview } from './preview';
 import { projects } from './projects';
 import { quoteRequests } from './quote-requests';
 import { services } from './services';
@@ -56,6 +58,8 @@ export const api = app
   .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
+  .route('/admin/theme', adminTheme)
+  .route('/preview', preview)
   .route('/account', account)
   .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)
