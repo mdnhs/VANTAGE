@@ -72,3 +72,28 @@ describe('settings repository', () => {
     expect(items[0]!.version).toBe(REVISION_LIMITS.setting + 5);
   });
 });
+
+describe('settings text actor ids', () => {
+  beforeEach(async () => {
+    await db.execute(sql`truncate table settings, revisions`);
+  });
+
+  it('stores non-uuid actor ids and surfaces them as revision authors', async () => {
+    await settingsRepository.save('site', { version: 0, value: { a: 1 } }, 'user_abc123');
+    expect((await settingsRepository.get('site'))?.updatedBy).toBe('user_abc123');
+    await settingsRepository.save('site', { version: 1, value: { a: 2 } }, 'user_abc123');
+    const { items } = await listRevisions(db, 'setting', 'site');
+    expect(items[0]!.createdBy).toBe('user_abc123');
+  });
+
+  it('restores with a non-null actor', async () => {
+    await settingsRepository.save('site', { version: 0, value: { a: 1 } }, 'user_abc123');
+    await settingsRepository.save('site', { version: 1, value: { a: 2 } }, 'user_abc123');
+    const { items } = await listRevisions(db, 'setting', 'site');
+    const res = await settingsRepository.restore('site', items[0]!.id, 'user_xyz789');
+    expect(res.version).toBe(3);
+    const row = await settingsRepository.get('site');
+    expect(row?.updatedBy).toBe('user_xyz789');
+    expect(row?.value).toEqual({ a: 1 });
+  });
+});

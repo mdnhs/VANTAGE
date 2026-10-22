@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, desc, eq, notInArray } from 'drizzle-orm';
 import type { DbLike } from '@/server/db';
-import { adminUsers, revisions } from '@/server/db/schema';
+import { revisions } from '@/server/db/schema';
 
 export const REVISION_LIMITS = { setting: 20, page: 50 } as const;
 export type RevisionEntity = keyof typeof REVISION_LIMITS;
@@ -47,10 +47,9 @@ export async function listRevisions(db: DbLike, entityType: RevisionEntity, enti
       version: revisions.version,
       note: revisions.note,
       createdAt: revisions.createdAt,
-      createdBy: adminUsers.name,
+      createdBy: revisions.createdBy,
     })
     .from(revisions)
-    .leftJoin(adminUsers, eq(revisions.createdBy, adminUsers.id))
     .where(of(entityType, entityId))
     .orderBy(...newestFirst);
   return { items };

@@ -1,5 +1,4 @@
 import { index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { adminUsers } from './admin-users';
 
 // Snapshots of versioned entities (settings rollbacks, page publishes).
 export const revisions = pgTable(
@@ -11,7 +10,7 @@ export const revisions = pgTable(
     version: integer('version').notNull(),
     snapshot: jsonb('snapshot').$type<unknown>().notNull(),
     note: text('note'),
-    createdBy: uuid('created_by').references(() => adminUsers.id, { onDelete: 'set null' }),
+    createdBy: text('created_by'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('revisions_entity_idx').on(t.entityType, t.entityId, t.createdAt)],

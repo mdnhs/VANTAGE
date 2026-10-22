@@ -1,5 +1,5 @@
 {
-  "id": "0c24045d-1d32-458f-8998-ddc6c964bfe2",
+  "id": "a5d1b4db-8baf-4070-82d5-b1c9d1771ccb",
   "prevId": "e40d49b5-4c43-4fe4-8b4e-5dd81f5b01bd",
   "version": "7",
   "dialect": "postgresql",
@@ -2281,7 +2281,7 @@
         },
         "updated_by": {
           "name": "updated_by",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2344,7 +2344,7 @@
         },
         "created_by": {
           "name": "created_by",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2385,21 +2385,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "revisions_created_by_admin_users_id_fk": {
-          "name": "revisions_created_by_admin_users_id_fk",
-          "tableFrom": "revisions",
-          "tableTo": "admin_users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
