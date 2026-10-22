@@ -111,7 +111,12 @@ export const quoteRequests = new Hono<AppEnv>()
     '/:id',
     can({ quote: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'quote.delete', entityType: 'quote', summary: 'Quote request deleted' }),
+    auditRoute({
+      action: 'quote.delete',
+      entityType: 'quote',
+      summary: 'Quote request deleted',
+      load: quoteRequestService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

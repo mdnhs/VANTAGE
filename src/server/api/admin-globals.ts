@@ -9,7 +9,7 @@ import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorOf, can } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
-import { notViewingAs } from '@/server/middleware/view-as';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { sendTestEmail } from '@/server/services/enquiry-notify';
 import { getGlobal, globalRevisions, restoreGlobal, saveGlobal } from '@/server/services/globals-service';
 
@@ -17,8 +17,6 @@ const KeyParam = z.object({ key: z.enum(EDITABLE_GLOBAL_KEYS) });
 const RevisionParam = KeyParam.extend({ rev: z.uuid() });
 const SaveInput = z.object({ version: z.number().int().min(0), value: z.unknown() });
 const VersionInput = z.object({ version: z.number().int().min(0) });
-
-const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 // The permission depends on the key, so the guard runs once the key is known.
 // Unknown keys are a 404 before any permission check.
@@ -34,7 +32,7 @@ export const adminGlobals = new Hono<AppEnv>()
   .post(
     '/notifications/test',
     can(GLOBAL_ACCESS.notifications.update),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     rateLimit(5, 60_000),
     async (c) => ok(c, await sendTestEmail(actorOf(c).email)),
   )
@@ -46,7 +44,7 @@ export const adminGlobals = new Hono<AppEnv>()
   .put(
     '/:key',
     canGlobal('update'),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('param', KeyParam),
     zValidator('json', SaveInput),
     async (c) => ok(c, await saveGlobal(actorOf(c), c.req.valid('param').key, c.req.valid('json'))),
@@ -59,7 +57,7 @@ export const adminGlobals = new Hono<AppEnv>()
   .post(
     '/:key/revisions/:rev/restore',
     canGlobal('update'),
-    notViewingAs(READ_ONLY_VIEW_AS),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('param', RevisionParam),
     zValidator('json', VersionInput),
     async (c) => {

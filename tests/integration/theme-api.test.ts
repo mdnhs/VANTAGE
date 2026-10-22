@@ -5,6 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { DEFAULT_THEME } from '@/lib/theme/schema';
 import { db } from '@/server/db';
+import { VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { auditLogs, revisions, settings } from '@/server/db/schema';
 
 import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
@@ -216,7 +217,7 @@ describe('View-as', () => {
     const viewing = await viewAsCookie(cookies.owner, target.id);
     const res = await put(viewing, 0, red);
     expect(res.status).toBe(403);
-    expect((await json(res)).error.message).toBe('View-as is read-only: the theme cannot be changed');
+    expect((await json(res)).error.message).toBe(VIEW_AS_READ_ONLY);
     expect((await get(viewing)).status).toBe(200);
     expect(await db.select().from(settings)).toHaveLength(0);
   });

@@ -119,7 +119,12 @@ export const testimonials = new Hono<AppEnv>()
     '/:id',
     can({ content: ['delete'] }),
     notViewingAs(VIEW_AS_READ_ONLY),
-    auditRoute({ action: 'testimonial.delete', entityType: 'testimonial', summary: 'Testimonial deleted' }),
+    auditRoute({
+      action: 'testimonial.delete',
+      entityType: 'testimonial',
+      summary: 'Testimonial deleted',
+      load: testimonialService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

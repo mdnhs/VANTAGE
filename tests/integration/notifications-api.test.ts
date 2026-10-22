@@ -126,6 +126,16 @@ describe('GET /admin/notifications', () => {
     expect((await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed')).toHaveLength(0);
   });
 
+  it('drops delivery failures for enquiries marked as spam', async () => {
+    const spamQuote = await addQuote({ status: 'spam' });
+    const spamContact = await addContact();
+    await db.update(contactMessages).set({ status: 'spam' }).where(eq(contactMessages.id, spamContact.id));
+    await notify('delivery_failed', { enquiry: 'quote', enquiryId: spamQuote.id, channel: 'notification' });
+    await notify('delivery_failed', { enquiry: 'contact', enquiryId: spamContact.id, channel: 'notification' });
+    const u = await userWith('owner');
+    expect((await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed')).toHaveLength(0);
+  });
+
   it('links delivery failures to the enquiry', async () => {
     const quote = await addQuote();
     await notify('delivery_failed', { enquiry: 'quote', enquiryId: quote.id, channel: 'auto_reply' });

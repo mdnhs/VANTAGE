@@ -106,6 +106,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
       action: 'homepage_process_step.delete',
       entityType: 'homepage_process_step',
       summary: 'Homepage process step deleted',
+      load: homepageProcessStepService.byId,
     }),
     zValidator('param', idParamSchema),
     async (c) => {
