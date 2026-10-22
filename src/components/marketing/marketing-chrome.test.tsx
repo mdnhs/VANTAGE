@@ -9,6 +9,7 @@ import type { PublicImage } from '@/lib/media/public-image';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 
+import { MarketingFooter } from './footer';
 import { ContactForm } from './contact-form';
 import { QuoteForm } from './quote-form';
 import { StitchEstimator } from './stitch-estimator';
@@ -18,6 +19,27 @@ import { fillCopy } from './ui/copy-template';
 vi.mock('next/navigation', () => ({ usePathname: () => '/services' }));
 vi.mock('@/features/contact-messages/services/api', () => ({ submitContactMessage: vi.fn() }));
 vi.mock('@/features/quote-requests/services/api', () => ({ submitQuoteRequest: vi.fn() }));
+vi.mock('@/server/services/site-settings-service', () => ({
+  siteSettingsService: {
+    getPublic: async () => ({
+      businessName: 'Shop',
+      logo: null,
+      address: '1 Road',
+      phone: '+353 1 234',
+      email: 'a@b.ie',
+    }),
+  },
+}));
+vi.mock('@/server/queries/get-setting', () => ({
+  getSetting: async () => ({
+    blurb: '',
+    columns: [],
+    contactNote: '',
+    copyrightName: '',
+    legalNote: '',
+    legalLinks: [{ label: 'Privacy', href: '/privacy' }],
+  }),
+}));
 
 afterEach(cleanup);
 
@@ -235,5 +257,27 @@ describe.each([
     await run();
     await screen.findByText('nope');
     expect((window as unknown as { dataLayer: unknown[] }).dataLayer).toEqual([]);
+  });
+});
+
+describe('MarketingFooter cookie settings slot', () => {
+  const legalRow = (container: HTMLElement) => container.querySelector('a[href="/privacy"]')!.parentElement!;
+
+  it('renders the same legal row with no slot as with a null slot', async () => {
+    const without = render(await MarketingFooter({}));
+    const before = legalRow(without.container).outerHTML;
+    cleanup();
+    const withNull = render(await MarketingFooter({ cookieSettings: null }));
+    expect(legalRow(withNull.container).outerHTML).toBe(before);
+    expect(before).not.toContain('data-cookie-settings');
+  });
+
+  it('renders the slot at the end of the legal row', async () => {
+    const { container } = render(
+      await MarketingFooter({ cookieSettings: <button data-cookie-settings>Cookie settings</button> }),
+    );
+    const row = legalRow(container);
+    expect(row.lastElementChild?.textContent).toBe('Cookie settings');
+    expect(row.querySelectorAll('a')).toHaveLength(1);
   });
 });
