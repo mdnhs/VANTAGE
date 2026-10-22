@@ -78,6 +78,15 @@ describe('redirects rules', () => {
     expect((await json(res)).error.causes?.destination).toBeDefined();
   });
 
+  it('rejects a destination inside the app, with causes.destination', async () => {
+    for (const to of ['/api/v1/resolve', '/dashboard/users', '/login', '/uploads/a.pdf']) {
+      const res = await create(cookies.owner, '/promo', to);
+      expect(res.status, to).toBe(422);
+      expect((await json(res)).error.causes?.destination, to).toBeDefined();
+    }
+    expect((await create(cookies.owner, '/promo', '/old-about.html')).status).toBe(201);
+  });
+
   it('rejects a loop and flattens chains', async () => {
     await create(cookies.owner, '/a', '/b');
     const loop = await create(cookies.owner, '/b', '/a');
