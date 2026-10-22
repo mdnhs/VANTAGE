@@ -37,7 +37,7 @@ export default function TwoFactorSetupPage() {
 // and anyone can go back without finishing.
 async function Gate() {
   const actor = await requireActor();
-  if (actor.twoFactorEnabled) redirect(APP_ROUTES.dashboard.index);
+  if (actor.twoFactorEnabled) redirect(APP_ROUTES.dashboard.accountSecurity);
   const recommended = isAdminRole(actor.roles);
   return (
     <>
@@ -53,10 +53,10 @@ async function Gate() {
       <p className='text-sm text-muted-foreground'>
         Not a good time?{' '}
         <Link
-          href={APP_ROUTES.dashboard.index}
+          href={APP_ROUTES.dashboard.accountSecurity}
           className='rounded-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50'
         >
-          Back to the dashboard
+          Back to your account
         </Link>
       </p>
     </>

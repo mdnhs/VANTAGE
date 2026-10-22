@@ -61,9 +61,20 @@ describe('requirePermission', () => {
     await expect(requirePermission({ page: ['read'] })).resolves.toMatchObject({ roles: ['viewer'] });
   });
 
-  it('sends a role without it to /unauthorized', async () => {
+  it('sends a signed-in role without it to the in-panel no-access page, naming the page asked for', async () => {
     current = signedInAs('viewer');
-    await expect(requirePermission({ quote: ['read'] })).rejects.toThrow('REDIRECT /unauthorized');
+    requestHeaders.set('x-vantage-admin-path', '/dashboard/quotes?x=1');
+    await expect(requirePermission({ quote: ['read'] })).rejects.toThrow(
+      'REDIRECT /dashboard/no-access?from=%2Fdashboard%2Fquotes%3Fx%3D1',
+    );
+    requestHeaders.delete('x-vantage-admin-path');
+  });
+
+  it('prefers an explicit next over the request header', async () => {
+    current = signedInAs('viewer');
+    await expect(requirePermission({ quote: ['read'] }, '/dashboard/media')).rejects.toThrow(
+      'REDIRECT /dashboard/no-access?from=%2Fdashboard%2Fmedia',
+    );
   });
 
   it('still sends a customer to /login first', async () => {

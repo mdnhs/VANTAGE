@@ -8,6 +8,8 @@ export const APP_ROUTES = {
   },
   dashboard: {
     index: '/dashboard',
+    account: '/dashboard/account',
+    accountSecurity: '/dashboard/account?tab=security',
   },
   content: {
     settings: {

@@ -6,6 +6,7 @@ import { cache } from 'react';
 
 import { ADMIN_PATH_HEADER } from '@/lib/auth/admin-path';
 import { hasPermission, parseRoles, type Permissions } from '@/lib/auth/permissions';
+import { noAccessHref } from '@/lib/admin/no-access';
 import { safeNext } from '@/lib/auth/safe-next';
 
 import { toActor, type Actor } from './actor';
@@ -32,14 +33,13 @@ export async function requireActor(next?: string): Promise<Actor> {
   return toActor(session);
 }
 
-const NO_ACCESS_PATH = '/unauthorized';
-
 // Page-level gate (layer 2): spares a user a page of
 // 403s. The API still authorises every call on its own.
 export async function requirePermission(permissions: Permissions, next?: string): Promise<Actor> {
   const actor = await requireActor(next);
   if (!hasPermission(actor.roles, permissions)) {
-    redirect(NO_ACCESS_PATH);
+    // A signed-in admin stays in the panel; the page names what was refused.
+    redirect(noAccessHref(next ?? (await headers()).get(ADMIN_PATH_HEADER)));
   }
   return actor;
 }

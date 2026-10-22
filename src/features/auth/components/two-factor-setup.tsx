@@ -218,7 +218,7 @@ export function TwoFactorSetup() {
               type='button'
               className={authButtonClass}
               onClick={() => {
-                router.replace(APP_ROUTES.dashboard.index);
+                router.replace(APP_ROUTES.dashboard.accountSecurity);
                 router.refresh();
               }}
             >
