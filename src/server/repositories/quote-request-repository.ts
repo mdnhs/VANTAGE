@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 import { SPAM_STATUS, type SpamReason } from '@/lib/enquiries/spam';
 import { db } from '@/server/db';
 import { quoteRequests } from '@/server/db/schema';
+import { noBillingData, SPAM_BILLING_ERROR } from '@/server/lib/enquiries/billing';
 import { attachPhotos, linkEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import type {
   CreateQuoteRequestOutput,
@@ -146,7 +147,7 @@ export const quoteRequestRepository = {
           description: data.description || null,
           source: data.source || 'website',
           status: spamReason ? SPAM_STATUS : data.status || 'new',
-          spamReason: spamReason ?? (data.status === SPAM_STATUS ? 'manual' : null),
+          spamReason: spamReason ?? null,
           assignedUserId: data.assignedUserId || null,
           inspectionDate: data.inspectionDate ?? null,
           estimatedCost:
@@ -192,7 +193,17 @@ export const quoteRequestRepository = {
     if (data.completedAt !== undefined) patch.completedAt = data.completedAt;
     if (data.adminNotes !== undefined) patch.adminNotes = data.adminNotes;
 
-    await db.update(quoteRequests).set(patch).where(eq(quoteRequests.id, id));
+    // Moving a quote to spam only matches one with no billing data (or one already spam).
+    const where =
+      data.status === SPAM_STATUS
+        ? and(eq(quoteRequests.id, id), or(eq(quoteRequests.status, SPAM_STATUS), noBillingData()))
+        : eq(quoteRequests.id, id);
+    const updated = await db.update(quoteRequests).set(patch).where(where).returning({ id: quoteRequests.id });
+    if (updated.length === 0 && data.status === SPAM_STATUS) {
+      const [exists] = await db.select({ id: quoteRequests.id }).from(quoteRequests).where(eq(quoteRequests.id, id));
+      if (exists) throw SPAM_BILLING_ERROR();
+      return undefined;
+    }
     return this.byId(id);
   },
 

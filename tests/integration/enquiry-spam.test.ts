@@ -107,12 +107,32 @@ describe('public quote form spam checks', () => {
     expect(await db.select().from(enquiryPhotos)).toHaveLength(0);
   });
 
-  it('files a missing stamp as spam (stamp) and a 1 s stamp as too-fast', async () => {
+  it('files an invalid or too-fresh stamp as spam, but keeps an unstamped lead', async () => {
     expect((await post('/quotes', quote)).status).toBe(201);
+    expect((await post('/quotes', { ...quote, stamp: '' })).status).toBe(201);
     expect((await post('/quotes', { ...quote, stamp: stampAge(1_000) })).status).toBe(201);
     expect((await post('/quotes', { ...quote, stamp: 'garbage' })).status).toBe(201);
     const reasons = (await quoteRows()).map((r) => `${r.status}:${r.spamReason}`).sort();
-    expect(reasons).toEqual(['spam:stamp', 'spam:stamp', 'spam:too-fast']);
+    expect(reasons).toEqual(['new:null', 'new:null', 'spam:stamp', 'spam:too-fast']);
+  });
+
+  it('answers a bot exactly like a human', async () => {
+    for (const [route, body] of [
+      ['/quotes', quote],
+      ['/contacts', contact],
+    ] as const) {
+      const human = (await (await post(route, { ...body, stamp: stampAge(5_000) })).json()).data;
+      const bot = (await (await post(route, { ...body, website: 'x' })).json()).data;
+      expect(Object.keys(bot).sort()).toEqual(Object.keys(human).sort());
+      expect(bot.status).toBe('new');
+      expect(bot.spamReason).toBeNull();
+    }
+  });
+
+  it('staff create cannot file spam', async () => {
+    const owner = await sessionCookie('owner');
+    const res = await call('/quotes/admin', owner, { method: 'POST', body: { ...quote, status: 'spam' } });
+    expect(res.status).toBe(422);
   });
 
   it('keeps a valid 5 s stamp as a new lead that notifies and converts', async () => {
@@ -139,7 +159,7 @@ describe('public quote form spam checks', () => {
 describe('public contact form spam checks', () => {
   it('files honeypot, missing and too-fast submissions as spam, and a valid one as new', async () => {
     await post('/contacts', { ...contact, website: 'x', stamp: stampAge(10_000), photoUrls: [PNG] }, consent);
-    await post('/contacts', contact);
+    await post('/contacts', { ...contact, stamp: 'garbage' });
     await post('/contacts', { ...contact, stamp: stampAge(1_000) });
     await post(
       '/contacts',

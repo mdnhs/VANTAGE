@@ -54,7 +54,8 @@ export const contacts = new Hono<AppEnv>()
       });
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row;
-    return ok(c, echo, { status: 201 });
+    // A spam row answers exactly like a human one: no verdict leaks to the bot.
+    return ok(c, { ...echo, status: 'new', spamReason: null }, { status: 201 });
   })
 
   // Admin list with pagination, search, and status filtering

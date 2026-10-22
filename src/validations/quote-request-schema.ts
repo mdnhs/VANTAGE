@@ -16,7 +16,8 @@ export const PIPELINE_STATUSES = [
 
 // Include legacy statuses for backward compatibility with existing records
 // 'spam' is filed by the public-form checks or by staff; it is not a pipeline stage.
-export const ALL_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived', 'spam'] as const;
+export const STAFF_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived'] as const;
+export const ALL_QUOTE_STATUSES = [...STAFF_QUOTE_STATUSES, 'spam'] as const;
 
 export const QUOTE_STATUSES = ALL_QUOTE_STATUSES;
 
@@ -58,7 +59,8 @@ export const createQuoteRequestSchema = z.object({
   serviceType: z.string().max(120).nullable().optional(),
   description: z.string().max(3000).nullable().optional(),
   source: z.enum(QUOTE_SOURCES).optional().default('website'),
-  status: z.enum(ALL_QUOTE_STATUSES).optional().default('new'),
+  // Staff create never files spam; the public checks and PATCH do.
+  status: z.enum(STAFF_QUOTE_STATUSES).optional().default('new'),
   assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),

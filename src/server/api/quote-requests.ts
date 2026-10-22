@@ -55,7 +55,8 @@ export const quoteRequests = new Hono<AppEnv>()
     if (!row) throw new Error('The quote request was not saved');
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row;
-    return ok(c, echo, { status: 201 });
+    // A spam row answers exactly like a human one: no verdict leaks to the bot.
+    return ok(c, { ...echo, status: 'new', spamReason: null }, { status: 201 });
   })
 
   // Staff-entered enquiry (phone / walk-in): full admin schema.

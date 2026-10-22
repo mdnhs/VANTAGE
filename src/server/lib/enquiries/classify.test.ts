@@ -17,8 +17,14 @@ describe('classifySubmission', () => {
     expect(classifySubmission({ website: 'x' }, t)).toBe('honeypot');
   });
 
+  it('fails open when no stamp came with the form', () => {
+    expect(classifySubmission({}, t)).toBeNull();
+    expect(classifySubmission({ stamp: '' }, t)).toBeNull();
+  });
+
   it('flags the stamp', () => {
-    expect(classifySubmission({}, t)).toBe('stamp');
+    expect(classifySubmission({ stamp: 'garbage' }, t)).toBe('stamp');
+    expect(classifySubmission({ stamp: `${t}.deadbeef` }, t + 5_000)).toBe('stamp');
     expect(classifySubmission({ stamp: issueStamp(t) }, t + 1_000)).toBe('too-fast');
   });
 });

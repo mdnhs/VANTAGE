@@ -1,5 +1,5 @@
 import { SPAM_STATUS, type SpamReason } from '@/lib/enquiries/spam';
-import { hasBillingData } from '@/server/lib/enquiries/billing';
+import { hasBillingData, SPAM_BILLING_ERROR } from '@/server/lib/enquiries/billing';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import { notifyNewQuote } from '@/server/services/enquiry-notify';
@@ -48,22 +48,17 @@ export const quoteRequestService = {
 
   async update(id: string, data: UpdateQuoteRequestOutput) {
     await assertAssignable(data.assignedUserId);
-    if (data.status === SPAM_STATUS) {
-      const current = await quoteRequestRepository.byId(id);
-      if (current && current.status !== SPAM_STATUS) {
-        // Billing as it would be after this patch.
-        const merged = {
-          invoiceNumber: data.invoiceNumber !== undefined ? data.invoiceNumber : current.invoiceNumber,
-          paymentStatus: data.paymentStatus ?? current.paymentStatus,
-          paidAmount: data.paidAmount !== undefined ? String(data.paidAmount ?? 0) : current.paidAmount,
-          paymentMethod: data.paymentMethod !== undefined ? data.paymentMethod : current.paymentMethod,
-        };
-        if (hasBillingData(merged)) {
-          const message = "This quote has invoice or payment records, so it can't be marked as spam.";
-          throw new ApiError(ERROR_CODES.VALIDATION_ERROR, message, 422, { status: [message] });
-        }
-      }
-    }
+    // Billing sent in the same patch counts; the repository checks what is already stored.
+    if (
+      data.status === SPAM_STATUS &&
+      hasBillingData({
+        invoiceNumber: data.invoiceNumber ?? null,
+        paymentStatus: data.paymentStatus ?? 'unpaid',
+        paidAmount: data.paidAmount != null ? String(data.paidAmount) : null,
+        paymentMethod: data.paymentMethod ?? null,
+      })
+    )
+      throw SPAM_BILLING_ERROR();
     return quoteRequestRepository.update(id, data);
   },
 
