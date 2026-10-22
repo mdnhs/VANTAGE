@@ -49,7 +49,7 @@ const addContact = async () => {
 };
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table audit_logs, quote_requests, contact_messages`);
+  await db.execute(sql`truncate table audit_logs, quote_requests, contact_messages cascade`);
 });
 
 describe('GET /admin/notifications', () => {
