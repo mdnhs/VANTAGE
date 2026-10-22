@@ -19,7 +19,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
         navigation={navigation}
         phone={settings.phone}
         businessName={settings.businessName}
-        logoPublicId={settings.logoPublicId}
+        logo={settings.logo}
         logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
         logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
       />

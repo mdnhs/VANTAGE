@@ -8,6 +8,7 @@ import type { PublicImage } from '@/lib/media/public-image';
 import { db } from '@/server/db';
 import { media, type MediaRow } from '@/server/db/schema/media';
 
+import { isMediaId } from './assert-media';
 import { legacyCloudinaryUrl, type LegacyRef } from './legacy-cloudinary';
 
 // A live row wins; a soft-deleted or missing row falls back to the legacy
@@ -54,7 +55,8 @@ async function loadSorted(ids: string[]): Promise<Record<string, PublicImage>> {
 }
 
 // Live media rows by id as PublicImages. Ids are sorted and deduped first so
-// equal sets share one cache entry.
+// equal sets share one cache entry; malformed ids (a bad value in settings JSON)
+// are dropped so they can never make the query throw.
 export async function loadPublicImages(ids: string[]): Promise<Record<string, PublicImage>> {
-  return loadSorted([...new Set(ids)].sort());
+  return loadSorted([...new Set(ids.filter(isMediaId).map((id) => id.toLowerCase()))].sort());
 }
