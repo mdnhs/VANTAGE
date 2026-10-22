@@ -1,4 +1,5 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { users } from './auth';
 import { media } from './media';
 
 // `status` is a plain varchar validated in Zod ('draft' | 'published'), not a DB enum —
@@ -22,11 +23,13 @@ export const projects = pgTable(
     isFeatured: boolean('is_featured').notNull().default(false),
     status: varchar('status', { length: 16 }).notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('projects_slug_idx').on(table.slug),
+    index('projects_created_by_idx').on(table.createdBy),
     index('projects_status_order_idx').on(table.status, table.displayOrder),
     index('projects_featured_status_idx').on(table.isFeatured, table.status),
   ],

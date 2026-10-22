@@ -22,4 +22,5 @@ export * from './enquiry-photos';
 export * from './relations';
 export * from './ai';
 export * from './redirects';
+export * from './media-purges';
 // export * from './orders';

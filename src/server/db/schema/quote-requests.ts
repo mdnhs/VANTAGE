@@ -31,6 +31,7 @@ export const quoteRequests = pgTable(
     completedAt: timestamp('completed_at', { withTimezone: true }),
     adminNotes: text('admin_notes'),
     source: varchar('source', { length: 60 }).notNull().default('website'),
+    spamReason: varchar('spam_reason', { length: 40 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
