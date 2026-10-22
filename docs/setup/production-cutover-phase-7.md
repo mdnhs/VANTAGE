@@ -8,7 +8,8 @@ code expires those tags and the pages refresh at once.
 
 `DISABLE_CUSTOM_SCRIPTS=true` is read at prerender time as well:
 
-- Changing it needs a rebuild or redeploy to take effect.
+- Changing it needs a rebuild or redeploy to take effect, or any later save of Tracking, Consent banner or
+  Custom code: that save re-renders the pages, which then pick up the new value.
 - The instant kill switch is in the admin: clear or switch off the snippets in Custom code (owner only). That
   save takes effect immediately and History keeps the previous version for rollback.
 

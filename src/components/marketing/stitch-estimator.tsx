@@ -5,6 +5,7 @@ import { useState, type CSSProperties } from 'react';
 
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 import { track } from '@/lib/tracking/track';
+import { newEventId } from '@/lib/tracking/event-id';
 
 // Figma-exported icon glyphs (node 131:204)
 const ICONS = {
@@ -196,7 +197,7 @@ export function StitchEstimator() {
       const converted = await Promise.all(photos.map(imageFileToDataUrl));
       const photoUrls = converted.filter((url): url is string => Boolean(url));
 
-      const eventId = crypto.randomUUID();
+      const eventId = newEventId();
       await submitQuoteRequest({
         name,
         phone,
