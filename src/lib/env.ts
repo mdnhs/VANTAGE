@@ -32,6 +32,8 @@ const serverSchema = z.object({
   AI_PROVIDER_MOCK: z.stringbool().optional(),
   DISABLE_CUSTOM_SCRIPTS: z.stringbool().optional(),
   SEED_DEMO_USERS: z.stringbool().optional(),
+  // Loopback origin the proxy uses to reach the redirect resolver; defaults per environment.
+  INTERNAL_ORIGIN: z.string().url().optional(),
 });
 
 const serverEnvSchema = serverSchema.superRefine((env, ctx) => {
