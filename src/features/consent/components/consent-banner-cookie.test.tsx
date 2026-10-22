@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+// @vitest-environment-options {"url":"https://vantageautobody.ie/"}
 import { cleanup, render, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -40,9 +41,7 @@ describe('ConsentBanner with the real cookie rules', () => {
     render(<ConsentBanner copy={copy} policy={policy} />);
     fireEvent.click(await screen.findByRole('button', { name: 'Reject all' }));
     const stored = decodeConsent(cookieValue(document.cookie, CONSENT_COOKIE));
-    // Secure cookies are not stored by an insecure test origin; the write itself is covered
-    // by consent-client tests, so accept either the stored cookie or none here.
-    if (stored) expect(stored).toMatchObject({ v: 1, a: 0, m: 0 });
+    expect(stored).toMatchObject({ v: 1, a: 0, m: 0 });
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 

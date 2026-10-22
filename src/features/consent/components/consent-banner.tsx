@@ -54,11 +54,11 @@ export function ConsentBanner({ copy, policy }: { copy: ConsentCopy; policy: Con
     if (open || !returnFocus.current) return;
     returnFocus.current = false;
     const trigger = document.querySelector<HTMLElement>('[data-cookie-settings]');
-    if (trigger) return trigger.focus();
+    if (trigger) return trigger.focus({ preventScroll: true });
     const main = document.querySelector<HTMLElement>('main');
     if (!main) return;
     if (!main.hasAttribute('tabindex')) main.tabIndex = -1;
-    main.focus();
+    main.focus({ preventScroll: true });
   }, [open]);
 
   if (!open) return null;

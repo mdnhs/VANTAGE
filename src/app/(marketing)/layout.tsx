@@ -2,7 +2,6 @@ import { manrope, inter } from '@/lib/font';
 import { StitchHeader } from '@/components/marketing/stitch-header';
 import { StitchCta } from '@/components/marketing/stitch-cta';
 import { MarketingFooter } from '@/components/marketing/footer';
-import { Suspense } from 'react';
 import { CookieSettingsSlot } from '@/features/tracking/components/cookie-settings-slot';
 import { MarketingTracking } from '@/features/tracking/components/marketing-tracking';
 import { SmoothScroll } from '@/components/providers/smooth-scroll';
@@ -28,16 +27,8 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
       />
       {children}
       <StitchCta phone={settings.phone} />
-      <MarketingFooter
-        cookieSettings={
-          <Suspense fallback={null}>
-            <CookieSettingsSlot />
-          </Suspense>
-        }
-      />
-      <Suspense fallback={null}>
-        <MarketingTracking />
-      </Suspense>
+      <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+      <MarketingTracking />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { render, fireEvent, screen } from '@testing-library/react';
+import { cleanup, render, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ConsentBanner } from './consent-banner';
@@ -23,9 +23,7 @@ const copy = {
 };
 const policy = { version: 1, months: 6 };
 
-afterEach(() => {
-  document.body.innerHTML = '';
-});
+afterEach(cleanup);
 
 describe('ConsentBanner focus', () => {
   it('returns focus to the footer Cookie settings trigger when it closes', async () => {

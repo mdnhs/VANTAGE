@@ -8,7 +8,6 @@ const state = vi.hoisted(() => ({
   disabled: false,
 }));
 
-vi.mock('next/cache', () => ({ io: async () => undefined }));
 vi.mock('@/lib/env', () => ({ serverEnv: () => ({ DISABLE_CUSTOM_SCRIPTS: state.disabled }) }));
 vi.mock('@/server/queries/get-setting', () => ({
   getSetting: async (key: 'consent' | 'scripts') => parseGlobal(key, state.settings[key]),

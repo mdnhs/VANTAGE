@@ -10,7 +10,6 @@ const state = vi.hoisted(() => ({
   disabled: false,
 }));
 
-vi.mock('next/cache', () => ({ io: async () => undefined }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
 vi.mock('next/script', () => ({
   default: (props: { id: string; children?: string }) => <script data-testid={props.id}>{props.children}</script>,
