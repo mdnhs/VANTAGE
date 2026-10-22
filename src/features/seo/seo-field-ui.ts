@@ -1,5 +1,5 @@
 import type { FieldOverrides } from '@/components/admin/schema-form/to-fields';
-import { SEO_PAGE_KEYS, type SeoPageKey } from '@/lib/content/globals-seo';
+import { SEO_PAGE_KEYS, TWITTER_CARDS, type SeoPageKey } from '@/lib/content/globals-seo';
 
 // Admin labels for a page's SEO form (MK wording); spread into GLOBAL_FIELD_UI.
 const PAGE_SEO_UI = {
@@ -12,10 +12,10 @@ const PAGE_SEO_UI = {
   twitterCard: {
     label: 'Card type',
     widget: 'select',
-    options: [
-      { value: 'summary_large_image', label: 'Large image' },
-      { value: 'summary', label: 'Small image' },
-    ],
+    options: TWITTER_CARDS.map((value) => ({
+      value,
+      label: value === 'summary_large_image' ? 'Large image' : 'Small image',
+    })),
   },
   noindex: { label: 'Hide from search engines' },
 } as const satisfies FieldOverrides;

@@ -34,7 +34,9 @@ describe('PageSeoGlobal', () => {
   it('bounds the title and description', () => {
     expect(PageSeoGlobal.safeParse({ title: 'a'.repeat(70) }).success).toBe(true);
     expect(PageSeoGlobal.safeParse({ title: 'a'.repeat(71) }).success).toBe(false);
-    expect(PageSeoGlobal.safeParse({ description: 'a'.repeat(321) }).success).toBe(false);
+    expect(PageSeoGlobal.safeParse({ description: 'a'.repeat(201) }).success).toBe(false);
+    expect(PageSeoGlobal.safeParse({ description: 'a'.repeat(200) }).success).toBe(true);
+    expect(canonical('/' + 'a'.repeat(300))).toBe(false);
     expect(PageSeoGlobal.safeParse({ twitterCard: 'player' }).success).toBe(false);
   });
 

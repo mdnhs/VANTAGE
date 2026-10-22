@@ -18,6 +18,9 @@ export const PUBLIC_PAGE_IDS = [
 ] as const;
 export type PublicPageId = (typeof PUBLIC_PAGE_IDS)[number];
 
+export type PagePageKey =
+  'page.home' | 'page.services' | 'page.our-work' | 'page.insurance' | 'page.about' | 'page.process';
+
 export type PublicPage = {
   id: PublicPageId;
   path: string;
@@ -26,9 +29,11 @@ export type PublicPage = {
   title: string;
   description: string;
   // Where the page's copy is edited; with `editorTab` the SEO tab lives there (`?tab=seo`),
-  // otherwise `editor` is the standalone /dashboard/seo/pages/<id> screen.
-  editor: string;
+  // otherwise `editorHref` is the standalone /dashboard/seo/pages/<id> screen.
+  editorHref: string;
   editorTab: boolean;
+  // The versioned `page.*` global holding the page's copy; null where there is no editor.
+  pageKey: PagePageKey | null;
   // Every page renders exactly one <h1> (checked in the browser exit check).
   hasH1: true;
   // Distinct internal hrefs rendered by the page body, counted from the component source: the
@@ -49,8 +54,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     label: 'Home page',
     title: 'Precision Crash Repair & Restoration Dublin',
     description: HOME_DESCRIPTION,
-    editor: '/dashboard/home-page',
+    editorHref: '/dashboard/home-page',
     editorTab: true,
+    pageKey: 'page.home',
     hasH1: true,
     codeLinks: 3,
   },
@@ -61,8 +67,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Services',
     description:
       'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
-    editor: '/dashboard/services',
+    editorHref: '/dashboard/services',
     editorTab: true,
+    pageKey: 'page.services',
     hasH1: true,
     codeLinks: 3,
   },
@@ -73,8 +80,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Our Work',
     description:
       'Explore a curated selection of our most challenging and rewarding restoration projects. Precision engineering meets master craftsmanship.',
-    editor: '/dashboard/projects',
+    editorHref: '/dashboard/projects',
     editorTab: true,
+    pageKey: 'page.our-work',
     hasH1: true,
     codeLinks: 1,
   },
@@ -85,8 +93,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Insurance Support',
     description:
       'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
-    editor: '/dashboard/insurance',
+    editorHref: '/dashboard/insurance',
     editorTab: true,
+    pageKey: 'page.insurance',
     hasH1: true,
     codeLinks: 2,
   },
@@ -97,8 +106,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'About',
     description:
       "Founded in 1998, Vantage Autobody has evolved into Ireland's premier high-end collision and repair facility.",
-    editor: '/dashboard/about',
+    editorHref: '/dashboard/about',
     editorTab: true,
+    pageKey: 'page.about',
     hasH1: true,
     codeLinks: 1,
   },
@@ -109,8 +119,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Our Process',
     description:
       'From initial digital triage to strict multi-point handoff inspection, the Vantage repair standard is transparently logged every time.',
-    editor: '/dashboard/process-page',
+    editorHref: '/dashboard/process-page',
     editorTab: true,
+    pageKey: 'page.process',
     hasH1: true,
     codeLinks: 3,
   },
@@ -121,8 +132,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Contact',
     description:
       'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
-    editor: '/dashboard/seo/pages/contact',
+    editorHref: '/dashboard/seo/pages/contact',
     editorTab: false,
+    pageKey: null,
     hasH1: true,
     codeLinks: 1,
   },
@@ -133,8 +145,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Get a Free Quote',
     description:
       'Precision assessment starts here. Provide your vehicle details and images for an accurate, no-obligation estimate from our master technicians.',
-    editor: '/dashboard/seo/pages/get-a-quote',
+    editorHref: '/dashboard/seo/pages/get-a-quote',
     editorTab: false,
+    pageKey: null,
     hasH1: true,
     codeLinks: 1,
   },
@@ -143,33 +156,35 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
 export const PUBLIC_PAGE_LIST: readonly PublicPage[] = PUBLIC_PAGE_IDS.map((id) => PUBLIC_PAGES[id]);
 
 // Paths served by a code page; a redirect source may not shadow one, and the proxy skips them.
-export const LIVE_PATHS: readonly string[] = PUBLIC_PAGE_LIST.map((p) => p.path);
+export const LIVE_PATHS: ReadonlySet<string> = new Set(PUBLIC_PAGE_LIST.map((p) => p.path));
 
-// First path segments owned by the app itself (admin, auth, API, assets, generated files).
-const RESERVED_SEGMENTS = new Set([
-  'dashboard',
-  'api',
-  'login',
-  'forgot-password',
-  'reset-password',
-  'two-factor',
-  'two-factor-setup',
-  'account',
-  'unauthorized',
-  'maintenance',
-  'assets',
-  'fonts',
-  'uploads',
-  '_next',
-  'og',
-  'robots.txt',
-  'sitemap.xml',
-  'favicon.ico',
-]);
+// Paths owned by the app itself (admin, auth, API, assets, generated files); segment-bound.
+export const RESERVED_PREFIXES = [
+  '/dashboard',
+  '/api',
+  '/_next',
+  '/uploads',
+  '/assets',
+  '/fonts',
+  '/og',
+  '/opengraph-image',
+  '/twitter-image',
+  '/login',
+  '/account',
+  '/forgot-password',
+  '/reset-password',
+  '/two-factor',
+  '/two-factor-setup',
+  '/unauthorized',
+  '/maintenance',
+] as const;
 
 export function isReservedPath(path: string): boolean {
-  const segment = path.split(/[?#]/, 1)[0]!.split('/')[1] ?? '';
-  return RESERVED_SEGMENTS.has(segment);
+  // Collapse leading slashes so "//dashboard" is judged as "/dashboard".
+  const clean = '/' + path.split(/[?#]/, 1)[0]!.replace(/^\/+/, '');
+  if (RESERVED_PREFIXES.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))) return true;
+  // Files (robots.txt, sitemap.xml, favicon.ico, any asset): a last segment with a dot.
+  return clean.split('/').pop()!.includes('.');
 }
 
 export function isPublicPageId(value: string): value is PublicPageId {
@@ -179,5 +194,5 @@ export function isPublicPageId(value: string): value is PublicPageId {
 // Where the admin goes to fix a page's SEO.
 export function seoFixHref(id: PublicPageId): string {
   const page = PUBLIC_PAGES[id];
-  return page.editorTab ? `${page.editor}?tab=seo` : page.editor;
+  return page.editorTab ? `${page.editorHref}?tab=seo` : page.editorHref;
 }

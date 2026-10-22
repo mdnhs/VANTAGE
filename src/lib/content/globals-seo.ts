@@ -14,7 +14,7 @@ const s = (max: number) => z.string().trim().max(max).default('');
 const Canonical = z
   .string()
   .trim()
-  .max(500)
+  .max(300)
   .refine(
     (v) =>
       v === '' ||
@@ -24,14 +24,16 @@ const Canonical = z
   )
   .default('');
 
+export const TWITTER_CARDS = ['summary_large_image', 'summary'] as const;
+
 export const PageSeoGlobal = z.object({
   title: s(70),
-  description: s(320),
+  description: s(200),
   ogTitle: s(70),
   ogDescription: s(200),
   ogImage: imageRefSchema.default(null),
   canonical: Canonical,
-  twitterCard: z.enum(['summary_large_image', 'summary']).default('summary_large_image'),
+  twitterCard: z.enum(TWITTER_CARDS).default('summary_large_image'),
   noindex: z.boolean().default(false),
 });
 
