@@ -35,7 +35,7 @@ describe('comingSoonLink', () => {
 describe('comingSoonParams', () => {
   const keys = comingSoonParams().map((p) => [p.section, ...p.rest].join('/'));
   it('lists the placeholder destinations', () => {
-    for (const k of ['seo', 'seo/redirects', 'help']) {
+    for (const k of ['seo', 'help']) {
       expect(keys).toContain(k);
     }
   });
@@ -54,6 +54,7 @@ describe('comingSoonParams', () => {
       'users',
       'account',
       'seo/defaults',
+      'seo/redirects',
       'appearance',
       'activity',
     ]) {
