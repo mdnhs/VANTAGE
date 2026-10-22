@@ -100,6 +100,10 @@ export const API_ROUTES = {
     revisions: (key: string) => `/admin/globals/${key}/revisions`,
     restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
   },
+  tracking: {
+    detail: '/admin/tracking',
+    testCapi: '/admin/tracking/test-capi',
+  },
   ai: {
     status: '/admin/ai/status',
     settings: '/admin/ai/settings',

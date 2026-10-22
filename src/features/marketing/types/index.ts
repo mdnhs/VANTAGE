@@ -1,0 +1,7 @@
+import type { TrackingAdmin } from '@/server/services/tracking-service';
+
+export type { ChannelStatus, TrackingAdmin } from '@/server/services/tracking-service';
+
+export type TestCapiResult = { ok: boolean; status: number; message: string };
+
+export type TrackingStatusMap = TrackingAdmin['status'];
