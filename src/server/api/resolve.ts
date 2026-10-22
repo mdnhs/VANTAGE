@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { after } from 'next/server';
 import * as z from 'zod';
+import { serverEnv } from '@/lib/env';
+import { HIT_HEADER, isHitToken } from '@/lib/seo/hit-token';
 import { resolvePath } from '@/lib/seo/route-resolution';
 import type { AppEnv } from '@/server/api/types';
 import { zValidator } from '@/server/lib/validator';
@@ -15,7 +17,8 @@ export const resolve = new Hono<AppEnv>().get(
   async (c) => {
     const { path } = c.req.valid('query');
     const result = resolvePath(await getRedirectTable(), path);
-    if (result.kind === 'redirect') {
+    // Only the proxy's signed, non-prefetch GET counts as a visit.
+    if (result.kind === 'redirect' && isHitToken(serverEnv().AUTH_SECRET, path, c.req.header(HIT_HEADER))) {
       after(() =>
         recordHit(path).catch((error) => console.warn('[redirects] hit not recorded:', error instanceof Error ? error.message : error)),
       );

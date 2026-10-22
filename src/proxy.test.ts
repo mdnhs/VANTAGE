@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { hitToken } from '@/lib/seo/hit-token';
+
 import { config, proxy } from './proxy';
 
 const req = (url: string, init?: { cookie?: string; headers?: Record<string, string> }) =>
@@ -160,6 +162,39 @@ describe('proxy: redirect enforcement', () => {
     expect((await proxy(post)).headers.get('location')).toBeNull();
     expect((await proxy(req('/old', { cookie: '__prerender_bypass=1' }))).headers.get('location')).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('proxy: caching and hit signing', () => {
+  const fetchMock = vi.fn();
+  const sentHeaders = () => (fetchMock.mock.calls[0]![1] as RequestInit).headers as Record<string, string> | undefined;
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () =>
+      new Response(JSON.stringify({ kind: 'redirect', destination: '/services', statusCode: 301 }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('lets browsers cache a redirect for an hour', async () => {
+    expect((await proxy(req('/old'))).headers.get('cache-control')).toBe('public, max-age=3600');
+  });
+
+  it('signs the resolver call for a plain GET', async () => {
+    await proxy(req('/old'));
+    expect(sentHeaders()?.['x-vantage-hit']).toBe(hitToken(process.env.AUTH_SECRET ?? '', '/old'));
+  });
+
+  it.each([
+    ['HEAD', {}],
+    ['GET', { 'next-router-prefetch': '1' }],
+    ['GET', { 'sec-purpose': 'prefetch' }],
+    ['GET', { purpose: 'prefetch' }],
+  ])('sends no hit header for %s %j', async (method, headers) => {
+    await proxy(new NextRequest('http://localhost:3000/old', { method, headers }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(sentHeaders()?.['x-vantage-hit']).toBeUndefined();
   });
 });
 

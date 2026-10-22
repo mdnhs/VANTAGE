@@ -5,6 +5,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/server/db';
 import { redirects } from '@/server/db/schema';
 
+import { serverEnv } from '@/lib/env';
+import { HIT_HEADER, hitToken } from '@/lib/seo/hit-token';
+
 import { call } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
@@ -28,7 +31,11 @@ beforeEach(async () => {
   await db.execute(sql`truncate table redirects cascade`);
 });
 
-const resolve = (path: string) => call(`/resolve?path=${encodeURIComponent(path)}`);
+const signed = (path: string) => ({ [HIT_HEADER]: hitToken(serverEnv().AUTH_SECRET, path) });
+const resolve = (path: string, headers: Record<string, string> = signed(path)) =>
+  call(`/resolve?path=${encodeURIComponent(path)}`, undefined, { headers });
+const hits = async (path: string) =>
+  (await db.select().from(redirects).where(eq(redirects.sourcePath, path)))[0]!.hitCount;
 
 describe('GET /resolve', () => {
   it('redirects an active row, no-store, and records the hit', async () => {
@@ -42,6 +49,16 @@ describe('GET /resolve', () => {
     expect(row!.hitCount).toBe(1);
     expect(row!.lastHitAt).not.toBeNull();
     expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('answers but does not count an unsigned or wrongly signed call', async () => {
+    await db.insert(redirects).values({ sourcePath: '/old', destination: '/services' });
+    expect(await (await resolve('/old', {})).json()).toMatchObject({ kind: 'redirect' });
+    expect(await (await resolve('/old', { [HIT_HEADER]: hitToken(serverEnv().AUTH_SECRET, '/other') })).json()).toMatchObject({
+      kind: 'redirect',
+    });
+    await Promise.all(pending);
+    expect(await hits('/old')).toBe(0);
   });
 
   it('does not touch updated_at on a hit', async () => {

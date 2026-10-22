@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { REDIRECT_STATUSES, RedirectInput, type RedirectDto, type RedirectStatus } from '@/lib/seo/redirect-rules';
@@ -145,6 +145,7 @@ function RedirectForm({ editing, onClose }: { editing: RedirectDto | 'new'; onCl
               ))}
             </SelectContent>
           </Select>
+          <FieldDescription>Browsers may keep a redirect for up to an hour, so a change can take that long to reach a returning visitor.</FieldDescription>
           {errors.statusCode ? <FieldError>{errors.statusCode}</FieldError> : null}
         </Field>
         <Field data-invalid={errors.note ? true : undefined}>

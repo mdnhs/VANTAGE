@@ -9,13 +9,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   'use cache';
   cacheLife('max');
 
-  // new Date() is non-deterministic and would otherwise force this route to render per
-  // request; 'use cache' captures one build-time value and serves it until the tag expires.
-  const lastModified = new Date();
-
-  return (await getSitemapEntries()).map(({ path, changeFrequency, priority }) => ({
+  // A page with no stored rows has no date: omitting <lastmod> beats a made-up one.
+  return (await getSitemapEntries()).map(({ path, changeFrequency, priority, lastModified }) => ({
     url: path === '/' ? `${APP_URL}/` : `${APP_URL}${path}`,
-    lastModified,
+    ...(lastModified ? { lastModified } : {}),
     changeFrequency,
     priority,
   }));
