@@ -19,7 +19,18 @@ export function OgCard({ title, eyebrow, siteName, colors }: OgSubject & { color
       }}
     >
       <div style={{ display: 'flex', fontSize: 30, color: colors.accent, letterSpacing: 1 }}>{eyebrow}</div>
-      <div style={{ display: 'flex', fontSize: title.length > 60 ? 64 : 80, lineHeight: 1.08 }}>{title}</div>
+      <div
+        style={{
+          display: 'flex',
+          maxWidth: '100%',
+          overflow: 'hidden',
+          wordBreak: 'break-word',
+          fontSize: title.length > 60 ? 64 : 80,
+          lineHeight: 1.08,
+        }}
+      >
+        {title}
+      </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 30 }}>
         <div style={{ width: 14, height: 14, borderRadius: 7, background: colors.accent }} />
         {siteName}

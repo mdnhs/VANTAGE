@@ -35,7 +35,11 @@ export function SocialCard({
       ) : (
         // The generated share card the site serves when a page has no image of its own.
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={pageId ? pageOgPath(pageId) : GENERATED_OG} alt='Share image preview' className='aspect-[1.91/1] w-full bg-muted object-cover' />
+        <img
+          src={pageId ? pageOgPath(pageId) : GENERATED_OG}
+          alt='Share image preview'
+          className='aspect-[1.91/1] w-full bg-muted object-cover'
+        />
       )}
       <div className='flex flex-col gap-1 border-t p-3'>
         <p className='text-xs tracking-wide text-muted-foreground uppercase'>{siteHost}</p>

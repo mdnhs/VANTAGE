@@ -32,4 +32,18 @@ describe('ogSubjectFor', () => {
     expect(home).toEqual({ title: 'Vantage Autobody', eyebrow: PUBLIC_PAGES.home.title, siteName: 'Vantage Autobody' });
     expect((await ogSubjectFor('services')).eyebrow).toBe(PUBLIC_PAGES.home.title);
   });
+
+  it('strips emoji from the title', async () => {
+    seo['seo.page.about'] = { ogTitle: 'Fast \u{1F697} repairs \u2764\uFE0F today', title: '' };
+    expect((await ogSubjectFor('about')).title).toBe('Fast repairs today');
+    seo['seo.page.about'] = { ogTitle: '\u{1F697}', title: '' };
+    expect((await ogSubjectFor('about')).title).toBe('About');
+  });
+
+  it('cuts a long title to 90 characters with an ellipsis', async () => {
+    seo['seo.page.about'] = { ogTitle: 'word '.repeat(40), title: '' };
+    const { title } = await ogSubjectFor('about');
+    expect([...title].length).toBeLessThanOrEqual(90);
+    expect(title.endsWith('…')).toBe(true);
+  });
 });
