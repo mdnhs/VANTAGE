@@ -10,7 +10,7 @@ async function main() {
   console.log(
     `${dryRun ? 'DRY RUN: would delete' : 'deleted'} ` +
       `quotes: ${r.quotes.expired} past ${r.windows.enquiryRetentionMonths} months + ${r.quotes.spam} spam past ${r.windows.spamRetentionDays} days; ` +
-      `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos}`,
+      `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos} (+ ${r.legacyPhotos} legacy left for cleanup); orphan photos: ${r.orphanPhotos}`,
   );
   if (dryRun) {
     console.log('ai conversations: (not counted in dry run)');

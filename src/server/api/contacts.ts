@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
@@ -9,35 +10,45 @@ import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
+import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
-import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import {
   publicContactMessageSchema,
   contactMessageListQuerySchema,
   updateContactMessageSchema,
 } from '@/validations/contact-message-schema';
 
+// 4 photos of up to 20 MB as base64 data URLs, plus the form fields.
+const PUBLIC_BODY_LIMIT = bodyLimit({
+  maxSize: 110 * 1024 * 1024,
+  onError: () => {
+    throw ApiError.payloadTooLarge('Photos are too large');
+  },
+});
+
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const contacts = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), zValidator('json', publicContactMessageSchema), async (c) => {
+  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicContactMessageSchema), async (c) => {
     const { eventId, sourcePath, ...input } = c.req.valid('json');
 
-    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/inquiries');
+    const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);
 
-    const row = await contactMessageService.create(input);
+    const row = await contactMessageService.create(input, photoMediaIds);
     queueLeadConversionAfterResponse({
-      leadId: row.id,
+      leadId: row!.id,
       eventId,
       sourcePath,
-      email: row.email,
-      phone: row.phone,
+      email: row!.email,
+      phone: row!.phone,
       cookieHeader: c.req.header('cookie'),
       ip: clientIp(c.req.raw.headers),
       userAgent: c.req.header('user-agent') ?? '',
     });
-    return ok(c, row, { status: 201 });
+    // Visitors never get the stored photo URLs back.
+    const { photos: _photos, ...echo } = row!;
+    return ok(c, echo, { status: 201 });
   })
 
   // Admin list with pagination, search, and status filtering

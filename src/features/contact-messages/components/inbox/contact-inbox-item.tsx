@@ -20,7 +20,7 @@ interface ContactInboxItemProps {
 export function ContactInboxItem({ message, isSelected, onSelect }: ContactInboxItemProps) {
   const isNew = message.status === 'new';
   const fullName = `${message.firstName} ${message.lastName}`.trim();
-  const photoCount = message.photoUrls?.length ?? 0;
+  const photoCount = message.photos.length;
 
   return (
     <button

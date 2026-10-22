@@ -583,17 +583,17 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
         </div>
 
         {/* Attachments: Customer Photos */}
-        {quote.photoUrls && quote.photoUrls.length > 0 && (
+        {quote.photos.length > 0 && (
           <div className='flex flex-col gap-2.5'>
             <div className='flex items-center justify-between'>
               <span className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
-                Attached Damage Photos ({quote.photoUrls.length})
+                Attached Damage Photos ({quote.photos.length})
               </span>
               <span className='text-[11px] text-muted-foreground'>Click to expand full resolution</span>
             </div>
 
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4'>
-              {quote.photoUrls.map((url, idx) => (
+              {quote.photos.map(({ url }, idx) => (
                 <button
                   key={idx}
                   type='button'

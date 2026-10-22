@@ -54,7 +54,6 @@ export const createQuoteRequestSchema = z.object({
   year: z.number().int().min(1900).max(2100).nullable().optional(),
   serviceType: z.string().max(120).nullable().optional(),
   description: z.string().max(3000).nullable().optional(),
-  photoUrls: z.array(z.string()).max(6).optional(),
   source: z.enum(QUOTE_SOURCES).optional().default('website'),
   status: z.enum(ALL_QUOTE_STATUSES).optional().default('new'),
   assignedUserId: z.string().min(1).nullable().optional(),
@@ -70,6 +69,8 @@ export const createQuoteRequestSchema = z.object({
 
 // Public website forms: customer-supplied fields only. Admin-only columns (status,
 // assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
+export const publicPhotoUrlsSchema = z.array(z.string().startsWith('data:image/').max(30_000_000)).max(4).optional();
+
 export const publicQuoteRequestSchema = createQuoteRequestSchema
   .pick({
     name: true,
@@ -84,10 +85,10 @@ export const publicQuoteRequestSchema = createQuoteRequestSchema
     year: true,
     serviceType: true,
     description: true,
-    photoUrls: true,
     source: true,
   })
   .extend({
+    photoUrls: publicPhotoUrlsSchema,
     eventId: z.uuid().optional(),
     sourcePath: z.string().max(300).optional(),
   });
@@ -116,8 +117,8 @@ export const quoteRequestListQuerySchema = z.object({
   assignedUserId: z.string().min(1).optional(),
 });
 
-export type CreateQuoteRequestInput = z.input<typeof createQuoteRequestSchema>;
 export type PublicQuoteRequestInput = z.input<typeof publicQuoteRequestSchema>;
+export type CreateQuoteRequestInput = z.input<typeof createQuoteRequestSchema>;
 export type CreateQuoteRequestOutput = z.infer<typeof createQuoteRequestSchema>;
 export type UpdateQuoteRequestInput = z.input<typeof updateQuoteRequestSchema>;
 export type UpdateQuoteRequestOutput = z.infer<typeof updateQuoteRequestSchema>;

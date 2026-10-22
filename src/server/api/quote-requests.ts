@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
@@ -8,7 +9,7 @@ import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
-import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
+import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
@@ -18,16 +19,24 @@ import {
   updateQuoteRequestSchema,
 } from '@/validations/quote-request-schema';
 
+// 4 photos of up to 20 MB as base64 data URLs, plus the form fields.
+const PUBLIC_BODY_LIMIT = bodyLimit({
+  maxSize: 110 * 1024 * 1024,
+  onError: () => {
+    throw ApiError.payloadTooLarge('Photos are too large');
+  },
+});
+
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), zValidator('json', publicQuoteRequestSchema), async (c) => {
+  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
-    const { eventId, sourcePath } = c.req.valid('json');
-    const input = createQuoteRequestSchema.parse(c.req.valid('json'));
-    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/quotes');
-    const row = await quoteRequestService.create(input);
+    const { photoUrls, eventId, sourcePath, ...fields } = c.req.valid('json');
+    const input = createQuoteRequestSchema.parse(fields);
+    const photoMediaIds = await storeEnquiryPhotos(photoUrls);
+    const row = await quoteRequestService.create(input, { photoMediaIds });
     if (row)
       queueLeadConversionAfterResponse({
         leadId: row.id,
@@ -39,7 +48,9 @@ export const quoteRequests = new Hono<AppEnv>()
         ip: clientIp(c.req.raw.headers),
         userAgent: c.req.header('user-agent') ?? '',
       });
-    return ok(c, row, { status: 201 });
+    // Visitors never get the stored photo URLs back.
+    const { photos: _photos, ...echo } = row!;
+    return ok(c, echo, { status: 201 });
   })
 
   // Staff-entered enquiry (phone / walk-in): full admin schema.
