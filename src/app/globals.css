@@ -60,6 +60,50 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Admin shell utilities and theme aliases (colour values live in the dashboard's admin.css,
+   scoped to :root:has([data-admin-root])). New names only: the public site is unaffected. */
+@theme {
+  --text-title: 2.25rem;
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.025em;
+  --text-title--font-weight: 600;
+  --text-card-title: 1.125rem;
+  --text-card-title--line-height: 1.35;
+  --text-card-title--font-weight: 600;
+  --text-kpi: 2.75rem;
+  --text-kpi--line-height: 1;
+  --text-kpi--letter-spacing: -0.03em;
+  --text-kpi--font-weight: 600;
+  --radius-card: 1.375rem;
+}
+
+@theme inline {
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-skeleton: var(--skeleton);
+  --color-hero-chip: var(--hero-chip);
+  --color-hero-chip-foreground: var(--hero-chip-foreground);
+  --color-hero-delta: var(--hero-delta);
+}
+
+@utility bg-hatch {
+  background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 3px, transparent 3px 7px);
+}
+
+@utility bg-hero {
+  background-image: linear-gradient(160deg, var(--hero-from), var(--hero-to));
+  color: var(--hero-foreground);
+}
+
+@utility bg-promo {
+  background-image: linear-gradient(160deg, var(--promo-from), var(--promo-to));
+  color: var(--promo-foreground);
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
