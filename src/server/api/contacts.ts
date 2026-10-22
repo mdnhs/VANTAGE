@@ -36,18 +36,19 @@ export const contacts = new Hono<AppEnv>()
     const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);
 
     const row = await contactMessageService.create(input, photoMediaIds);
+    if (!row) throw new Error('The contact message was not saved');
     queueLeadConversionAfterResponse({
-      leadId: row!.id,
+      leadId: row.id,
       eventId,
       sourcePath,
-      email: row!.email,
-      phone: row!.phone,
+      email: row.email,
+      phone: row.phone,
       cookieHeader: c.req.header('cookie'),
       ip: clientIp(c.req.raw.headers),
       userAgent: c.req.header('user-agent') ?? '',
     });
     // Visitors never get the stored photo URLs back.
-    const { photos: _photos, ...echo } = row!;
+    const { photos: _photos, ...echo } = row;
     return ok(c, echo, { status: 201 });
   })
 

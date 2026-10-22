@@ -19,6 +19,8 @@
     "jobs:retention": "tsx scripts/retention.ts",
     "admin:create": "tsx scripts/admin-create.ts",
     "media:smoke": "tsx scripts/r2-smoke.ts",
+    "media:migrate": "tsx scripts/migrate-cloudinary-media.ts",
+    "media:cloudinary-cleanup": "tsx scripts/cloudinary-cleanup.ts",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
