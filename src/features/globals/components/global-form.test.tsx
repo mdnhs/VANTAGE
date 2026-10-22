@@ -6,8 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CONFLICT_MESSAGE } from '../lib/submit-result';
 import { GlobalForm } from './global-form';
 
-const can = vi.hoisted(() => ({ value: true }));
-vi.mock('@/contexts/actor-provider', () => ({ useCan: () => can.value }));
+const can = vi.hoisted(() => ({ value: true, impersonatedBy: null as string | null }));
+vi.mock('@/contexts/actor-provider', () => ({
+  useCan: () => can.value,
+  useActor: () => ({ impersonatedBy: can.impersonatedBy }),
+}));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 const privacy = (version: number, months: number) => ({
@@ -30,6 +33,7 @@ function respond(body: unknown, status = 200) {
 
 beforeEach(() => {
   can.value = true;
+  can.impersonatedBy = null;
   putStatus = 200;
   docs = [privacy(1, 24)];
   vi.stubEnv('NEXT_PUBLIC_API_PREFIX', '/api');
@@ -78,6 +82,14 @@ describe('GlobalForm', () => {
     expect(screen.queryByRole('button', { name: /^Save/ })).toBeNull();
     // Reading history stays available.
     expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
+  });
+
+  it('is read-only while viewing as another user, even for a role that can update', async () => {
+    can.impersonatedBy = 'owner-id';
+    renderForm();
+    const field = await screen.findByLabelText('Keep enquiries for (months)');
+    expect(field.closest('fieldset')?.disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: /^Save/ })).toBeNull();
   });
 
   it('offers Save to a role that can update', async () => {

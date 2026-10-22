@@ -85,8 +85,9 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+let client: QueryClient;
 const renderView = () => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
       <TrackingView />
@@ -122,6 +123,23 @@ describe('TrackingView', () => {
     fireEvent.change(await tokenInput(), { target: { value: 'x'.repeat(24) } });
     save();
     await waitFor(() => expect(putBodies[0]).toMatchObject({ capiToken: 'x'.repeat(24) }));
+  });
+
+  it('keeps the typed token out of the mutation and query caches after saving', async () => {
+    const token = 'x'.repeat(24) + 'SECRET';
+    renderView();
+    fireEvent.change(await tokenInput(), { target: { value: token } });
+    save();
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    await waitFor(() => expect(client.getMutationCache().getAll()).toEqual([]));
+    expect(
+      JSON.stringify(
+        client
+          .getQueryCache()
+          .getAll()
+          .map((q) => q.state.data),
+      ),
+    ).not.toContain(token);
   });
 
   it('sends capiToken null after Remove token', async () => {

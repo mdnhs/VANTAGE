@@ -199,6 +199,9 @@ function TrackingForm({
         ...(capiToken !== undefined ? { capiToken } : {}),
         ...(matchingChanged ? { enhancedMatching: { enabled: values.matching, acknowledge: values.acknowledge } } : {}),
       });
+      // Drop the finished mutation (its variables hold the typed token) and the field.
+      save.reset();
+      form.setValue('capiToken', '');
       onSaved();
       toast.success('Tracking saved');
     } catch (error) {

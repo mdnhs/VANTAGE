@@ -7,7 +7,7 @@ import { GLOBALS } from '@/lib/content/globals';
 
 import { ConsentView } from './consent-view';
 
-vi.mock('@/contexts/actor-provider', () => ({ useCan: () => true }));
+vi.mock('@/contexts/actor-provider', () => ({ useCan: () => true, useActor: () => ({ impersonatedBy: null }) }));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 beforeEach(() => {
