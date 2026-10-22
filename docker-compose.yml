@@ -1,0 +1,22 @@
+# Local Postgres for development. Start with `docker compose up -d`.
+# DATABASE_URL=postgresql://vantage:vantage@localhost:5433/vantage
+services:
+  postgres:
+    image: postgres:18.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vantage
+      POSTGRES_PASSWORD: vantage
+      POSTGRES_DB: vantage
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - vantage-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vantage -d vantage']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  vantage-pgdata:
