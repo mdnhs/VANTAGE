@@ -10,6 +10,7 @@ import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
 import { adminNotifications } from './admin-notifications';
 import { adminSearch } from './admin-search';
+import { adminTracking } from './admin-tracking';
 import { adminTheme } from './admin-theme';
 import { adminUsers } from './admin-users';
 import { adminUsersLookup } from './admin-users-lookup';
@@ -62,6 +63,7 @@ export const api = app
   .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
+  .route('/admin/tracking', adminTracking)
   .route('/admin/ai', adminAi)
   .route('/admin/theme', adminTheme)
   .route('/preview', preview)
