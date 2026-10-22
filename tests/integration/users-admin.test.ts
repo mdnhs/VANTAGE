@@ -5,6 +5,8 @@ import { ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
 import { auditLogs, sessions, users } from '@/server/db/schema';
 
+import { activeOwnersExcept } from '@/server/services/user-admin/manage';
+
 import { call, createTestUser, sessionCookie, signInCookie, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
@@ -177,6 +179,15 @@ describe('POST /admin/users/invite', () => {
     const res = await invite(owner.cookie, { email: 'nope', name: '', role: 'chief' });
     expect(res.status).toBe(422);
     expect(Object.keys((await json(res)).error.causes!).sort()).toEqual(['email', 'name', 'role']);
+  });
+
+  it('caps the name at 100 characters like the profile', async () => {
+    const owner = await actor('owner');
+    const long = await invite(owner.cookie, { email: 'long@example.com', name: 'n'.repeat(101), role: 'viewer' });
+    expect(long.status).toBe(422);
+    expect(Object.keys((await json(long)).error.causes!)).toEqual(['name']);
+    const ok = await invite(owner.cookie, { email: 'ok@example.com', name: 'n'.repeat(100), role: 'viewer' });
+    expect(ok.status).toBe(201);
   });
 
   it('treats emails case-insensitively for duplicates (409)', async () => {
@@ -452,5 +463,18 @@ describe('customer accounts (role user) are not managed here', () => {
     const [row] = await db.select().from(users).where(eq(users.id, customer.id));
     expect(row).toMatchObject({ role: 'user', banned: false });
     expect(await sessionsOf(customer.id)).toHaveLength(0);
+  });
+});
+
+describe('activeOwnersExcept', () => {
+  it('does not count an owner whose invitation is still pending', async () => {
+    const owner = await actor('owner');
+    const real = await createTestUser('owner');
+    const { data: pendingOwner } = await json(
+      await post('/admin/users/invite', owner.cookie, { email: 'pending-owner@example.com', name: 'P', role: 'owner' }),
+    );
+    expect(await activeOwnersExcept(db, owner.id)).toBe(1); // only `real`, not the pending invite
+    expect(await activeOwnersExcept(db, real.id)).toBe(1); // only `owner`
+    expect(await activeOwnersExcept(db, pendingOwner.id)).toBe(2);
   });
 });

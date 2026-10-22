@@ -29,8 +29,8 @@ const isAdminPath = (path: string) => path.startsWith('/admin/');
 
 // Better Auth's own device endpoints hand every session's token and IP
 // address to the browser, and /list-sessions refuses sessions older than a
-// day (freshAge). Devices are managed through /api/v1/admin/account/sessions
-// instead (server/modules/account), which shows neither.
+// day (freshAge). Devices are managed through /api/v1/account/sessions
+// instead (services/user-admin/account.ts), which shows neither.
 const HTTP_SESSION_PATHS = new Set(['/list-sessions', '/revoke-session', '/revoke-sessions', '/revoke-other-sessions']);
 
 export const beforeHook = createAuthMiddleware(async (ctx) => {

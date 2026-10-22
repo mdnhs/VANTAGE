@@ -138,7 +138,7 @@ export async function activeOwnersExcept(dbLike: DbLike, id: string) {
   const [{ n }] = await dbLike
     .select({ n: count() })
     .from(users)
-    .where(and(ne(users.id, id), ownerSql, activeSql));
+    .where(and(ne(users.id, id), ownerSql, activeSql, sql`not ${pending}`));
   return n;
 }
 

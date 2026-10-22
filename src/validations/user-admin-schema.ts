@@ -13,7 +13,7 @@ export const InviteInput = z.object({
     .trim()
     .toLowerCase()
     .pipe(z.email({ error: 'Enter a valid email address' })),
-  name: z.string().trim().min(1, 'Enter a name').max(120),
+  name: z.string().trim().min(1, 'Enter a name').max(100),
   role: Role,
 });
 export type InviteInput = z.infer<typeof InviteInput>;

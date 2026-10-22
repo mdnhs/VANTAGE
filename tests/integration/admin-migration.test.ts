@@ -171,6 +171,25 @@ describe('admin migration', () => {
     expect((await verifyAdminMigration()).ok).toBe(true);
   });
 
+  it('counts an existing multi-role owner, so nobody else is promoted', async () => {
+    await seedAdmins();
+    await db
+      .update(adminUsers)
+      .set({ role: 'editor', permissionsBitfield: compressPermissions(CONTENT) })
+      .where(eq(adminUsers.id, ids.owner));
+    await db.insert(users).values({
+      id: 'existing-owner',
+      name: 'Existing',
+      email: 'existing@x.test',
+      emailVerified: true,
+      role: 'owner,editor',
+    });
+    await migrateAdmins({});
+    const [u] = await db.select().from(users).where(eq(users.id, ids.owner));
+    expect(u!.role).toBe('editor');
+    expect((await verifyAdminMigration()).ok).toBe(true);
+  });
+
   it('verify fails on a role mismatch', async () => {
     await seedAdmins();
     await migrateAdmins({});

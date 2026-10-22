@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 
-import type { RoleName } from '@/lib/auth/permissions';
+import { parseRoles, type RoleName } from '@/lib/auth/permissions';
 import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
 import { decompressPermissions } from '@/lib/permission/utils';
 import { db } from '@/server/db';
@@ -65,7 +65,7 @@ export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {
       .select({ email: users.email, role: users.role, id: users.id, banned: users.banned })
       .from(users);
     const existingEmails = new Set(existing.map((u) => u.email));
-    const existingOwner = existing.some((u) => u.role === 'owner' && !u.banned);
+    const existingOwner = existing.some((u) => parseRoles(u.role).includes('owner') && !u.banned);
 
     const toCreate = admins.filter((a) => !existingEmails.has(norm(a.email)));
     const roles = assignRoles(toCreate, existingOwner);
@@ -163,7 +163,7 @@ export async function verifyAdminMigration(): Promise<VerifyResult> {
   const allUsers = await db
     .select({ id: users.id, email: users.email, role: users.role, banned: users.banned })
     .from(users);
-  const ownedElsewhere = allUsers.some((u) => u.role === 'owner' && !u.banned && !byId.has(u.id));
+  const ownedElsewhere = allUsers.some((u) => parseRoles(u.role).includes('owner') && !u.banned && !byId.has(u.id));
   const roles = assignRoles(
     admins.filter((a) => byId.has(a.id)),
     ownedElsewhere,
@@ -204,7 +204,7 @@ export async function verifyAdminMigration(): Promise<VerifyResult> {
   const orphans = Number((orphaned.rows[0] as { n: number }).n);
   if (orphans > 0) problems.push(`${orphans} quote(s) have assigned_admin_id but no assigned_user_id`);
 
-  if (admins.length > 0 && !allUsers.some((u) => u.role === 'owner' && !u.banned)) {
+  if (admins.length > 0 && !allUsers.some((u) => parseRoles(u.role).includes('owner') && !u.banned)) {
     problems.push('no active owner exists');
   }
 
