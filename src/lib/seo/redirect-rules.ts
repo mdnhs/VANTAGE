@@ -27,8 +27,11 @@ function canonicalDestination(v: string): string {
   return path + url.search;
 }
 
-// Destinations may be live pages and legacy pages, but never the app's own areas (API, admin,
-// auth pages, /_next, /uploads). Only those prefixes are blocked: a file path such as /brochure.pdf is fine.
+// Destinations may be live pages, legacy pages and public files, but never the app's own areas
+// (API, admin, auth pages, /_next). Uploaded files and assets are public, so an old /brochure.pdf
+// may point at /uploads/...; only the remaining prefixes are blocked.
+const PUBLIC_FILE_PREFIXES = new Set(['/uploads', '/assets', '/fonts']);
+
 function isAppPath(v: string): boolean {
   let path = v.split(/[?#]/, 1)[0]!;
   try {
@@ -37,7 +40,9 @@ function isAppPath(v: string): boolean {
     // keep the raw path
   }
   path = path.toLowerCase();
-  return RESERVED_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+  return RESERVED_PREFIXES.some(
+    (prefix) => !PUBLIC_FILE_PREFIXES.has(prefix) && (path === prefix || path.startsWith(`${prefix}/`)),
+  );
 }
 
 // Site paths only, optionally with a query string.
