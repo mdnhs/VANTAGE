@@ -1,4 +1,4 @@
-import { auth } from '@/server/lib/auth';
+import { getAuth } from '@/server/lib/auth';
 import { ApiError } from '@/server/lib/errors';
 import { userRepository } from '@/server/repositories/user-repository';
 import type { CreateUserInput } from '@/validations/user-schema';
@@ -15,8 +15,9 @@ export const userService = {
     const existing = await userRepository.byEmail(data.email);
     if (existing) throw ApiError.conflict('A user with this email already exists');
 
-    const result = await auth.api.signUpEmail({
-      body: { email: data.email, password: data.password, name: data.name },
+    // Server-side only (no HTTP sign-up): customers get the non-admin `user` role.
+    const result = await getAuth().api.createUser({
+      body: { email: data.email, password: data.password, name: data.name, role: 'user' as never },
     });
     return result.user;
   },
