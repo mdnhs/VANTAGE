@@ -61,5 +61,5 @@ export function parseTheme(value: unknown): ThemeConfigValue {
   const parsed = ThemeConfig.safeParse(value);
   if (parsed.success) return parsed.data;
   console.warn('Invalid stored theme, using defaults', parsed.error.message);
-  return DEFAULT_THEME;
+  return structuredClone(DEFAULT_THEME);
 }
