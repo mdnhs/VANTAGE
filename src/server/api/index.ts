@@ -9,6 +9,7 @@ import { adminAudit } from './admin-audit';
 import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
 import { adminNotifications } from './admin-notifications';
+import { adminRedirects } from './admin-redirects';
 import { adminSearch } from './admin-search';
 import { adminTracking } from './admin-tracking';
 import { adminTheme } from './admin-theme';
@@ -24,6 +25,7 @@ import { preview } from './preview';
 import { projects } from './projects';
 import { publicConsent } from './public-consent';
 import { quoteRequests } from './quote-requests';
+import { resolve } from './resolve';
 import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
@@ -64,6 +66,8 @@ export const api = app
   .route('/admin/tracking', adminTracking)
   .route('/admin/ai', adminAi)
   .route('/admin/theme', adminTheme)
+  .route('/admin/redirects', adminRedirects)
+  .route('/resolve', resolve)
   .route('/preview', preview)
   .route('/account', account)
   .route('/admin/notifications', adminNotifications)

@@ -118,6 +118,11 @@ export const API_ROUTES = {
     revisions: '/admin/theme/revisions',
     restore: (revisionId: string) => `/admin/theme/revisions/${revisionId}/restore`,
   },
+  redirects: {
+    list: '/admin/redirects',
+    detail: (id: string) => `/admin/redirects/${id}`,
+  },
+  resolve: '/resolve',
   preview: {
     enter: (path: string) => `/preview?path=${encodeURIComponent(path)}`,
     exit: (path: string) => `/preview/exit?path=${encodeURIComponent(path)}`,

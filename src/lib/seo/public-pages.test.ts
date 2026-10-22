@@ -1,3 +1,6 @@
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -9,6 +12,7 @@ import {
   PUBLIC_PAGE_IDS,
   PUBLIC_PAGES,
   isReservedPath,
+  LEGACY_PAGE_EXTENSION,
   seoFixHref,
   type PublicPageId,
 } from './public-pages';
@@ -71,7 +75,7 @@ describe('public page registry', () => {
     ]) {
       expect(isReservedPath(p), p).toBe(true);
     }
-    for (const p of ['/services', '/old-page', '/apiary', '/og-old', '/']) {
+    for (const p of ['/services', '/old-page', '/apiary', '/og-old', '/', '/about.html', '/Services.PHP', '/index.htm', '/page.asp', '/page.aspx']) {
       expect(isReservedPath(p), p).toBe(false);
     }
   });
@@ -86,5 +90,23 @@ describe('public page registry', () => {
     expect(seoFixHref('about')).toBe('/dashboard/about?tab=seo');
     expect(seoFixHref('contact')).toBe('/dashboard/seo/pages/contact');
     expect(seoFixHref('get-a-quote')).toBe('/dashboard/seo/pages/get-a-quote');
+  });
+});
+
+describe('legacy page extensions', () => {
+  it('stay redirectable, unless under an app-owned prefix', () => {
+    expect(isReservedPath('/dashboard/x.html')).toBe(true);
+    expect(isReservedPath('/api/x.php')).toBe(true);
+    expect(isReservedPath('/logo.svg')).toBe(true);
+    expect(isReservedPath('/page.html.map')).toBe(true);
+  });
+
+  it('public/ holds no legacy page file, so the proxy never shadows a real asset', () => {
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? walk(path.join(dir, e.name)) : [e.name],
+      );
+    const legacy = walk(path.join(process.cwd(), 'public')).filter((f) => LEGACY_PAGE_EXTENSION.test(f));
+    expect(legacy).toEqual([]);
   });
 });

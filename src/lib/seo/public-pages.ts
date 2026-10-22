@@ -179,12 +179,17 @@ export const RESERVED_PREFIXES = [
   '/maintenance',
 ] as const;
 
+// Page URLs of the site this one replaces: /about.html, /services.php, /page.aspx ...
+export const LEGACY_PAGE_EXTENSION = /\.(?:html?|php|aspx?)$/i;
+
 export function isReservedPath(path: string): boolean {
   // Collapse leading slashes so "//dashboard" is judged as "/dashboard".
   const clean = '/' + path.split(/[?#]/, 1)[0]!.replace(/^\/+/, '');
   if (RESERVED_PREFIXES.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))) return true;
-  // Files (robots.txt, sitemap.xml, favicon.ico, any asset): a last segment with a dot.
-  return clean.split('/').pop()!.includes('.');
+  // Files (robots.txt, sitemap.xml, favicon.ico, any asset): a last segment with a dot, except
+  // the legacy page extensions of the old site, which stay redirectable (public/ never holds one).
+  const last = clean.split('/').pop()!;
+  return last.includes('.') && !LEGACY_PAGE_EXTENSION.test(last);
 }
 
 export function isPublicPageId(value: string): value is PublicPageId {
