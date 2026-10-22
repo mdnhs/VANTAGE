@@ -2,13 +2,12 @@
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeroForm } from './sections/hero-form';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { PillarsPanel } from './sections/pillars-panel';
 import { CatalogPanel } from './sections/catalog-panel';
 import { ProcessPanel } from './sections/process-panel';
 import { TestimonialsPanel } from './sections/testimonials-panel';
 import { PartnerLogosPanel } from './sections/partner-logos-panel';
-import type { SiteSettings } from '@/features/site-settings/types';
 import type { HomepagePillar } from '@/features/homepage-pillars/types';
 import type { HomepageProcessStep } from '@/features/homepage-process-steps/types';
 import type { Testimonial } from '@/features/testimonials/types';
@@ -16,7 +15,7 @@ import type { PartnerLogo } from '@/features/partner-logos/types';
 import type { HomepageCatalog } from '@/features/homepage-catalogs/types';
 
 const SECTIONS = [
-  { value: 'hero', label: 'Hero' },
+  { value: 'copy', label: 'Page copy' },
   { value: 'pillars', label: 'Pillars' },
   { value: 'catalog', label: 'Catalog' },
   { value: 'process', label: 'Process' },
@@ -27,7 +26,6 @@ const SECTIONS = [
 const SECTION_VALUES = SECTIONS.map((section) => section.value);
 
 interface HomePageTabsProps {
-  settings: SiteSettings | null;
   pillars: { data: HomepagePillar[]; total: number };
   catalogItems: { data: HomepageCatalog[]; total: number };
   processSteps: { data: HomepageProcessStep[]; total: number };
@@ -35,20 +33,14 @@ interface HomePageTabsProps {
   partnerLogos: { data: PartnerLogo[]; total: number };
 }
 
-// One tab per homepage content type — hero copy lives on the site_settings singleton (same
-// PATCH route as Settings); pillars/catalog/process steps/testimonials/partner logos are each their
-// own CRUD tables. Tab is kept in the URL (?tab=...) via nuqs, same pattern as the Settings tabs.
-export function HomePageTabs({
-  settings,
-  pillars,
-  catalogItems,
-  processSteps,
-  testimonials,
-  partnerLogos,
-}: HomePageTabsProps) {
+// One tab per homepage content type. "Page copy" (hero, trust badges, catalog header) is the
+// versioned `page.home` global edited with GlobalEditor; pillars/catalog items/process steps/
+// testimonials/partner logos are each their own CRUD tables. Tab is kept in the URL (?tab=...)
+// via nuqs.
+export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials, partnerLogos }: HomePageTabsProps) {
   const [tab, setTab] = useQueryState(
     'tab',
-    parseAsStringLiteral(SECTION_VALUES).withDefault('hero').withOptions({ clearOnDefault: true }),
+    parseAsStringLiteral(SECTION_VALUES).withDefault('copy').withOptions({ clearOnDefault: true }),
   );
 
   return (
@@ -65,14 +57,14 @@ export function HomePageTabs({
       </div>
 
       <div className='min-w-0'>
-        <TabsContent value='hero'>
-          <HeroForm initialData={settings} />
+        <TabsContent value='copy'>
+          <GlobalEditor title='Home page' keys={['page.home']} embedded />
         </TabsContent>
         <TabsContent value='pillars'>
           <PillarsPanel initialData={pillars} />
         </TabsContent>
         <TabsContent value='catalog'>
-          <CatalogPanel settings={settings} catalogItems={catalogItems} />
+          <CatalogPanel catalogItems={catalogItems} />
         </TabsContent>
         <TabsContent value='process'>
           <ProcessPanel initialData={processSteps} />

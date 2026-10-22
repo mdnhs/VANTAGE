@@ -2,12 +2,10 @@ import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageTabs } from '@/components/layout/page-tabs';
 import { ProcessPanel } from '@/features/home-page/components/sections/process-panel';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
-import { ProcessPageForm } from '@/features/process-page/components/process-page-form';
-import { resolveProcessPageContent } from '@/features/process-page/defaults';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 
 export const metadata: Metadata = {
   title: 'Process page',
@@ -19,23 +17,20 @@ export const instant = false;
 
 export default async function ProcessPageContentPage() {
   await requirePermission(permissionFor('/dashboard/process-page'));
-  const [settings, steps] = await Promise.all([
-    siteSettingsService.getAdmin(),
-    homepageProcessStepService.listAdmin({ page: 1, limit: 50 }),
-  ]);
+  const steps = await homepageProcessStepService.listAdmin({ page: 1, limit: 50 });
 
   return (
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Process page'
-        description='Header copy and steps shown on the public process page. The steps are shared with the homepage.'
+        description='Header copy (changes go live as soon as you save) and steps shown on the public process page. The steps are shared with the homepage.'
       />
       <PageTabs
         tabs={[
           {
             value: 'header',
             label: 'Header',
-            content: <ProcessPageForm initialContent={resolveProcessPageContent(settings)} />,
+            content: <GlobalEditor title='Process page' keys={['page.process']} embedded />,
           },
           {
             value: 'steps',

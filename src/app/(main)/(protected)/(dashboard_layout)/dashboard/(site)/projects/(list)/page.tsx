@@ -4,9 +4,8 @@ import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
 import Link from 'next/link';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
-import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageTabs } from '@/components/layout/page-tabs';
-import { OurWorkHeroForm } from '@/features/projects/components/our-work-hero-form';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { projectService } from '@/server/services/project-service';
 import { ProjectTable } from '@/features/projects/components/list/project-table';
 
@@ -20,16 +19,13 @@ export const instant = false;
 
 export default async function ProjectsListPage() {
   await requirePermission(permissionFor('/dashboard/projects'));
-  const [{ rows, total }, settings] = await Promise.all([
-    projectService.listAdmin({ page: 1, limit: 50 }),
-    siteSettingsService.getAdmin(),
-  ]);
+  const { rows, total } = await projectService.listAdmin({ page: 1, limit: 50 });
 
   return (
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Our work page'
-        description='Hero copy and the before/after projects shown on the Our Work page.'
+        description='Hero copy (changes go live as soon as you save) and the before/after projects shown on the Our Work page.'
         actions={
           <Link href={APP_ROUTES.content.projects.create} className={LINK_PRIMARY}>
             Add project
@@ -38,7 +34,11 @@ export default async function ProjectsListPage() {
       />
       <PageTabs
         tabs={[
-          { value: 'hero', label: 'Hero', content: <OurWorkHeroForm settings={settings ?? null} /> },
+          {
+            value: 'hero',
+            label: 'Hero',
+            content: <GlobalEditor title='Our work page' keys={['page.our-work']} embedded />,
+          },
           {
             value: 'projects',
             label: 'Projects',

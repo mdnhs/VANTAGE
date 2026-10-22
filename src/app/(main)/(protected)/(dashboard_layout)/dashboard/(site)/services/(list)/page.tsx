@@ -4,9 +4,8 @@ import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
 import Link from 'next/link';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
-import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageTabs } from '@/components/layout/page-tabs';
-import { ServicesHeroForm } from '@/features/services/components/services-hero-form';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { serviceService } from '@/server/services/service-service';
 import { ServiceTable } from '@/features/services/components/list/service-table';
 
@@ -20,16 +19,13 @@ export const instant = false;
 
 export default async function ServicesListPage() {
   await requirePermission(permissionFor('/dashboard/services'));
-  const [{ rows, total }, settings] = await Promise.all([
-    serviceService.listAdmin({ page: 1, limit: 50 }),
-    siteSettingsService.getAdmin(),
-  ]);
+  const { rows, total } = await serviceService.listAdmin({ page: 1, limit: 50 });
 
   return (
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Services page'
-        description='Hero copy and the service blocks shown on the public services page.'
+        description='Hero copy (changes go live as soon as you save) and the service blocks shown on the public services page.'
         actions={
           <Link href={APP_ROUTES.content.services.create} className={LINK_PRIMARY}>
             Add service
@@ -38,7 +34,11 @@ export default async function ServicesListPage() {
       />
       <PageTabs
         tabs={[
-          { value: 'hero', label: 'Hero', content: <ServicesHeroForm settings={settings ?? null} /> },
+          {
+            value: 'hero',
+            label: 'Hero',
+            content: <GlobalEditor title='Services page' keys={['page.services']} embedded />,
+          },
           {
             value: 'services',
             label: 'Services',

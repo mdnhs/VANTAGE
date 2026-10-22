@@ -1,10 +1,7 @@
-import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
-import { InsurancePageForm } from '@/features/insurance-page/components/insurance-page-form';
-import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 
 export const metadata: Metadata = {
   title: 'Insurance page',
@@ -16,15 +13,5 @@ export const instant = false;
 
 export default async function InsurancePageContentPage() {
   await requirePermission(permissionFor('/dashboard/insurance'));
-  const settings = await siteSettingsService.getAdmin();
-
-  return (
-    <div className='flex flex-col gap-6'>
-      <PageHeader
-        title='Insurance page'
-        description='Copy, feature cards and process steps shown on the public insurance page. Partner logos are managed under Home page.'
-      />
-      <InsurancePageForm initialContent={resolveInsuranceContent(settings)} />
-    </div>
-  );
+  return <GlobalEditor title='Insurance page' keys={['page.insurance']} />;
 }
