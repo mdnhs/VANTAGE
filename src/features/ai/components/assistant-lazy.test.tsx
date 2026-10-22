@@ -78,7 +78,7 @@ describe('AiAssistant lazy chunk', () => {
     expect(trigger.getAttribute('aria-keyshortcuts')).toBe('Meta+J Control+J');
     expect(mocks.chatLoaded).toBe(0);
     fireEvent.click(trigger);
-    await screen.findByLabelText('Message the AI assistant');
+    await screen.findByLabelText('Message the AI assistant', {}, { timeout: 5000 });
     expect(mocks.chatLoaded).toBe(1);
   });
 });

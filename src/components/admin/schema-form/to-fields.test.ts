@@ -111,11 +111,14 @@ describe('image and video refs', () => {
 
   it('survive .register(ui, { label }) on the shared instance', () => {
     // Registering replaces the ui entry; the widget must not be lost.
-    const labelled = imageRefSchema.register(ui, { label: 'Hero' });
-    const [field] = toFields(z.object({ hero: labelled }));
-    expect(field).toMatchObject({ widget: 'image', label: 'Hero', required: false });
-    // restore a plain entry for the remaining tests
-    ui.remove(imageRefSchema);
+    try {
+      const labelled = imageRefSchema.register(ui, { label: 'Hero' });
+      const [field] = toFields(z.object({ hero: labelled }));
+      expect(field).toMatchObject({ widget: 'image', label: 'Hero', required: false });
+    } finally {
+      // restore a plain entry for the remaining tests, even when an assertion fails
+      ui.remove(imageRefSchema);
+    }
   });
 
   it('survive .optional() and .default(null)', () => {
