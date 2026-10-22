@@ -2,7 +2,10 @@ import 'server-only';
 
 import { normaliseBaseUrl, type AiProvider } from '@/lib/ai/schema';
 
+import { fetchFor } from '@/server/lib/net/safe-fetch';
+
 import { ProviderHttpError } from './errors';
+import { localHttpAllowed } from './provider';
 
 const TIMEOUT_MS = 10_000;
 const MAX_MODELS = 500;
@@ -43,8 +46,11 @@ type GeminiListing = {
 
 export async function listModels(
   input: { provider: AiProvider; baseUrl: string; apiKey: string | null },
-  fetchImpl: typeof fetch = (...args) => globalThis.fetch(...args),
+  fetchOverride?: typeof fetch,
 ): Promise<string[]> {
+  const fetchImpl: typeof fetch =
+    fetchOverride ??
+    (input.provider === 'openai-compatible' ? fetchFor(localHttpAllowed()) : (...args) => globalThis.fetch(...args));
   const ids: string[] = [];
   if (input.provider === 'google') {
     let token: string | null = null;
