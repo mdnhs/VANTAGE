@@ -19,6 +19,7 @@ import {
   searchContent,
   seoHealth,
 } from '@/server/services/ai/tool-data';
+import { computeSeoHealth } from '@/server/services/seo-health-service';
 
 const actorFor = (role: RoleName): Actor => ({
   userId: `u-${role}`,
@@ -242,11 +243,15 @@ describe('content tools', () => {
     expect(await searchContent(actorFor('intake'), 'paint')).toHaveProperty('error');
   });
 
-  it('reports SEO health from the seo global', async () => {
+  it('reports the real SEO health report', async () => {
     const health = await seoHealth(actorFor('marketer'));
     expect(health.label).toBe('SEO health');
-    expect(health.score).toBeLessThanOrEqual(100);
-    expect(Array.isArray(health.issues)).toBe(true);
+    expect(health.score).toBe((await computeSeoHealth()).score);
+    const issues = health.issues as { where: string; problem: string }[];
+    expect(issues).toContainEqual({
+      where: 'Services page (/services)',
+      problem: 'Title is 27 characters (aim for 30–60)',
+    });
     expect(await seoHealth(actorFor('intake'))).toHaveProperty('error');
   });
 
