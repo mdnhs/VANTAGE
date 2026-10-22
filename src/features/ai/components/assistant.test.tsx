@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MePayload } from '@/lib/auth/me';
 
@@ -72,6 +72,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// Warm the lazy sheet chunk so the first open does not race the default 1s wait.
+beforeAll(async () => {
+  await import('./assistant-sheet');
+}, 30_000);
+
 describe('AiAssistant', () => {
   it('tells assistive tech that the button opens a dialog', async () => {
     renderAssistant();
@@ -86,7 +91,7 @@ describe('AiAssistant', () => {
     renderAssistant();
     const trigger = await screen.findByRole('button', { name: 'AI assistant' });
     fireEvent.click(trigger);
-    const box = await screen.findByLabelText('Message the AI assistant');
+    const box = await screen.findByLabelText('Message the AI assistant', undefined, { timeout: 3000 });
     await waitFor(() => expect(document.activeElement).toBe(box));
     fireEvent.keyDown(box, { key: 'Escape' });
     await waitFor(() => expect(document.activeElement).toBe(trigger));
@@ -96,7 +101,7 @@ describe('AiAssistant', () => {
     renderAssistant();
     await screen.findByRole('button', { name: 'AI assistant' });
     fireEvent.keyDown(window, { key: 'j', ctrlKey: true });
-    await screen.findByLabelText('Message the AI assistant');
+    await screen.findByLabelText('Message the AI assistant', undefined, { timeout: 3000 });
   });
 
   it('uses the page starters and names the page on the chip for an editor route', async () => {
@@ -126,7 +131,9 @@ describe('AiAssistant', () => {
     mocks.actor = me('owner-1');
     renderAssistant();
     fireEvent.click(await screen.findByRole('button', { name: 'AI assistant' }));
-    const box = (await screen.findByLabelText('Message the AI assistant')) as HTMLTextAreaElement;
+    const box = (await screen.findByLabelText('Message the AI assistant', undefined, {
+      timeout: 3000,
+    })) as HTMLTextAreaElement;
     expect(box.disabled).toBe(true);
     expect(screen.getByText(/while viewing as someone, but not send messages/)).toBeTruthy();
   });

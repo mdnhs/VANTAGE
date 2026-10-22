@@ -15,8 +15,8 @@ async function main() {
   if (dryRun) {
     console.log('ai conversations: (not counted in dry run)');
   } else {
-    const { purgeStaleConversations } = await import('@/server/repositories/ai-conversation-repository');
-    const ai = await purgeStaleConversations(new Date());
+    const { runAiRetention } = await import('@/server/repositories/ai-conversation-repository');
+    const ai = await runAiRetention(new Date());
     console.log(`ai conversations: ${ai.conversations}, messages: ${ai.messages}`);
   }
   process.exit(0);

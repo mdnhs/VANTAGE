@@ -2,7 +2,7 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 
-import { and, desc, eq, gte, lt, notExists, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, ne, notExists, or, sql } from 'drizzle-orm';
 
 import { textOnly, type AiPart, type AiUIMessage } from '@/lib/ai/messages';
 import { db, type DbLike } from '@/server/db';
@@ -37,10 +37,16 @@ export async function ownConversation(userId: string, id: string) {
 export async function appendMessage(
   conversationId: string,
   message: AiUIMessage,
-  meta?: { tokensIn?: number; tokensOut?: number; sharedEnquiryDetails?: boolean },
+  meta?: { tokensIn?: number; tokensOut?: number; sharedEnquiryDetails?: boolean; replaces?: string },
 ) {
   const now = new Date();
   await db.transaction(async (tx) => {
+    // Regenerate: the old reply goes in the same transaction the new one lands in.
+    if (meta?.replaces) {
+      await tx
+        .delete(aiMessages)
+        .where(and(eq(aiMessages.id, meta.replaces), eq(aiMessages.conversationId, conversationId)));
+    }
     await tx.insert(aiMessages).values({
       id: UUID.test(message.id) ? message.id : randomUUID(),
       conversationId,
@@ -55,21 +61,17 @@ export async function appendMessage(
   });
 }
 
-// Regenerate: the newest message goes if it is a reply, so the turn can run
-// again from the person's last message. Callers check ownership first.
-export async function dropLastReply(conversationId: string) {
-  return db.transaction(async (tx) => {
-    const [last] = await tx
-      .select({ id: aiMessages.id, role: aiMessages.role })
-      .from(aiMessages)
-      .where(eq(aiMessages.conversationId, conversationId))
-      .orderBy(desc(aiMessages.createdAt), desc(aiMessages.id))
-      .limit(1)
-      .for('update');
-    if (last?.role !== 'assistant') return false;
-    await tx.delete(aiMessages).where(and(eq(aiMessages.id, last.id), eq(aiMessages.conversationId, conversationId)));
-    return true;
-  });
+// Regenerate: the newest message, if it is a reply. It stays until the new reply
+// is saved (see appendMessage `replaces`), so a provider failure keeps it.
+// Callers check ownership first.
+export async function lastReplyId(conversationId: string) {
+  const [last] = await db
+    .select({ id: aiMessages.id, role: aiMessages.role })
+    .from(aiMessages)
+    .where(eq(aiMessages.conversationId, conversationId))
+    .orderBy(desc(aiMessages.createdAt), desc(aiMessages.id))
+    .limit(1);
+  return last?.role === 'assistant' ? last.id : null;
 }
 
 // Edit: one of the person's own messages in this conversation, or not found.
@@ -109,7 +111,7 @@ export async function replaceFrom(conversationId: string, from: { id: string; cr
 export async function historyFor(
   conversationId: string,
   limit: number,
-  options: { includeShared: boolean },
+  options: { includeShared: boolean; excludeId?: string | null },
 ): Promise<AiUIMessage[]> {
   const rows = await db
     .select()
@@ -118,6 +120,7 @@ export async function historyFor(
       and(
         eq(aiMessages.conversationId, conversationId),
         options.includeShared ? undefined : eq(aiMessages.sharedEnquiryDetails, false),
+        options.excludeId ? ne(aiMessages.id, options.excludeId) : undefined,
       ),
     )
     .orderBy(desc(aiMessages.createdAt), desc(aiMessages.id))
@@ -146,7 +149,10 @@ export async function listConversations(userId: string) {
   return rows.map((r) => ({ ...r, updatedAt: r.updatedAt.toISOString() }));
 }
 
-export async function getConversation(userId: string, id: string) {
+// With sharing off, replies written under it show a short placeholder instead of their text.
+export const HIDDEN_SHARED_REPLY = 'Hidden: this reply used enquiry details, and sharing is now off.';
+
+export async function getConversation(userId: string, id: string, options: { includeShared: boolean }) {
   const conv = await ownConversation(userId, id);
   const rows = await db
     .select()
@@ -161,7 +167,11 @@ export async function getConversation(userId: string, id: string) {
     // The newest 200, oldest first.
     messages: rows
       .reverse()
-      .map((r): AiUIMessage => ({ id: r.id, role: r.role as AiUIMessage['role'], parts: r.parts as AiPart[] })),
+      .map((r): AiUIMessage =>
+        r.sharedEnquiryDetails && !options.includeShared
+          ? { id: r.id, role: 'assistant', parts: [{ type: 'text', text: HIDDEN_SHARED_REPLY }] }
+          : { id: r.id, role: r.role as AiUIMessage['role'], parts: r.parts as AiPart[] },
+      ),
   };
 }
 
@@ -212,4 +222,23 @@ export async function purgeStaleConversations(now: Date, dbLike: DbLike = db) {
     )
     .returning({ id: aiConversations.id });
   return { conversations: conversations.length, messages: messages.length };
+}
+
+// The job's entry point: purge and, when something went, one audit row with counts only.
+export async function runAiRetention(now: Date) {
+  return db.transaction(async (tx) => {
+    const r = await purgeStaleConversations(now, tx);
+    if (r.conversations > 0 || r.messages > 0) {
+      await audit(
+        null,
+        {
+          action: 'ai.retention_purge',
+          entityType: 'ai_conversation',
+          summary: `Retention purge: ${r.messages} AI assistant messages and ${r.conversations} conversations past ${RETENTION_DAYS} days or left empty`,
+        },
+        tx,
+      );
+    }
+    return r;
+  });
 }
