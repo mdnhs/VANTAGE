@@ -14,5 +14,6 @@ export * from './quote-requests';
 export * from './contact-messages';
 export * from './settings';
 export * from './revisions';
+export * from './media';
 export * from './relations';
 // export * from './orders';

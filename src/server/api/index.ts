@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
+import { adminMedia } from './admin-media';
 import { admins } from './admins';
 import { auth } from './auth';
 import { contacts } from './contacts';
@@ -34,6 +35,7 @@ export const api = app
   })
   .route('/auth', auth)
   .route('/media', media)
+  .route('/admin/media', adminMedia)
   .route('/site-settings', siteSettings)
   .route('/services', services)
   .route('/projects', projects)
