@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { inter, manrope, geistMono, jakarta } from '@/lib/font';
+import { geistMono, SITE_FONT_VARIABLES } from '@/lib/font';
 import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -74,7 +74,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
     <html
       lang='en'
       suppressHydrationWarning
-      className={`${inter.variable} ${manrope.variable} ${geistMono.variable} ${jakarta.variable} h-full antialiased`}
+      className={`${SITE_FONT_VARIABLES} ${geistMono.variable} h-full antialiased`}
     >
       <body className='flex min-h-full flex-col font-sans'>
         <JsonLd

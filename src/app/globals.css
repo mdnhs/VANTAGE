@@ -90,6 +90,18 @@
   --color-hero-delta: var(--hero-delta);
 }
 
+/* Public brand family + fonts (Appearance > Site). Defaults = the Figma build; the
+   site theme <style> overrides them on :root only when they differ. */
+@theme {
+  --color-brand: #dc2626;
+  --color-brand-hover: #b91c1c;
+  --color-brand-soft: #fca5a5;
+  --color-brand-mid: #f0605f;
+  --color-brand-pale: #ffd9d9;
+  --font-site-heading: var(--font-manrope);
+  --font-site-body: var(--font-inter);
+}
+
 @utility bg-hatch {
   background-image: repeating-linear-gradient(-45deg, var(--hatch) 0 3px, transparent 3px 7px);
 }
@@ -105,6 +117,7 @@
 }
 
 :root {
+  --brand-rgb: 220 38 38;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
