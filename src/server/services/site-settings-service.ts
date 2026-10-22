@@ -3,10 +3,10 @@ import { CACHE_TAGS } from '@/lib/cache/tags';
 import {
   composePublicSettings,
   PUBLIC_SETTINGS_KEYS,
-  type PublicGlobals,
   type PublicSiteSettings,
 } from '@/server/lib/settings/public-settings';
-import { getSetting } from '@/server/queries/get-setting';
+import { resolvePublicGlobals } from '@/server/lib/settings/site-settings-migration';
+import { getStoredSetting } from '@/server/queries/get-setting';
 import { siteSettingsRepository } from '@/server/repositories/site-settings-repository';
 import type {
   UpdateBusinessInfoInput,
@@ -32,10 +32,14 @@ export type { PublicSiteSettings };
 // `settings:<key>` tag, expired by a save of that key) and get them in the flat shape the
 // marketing components were built against. Malformed or missing keys render the defaults.
 async function getPublic(): Promise<PublicSiteSettings> {
-  const values = await Promise.all(PUBLIC_SETTINGS_KEYS.map((key) => getSetting(key)));
-  return composePublicSettings(
-    Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((key, i) => [key, values[i]])) as PublicGlobals,
-  );
+  const values = await Promise.all(PUBLIC_SETTINGS_KEYS.map((key) => getStoredSetting(key)));
+  const stored = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((key, i) => [key, values[i]])) as Parameters<
+    typeof resolvePublicGlobals
+  >[0];
+  // Uncached on purpose: until `yarn settings:migrate` has run, never-saved keys come from the legacy
+  // row, and that must not be frozen into the per-key cache.
+  const legacy = values.some((v) => v === null) ? await siteSettingsRepository.get() : null;
+  return composePublicSettings(resolvePublicGlobals(stored, legacy));
 }
 
 // Same singleton row, same cache tag — each section just writes its own subset of columns

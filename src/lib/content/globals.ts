@@ -23,8 +23,8 @@ const Href = z
 const HttpsUrl = z
   .string()
   .trim()
-  .max(300)
-  .regex(/^https:\/\/\S+$/, 'Use a full https:// address');
+  .max(1000)
+  .regex(/^https?:\/\/\S+$/, 'Use a full http(s):// address');
 const Link = z.object({ label: s(60), href: Href });
 const Time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:MM, e.g. 08:00');
 // ISO weekday: 1 = Monday … 7 = Sunday.
@@ -32,12 +32,12 @@ const Day = z.number().int().min(1).max(7);
 const image = () => imageRefSchema.default(null);
 const video = () => videoRefSchema.default(null);
 
-const titled = (max: number) => z.object({ title: s(max), description: s(400) });
+const titled = (max: number) => z.object({ title: s(max), description: s(500) });
 
 // ---------------------------------------------------------------- identity
 
 export const SiteGlobal = z.object({
-  name: s(80, 'Vantage Autobody'),
+  name: s(255, 'Vantage Autobody'),
   legalName: s(120),
   logo: image(),
   favicon: image(),
@@ -58,18 +58,18 @@ export const ContactGlobal = z.object({
   email: z.email().or(z.literal('')).default('info@vantageautobody.ie'),
   phone: z
     .object({
-      display: s(40, '+353 1 234 5678'),
+      display: s(50, '+353 1 234 5678'),
       e164: z
         .string()
         .regex(/^(\+[1-9]\d{6,14})?$/, 'Use E.164, e.g. +35312345678')
         .default('+35312345678'),
     })
     .prefault({}),
-  emergencyPhone: s(40),
-  whatsapp: s(40),
+  emergencyPhone: s(50),
+  whatsapp: s(50),
   address: z
     .object({
-      lines: z.array(s(80)).max(4).default(['Unit 4, Industrial Estate, Dublin Road, Ireland']),
+      lines: z.array(s(500)).max(4).default(['Unit 4, Industrial Estate, Dublin Road, Ireland']),
       city: s(60),
       eircode: s(10),
       country: s(60),
@@ -86,15 +86,15 @@ export const ContactGlobal = z.object({
         .max(7)
         .default([{ days: [1, 2, 3, 4, 5], opens: '08:00', closes: '18:00' }]),
       // How the site prints the hours; the structured list feeds JSON-LD.
-      summary: s(120, 'Mon–Fri: 8:00 – 18:00'),
+      summary: s(500, 'Mon–Fri: 8:00 – 18:00'),
       note: s(200),
     })
     .prefault({}),
   mapUrl: z
     .string()
     .trim()
-    .max(500)
-    .refine((v) => v === '' || /^https:\/\/\S+$/.test(v), 'Use a full https:// address')
+    .max(1000)
+    .refine((v) => v === '' || /^https?:\/\/\S+$/.test(v), 'Use a full http(s):// address')
     .default(''),
 });
 
@@ -350,10 +350,10 @@ export const SeoGlobal = z.object({
     .max(60)
     .refine((v) => v === '' || v.includes('%s'), 'The template needs "%s"')
     .default('%s | Vantage Autobody'),
-  defaultTitle: s(70, 'Vantage Autobody'),
-  defaultDescription: s(200, 'Vantage Autobody — Mon–Fri: 8:00 – 18:00'),
+  defaultTitle: s(255, 'Vantage Autobody'),
+  defaultDescription: s(500, 'Vantage Autobody — Mon–Fri: 8:00 – 18:00'),
   defaultOgImage: image(),
-  twitterHandle: s(40),
+  twitterHandle: s(50),
   robots: z.enum(['index', 'noindex']).default('index'),
 });
 
@@ -386,7 +386,7 @@ export const HomePageGlobal = z.object({
     })
     .prefault({}),
   trustBadges: z
-    .array(z.object({ title: s(60), subtitle: s(80) }))
+    .array(z.object({ title: s(100), subtitle: s(150) }))
     .max(4)
     .default([
       { title: '4.9★ Google Rated', subtitle: '180+ Dublin Reviews' },
@@ -444,7 +444,7 @@ export const InsurancePageGlobal = z.object({
         'Our concierge-level claims service is designed to eliminate friction at every step of the repair journey.',
       ),
       features: z
-        .array(titled(100))
+        .array(titled(120))
         .max(6)
         .default([
           {
@@ -470,7 +470,7 @@ export const InsurancePageGlobal = z.object({
       eyebrow: s(100, 'The Methodology'),
       title: s(160, '7 Steps to Perfection'),
       items: z
-        .array(z.object({ label: s(60), description: s(300) }))
+        .array(z.object({ label: s(80), description: s(300) }))
         .max(12)
         .default([
           { label: 'Report', description: 'Drop off your vehicle or let us recover it securely to our facility.' },
@@ -518,13 +518,13 @@ export const AboutPageGlobal = z.object({
     .prefault({}),
   heritage: z
     .object({
-      title: s(120, 'Our Heritage'),
+      title: s(160, 'Our Heritage'),
       text: s(
         1000,
         "Founded in 1998, Vantage Autobody began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
       ),
-      stat1: z.object({ value: s(20, '1998'), label: s(60, 'Est.') }).prefault({}),
-      stat2: z.object({ value: s(20, '25+'), label: s(60, 'Years of Precision') }).prefault({}),
+      stat1: z.object({ value: s(40, '1998'), label: s(80, 'Est.') }).prefault({}),
+      stat2: z.object({ value: s(40, '25+'), label: s(80, 'Years of Precision') }).prefault({}),
       image: image(),
       quote: s(
         400,
@@ -534,13 +534,13 @@ export const AboutPageGlobal = z.object({
     .prefault({}),
   team: z
     .object({
-      title: s(120, 'The Precision Team'),
+      title: s(160, 'The Precision Team'),
       subtext: s(
         500,
         'Our facility is only as good as the hands that operate it. We employ master technicians, ATA-accredited painters, and certified chassis alignment specialists.',
       ),
       members: z
-        .array(z.object({ name: s(80), role: s(80), image: image() }))
+        .array(z.object({ name: s(120), role: s(120), image: image() }))
         .max(12)
         .default([
           { name: "Declan O'Rourke", role: 'Master Technician', image: null },
@@ -555,7 +555,7 @@ export const AboutPageGlobal = z.object({
       title: s(160, 'Uncompromising\nStandards'),
       image: image(),
       items: z
-        .array(titled(100))
+        .array(titled(160))
         .max(8)
         .default([
           {

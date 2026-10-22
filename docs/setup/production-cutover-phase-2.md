@@ -88,3 +88,5 @@ as before; new hashes use Better Auth's default.
   `pg_restore --clean --no-owner -d "$DATABASE_URL_UNPOOLED" vantage-pre-phase2-*.dump`.
   This discards everything written since the backup (quotes, contacts), so
   prefer the traffic switch.
+
+Next: [Phase 4 cutover (site settings)](production-cutover-phase-4.md).

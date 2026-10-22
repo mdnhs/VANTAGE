@@ -1,9 +1,9 @@
 import { eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveAboutContent } from '@/features/about-page/defaults';
-import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
-import { resolveProcessPageContent } from '@/features/process-page/defaults';
+import { ABOUT_DEFAULTS, resolveAboutContent } from '@/features/about-page/defaults';
+import { INSURANCE_DEFAULTS, resolveInsuranceContent } from '@/features/insurance-page/defaults';
+import { PROCESS_PAGE_DEFAULTS, resolveProcessPageContent } from '@/features/process-page/defaults';
 import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
@@ -15,7 +15,9 @@ import {
   type PublicGlobals,
 } from '@/server/lib/settings/public-settings';
 import {
+  LossyMigrationError,
   mapLegacyToDocs,
+  resolvePublicGlobals,
   MIGRATION_NOTE,
   migrateSiteSettings,
   verifySiteSettingsMigration,
@@ -135,6 +137,50 @@ async function composeFromKeys() {
   return composePublicSettings(docs as PublicGlobals);
 }
 
+// The complete flat shape of an untouched site: built-in copy for every column.
+const DEFAULT_PUBLIC = {
+  ...FALLBACK_SETTINGS,
+  insuranceHeroEyebrow: INSURANCE_DEFAULTS.heroEyebrow,
+  insuranceHeroLine1: INSURANCE_DEFAULTS.heroLine1,
+  insuranceHeroLine2: INSURANCE_DEFAULTS.heroLine2,
+  insuranceHeroLine3: INSURANCE_DEFAULTS.heroLine3,
+  insuranceHeroSubtext: INSURANCE_DEFAULTS.heroSubtext,
+  insuranceCoordinationTitle: INSURANCE_DEFAULTS.coordinationTitle,
+  insuranceCoordinationSubtext: INSURANCE_DEFAULTS.coordinationSubtext,
+  insuranceFeatures: INSURANCE_DEFAULTS.features,
+  insuranceStepsEyebrow: INSURANCE_DEFAULTS.stepsEyebrow,
+  insuranceStepsTitle: INSURANCE_DEFAULTS.stepsTitle,
+  insuranceSteps: INSURANCE_DEFAULTS.steps,
+  insuranceCtaLine1: INSURANCE_DEFAULTS.ctaLine1,
+  insuranceCtaAccent: INSURANCE_DEFAULTS.ctaAccent,
+  insuranceCtaSubtext: INSURANCE_DEFAULTS.ctaSubtext,
+  insuranceDisclaimer: INSURANCE_DEFAULTS.disclaimer,
+  aboutHeroEyebrow: ABOUT_DEFAULTS.heroEyebrow,
+  aboutHeroLine1: ABOUT_DEFAULTS.heroLine1,
+  aboutHeroAccent1: ABOUT_DEFAULTS.heroAccent1,
+  aboutHeroLine2: ABOUT_DEFAULTS.heroLine2,
+  aboutHeroAccent2: ABOUT_DEFAULTS.heroAccent2,
+  aboutHeroImagePublicId: null,
+  aboutHeritageTitle: ABOUT_DEFAULTS.heritageTitle,
+  aboutHeritageText: ABOUT_DEFAULTS.heritageText,
+  aboutHeritageStat1Value: ABOUT_DEFAULTS.heritageStat1Value,
+  aboutHeritageStat1Label: ABOUT_DEFAULTS.heritageStat1Label,
+  aboutHeritageStat2Value: ABOUT_DEFAULTS.heritageStat2Value,
+  aboutHeritageStat2Label: ABOUT_DEFAULTS.heritageStat2Label,
+  aboutHeritageImagePublicId: null,
+  aboutHeritageQuote: ABOUT_DEFAULTS.heritageQuote,
+  aboutTeamTitle: ABOUT_DEFAULTS.teamTitle,
+  aboutTeamSubtext: ABOUT_DEFAULTS.teamSubtext,
+  aboutTeamMembers: ABOUT_DEFAULTS.teamMembers,
+  aboutStandardsEyebrow: ABOUT_DEFAULTS.standardsEyebrow,
+  aboutStandardsTitle: ABOUT_DEFAULTS.standardsTitle,
+  aboutStandardsImagePublicId: null,
+  aboutStandardsItems: ABOUT_DEFAULTS.standardsItems,
+  processPageEyebrow: PROCESS_PAGE_DEFAULTS.eyebrow,
+  processPageTitle: PROCESS_PAGE_DEFAULTS.title,
+  processPageSubtext: PROCESS_PAGE_DEFAULTS.subtext,
+};
+
 describe('site_settings -> versioned keys', () => {
   beforeEach(wipe);
 
@@ -233,7 +279,7 @@ describe('site_settings -> versioned keys', () => {
 
     it('empty keys compose to the built-in defaults (FALLBACK_SETTINGS)', async () => {
       const composed = await composeFromKeys();
-      expect(composed).toMatchObject(FALLBACK_SETTINGS);
+      expect(composed).toEqual(DEFAULT_PUBLIC);
       expect((await verifySiteSettingsMigration()).ok).toBe(true);
     });
   });
@@ -277,8 +323,9 @@ describe('site_settings -> versioned keys', () => {
         { days: [1, 2, 3, 4], opens: '08:00', closes: '18:00' },
         { days: [5], opens: '09:00', closes: '17:00' },
       ]);
-      expect(contact.hours.summary).toBe(formatOpeningHoursSummary(structured));
-      expect((await composeFromKeys()).openingHours).toBe(contact.hours.summary);
+      // Nothing dropped: the site derives the text from the weekly rows.
+      expect(contact.hours.summary).toBe('');
+      expect((await composeFromKeys()).openingHours).toBe(formatOpeningHoursSummary(structured));
       expect((await verifySiteSettingsMigration()).ok).toBe(true);
     });
 
@@ -311,35 +358,47 @@ describe('site_settings -> versioned keys', () => {
   });
 
   describe('values that do not fit the new schema', () => {
-    it('are repaired field by field, never by dropping the whole key', async () => {
+    it('are refused, with nothing written, unless --allow-lossy is passed', async () => {
+      await seed({ insuranceSteps: [{ label: 'L'.repeat(90), description: 'cut' }], email: 'not-an-email' });
+      await expect(migrateSiteSettings()).rejects.toBeInstanceOf(LossyMigrationError);
+      expect(await db.select().from(revisions)).toHaveLength(0);
+      expect(await settingsRepository.get('site')).toBeNull();
+
+      const dry = await migrateSiteSettings({ dryRun: true });
+      expect(dry.lossy.join('\n')).toContain('page.insurance.steps.items.0.label: truncated to 80');
+      expect(dry.lossy.join('\n')).toContain('contact.email');
+      expect(dry.written).toBe(0);
+    });
+
+    it('are repaired field by field with --allow-lossy, never by dropping the whole key', async () => {
       await seed({
-        facebookUrl: 'http://not-https.example/page',
-        emergencyPhone: '0'.repeat(50),
-        address: 'x'.repeat(60) + ', ' + 'y'.repeat(60) + ', Ireland',
+        facebookUrl: 'not a url',
         insuranceSteps: [
           { label: 'Fine', description: 'ok' },
-          { label: 'L'.repeat(80), description: 'long label is cut' },
+          { label: 'L'.repeat(90), description: 'long label is cut' },
         ],
       });
-      const result = await migrateSiteSettings();
+      const result = await migrateSiteSettings({ allowLossy: true });
 
       const site = (await settingsRepository.get('site'))!.value as { social: { label: string }[] };
       expect(site.social.map((s) => s.label)).toEqual(['Instagram', 'TikTok', 'LinkedIn']);
-      const contact = (await settingsRepository.get('contact'))!.value as {
-        email: string;
-        emergencyPhone: string;
-        address: { lines: string[] };
-      };
+      const contact = (await settingsRepository.get('contact'))!.value as { email: string };
       expect(contact.email).toBe('hello@autopaint.ie');
-      expect(contact.emergencyPhone).toHaveLength(40);
-      expect(contact.address.lines.every((l) => l.length <= 80)).toBe(true);
-      expect(contact.address.lines.join(', ')).toBe(`${'x'.repeat(60)}, ${'y'.repeat(60)}, Ireland`);
       const insurance = (await settingsRepository.get('page.insurance'))!.value as {
         steps: { items: { label: string }[] };
       };
-      expect(insurance.steps.items[1]!.label).toHaveLength(60);
-      expect(result.warnings.join('\n')).toContain('site.social.0.url');
-      expect(result.warnings.join('\n')).toContain('contact.emergencyPhone: truncated');
+      expect(insurance.steps.items[1]!.label).toHaveLength(80);
+      expect(result.lossy.join('\n')).toContain('site.social.0.url');
+    });
+
+    it('keeps http links and the exact address string, newlines included', async () => {
+      const address = '10 Park Street\nDublin 2, Ireland';
+      await seed({ facebookUrl: 'http://old.example/page', address });
+      await migrateSiteSettings();
+      const site = (await settingsRepository.get('site'))!.value as { social: { url: string }[] };
+      expect(site.social[0]!.url).toBe('http://old.example/page');
+      expect((await composeFromKeys()).address).toBe(address);
+      expect((await verifySiteSettingsMigration()).ok).toBe(true);
     });
 
     it('blank copy columns fall back to the built-in copy, like the legacy `||` did', async () => {
@@ -355,9 +414,18 @@ describe('site_settings -> versioned keys', () => {
     it('derived SEO values stay derived (null) so renames keep flowing through', async () => {
       await seed({ metaTitle: null, metaDescription: null });
       await migrateSiteSettings();
+      const seo = (await settingsRepository.get('seo'))!.value as { defaultTitle: string; defaultDescription: string };
+      expect([seo.defaultTitle, seo.defaultDescription]).toEqual(['', '']);
       const composed = await composeFromKeys();
       expect(composed.metaTitle).toBeNull();
       expect(composed.metaDescription).toBeNull();
+
+      // Rename the business: the title/description derive from the new name, live.
+      await settingsRepository.save('site', { version: 1, value: { name: 'Renamed Ltd' } }, null);
+      const renamed = await composeFromKeys();
+      expect(renamed.businessName).toBe('Renamed Ltd');
+      expect(renamed.metaTitle).toBeNull();
+      expect(renamed.metaDescription).toBeNull();
     });
   });
 
@@ -376,6 +444,69 @@ describe('site_settings -> versioned keys', () => {
       heroVideoEnabled: false,
     });
     const parsed = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((k) => [k, parseGlobal(k, docs[k])]));
-    expect(composePublicSettings(parsed as PublicGlobals)).toMatchObject(FALLBACK_SETTINGS);
+    expect(composePublicSettings(parsed as PublicGlobals)).toEqual(DEFAULT_PUBLIC);
+  });
+
+  describe('deploy before migrate', () => {
+    const none = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((k) => [k, null])) as Parameters<
+      typeof resolvePublicGlobals
+    >[0];
+
+    it('with no key rows, the public output deep-equals the legacy output', async () => {
+      const legacy = await seed();
+      const { id: _id, updatedAt: _updatedAt, ...expected } = legacy;
+      expect(composePublicSettings(resolvePublicGlobals(none, legacy))).toEqual(expected);
+    });
+
+    it('structured hours, a newline address and blank optional columns still match', async () => {
+      const structured = JSON.stringify(
+        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => ({
+          day,
+          shortDay: day.slice(0, 3),
+          isOpen: i < 5,
+          openTime: '08:00',
+          closeTime: '17:30',
+        })),
+      );
+      const legacy = await seed({
+        openingHours: structured,
+        address: 'Unit 4\nDublin Road',
+        emergencyPhone: null,
+        whatsappNumber: '',
+        facebookUrl: null,
+        googleMapsUrl: null,
+        metaTitle: null,
+        metaDescription: null,
+        ogImagePublicId: null,
+        logoPublicId: null,
+        insuranceFeatures: null,
+        aboutTeamMembers: null,
+        heroEyebrow: '',
+      });
+      const fromLegacy = composePublicSettings(resolvePublicGlobals(none, legacy));
+      await migrateSiteSettings();
+      const fromKeys = await composeFromKeys();
+      expect(fromKeys).toEqual(fromLegacy);
+      expect(fromKeys.address).toBe('Unit 4\nDublin Road');
+      expect(formatOpeningHoursSummary(fromKeys.openingHours)).toBe(formatOpeningHoursSummary(structured));
+      expect((await verifySiteSettingsMigration()).ok).toBe(true);
+    });
+
+    it('a stored key always wins over the legacy row', async () => {
+      const legacy = await seed();
+      const stored = { ...none, site: parseGlobal('site', { name: 'From keys' }) };
+      const composed = composePublicSettings(resolvePublicGlobals(stored, legacy));
+      expect(composed.businessName).toBe('From keys');
+      expect(composed.phone).toBe(legacy.phone);
+    });
+  });
+
+  it('--force leaves keys whose value is unchanged alone', async () => {
+    await seed();
+    await migrateSiteSettings();
+    const forced = await migrateSiteSettings({ force: true });
+    expect(forced.written).toBe(0);
+    expect(forced.plan.every((p) => p.action === 'unchanged')).toBe(true);
+    expect((await settingsRepository.get('site'))?.version).toBe(1);
   });
 });

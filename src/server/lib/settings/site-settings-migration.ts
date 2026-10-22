@@ -36,22 +36,6 @@ const t = (v: string | null | undefined) => v?.trim() || undefined;
 
 // ------------------------------------------------------------------ mapping
 
-// Greedy-pack an address into <= 80 char lines, breaking at newlines, then at ", ".
-function addressLines(address: string): string[] {
-  const parts = address
-    .split(/\r?\n/)
-    .flatMap((line) => line.split(/,\s*/))
-    .map((p) => p.trim())
-    .filter(Boolean);
-  const lines: string[] = [];
-  for (const part of parts) {
-    const last = lines[lines.length - 1];
-    if (last !== undefined && last.length + 2 + part.length <= 80) lines[lines.length - 1] = `${last}, ${part}`;
-    else lines.push(part);
-  }
-  return lines;
-}
-
 function toE164(phone: string): string {
   let digits = phone.replace(/[^\d+]/g, '');
   if (digits.startsWith('00')) digits = `+${digits.slice(2)}`;
@@ -78,14 +62,18 @@ function mapHours(raw: string, warnings: string[]) {
     if (!ok) warnings.push(`contact.hours: dropped ${row.opens}-${row.closes} (closing must be after opening)`);
     return ok;
   });
-  // The summary keeps every day as it was printed, including rows left out of `weekly`.
-  return { weekly, summary: formatOpeningHoursSummary(schedule) };
+  const summary = formatOpeningHoursSummary(schedule);
+  // Nothing dropped: the weekly rows alone say it all and the site derives the text from them.
+  if (weekly.length > 0 && weekly.length === byTimes.size) return { weekly, summary: '' };
+  // Otherwise the summary keeps every day as it was printed, including rows left out of `weekly`.
+  return { weekly, summary };
 }
 
 export type MigratedDocs = Record<PublicSettingsKey, Json>;
 
-export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: string[] } {
+export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: string[]; lossy: string[] } {
   const warnings: string[] = [];
+  const lossy: string[] = [];
   const badge = (title: string | null, subtitle: string | null) => ({ title: t(title), subtitle: t(subtitle) });
   const defaults = GLOBALS['page.home'].parse({}).trustBadges;
   const hours = mapHours(row.openingHours, warnings);
@@ -99,10 +87,9 @@ export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: st
 
   const email = row.email.trim();
   if (email && !GLOBALS.contact.shape.email.safeParse(email).success) {
-    warnings.push('contact.email: not a valid address; left empty');
+    lossy.push('contact.email: not a valid address; left empty');
   }
   const mapUrl = t(row.googleMapsUrl);
-  const hoursForSeo = formatOpeningHoursSummary(row.openingHours);
 
   const docs: MigratedDocs = {
     site: {
@@ -117,13 +104,15 @@ export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: st
       phone: { display: row.phone.trim(), e164: toE164(row.phone) },
       emergencyPhone: t(row.emergencyPhone),
       whatsapp: t(row.whatsappNumber),
-      address: { lines: addressLines(row.address) },
+      // One line, exactly as typed (lines are capped at 500; a longer address is reported as lossy).
+      address: { lines: row.address.trim() ? [row.address.trim()] : [] },
       hours,
       mapUrl,
     },
     seo: {
-      defaultTitle: t(row.metaTitle) ?? t(row.businessName),
-      defaultDescription: t(row.metaDescription) ?? `${row.businessName.trim()} — ${hoursForSeo}`,
+      // Blank = derived live from the site name / hours (the adapter maps blank to null).
+      defaultTitle: row.metaTitle?.trim() ?? '',
+      defaultDescription: row.metaDescription?.trim() ?? '',
       defaultOgImage: cloudinaryImage(t(row.ogImagePublicId)),
       twitterHandle: t(row.twitterHandle),
     },
@@ -233,7 +222,7 @@ export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: st
       subtext: t(row.processPageSubtext),
     },
   };
-  return { docs, warnings };
+  return { docs, warnings, lossy };
 }
 
 // -------------------------------------------------------------- repair
@@ -247,7 +236,7 @@ function containerAt(root: unknown, path: PropertyKey[]): Record<PropertyKey, un
 // Validates `value` against the key's schema and repairs what does not fit: over-long
 // strings are truncated (never the Lottie JSON), everything else is dropped (the whole
 // array item when the problem sits inside one). Returns the parsed document to store.
-export function repairToSchema(key: GlobalKey, value: unknown, warnings: string[]): unknown {
+export function repairToSchema(key: GlobalKey, value: unknown, lossy: string[]): unknown {
   const current = structuredClone(value);
   for (let pass = 0; pass < 12; pass++) {
     const result = GLOBALS[key].safeParse(current);
@@ -263,13 +252,13 @@ export function repairToSchema(key: GlobalKey, value: unknown, warnings: string[
       if (issue.code === 'too_big' && issue.origin === 'string' && parent && last !== undefined && !isLottie) {
         const original = String(parent[last]);
         parent[last] = original.slice(0, Number(issue.maximum)).trim();
-        warnings.push(`${label}: truncated to ${String(issue.maximum)} characters`);
+        lossy.push(`${label}: truncated to ${String(issue.maximum)} characters`);
         continue;
       }
       if (path.length === 0) throw new Error(`${key}: cannot repair root issue: ${issue.message}`);
       const firstIndex = path.findIndex((p) => typeof p === 'number');
       removals.push(firstIndex >= 0 ? path.slice(0, firstIndex + 1) : [...path]);
-      warnings.push(`${label}: ${issue.message}; ${firstIndex >= 0 ? 'item dropped' : 'left to default'}`);
+      lossy.push(`${label}: ${issue.message}; ${firstIndex >= 0 ? 'item dropped' : 'left to default'}`);
     }
     // Deepest and highest array index first so earlier removals do not shift later ones.
     removals
@@ -288,7 +277,7 @@ export function repairToSchema(key: GlobalKey, value: unknown, warnings: string[
 
 export type MigrationPlanRow = {
   key: PublicSettingsKey;
-  action: 'create' | 'skip' | 'overwrite';
+  action: 'create' | 'skip' | 'unchanged' | 'overwrite';
   fields: number;
   version?: number;
 };
@@ -299,45 +288,87 @@ export type MigrationResult = {
   written: number;
   skipped: number;
   warnings: string[];
+  // Values the new schemas cannot hold as they are (truncated or dropped).
+  lossy: string[];
 };
+
+export class LossyMigrationError extends Error {
+  constructor(readonly lossy: string[]) {
+    super(
+      `Migration would lose data in ${lossy.length} place(s); nothing was written. Re-run with --allow-lossy to accept.`,
+    );
+  }
+}
+
+// Every document for a legacy row, validated and repaired, before anything is written.
+export function buildDocs(row: Legacy) {
+  const { docs, warnings, lossy } = mapLegacyToDocs(row);
+  const repaired = {} as Record<PublicSettingsKey, Json>;
+  for (const key of PUBLIC_SETTINGS_KEYS) repaired[key] = repairToSchema(key, docs[key], lossy) as Json;
+  return { docs: repaired, warnings, lossy };
+}
+
+// Public reads before the migration has run (deploy-before-migrate): a key that was never
+// saved is taken from the legacy row; once saved, the stored document always wins.
+export function resolvePublicGlobals(
+  stored: { [K in PublicSettingsKey]: PublicGlobals[K] | null },
+  legacy: Legacy | null | undefined,
+): PublicGlobals {
+  const legacyDocs = legacy && PUBLIC_SETTINGS_KEYS.some((k) => stored[k] === null) ? buildDocs(legacy).docs : null;
+  const out: Record<string, unknown> = {};
+  for (const key of PUBLIC_SETTINGS_KEYS) out[key] = stored[key] ?? parseGlobal(key, legacyDocs?.[key]);
+  return out as PublicGlobals;
+}
 
 export async function migrateSiteSettings({
   dryRun = false,
   force = false,
-}: { dryRun?: boolean; force?: boolean } = {}): Promise<MigrationResult> {
+  allowLossy = false,
+}: { dryRun?: boolean; force?: boolean; allowLossy?: boolean } = {}): Promise<MigrationResult> {
   const row = await siteSettingsRepository.get();
-  if (!row) return { dryRun, legacyRow: false, plan: [], written: 0, skipped: 0, warnings: [] };
+  if (!row) return { dryRun, legacyRow: false, plan: [], written: 0, skipped: 0, warnings: [], lossy: [] };
 
-  const warnings: string[] = [];
-  const { docs, warnings: mapWarnings } = mapLegacyToDocs(row);
-  warnings.push(...mapWarnings);
+  // Compute and repair every document first: a failure leaves nothing half-written.
+  const { docs, warnings, lossy } = buildDocs(row);
+  if (lossy.length > 0 && !allowLossy && !dryRun) throw new LossyMigrationError(lossy);
 
   const plan: MigrationPlanRow[] = [];
-  let written = 0;
-  let skipped = 0;
+  const writes: { key: PublicSettingsKey; value: Json; version: number; note: string }[] = [];
   for (const key of PUBLIC_SETTINGS_KEYS) {
     const existing = await settingsRepository.get(key);
-    const value = repairToSchema(key, docs[key], warnings);
-    const fields = Object.keys(value as object).length;
+    const value = docs[key];
+    const fields = Object.keys(value).length;
     if (existing && !force) {
       plan.push({ key, action: 'skip', fields, version: existing.version });
-      skipped++;
-      continue;
+    } else if (existing && isDeepStrictEqual(existing.value, value)) {
+      plan.push({ key, action: 'unchanged', fields, version: existing.version });
+    } else {
+      plan.push({ key, action: existing ? 'overwrite' : 'create', fields, version: (existing?.version ?? 0) + 1 });
+      writes.push({
+        key,
+        value,
+        version: existing?.version ?? 0,
+        note: existing ? `${MIGRATION_NOTE} (forced)` : MIGRATION_NOTE,
+      });
     }
-    plan.push({ key, action: existing ? 'overwrite' : 'create', fields, version: existing ? existing.version + 1 : 1 });
-    if (dryRun) continue;
-    // System actor (null user): the revision and the audit row record "no person".
-    await settingsRepository.save(
-      key,
-      { version: existing?.version ?? 0, value },
-      null,
-      existing ? `${MIGRATION_NOTE} (forced)` : MIGRATION_NOTE,
-      (tx) =>
-        audit(null, { action: 'globals.migrate', entityType: 'setting', entityId: key, summary: MIGRATION_NOTE }, tx),
-    );
-    written++;
   }
-  return { dryRun, legacyRow: true, plan, written, skipped, warnings };
+  if (!dryRun) {
+    for (const w of writes) {
+      // System actor (null user): the revision and the audit row record "no person".
+      await settingsRepository.save(w.key, { version: w.version, value: w.value }, null, w.note, (tx) =>
+        audit(null, { action: 'globals.migrate', entityType: 'setting', entityId: w.key, summary: MIGRATION_NOTE }, tx),
+      );
+    }
+  }
+  return {
+    dryRun,
+    legacyRow: true,
+    plan,
+    written: dryRun ? 0 : writes.length,
+    skipped: plan.length - writes.length,
+    warnings,
+    lossy,
+  };
 }
 
 // ----------------------------------------------------------------- verify
@@ -391,7 +422,7 @@ function visibleView(s: View): Record<string, unknown> {
   const name = trim(get('businessName'));
   const hours = trim(formatOpeningHoursSummary(get('openingHours')));
   const view: Record<string, unknown> = {
-    address: trim(get('address')).replace(/[\s,]+/g, ' '),
+    address: trim(get('address')),
     hours,
     logoLottieJson: get('logoLottieJson') || null,
     logoUseLottie: Boolean(s.logoUseLottie),
