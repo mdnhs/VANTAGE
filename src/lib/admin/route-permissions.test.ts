@@ -29,6 +29,8 @@ function routeOf(file: string): string {
 const SELF_GATED = [
   path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', 'no-access', 'page.tsx'),
   path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', '[section]', '[[...rest]]', 'page.tsx'),
+  // Settings: each slug is gated by its registry link (settings.read or globals.read).
+  path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', 'settings', '[slug]', 'page.tsx'),
 ];
 
 const dashboardRoutes = pageFiles(APP_DIR)
@@ -49,7 +51,10 @@ describe('permissionFor', () => {
     expect(permissionFor('/dashboard')).toEqual({ dashboard: ['view'] });
     expect(permissionFor('/dashboard/quotes/q1')).toEqual({ quote: ['read'] });
     expect(permissionFor('/dashboard/contacts')).toEqual({ contact: ['read'] });
-    expect(permissionFor('/dashboard/settings')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings')).toEqual({ globals: ['read'] });
+    expect(permissionFor('/dashboard/settings/identity')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings/privacy')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings/footer')).toEqual({ globals: ['read'] });
     expect(permissionFor('/dashboard/home-page')).toEqual({ page: ['read'] });
     expect(permissionFor('/dashboard/services')).toEqual({ content: ['read'] });
     expect(permissionFor('/dashboard/services/create')).toEqual({ content: ['create'] });

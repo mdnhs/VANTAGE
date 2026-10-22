@@ -1,30 +1,23 @@
-import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
-import { requirePermission } from '@/server/lib/auth/session';
+import { redirect } from 'next/navigation';
+
+import { noAccessHref } from '@/lib/admin/no-access';
+import { visibleNav } from '@/lib/admin/nav';
 import { permissionFor } from '@/lib/admin/route-permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
-import { SettingsTabs } from '@/features/site-settings/components/settings-tabs';
+import { requirePermission } from '@/server/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'Site settings',
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via requirePermission) per request — must not be prerendered.
+// Reads the session cookie per request — must not be prerendered.
 export const instant = false;
 
-// Detail page: calls the service directly rather than fetching the API route.
-export default async function SiteSettingsPage() {
-  await requirePermission(permissionFor('/dashboard/settings'));
-  const initialData = await siteSettingsService.getAdmin();
-
-  return (
-    <div className='flex flex-col gap-6'>
-      <PageHeader
-        title='Site settings'
-        description='Business contact info, social links, branding and SEO shown across the public site.'
-      />
-      <SettingsTabs initialData={initialData ?? null} />
-    </div>
-  );
+// The first settings page this role may open (the registry gates each child),
+// so settings.read-only pages are never offered to a globals.read-only role.
+export default async function SettingsIndexPage() {
+  const actor = await requirePermission(permissionFor('/dashboard/settings'), '/dashboard/settings');
+  const first = visibleNav(actor.roles).find((item) => item.id === 'settings')?.children?.[0];
+  redirect(first ? first.href : noAccessHref('/dashboard/settings'));
 }

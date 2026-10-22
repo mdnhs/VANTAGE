@@ -28,6 +28,7 @@ export function SchemaForm<S extends z.ZodObject>({
   resetOnSuccess = false,
   overrides,
   onValuesChange,
+  readOnly = false,
 }: {
   schema: S;
   defaultValues: z.input<S>;
@@ -37,6 +38,8 @@ export function SchemaForm<S extends z.ZodObject>({
   overrides?: FieldOverrides;
   // Called on every change, for live previews next to the form.
   onValuesChange?: (values: z.input<S>) => void;
+  // Hides the submit button (the caller disables the fields, e.g. in a fieldset).
+  readOnly?: boolean;
 }) {
   // Callers pass inline `overrides` literals and unstable callbacks: key the
   // field tree on the overrides' content and read the callback through a ref,
@@ -97,12 +100,14 @@ export function SchemaForm<S extends z.ZodObject>({
           {rootError}
         </p>
       ) : null}
-      <div>
-        <Button type='submit' disabled={pending} className={FORM_ACTION}>
-          {pending ? <Spinner data-icon='inline-start' /> : null}
-          {submitLabel}
-        </Button>
-      </div>
+      {readOnly ? null : (
+        <div>
+          <Button type='submit' disabled={pending} className={FORM_ACTION}>
+            {pending ? <Spinner data-icon='inline-start' /> : null}
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

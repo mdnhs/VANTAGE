@@ -21,6 +21,11 @@ const REGISTRY_ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Per
 const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]> = [
   ...REGISTRY_ROUTES,
 
+  // The settings index forwards to the first child the role may open. Every role
+  // holding settings.read also holds globals.read, so the second grant is the
+  // exact "may open any settings page" gate (the section itself is any-of).
+  ['/dashboard/settings', { globals: ['read'] }],
+
   ['/dashboard/quotes/[id]', { quote: ['read'] }],
   ['/dashboard/contacts/[id]', { contact: ['read'] }],
 

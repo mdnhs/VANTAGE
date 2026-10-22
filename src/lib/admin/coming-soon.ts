@@ -1,3 +1,5 @@
+import { SETTINGS_PAGES } from '@/lib/content/global-access';
+
 import { EXTRA_LINKS, HELP_LINK, NAV, linkForPath, type NavLink } from './nav';
 
 // A sidebar destination whose page has not been built yet. Only registered
@@ -18,6 +20,8 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/quotes',
   '/dashboard/contacts',
   '/dashboard/settings',
+  // settings/[slug] serves every settings page.
+  ...Object.keys(SETTINGS_PAGES).map((slug) => `/dashboard/settings/${slug}`),
   '/dashboard/users',
   '/dashboard/account',
 ]);

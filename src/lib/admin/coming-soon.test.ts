@@ -56,8 +56,17 @@ describe('comingSoonParams', () => {
   });
   it('every excluded real route has a page file', () => {
     for (const href of REAL_ROUTES) {
-      const name = href.replace('/dashboard/', '');
-      const hit = pageFiles(APP_DIR).some((f) => f.includes(`${path.sep}${name}${path.sep}`));
+      // A dynamic segment ("settings/[slug]") serves any one value there.
+      const want = href.replace('/dashboard/', '').split('/');
+      const hit = pageFiles(APP_DIR).some((f) => {
+        const have = path
+          .relative(APP_DIR, path.dirname(f))
+          .split(path.sep)
+          .filter((seg) => !/^\(.*\)$/.test(seg));
+        const at = have.indexOf('dashboard');
+        const rest = at < 0 ? [] : have.slice(at + 1);
+        return rest.length === want.length && rest.every((seg, i) => seg === want[i] || /^\[[^.]+\]$/.test(seg));
+      });
       expect(hit, href).toBe(true);
     }
   });
