@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { MediaGalleryField } from '@/features/media/components/media-gallery-field';
+import { sizedSrc } from '@/lib/media/public-image';
+import { slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { ProjectWithGallery } from '../types';
 
@@ -40,9 +43,12 @@ interface FormState {
   description: string;
   completedAt: string;
   isFeatured: boolean;
-  beforeImagePublicId: string;
-  afterImagePublicId: string;
-  galleryImagePublicIds: string[];
+  beforeImageMediaId: Slot;
+  afterImageMediaId: Slot;
+  // The library images of the gallery, in order. `galleryTouched` is false until the
+  // user changes it; an untouched gallery is not sent, so legacy images stay.
+  galleryMediaIds: string[];
+  galleryTouched: boolean;
 }
 
 function toFormState(data: ProjectWithGallery | null): FormState {
@@ -54,10 +60,10 @@ function toFormState(data: ProjectWithGallery | null): FormState {
     description: data?.description ?? '',
     completedAt: toDateInputValue(data?.completedAt),
     isFeatured: data?.isFeatured ?? false,
-    beforeImagePublicId: data?.beforeImagePublicId ?? '',
-    afterImagePublicId: data?.afterImagePublicId ?? '',
-    // Media-backed rows have no legacy id; they are kept untouched unless replaced.
-    galleryImagePublicIds: data?.galleryImages?.flatMap((g) => (g.imagePublicId ? [g.imagePublicId] : [])) ?? [],
+    beforeImageMediaId: undefined,
+    afterImageMediaId: undefined,
+    galleryMediaIds: data?.galleryImages?.flatMap((g) => (g.mediaId ? [g.mediaId] : [])) ?? [],
+    galleryTouched: false,
   };
 }
 
@@ -69,9 +75,9 @@ export interface ProjectFormSubmitInput {
   description: string;
   completedAt: string | null;
   isFeatured: boolean;
-  beforeImagePublicId?: string;
-  afterImagePublicId?: string;
-  galleryImagePublicIds?: string[];
+  beforeImageMediaId?: string;
+  afterImageMediaId?: string;
+  galleryMediaIds?: string[];
 }
 
 interface ProjectFormProps {
@@ -93,7 +99,8 @@ export function ProjectForm({
 }: ProjectFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
-  const hasMediaGallery = Boolean(initialData?.galleryImages?.some((g) => g.mediaId));
+  const [imageError, setImageError] = useState<{ before?: string; after?: string }>({});
+  const legacyGallery = (initialData?.gallery ?? []).filter((image) => image.id === null);
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -109,6 +116,21 @@ export function ProjectForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    // Both images are required: a chosen one, or the row's current (media or legacy) one.
+    const hasBefore = Boolean(
+      form.beforeImageMediaId ?? initialData?.beforeImageMediaId ?? initialData?.beforeImagePublicId,
+    );
+    const hasAfter = Boolean(
+      form.afterImageMediaId ?? initialData?.afterImageMediaId ?? initialData?.afterImagePublicId,
+    );
+    if (!hasBefore || !hasAfter) {
+      setImageError({
+        before: hasBefore ? undefined : 'Choose a before image',
+        after: hasAfter ? undefined : 'Choose an after image',
+      });
+      return;
+    }
+    setImageError({});
     await onSubmit({
       title: form.title,
       slug: form.slug,
@@ -117,11 +139,10 @@ export function ProjectForm({
       description: form.description,
       completedAt: form.completedAt || null,
       isFeatured: form.isFeatured,
-      // Left out when empty so a media-backed image on the row stays as it is.
-      beforeImagePublicId: form.beforeImagePublicId || undefined,
-      afterImagePublicId: form.afterImagePublicId || undefined,
-      // A gallery with media rows is managed in the new editor; the old form leaves it alone.
-      galleryImagePublicIds: hasMediaGallery ? undefined : form.galleryImagePublicIds,
+      // Untouched images are left out so the row keeps them (even legacy ones).
+      ...(form.beforeImageMediaId ? { beforeImageMediaId: form.beforeImageMediaId } : {}),
+      ...(form.afterImageMediaId ? { afterImageMediaId: form.afterImageMediaId } : {}),
+      ...(form.galleryTouched ? { galleryMediaIds: form.galleryMediaIds } : {}),
     });
   };
 
@@ -203,33 +224,53 @@ export function ProjectForm({
           </div>
 
           <div className='flex flex-col gap-1.5'>
-            <Label>Before / after images</Label>
-            <CloudinaryUpload
-              mode='before-after'
-              folder='vantage/projects'
-              value={[form.beforeImagePublicId, form.afterImagePublicId].filter(Boolean)}
-              onChange={(value) => {
-                const ids = Array.isArray(value) ? value : value ? [value] : [];
-                setField('beforeImagePublicId', ids[0] ?? '');
-                setField('afterImagePublicId', ids[1] ?? '');
-              }}
+            <Label>Before</Label>
+            <MediaField
+              kind='image'
+              label='Before'
+              value={slotRef(
+                form.beforeImageMediaId,
+                initialData?.beforeImageMediaId,
+                initialData?.beforeImagePublicId,
+              )}
+              onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
             />
+            {imageError.before ? <p className='text-sm text-destructive'>{imageError.before}</p> : null}
           </div>
           <div className='flex flex-col gap-1.5'>
+            <Label>After</Label>
+            <MediaField
+              kind='image'
+              label='After'
+              value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId, initialData?.afterImagePublicId)}
+              onChange={(ref) => setField('afterImageMediaId', ref?.id)}
+            />
+            {imageError.after ? <p className='text-sm text-destructive'>{imageError.after}</p> : null}
+          </div>
+          <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Gallery (up to 10 images)</Label>
-            {hasMediaGallery ? (
-              <p className='text-sm text-muted-foreground'>
-                This gallery is managed in the new media editor and is not changed by this form.
-              </p>
-            ) : (
-              <CloudinaryUpload
-                mode='gallery'
-                folder='vantage/projects'
-                maxFiles={10}
-                value={form.galleryImagePublicIds}
-                onChange={(value) => setField('galleryImagePublicIds', Array.isArray(value) ? value : [])}
-              />
-            )}
+            {legacyGallery.length > 0 && !form.galleryTouched ? (
+              <div className='flex flex-col gap-2'>
+                <p className='text-sm text-muted-foreground'>
+                  {legacyGallery.length} legacy {legacyGallery.length === 1 ? 'image is' : 'images are'} still on this
+                  gallery. Choosing library images below replaces the whole gallery.
+                </p>
+                <ul className='flex flex-wrap gap-2'>
+                  {legacyGallery.map((image, index) => (
+                    <li key={image.src + index} className='size-16 overflow-hidden rounded-lg border bg-muted'>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={sizedSrc(image, 'w_96,h_96,c_fill')} alt='' className='size-full object-cover' />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <MediaGalleryField
+              label='Gallery image'
+              max={10}
+              value={form.galleryMediaIds}
+              onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
+            />
           </div>
         </CardContent>
       </Card>

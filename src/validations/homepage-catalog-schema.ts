@@ -23,7 +23,6 @@ export const createHomepageCatalogSchema = z.object({
   badge: z.string().max(80).nullable().optional(),
   footnote: z.string().max(80).optional().default('Free Estimate'),
   icon: z.enum(HOMEPAGE_CATALOG_ICONS).default('car-front'),
-  iconPublicId: z.string().max(255).nullable().optional(),
   iconMediaId: z.string().uuid().nullable().optional(),
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),

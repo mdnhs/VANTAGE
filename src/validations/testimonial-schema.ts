@@ -6,7 +6,6 @@ export const createTestimonialSchema = z.object({
   customerName: z.string().min(1).max(120),
   rating: z.coerce.number().int().min(1).max(5),
   reviewText: z.string().min(1),
-  avatarPublicId: z.string().min(1).max(255).nullable().optional(),
   avatarMediaId: z.string().uuid().nullable().optional(),
   serviceReceived: z.string().min(1).max(120).nullable().optional(),
   receivedAt: z.coerce.date().nullable().optional(),

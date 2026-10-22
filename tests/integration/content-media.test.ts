@@ -15,6 +15,7 @@ import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { projectService } from '@/server/services/project-service';
 import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
+import { call, sessionCookie } from '../support/session';
 import { createPartnerLogoSchema, updatePartnerLogoSchema } from '@/validations/partner-logo-schema';
 import { createProjectSchema, updateProjectSchema } from '@/validations/project-schema';
 
@@ -175,16 +176,20 @@ describe('projects', () => {
     ]);
   });
 
-  it('requires a before and an after image (media or legacy)', () => {
-    expect(createProjectSchema.safeParse(project()).success).toBe(false);
+  it('requires a before and an after media id', () => {
     const id = '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11';
-    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id, afterImagePublicId: 'x' })).success).toBe(
+    expect(createProjectSchema.safeParse(project()).success).toBe(false);
+    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id })).success).toBe(false);
+    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id, afterImageMediaId: id })).success).toBe(
       true,
     );
-    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id })).success).toBe(false);
+    // legacy ids are no longer accepted as input
+    expect(createProjectSchema.safeParse(project({ beforeImagePublicId: 'x', afterImagePublicId: 'y' })).success).toBe(
+      false,
+    );
   });
 
-  it('a legacy-only gallery save keeps media-backed gallery rows', async () => {
+  it('an update without galleryMediaIds keeps legacy and media gallery rows; with it, replaces all', async () => {
     const [before, after, g1, g2] = await Promise.all([1, 2, 3, 4].map(() => insertMedia()));
     const created = await projectService.create({
       ...project(),
@@ -192,27 +197,24 @@ describe('projects', () => {
       afterImageMediaId: after!.id,
       galleryMediaIds: [g1!.id, g2!.id],
     });
-    // all-media gallery: an old-form save with no change and one with ids both keep the rows
-    await projectService.update(created!.id, { title: 'Renamed' });
-    await projectService.update(created!.id, { galleryImagePublicIds: [] });
-    let found = await projectRepository.byId(created!.id);
-    expect(found?.gallery.map((g) => g.id)).toEqual([g1!.id, g2!.id]);
-    // mixed gallery: legacy rows are replaced, media rows stay, and order stays unique
     await db
       .insert(projectGalleryImages)
       .values({ projectId: created!.id, imagePublicId: 'vantage/old', displayOrder: 2 });
-    await projectService.update(created!.id, { galleryImagePublicIds: ['vantage/new'] });
-    found = await projectRepository.byId(created!.id);
-    expect(found?.galleryImages.map((g) => g.imagePublicId)).toEqual([null, null, 'vantage/new']);
+    await projectService.update(created!.id, { title: 'Renamed' });
+    let found = await projectRepository.byId(created!.id);
     expect(found?.galleryImages.map((g) => g.mediaId)).toEqual([g1!.id, g2!.id, null]);
-    expect(found?.galleryImages.map((g) => g.displayOrder)).toEqual([0, 1, 2]);
+    expect(found?.galleryImages[2]?.imagePublicId).toBe('vantage/old');
+    await projectService.update(created!.id, { galleryMediaIds: [g2!.id] });
+    found = await projectRepository.byId(created!.id);
+    expect(found?.galleryImages.map((g) => [g.mediaId, g.imagePublicId, g.displayOrder])).toEqual([[g2!.id, null, 0]]);
   });
 
-  it('cannot clear an image id on update', () => {
-    expect(updateProjectSchema.safeParse({ beforeImagePublicId: null }).success).toBe(false);
-    expect(updateProjectSchema.safeParse({ afterImagePublicId: null }).success).toBe(false);
+  it('cannot clear a required image on update, and an update may leave it out', () => {
     expect(updateProjectSchema.safeParse({ beforeImageMediaId: null }).success).toBe(false);
-    expect(updatePartnerLogoSchema.safeParse({ logoPublicId: null }).success).toBe(false);
+    expect(updateProjectSchema.safeParse({ afterImageMediaId: null }).success).toBe(false);
+    expect(updatePartnerLogoSchema.safeParse({ logoMediaId: null }).success).toBe(false);
+    expect(updateProjectSchema.safeParse({ title: 'x' }).success).toBe(true);
+    expect(updatePartnerLogoSchema.safeParse({ companyName: 'x' }).success).toBe(true);
   });
 
   it('refuses a deleted gallery id', async () => {
@@ -230,11 +232,17 @@ describe('projects', () => {
 });
 
 describe('partner logos', () => {
-  it('needs a media id or a legacy id, reported on logoPublicId', () => {
+  it('needs a logo media id (422 on the API path)', async () => {
     const result = createPartnerLogoSchema.safeParse({ companyName: 'A' });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['logoPublicId']);
-    expect(createPartnerLogoSchema.safeParse({ companyName: 'A', logoPublicId: 'x' }).success).toBe(true);
+    expect(result.error?.issues[0]?.path).toEqual(['logoMediaId']);
+    expect(createPartnerLogoSchema.safeParse({ companyName: 'A', logoPublicId: 'x' }).success).toBe(false);
+    const cookie = await sessionCookie('owner');
+    const res = await call('/partner-logos', cookie, { method: 'POST', body: { companyName: 'A' } });
+    expect(res.status).toBe(422);
+    expect(
+      ((await res.json()) as { error: { causes: Record<string, string[]> } }).error.causes.logoMediaId,
+    ).toBeTruthy();
   });
 
   it('resolves the logo from a media row; a row with neither id reads null', async () => {

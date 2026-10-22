@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
@@ -6,31 +6,13 @@ import type { CreateProjectInput, ProjectListQuery, UpdateProjectInput } from '@
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-type GalleryInput = { mediaIds?: string[]; publicIds?: string[] };
-
-// Runs inside the caller's transaction so the project row and its gallery rows commit atomically.
-// Media ids (when given) replace the whole gallery; a media row never carries a legacy id.
-// Legacy ids alone replace only the legacy rows: media-backed rows are kept, so an old
-// form save can never wipe them.
-async function replaceGalleryImages(tx: Tx, projectId: string, { mediaIds, publicIds }: GalleryInput) {
-  const mine = eq(projectGalleryImages.projectId, projectId);
-  if (mediaIds) {
-    await tx.delete(projectGalleryImages).where(mine);
-    if (mediaIds.length === 0) return;
-    await tx
-      .insert(projectGalleryImages)
-      .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, imagePublicId: null, displayOrder: index })));
-    return;
-  }
-  await tx.delete(projectGalleryImages).where(and(mine, isNull(projectGalleryImages.mediaId)));
-  if (!publicIds || publicIds.length === 0) return;
-  const [{ kept }] = await tx
-    .select({ kept: sql<number>`coalesce(max(${projectGalleryImages.displayOrder}) + 1, 0)::int` })
-    .from(projectGalleryImages)
-    .where(mine);
+// Replaces the whole gallery (legacy rows included) with the given media ids, in order.
+async function replaceGalleryImages(tx: Tx, projectId: string, mediaIds: string[]) {
+  await tx.delete(projectGalleryImages).where(eq(projectGalleryImages.projectId, projectId));
+  if (mediaIds.length === 0) return;
   await tx
     .insert(projectGalleryImages)
-    .values(publicIds.map((imagePublicId, index) => ({ projectId, imagePublicId, displayOrder: kept + index })));
+    .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, imagePublicId: null, displayOrder: index })));
 }
 
 const withMedia = {
@@ -109,26 +91,24 @@ export const projectRepository = {
   },
 
   async create(data: CreateProjectInput) {
-    const { galleryImagePublicIds, galleryMediaIds, ...rest } = data;
+    const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [inserted] = await tx.insert(projects).values(rest).returning();
-      await replaceGalleryImages(tx, inserted.id, { mediaIds: galleryMediaIds, publicIds: galleryImagePublicIds });
+      if (galleryMediaIds) await replaceGalleryImages(tx, inserted.id, galleryMediaIds);
       return inserted;
     });
     return projectRepository.byId(row.id);
   },
 
   async update(id: string, data: UpdateProjectInput) {
-    const { galleryImagePublicIds, galleryMediaIds, ...rest } = data;
+    const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [updated] = await tx
         .update(projects)
         .set({ ...rest, updatedAt: new Date() })
         .where(eq(projects.id, id))
         .returning();
-      if (updated && (galleryMediaIds !== undefined || galleryImagePublicIds !== undefined)) {
-        await replaceGalleryImages(tx, id, { mediaIds: galleryMediaIds, publicIds: galleryImagePublicIds });
-      }
+      if (updated && galleryMediaIds !== undefined) await replaceGalleryImages(tx, id, galleryMediaIds);
       return updated;
     });
     if (!row) return undefined;
