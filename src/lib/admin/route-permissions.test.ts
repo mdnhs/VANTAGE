@@ -1,8 +1,11 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { SETTINGS_PAGES } from '@/lib/content/global-access';
+
+import { NAV } from './nav';
 import { permissionFor } from './route-permissions';
 
 const APP_DIR = path.join(import.meta.dirname, '../../app');
@@ -81,5 +84,24 @@ describe('permissionFor', () => {
   it('throws for an unknown route', () => {
     expect(() => permissionFor('/dashboard/nope')).toThrow(/No permission mapped/);
     expect(() => permissionFor('/other')).toThrow();
+  });
+});
+
+describe('settings pages', () => {
+  const settingsItem = NAV.find((item) => item.id === 'settings')!;
+
+  it.each(Object.keys(SETTINGS_PAGES))('settings/%s is gated by its nav child permission', (slug) => {
+    const child = settingsItem.children!.find((c) => c.href === `/dashboard/settings/${slug}`);
+    expect(child, slug).toBeDefined();
+    expect(permissionFor(`/dashboard/settings/${slug}`)).toEqual(child!.permission);
+  });
+
+  it('settings/[slug]/page.tsx calls requirePermission', () => {
+    const source = readFileSync(
+      path.join(APP_DIR, '(main)/(protected)/(dashboard_layout)/dashboard/settings/[slug]/page.tsx'),
+      'utf8',
+    );
+    expect(source).toMatch(/await\s+requirePermission\(/);
+    expect(source).toMatch(/await\s+requireActor\(/);
   });
 });

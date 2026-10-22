@@ -22,6 +22,7 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/settings',
   // settings/[slug] serves every settings page.
   ...Object.keys(SETTINGS_PAGES).map((slug) => `/dashboard/settings/${slug}`),
+  '/dashboard/seo/defaults',
   '/dashboard/users',
   '/dashboard/account',
 ]);

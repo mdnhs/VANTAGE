@@ -270,3 +270,19 @@ describe('firstReachableHref', () => {
     expect(firstReachableHref(item('media'), ['owner'])).toBe('/dashboard/media');
   });
 });
+
+describe('settings index gate', () => {
+  // /dashboard/settings is gated by globals.read; that is only the exact "may
+  // open any settings page" gate while settings.read implies globals.read.
+  it.each(ROLE_NAMES)('%s: settings.read implies globals.read', (role) => {
+    if (hasPermission([role], { settings: ['read'] })) {
+      expect(hasPermission([role], { globals: ['read'] })).toBe(true);
+    }
+  });
+
+  it.each(ROLE_NAMES)('%s: opens the settings index exactly when a child is openable', (role) => {
+    const children = NAV.find((i) => i.id === 'settings')!.children!;
+    const anyChild = children.some((c) => canOpen([role], c.permission));
+    expect(hasPermission([role], permissionFor('/dashboard/settings'))).toBe(anyChild);
+  });
+});

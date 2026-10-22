@@ -34,3 +34,20 @@ export function submitResultErrors(result: SubmitResult): {
   );
   return { fields, root: result?.formError || undefined };
 }
+
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// The text of a JSON file, accepted only when it parses to an object or array.
+export function readJsonText(text: string): { ok: true; text: string } | { ok: false; error: string } {
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (parsed === null || typeof parsed !== 'object') return { ok: false, error: 'This file is not a JSON document.' };
+    return { ok: true, text };
+  } catch {
+    return { ok: false, error: 'This file is not valid JSON.' };
+  }
+}

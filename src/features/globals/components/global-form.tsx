@@ -14,6 +14,7 @@ import { GLOBALS } from '@/lib/content/globals';
 import { GLOBAL_FIELD_UI } from '../global-ui';
 import { useSaveGlobal } from '../hooks/api/mutation/use-save-global';
 import { useGlobal } from '../hooks/api/query/use-global';
+import { CONFLICT_MESSAGE } from '../lib/submit-result';
 import { GlobalHistory } from './global-history';
 
 // Globals go live on save, guarded by version. The form is keyed by version so
@@ -30,6 +31,9 @@ export function GlobalForm({
   const { save } = useSaveGlobal(settingKey);
   const canUpdate = useCan(GLOBAL_ACCESS[settingKey].update);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // Held here, outside the version-keyed SchemaForm: the conflict reload
+  // remounts the form, which would drop an error set on the old instance.
+  const [conflict, setConflict] = useState(false);
   const label = GLOBAL_LABELS[settingKey];
 
   if (doc.isError) {
@@ -51,6 +55,11 @@ export function GlobalForm({
         <HistoryIcon data-icon='inline-start' />
         History
       </Button>
+      {conflict ? (
+        <p role='alert' className='rounded-xl border border-destructive/40 p-3 text-sm text-destructive'>
+          {CONFLICT_MESSAGE}
+        </p>
+      ) : null}
       {/* Read-only for roles that can read but not update; the API still refuses their PUT. */}
       <fieldset disabled={!canUpdate} className='min-w-0'>
         <SchemaForm
@@ -62,9 +71,14 @@ export function GlobalForm({
           readOnly={!canUpdate}
           onValuesChange={onValuesChange}
           onSubmit={async (next) => {
+            setConflict(false);
             const result = await save({ version, value: next });
             if (result.saved) {
               toast.success(`${label} saved`);
+              return;
+            }
+            if (result.conflict) {
+              setConflict(true);
               return;
             }
             return result;

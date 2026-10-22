@@ -13,7 +13,11 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     favicon: { label: 'Favicon' },
     lottieLogo: { label: 'Animated logo' },
     'lottieLogo.enabled': { label: 'Use the animated logo', description: 'Falls back to the logo when off.' },
-    'lottieLogo.json': { label: 'Lottie JSON', description: 'Paste the exported animation JSON.' },
+    'lottieLogo.json': {
+      widget: 'json-file',
+      label: 'Lottie animation',
+      description: 'A .json file exported from Lottie.',
+    },
     social: { label: 'Social profiles' },
     'social.$.label': { label: 'Network' },
     'social.$.url': { label: 'Address', inputType: 'url', placeholder: 'https://' },
@@ -27,11 +31,8 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'address.lines': { label: 'Address lines' },
     'address.eircode': { label: 'Eircode' },
     hours: { label: 'Opening hours' },
-    'hours.weekly': { label: 'Opening times' },
-    'hours.weekly.$.days': { label: 'Days (1 = Monday … 7 = Sunday)' },
-    'hours.weekly.$.opens': { label: 'Opens', placeholder: '08:00' },
-    'hours.weekly.$.closes': { label: 'Closes', placeholder: '18:00' },
-    'hours.summary': { description: 'How the site prints the hours.' },
+    'hours.weekly': { widget: 'weekly-hours-groups', label: 'Opening times' },
+    'hours.summary': { description: 'Leave blank to generate it from the opening times.' },
     mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://' },
   },
   navigation: {
@@ -63,6 +64,11 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     autoReply: { label: 'Auto-reply to the customer' },
     'autoReply.enabled': { label: 'Send an auto-reply' },
     'autoReply.body': { description: 'The enquiry text is never added to the auto-reply.' },
+  },
+  seo: {
+    titleTemplate: { label: 'Title template', description: '"%s" is replaced by the page title.' },
+    defaultOgImage: { label: 'Default share image' },
+    twitterHandle: { label: 'X / Twitter handle' },
   },
   privacy: {
     enquiryRetentionMonths: { label: 'Keep enquiries for (months)' },

@@ -38,7 +38,7 @@ export function GlobalHistory({
       <SheetContent className='w-full gap-0 sm:max-w-md'>
         <SheetHeader className='border-b p-5'>
           <SheetTitle className='text-lg font-semibold'>{GLOBAL_LABELS[settingKey]} history</SheetTitle>
-          <SheetDescription>Every save is kept. Pick one to bring it back as the newest version.</SheetDescription>
+          <SheetDescription>Every save is kept (the latest 20). Pick one to bring it back.</SheetDescription>
         </SheetHeader>
         <div className='flex-1 overflow-y-auto p-5'>
           {list.isPending ? (

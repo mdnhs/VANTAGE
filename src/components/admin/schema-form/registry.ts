@@ -15,7 +15,9 @@ export type Widget =
   | 'link'
   | 'image'
   | 'video'
-  | 'weekly-hours';
+  | 'weekly-hours'
+  | 'weekly-hours-groups'
+  | 'json-file';
 
 export type UiMeta = {
   // Optional: shared field schemas (field-ui.ts) take the field's own name.

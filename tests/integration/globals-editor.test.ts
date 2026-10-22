@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { revalidateTag } from 'next/cache';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { newestFirst } from '@/features/globals/lib/revisions';
 import { CONFLICT_MESSAGE, submitResultFromError } from '@/features/globals/lib/submit-result';
@@ -44,10 +45,16 @@ beforeAll(async () => {
   });
 });
 
+afterAll(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+
 afterEach(() => vi.restoreAllMocks());
 
 beforeEach(async () => {
   await db.execute(sql`truncate table settings, revisions, audit_logs`);
+  vi.mocked(revalidateTag).mockClear();
 });
 
 const failure = async (promise: Promise<unknown>) => {
@@ -111,6 +118,7 @@ describe('history and restore', () => {
     await saveGlobal('privacy', { version: 1, value: { enquiryRetentionMonths: 36 } });
     await saveGlobal('privacy', { version: 2, value: { enquiryRetentionMonths: 48 } });
 
+    expect(vi.mocked(revalidateTag).mock.calls).toEqual(Array(3).fill(['settings:privacy', { expire: 0 }]));
     const { items } = await fetchGlobalRevisions('privacy');
     expect(items.map((i) => i.version)).toEqual([3, 2, 1]);
     expect(newestFirst(items).map((i) => i.version)).toEqual([3, 2, 1]);
@@ -119,6 +127,8 @@ describe('history and restore', () => {
     const oldest = items.at(-1)!;
     const restored = await restoreGlobal('privacy', oldest.id, { version: 3 });
     expect(restored.version).toBe(4);
+    expect(vi.mocked(revalidateTag)).toHaveBeenCalledTimes(4);
+    expect(vi.mocked(revalidateTag).mock.lastCall).toEqual(['settings:privacy', { expire: 0 }]);
     expect(restored.value).toMatchObject({ enquiryRetentionMonths: 12 });
 
     const after = await fetchGlobalRevisions('privacy');

@@ -9,5 +9,10 @@ import { globalKeys } from '../../../utils/query-keys';
 
 // The form is keyed by version, so it always starts from what is stored.
 export function useGlobal(key: EditableGlobalKey) {
-  return useQuery({ queryKey: globalKeys.detail(key), queryFn: () => fetchGlobal(key), staleTime: 0 });
+  return useQuery({
+    queryKey: globalKeys.detail(key),
+    queryFn: () => fetchGlobal(key),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
 }

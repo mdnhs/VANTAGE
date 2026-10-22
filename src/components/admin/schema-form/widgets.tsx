@@ -31,8 +31,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { moveItem, parseNumberInput } from './helpers';
 import { emptyValue, rebase, type FormField } from './to-fields';
 import { ImageWidget } from './widgets/image-widget';
+import { JsonFileWidget } from './widgets/json-file-widget';
 import { LinkWidget } from './widgets/link-widget';
 import { VideoWidget } from './widgets/video-widget';
+import { WeeklyHoursGroupsWidget } from './widgets/weekly-hours-groups-widget';
 import { WeeklyHoursWidget } from './widgets/weekly-hours-widget';
 
 type Controlled = ControllerRenderProps<FieldValues, string>;
@@ -125,6 +127,10 @@ function LeafWidget({ field, control }: Props) {
             return <VideoWidget {...props} />;
           case 'weekly-hours':
             return <WeeklyHoursWidget {...props} />;
+          case 'weekly-hours-groups':
+            return <WeeklyHoursGroupsWidget {...props} />;
+          case 'json-file':
+            return <JsonFileWidget {...props} />;
           default:
             return <ScalarWidget field={field} input={input} inputRef={ref} error={error} />;
         }

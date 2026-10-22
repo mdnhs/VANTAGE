@@ -27,11 +27,15 @@ export function useSaveGlobal(key: EditableGlobalKey) {
     },
   });
 
-  async function save(input: { version: number; value: unknown }): Promise<SubmitResult & { saved?: boolean }> {
+  async function save(input: {
+    version: number;
+    value: unknown;
+  }): Promise<NonNullable<SubmitResult> & { saved?: boolean; conflict?: boolean }> {
     try {
       await mutation.mutateAsync(input);
       return { saved: true };
     } catch (error) {
+      if (isConflict(error)) return { conflict: true };
       const result = submitResultFromError(error);
       if (!result) throw error;
       return result;
