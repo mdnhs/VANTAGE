@@ -56,10 +56,15 @@ describe('Better Auth server', () => {
     await getAuth().api.createUser({
       body: { email: EMAIL, password: PASSWORD, name: 'Test', role: 'editor' as never },
     });
-    await signIn();
+    await getAuth().api.signInEmail({
+      body: { email: EMAIL, password: PASSWORD },
+      headers: new Headers({ 'x-real-ip': '203.0.113.9' }),
+    });
     const rows = await db.select().from(auditLogs).where(eq(auditLogs.action, 'auth.sign_in'));
     expect(rows).toHaveLength(1);
     expect(rows[0]!.actorEmail).toBe(EMAIL);
+    expect(rows[0]!.ipHash).toBe(hashIp('203.0.113.9'));
+    expect(JSON.stringify(rows[0])).not.toContain('203.0.113.9');
   });
 
   it('treats a banned user as anonymous in getFreshSession', async () => {

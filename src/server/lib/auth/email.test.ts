@@ -45,7 +45,13 @@ describe('deliverAuthEmail', () => {
     expect(send.mock.calls[0]![0].subject).toMatch(/reset/i);
   });
 
-  it('never throws, and never logs the link', async () => {
+  it('resolves before a never-settling send when SMTP is configured', async () => {
+    const send = vi.fn(() => new Promise<never>(() => {}));
+    await expect(deliverAuthEmail(user, link('/x'), send, () => true)).resolves.toEqual({});
+    expect(send).toHaveBeenCalledOnce();
+  });
+
+  it('logs background failures without the link or token, and never throws', async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const url = link('/x');
     await expect(
@@ -56,6 +62,18 @@ describe('deliverAuthEmail', () => {
         () => true,
       ),
     ).resolves.toEqual({});
+    await expect(
+      deliverAuthEmail(
+        user,
+        url,
+        () => {
+          throw new Error('sync');
+        },
+        () => true,
+      ),
+    ).resolves.toEqual({});
+    await new Promise((r) => setTimeout(r, 0));
+    expect(error).toHaveBeenCalledTimes(2);
     expect(JSON.stringify(error.mock.calls)).not.toContain('tok123');
     error.mockRestore();
   });

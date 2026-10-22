@@ -72,10 +72,17 @@ export async function deliverAuthEmail(
   configured: () => boolean = smtpConfigured,
 ): Promise<{ manualLink?: string }> {
   if (!configured()) return { manualLink: url };
+  // Fire and forget: awaiting the SMTP round-trip would make known emails
+  // slower than unknown ones, revealing which have accounts.
   try {
-    await send(compose(user, url));
+    void Promise.resolve(send(compose(user, url))).catch(logSendFailure);
   } catch (error) {
-    console.error('[auth] could not send email', error instanceof Error ? error.message : 'unknown error');
+    logSendFailure(error);
   }
   return {};
+}
+
+// Message only: the error object and the link (which carries the token) stay out of logs.
+function logSendFailure(error: unknown) {
+  console.error('[auth] could not send email', error instanceof Error ? error.message : 'unknown error');
 }
