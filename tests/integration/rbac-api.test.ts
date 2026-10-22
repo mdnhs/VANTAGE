@@ -24,6 +24,7 @@ type Key =
   | 'content.delete'
   | 'page.update'
   | 'settings.update'
+  | 'seo.update'
   | 'settings.admin-read'
   | 'quote.read'
   | 'quote.update'
@@ -46,9 +47,10 @@ const ENDPOINTS: Endpoint[] = [
   { key: 'page.update', method: 'PATCH', path: '/site-settings/about-page', body: {} },
   { key: 'page.update', method: 'PATCH', path: '/site-settings/homepage-hero', body: {} },
   { key: 'settings.update', method: 'PATCH', path: '/site-settings/business-info', body: {} },
-  { key: 'settings.update', method: 'PATCH', path: '/site-settings/seo', body: {} },
+  { key: 'seo.update', method: 'PATCH', path: '/site-settings/seo', body: {} },
   { key: 'settings.admin-read', method: 'GET', path: '/site-settings/admin' },
   { key: 'quote.read', method: 'GET', path: '/quotes/admin/list' },
+  { key: 'quote.read', method: 'GET', path: '/admin/assignees' },
   { key: 'quote.update', method: 'PATCH', path: `/quotes/${ID}`, body: {} },
   { key: 'quote.delete', method: 'DELETE', path: `/quotes/${ID}` },
   { key: 'contact.read', method: 'GET', path: '/contacts/admin/list' },
@@ -71,12 +73,13 @@ const GRANTED: Record<RoleName | 'user', Key[]> = {
     'content.update',
     'content.delete',
     'page.update',
+    'seo.update',
     'settings.admin-read',
     'media.read',
     'media.delete',
   ],
   author: ['content.read', 'content.create', 'content.update', 'settings.admin-read', 'media.read'],
-  marketer: ['content.read', 'settings.admin-read', 'media.read'],
+  marketer: ['content.read', 'seo.update', 'settings.admin-read', 'media.read'],
   intake: ['quote.read', 'quote.update', 'contact.read', 'contact.update'],
   viewer: ['content.read', 'settings.admin-read'],
   user: [],
@@ -115,6 +118,7 @@ describe('admin API role matrix', () => {
             expect(res.status).toBeLessThan(500);
           } else {
             expect(res.status).toBe(403);
+            expect(((await res.json()) as { error: { code: string } }).error.code).toBe('FORBIDDEN');
           }
         });
       }
@@ -128,8 +132,28 @@ describe('admin API role matrix', () => {
     );
   });
 
+  it('lists active quote-updating staff at /admin/assignees, sorted by name', async () => {
+    const asIntake = await api.request('/api/v1/admin/assignees', { headers: { cookie: cookies.intake } });
+    expect(asIntake.status).toBe(200);
+    const { data } = (await asIntake.json()) as { data: { id: string; name: string; email: string }[] };
+    const names = data.map((u) => u.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(names).toEqual(expect.arrayContaining(['Test owner', 'Test admin', 'Test intake']));
+    expect(names).not.toContain('Test marketer');
+    expect(names).not.toContain('Test user');
+    expect(Object.keys(data[0]!).sort()).toEqual(['email', 'id', 'name']);
+    for (const role of ['owner', 'admin'] as const) {
+      const res = await api.request('/api/v1/admin/assignees', { headers: { cookie: cookies[role] } });
+      expect(res.status).toBe(200);
+    }
+  });
+
   it('returns 401 for every admin route without a session', async () => {
-    for (const e of ENDPOINTS) expect((await call(e)).status, `${e.method} ${e.path}`).toBe(401);
+    for (const e of ENDPOINTS) {
+      const res = await call(e);
+      expect(res.status, `${e.method} ${e.path}`).toBe(401);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('UNAUTHORIZED');
+    }
   });
 
   describe('GET /auth/me', () => {

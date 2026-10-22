@@ -108,6 +108,8 @@ export const API_ROUTES = {
   },
   quotes: {
     submit: '/quotes',
+    adminCreate: '/quotes/admin',
+    assignees: '/admin/assignees',
     adminList: '/quotes/admin/list',
     stats: '/quotes/admin/stats',
     detail: (id: string) => `/quotes/${id}`,

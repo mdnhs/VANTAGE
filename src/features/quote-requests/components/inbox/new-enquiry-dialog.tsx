@@ -29,7 +29,7 @@ import {
   UserCheck2,
 } from 'lucide-react';
 import { useSubmitQuoteRequest } from '../../hooks/api/mutation/use-submit-quote-request';
-import { useAdminUserList } from '@/features/admin-users/hooks/api/query/use-admin-user-list';
+import { useAssignees } from '../../hooks/api/query/use-assignees';
 import { PIPELINE_STATUSES, type QuoteSource, type PipelineStatus } from '../../types';
 import { STATUS_CONFIG } from '../quote-status-badge';
 
@@ -55,7 +55,7 @@ interface NewEnquiryDialogProps {
 export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: NewEnquiryDialogProps) {
   const [open, setOpen] = useState(false);
   const submitMutation = useSubmitQuoteRequest();
-  const { data: adminUsers } = useAdminUserList();
+  const { data: adminUsers } = useAssignees();
 
   // Form State
   const [source, setSource] = useState<QuoteSource>('phone_call');

@@ -36,6 +36,25 @@ export async function submitQuoteRequest(input: CreateQuoteRequestInput): Promis
   return parseOrThrow<QuoteRequest>(res);
 }
 
+// Staff-entered enquiry (phone / walk-in) with admin fields
+export async function createAdminQuoteRequest(input: CreateQuoteRequestInput): Promise<QuoteRequest> {
+  const res = await fetch(`${BASE_URL}${API_ROUTES.quotes.adminCreate}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return parseOrThrow<QuoteRequest>(res);
+}
+
+export type Assignee = { id: string; name: string; email: string };
+
+// Active staff who can be assigned a quote
+export async function fetchAssignees(): Promise<Assignee[]> {
+  const res = await fetch(`${BASE_URL}${API_ROUTES.quotes.assignees}`, { credentials: 'include' });
+  return parseOrThrow<Assignee[]>(res);
+}
+
 // Admin list with pagination & filters
 export async function fetchAdminQuoteRequestList(
   query: QuoteRequestListQuery,

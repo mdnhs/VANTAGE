@@ -68,6 +68,25 @@ export const createQuoteRequestSchema = z.object({
   adminNotes: z.string().max(5000).nullable().optional(),
 });
 
+// Public website forms: customer-supplied fields only. Admin-only columns (status,
+// assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
+export const publicQuoteRequestSchema = createQuoteRequestSchema.pick({
+  name: true,
+  email: true,
+  phone: true,
+  address: true,
+  city: true,
+  eircode: true,
+  registration: true,
+  make: true,
+  model: true,
+  year: true,
+  serviceType: true,
+  description: true,
+  photoUrls: true,
+  source: true,
+});
+
 export const updateQuoteRequestSchema = z.object({
   status: z.enum(ALL_QUOTE_STATUSES).optional(),
   address: z.string().max(500).nullable().optional(),

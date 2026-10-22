@@ -65,7 +65,7 @@ export const siteSettings = new Hono<AppEnv>()
     return ok(c, data);
   })
 
-  .patch('/seo', can({ settings: ['update'] }), zValidator('json', updateSeoSchema), async (c) => {
+  .patch('/seo', can({ seo: ['update'] }), zValidator('json', updateSeoSchema), async (c) => {
     const input = c.req.valid('json');
     const data = await siteSettingsService.updateSeo(input);
     return ok(c, data);

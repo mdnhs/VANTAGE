@@ -38,7 +38,7 @@ import { QuoteStatusBadge } from '../quote-status-badge';
 import { QuoteSourceBadge } from '../quote-source-badge';
 import { useUpdateQuoteRequest } from '../../hooks/api/mutation/use-update-quote-request';
 import { useDeleteQuoteRequest } from '../../hooks/api/mutation/use-delete-quote-request';
-import { useAdminUserList } from '@/features/admin-users/hooks/api/query/use-admin-user-list';
+import { useAssignees } from '../../hooks/api/query/use-assignees';
 import {
   PIPELINE_STATUSES,
   PAYMENT_STATUSES,
@@ -129,7 +129,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
-  const { data: adminUsers } = useAdminUserList();
+  const { data: adminUsers } = useAssignees();
   const updateQuote = useUpdateQuoteRequest(quote.id);
   const deleteQuote = useDeleteQuoteRequest();
 
