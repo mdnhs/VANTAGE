@@ -9,13 +9,16 @@ import { imageRefSchema, videoRefSchema } from './image-ref';
 
 const s = (max: number, fallback = '') => z.string().trim().max(max).default(fallback);
 
-// Internal paths, anchors, mailto/tel and https links; '' = not set.
+// Internal paths, anchors, mailto/tel and http(s) links; '' = not set.
 const HREF = /^(\/|#|https:\/\/|http:\/\/|mailto:|tel:)\S*$/;
 const Href = z
   .string()
   .trim()
   .max(300)
-  .refine((v) => v === '' || HREF.test(v), 'Use a path like /services, or a full https:// address')
+  .refine(
+    (v) => v === '' || HREF.test(v),
+    'Use a path like /services, #section, mailto:, tel: or a full http(s):// address',
+  )
   .default('');
 const HttpsUrl = z
   .string()
@@ -75,7 +78,11 @@ export const ContactGlobal = z.object({
   hours: z
     .object({
       weekly: z
-        .array(z.object({ days: z.array(Day).min(1).max(7), opens: Time, closes: Time }))
+        .array(
+          z
+            .object({ days: z.array(Day).min(1).max(7), opens: Time, closes: Time })
+            .refine((r) => r.closes > r.opens, { path: ['closes'], message: 'Closing time must be after opening' }),
+        )
         .max(7)
         .default([{ days: [1, 2, 3, 4, 5], opens: '08:00', closes: '18:00' }]),
       // How the site prints the hours; the structured list feeds JSON-LD.
@@ -110,6 +117,8 @@ export const NavigationGlobal = z.object({
       label: s(60, 'Get a Free Quote'),
       href: Href.default('/#estimator'),
       // The mobile menu shows a wider button to the full quote form.
+      // Shown below the sm breakpoint.
+      shortLabel: s(30, 'Free Quote'),
       mobileLabel: s(60, 'Request Free Quote Online'),
       mobileHref: Href.default('/get-a-quote'),
     })
@@ -350,7 +359,7 @@ export const SeoGlobal = z.object({
 
 // ------------------------------------------------------------ website pages
 
-const HERO_TITLED = (fallback: { eyebrow: string; line1: string; accent: string; subtext: string }) =>
+const heroTitled = (fallback: { eyebrow: string; line1: string; accent: string; subtext: string }) =>
   z
     .object({
       eyebrow: s(200, fallback.eyebrow),
@@ -385,7 +394,7 @@ export const HomePageGlobal = z.object({
       { title: 'Lifetime Paint Warranty', subtitle: 'Standox & PPG Systems' },
       { title: 'Courtesy Replacement', subtitle: 'Cars Available On-Site' },
     ]),
-  catalog: HERO_TITLED({
+  catalog: heroTitled({
     eyebrow: 'Specialist Autobody Divisions',
     line1: 'From Damage To',
     accent: 'Showroom Finish.',
@@ -395,7 +404,7 @@ export const HomePageGlobal = z.object({
 });
 
 export const ServicesPageGlobal = z.object({
-  hero: HERO_TITLED({
+  hero: heroTitled({
     eyebrow: 'Master Craftsmanship',
     line1: 'Professional Bodywork.',
     accent: 'Precision Finish.',
@@ -405,7 +414,7 @@ export const ServicesPageGlobal = z.object({
 });
 
 export const OurWorkPageGlobal = z.object({
-  hero: HERO_TITLED({
+  hero: heroTitled({
     eyebrow: 'Portfolio',
     line1: 'Our Recent',
     accent: 'Restorations.',

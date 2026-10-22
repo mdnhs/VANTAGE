@@ -64,7 +64,7 @@ describe('defaults equal today’s public copy', () => {
       ['About', '/about', true],
       ['Process', '/process', true],
     ]);
-    expect(nav.cta).toMatchObject({ label: 'Get a Free Quote', href: '/#estimator' });
+    expect(nav.cta).toMatchObject({ label: 'Get a Free Quote', shortLabel: 'Free Quote', href: '/#estimator' });
     const footer = parseGlobal('footer', {});
     expect(footer.columns.map((c) => c.title)).toEqual(['Services', 'Company']);
     expect(footer.legalLinks.map((l) => l.label)).toEqual(['Privacy Policy', 'Terms of Service', 'Login']);
@@ -204,6 +204,18 @@ describe('globals limits', () => {
     expect(GLOBALS.site.safeParse({ logo: { kind: 'media', id } }).success).toBe(true);
     expect(GLOBALS.site.safeParse({ logo: { kind: 'media', id: 'nope' } }).success).toBe(false);
     expect(GLOBALS.site.safeParse({ logo: 'a/b' }).success).toBe(false);
+  });
+
+  it('requires closing after opening and accepts http(s) and relative links', () => {
+    const row = (opens: string, closes: string) => ({ hours: { weekly: [{ days: [1], opens, closes }] } });
+    expect(GLOBALS.contact.safeParse(row('08:00', '18:00')).success).toBe(true);
+    expect(GLOBALS.contact.safeParse(row('18:00', '08:00')).success).toBe(false);
+    expect(GLOBALS.contact.safeParse(row('08:00', '08:00')).success).toBe(false);
+    const nav = (href: string) => GLOBALS.navigation.safeParse({ links: [{ label: 'x', href }] }).success;
+    expect(nav('http://example.com')).toBe(true);
+    expect(nav('https://example.com')).toBe(true);
+    expect(nav('/a')).toBe(true);
+    expect(nav('javascript:alert(1)')).toBe(false);
   });
 
   it('validates phone E.164, emails and hours', () => {

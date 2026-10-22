@@ -2,6 +2,7 @@ import 'server-only';
 
 import { inArray } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
+import { redactForAudit } from '@/lib/audit/redact-for-audit';
 import { topLevelDiff } from '@/lib/audit/top-level-diff';
 import type { EditableGlobalKey } from '@/lib/content/global-access';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
@@ -53,7 +54,7 @@ export async function saveGlobal(
           entityType: 'setting',
           entityId: key,
           summary: note ?? `Updated ${key}`,
-          diff: topLevelDiff(before?.value, value),
+          diff: topLevelDiff(redactForAudit(key, before?.value), redactForAudit(key, value)),
         },
         tx,
       ),

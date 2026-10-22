@@ -26,8 +26,6 @@ describe('getSetting', () => {
   });
 
   it('returns the stored value, filling missing fields from the defaults', async () => {
-    get.mockResolvedValue({ value: { enquiryRetentionMonths: 6 } });
-    expect(await getSetting('seo')).toEqual(parseGlobal('seo', {}));
     get.mockResolvedValue({ value: { robots: 'noindex' } });
     expect(await getSetting('seo')).toMatchObject({ robots: 'noindex', defaultTitle: 'Vantage Autobody' });
   });

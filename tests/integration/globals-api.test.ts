@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { hasPermission, ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { EDITABLE_GLOBAL_KEYS, GLOBAL_ACCESS } from '@/lib/content/global-access';
@@ -8,7 +8,7 @@ import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
 import { auditLogs, revisions, settings } from '@/server/db/schema';
 
-import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
+import { call, createTestUser, sessionCookie, signInCookie, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -47,6 +47,10 @@ beforeAll(async () => {
   }
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 beforeEach(async () => {
   await db.execute(sql`truncate table settings, revisions, audit_logs`);
   vi.mocked(revalidateTag).mockClear();
@@ -67,6 +71,13 @@ describe('globals permission matrix', () => {
       expect((await put(cookies[role], key, {})).status).toBe(canUpdate ? 422 : 403);
       expect((await call(`/admin/globals/${key}/revisions`, cookies[role])).status).toBe(canRead ? 200 : 403);
     });
+  });
+
+  it('refuses a signed-in site customer (role user) on read and write', async () => {
+    const customer = await sessionCookie('user');
+    expect((await call('/admin/globals/contact', customer)).status).toBe(403);
+    expect((await put(customer, 'contact', { version: 0, value: {} })).status).toBe(403);
+    expect((await call('/admin/globals/contact/revisions', customer)).status).toBe(403);
   });
 
   it('answers an unknown key with 404', async () => {
@@ -102,7 +113,6 @@ describe('GET /admin/globals/:key', () => {
     const { data } = await json(await call('/admin/globals/contact', cookies.owner));
     expect(data.version).toBe(4);
     expect(data.value).toEqual(parseGlobal('contact', {}));
-    vi.restoreAllMocks();
   });
 });
 
@@ -152,6 +162,18 @@ describe('PUT /admin/globals/:key', () => {
     const [row] = await db.select().from(settings).where(eq(settings.key, 'contact'));
     expect(row).toMatchObject({ version: 2, value: { email: 'second@example.ie' } });
     expect(vi.mocked(revalidateTag)).toHaveBeenCalledTimes(2);
+  });
+
+  it('two concurrent saves at the same version: one wins, one gets 409', async () => {
+    const [a, b] = await Promise.all([
+      put(cookies.owner, 'contact', { version: 0, value: { email: 'a@example.ie' } }),
+      put(cookies.admin, 'contact', { version: 0, value: { email: 'b@example.ie' } }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    const winner = a.status === 200 ? 'a@example.ie' : 'b@example.ie';
+    const [row] = await db.select().from(settings).where(eq(settings.key, 'contact'));
+    expect(row).toMatchObject({ version: 1, value: { email: winner } });
+    expect(await db.select().from(revisions).where(eq(revisions.entityId, 'contact'))).toHaveLength(1);
   });
 
   it('answers an invalid value with 422 and per-field messages', async () => {
