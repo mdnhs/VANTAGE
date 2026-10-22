@@ -114,7 +114,11 @@ export function buildAuth() {
         adminRoles: [...VIEW_AS_ADMIN_ROLES],
         impersonationSessionDuration: VIEW_AS_SECONDS,
       }),
-      twoFactor({ issuer: 'VANTAGE Admin' }),
+      twoFactor({
+        issuer: 'VANTAGE Admin',
+        // Spelled out: the sign-in screen's LOCKED copy promises exactly this.
+        accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: 15 * 60 },
+      }),
       // After twoFactor: its hook must see the challenge replace the session.
       signInAudit(),
       accountHooks(),

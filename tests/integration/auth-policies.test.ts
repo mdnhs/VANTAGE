@@ -2,7 +2,7 @@ import { asc, eq, sql } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { db } from '@/server/db';
-import { auditLogs, sessions, users, verifications } from '@/server/db/schema';
+import { auditLogs, sessions, twoFactors, users, verifications } from '@/server/db/schema';
 
 import {
   authCall,
@@ -138,6 +138,40 @@ describe('two-factor policy', () => {
       expect(res.status, path).toBe(403);
       expect(((await res.json()) as Json).code, path).toBe('IMPERSONATION_READ_ONLY');
     }
+  });
+});
+
+describe('two-factor lockout (matches the LOCKED copy: 10 wrong codes, 15 minutes)', () => {
+  it('locks after 10 wrong codes in a row, for ~15 minutes', async () => {
+    const user = await createTestUser('editor');
+    const cookie = await signInCookie(user.email);
+    expect((await authCall('/two-factor/enable', cookie, { password: PASSWORD })).status).toBe(200);
+    await db.update(users).set({ twoFactorEnabled: true }).where(eq(users.id, user.id));
+    await db.update(twoFactors).set({ verified: true }).where(eq(twoFactors.userId, user.id));
+
+    // Each sign-in challenge allows 5 tries; the account budget spans challenges.
+    const challenge = async () => {
+      const signIn = await authCall('/sign-in/email', undefined, { email: user.email, password: PASSWORD });
+      expect(await signIn.json()).toMatchObject({ twoFactorRedirect: true });
+      return signIn.headers
+        .getSetCookie()
+        .map((c) => c.split(';')[0])
+        .join('; ');
+    };
+    let current = await challenge();
+    for (let i = 1; i <= 10; i++) {
+      if (i === 6) current = await challenge();
+      const res = await authCall('/two-factor/verify-totp', current, { code: '000000' });
+      expect(res.status, `attempt ${i}`).toBe(401);
+    }
+    const locked = await authCall('/two-factor/verify-totp', await challenge(), { code: '000000' });
+    expect(locked.status).toBe(429);
+    expect(await locked.json()).toMatchObject({ code: 'ACCOUNT_TEMPORARILY_LOCKED' });
+
+    const [row] = await db.select().from(twoFactors).where(eq(twoFactors.userId, user.id));
+    const minutes = (new Date(row!.lockedUntil!).getTime() - Date.now()) / 60_000;
+    expect(minutes).toBeGreaterThan(14);
+    expect(minutes).toBeLessThanOrEqual(15);
   });
 });
 
