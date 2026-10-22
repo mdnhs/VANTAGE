@@ -8,7 +8,7 @@ import {
 } from '@/components/marketing/ui/landing-primitives';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
+import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 
 // Coordinates aren't part of site settings (no lat/lng field on the model), so the pin
 // stays hardcoded here — address and hours text below are pulled from admin-managed

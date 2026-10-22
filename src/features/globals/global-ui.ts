@@ -8,7 +8,7 @@ import type { EditableGlobalKey } from '@/lib/content/global-access';
 export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>> = {
   site: {
     name: { label: 'Business name' },
-    legalName: { label: 'Legal name', description: 'Shown in the footer and legal pages when set.' },
+    legalName: { label: 'Legal name', description: 'Used in legal pages and invoices (not shown on the site yet).' },
     logo: { label: 'Logo' },
     favicon: { label: 'Favicon' },
     lottieLogo: { label: 'Animated logo' },
@@ -25,13 +25,18 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
   contact: {
     email: { inputType: 'email', label: 'Email' },
     'phone.display': { label: 'Phone (as shown)' },
-    'phone.e164': { label: 'Phone for links (E.164)', placeholder: '+35312345678' },
+    'phone.e164': {
+      label: 'Phone in international format (E.164)',
+      placeholder: '+35312345678',
+      description: 'Stored for future use. Phone links on the site currently use the phone as shown.',
+    },
     emergencyPhone: { label: 'Emergency phone', inputType: 'tel' },
     whatsapp: { label: 'WhatsApp number', inputType: 'tel' },
     'address.lines': { label: 'Address lines' },
     'address.eircode': { label: 'Eircode' },
     hours: { label: 'Opening hours' },
     'hours.weekly': { widget: 'weekly-hours-groups', label: 'Opening times' },
+    'hours.note': { description: 'Internal note about the hours (not shown on the site yet).' },
     'hours.summary': { description: 'Leave blank to generate it from the opening times.' },
     mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://' },
   },
@@ -69,7 +74,15 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'autoReply.body': { description: 'The enquiry text is never added to the auto-reply.' },
   },
   seo: {
-    titleTemplate: { label: 'Title template', description: '"%s" is replaced by the page title.' },
+    titleTemplate: {
+      label: 'Title template',
+      description: '"%s" is replaced by the page title. Blank uses "%s | business name".',
+    },
+    defaultTitle: { label: 'Default title', description: 'Blank uses the business name.' },
+    defaultDescription: {
+      label: 'Default description',
+      description: 'Blank uses the business name and opening hours.',
+    },
     defaultOgImage: { label: 'Default share image' },
     twitterHandle: { label: 'X / Twitter handle' },
   },

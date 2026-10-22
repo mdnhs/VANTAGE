@@ -9,6 +9,9 @@ Moves the legacy `site_settings` row (90 columns) into versioned `settings` keys
 1. Back up: `pg_dump "$DATABASE_URL" -Fc -f vantage-before-phase4.dump`.
 2. Deploy the release. The public site is safe before the migration has run: a key that
    was never saved is read from the legacy row, so nothing changes visibly.
+   Do not let anyone edit settings in the admin until the migration has run: run
+   `yarn settings:migrate --dry-run` first. Until then the editor shows values repaired from the
+   legacy row, and a first save would store them without the `LOSSY` gate the CLI enforces.
 3. Plan: `yarn settings:migrate --dry-run`. It lists each key with its field count and prints
    any `LOSSY` lines (values that would be truncated or dropped).
 4. Migrate: `yarn settings:migrate`. It writes the missing keys at version 1 (note

@@ -158,8 +158,9 @@ describe('defaults equal today’s public copy', () => {
 
   it('seo and privacy defaults', () => {
     expect(parseGlobal('seo', {})).toMatchObject({
-      titleTemplate: '%s | Vantage Autobody',
-      defaultTitle: 'Vantage Autobody',
+      titleTemplate: '',
+      defaultTitle: '',
+      defaultDescription: '',
       defaultOgImage: null,
       twitterHandle: '',
       robots: 'index',

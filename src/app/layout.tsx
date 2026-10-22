@@ -3,8 +3,9 @@ import { inter, manrope, geistMono, jakarta } from '@/lib/font';
 import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
 import { cldUrl } from '@/lib/cloudinary/url';
+import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
+import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -12,7 +13,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 // Site-wide fallback metadata — editable from the admin's Settings > SEO tab. Individual
 // pages that set their own `metadata`/`generateMetadata` still override these per-field.
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, seo] = await Promise.all([siteSettingsService.getPublic(), getSetting('seo')]);
   const title = settings.metaTitle || settings.businessName;
   const description =
     settings.metaDescription || `${settings.businessName} — ${formatOpeningHoursSummary(settings.openingHours)}`;
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(APP_URL),
     title: {
       default: title,
-      template: `%s | ${settings.businessName}`,
+      template: seo.titleTemplate.includes('%s') ? seo.titleTemplate : `%s | ${settings.businessName}`,
     },
     description,
     applicationName: settings.businessName,
@@ -48,11 +49,14 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: [ogImage],
     },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
-    },
+    robots:
+      seo.robots === 'noindex'
+        ? { index: false, follow: false }
+        : {
+            index: true,
+            follow: true,
+            googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+          },
   };
 }
 

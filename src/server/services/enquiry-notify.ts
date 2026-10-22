@@ -2,12 +2,11 @@ import 'server-only';
 
 import { after } from 'next/server';
 
-import { parseGlobal } from '@/lib/content/globals';
 import type { ContactMessage, QuoteRequest } from '@/server/db/schema';
 import { headerText, singleAddress } from '@/server/lib/email/headers';
 import { renderEmail } from '@/server/lib/email/layout';
 import { sendMail, smtpConfigured, verifySmtp, type SendResult } from '@/server/lib/email/mailer';
-import { settingsRepository } from '@/server/repositories/settings-repository';
+import { readEffectiveGlobal } from '@/server/services/globals-service';
 
 type Enquiry = {
   kind: 'quote' | 'contact';
@@ -27,9 +26,9 @@ export type NotifyOutcome = {
 
 const appUrl = () => (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
 
-// Settings are read straight from the table: this runs after the request, outside any cache scope.
-const readSetting = async <K extends 'notifications' | 'contact'>(key: K) =>
-  parseGlobal(key, (await settingsRepository.get(key))?.value);
+// Read straight from the table (this runs after the request, outside any cache scope), with the same
+// legacy-aware fallback the public site and the editor use: stored row, else legacy-derived, else defaults.
+const readSetting = async <K extends 'notifications' | 'contact'>(key: K) => (await readEffectiveGlobal(key)).value;
 
 // `{name}` in the editable auto-reply copy is replaced by the customer's name.
 const fillName = (text: string, name: string) => text.replaceAll('{name}', name);

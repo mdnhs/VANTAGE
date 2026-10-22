@@ -4,8 +4,7 @@ import {
   type PublicSiteSettings,
 } from '@/server/lib/settings/public-settings';
 import { resolvePublicGlobals } from '@/server/lib/settings/site-settings-migration';
-import { getStoredSetting } from '@/server/queries/get-setting';
-import { siteSettingsRepository } from '@/server/repositories/site-settings-repository';
+import { getLegacySettings, getStoredSetting } from '@/server/queries/get-setting';
 
 export type { PublicSiteSettings };
 
@@ -17,10 +16,16 @@ async function getPublic(): Promise<PublicSiteSettings> {
   const stored = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((key, i) => [key, values[i]])) as Parameters<
     typeof resolvePublicGlobals
   >[0];
-  // Uncached on purpose: until `yarn settings:migrate` has run, never-saved keys come from the legacy
-  // row, and that must not be frozen into the per-key cache.
-  const legacy = values.some((v) => v === null) ? await siteSettingsRepository.get() : null;
-  return composePublicSettings(resolvePublicGlobals(stored, legacy));
+  // Until `yarn settings:migrate` has run, never-saved keys come from the legacy row. That read is
+  // cached under every public key's tag, so saving any key also drops the cached fallback.
+  const legacy = values.some((v) => v === null) ? await getLegacySettings() : null;
+  try {
+    return composePublicSettings(resolvePublicGlobals(stored, legacy));
+  } catch (error) {
+    // A repair failure must never 500 the public site: render the defaults instead.
+    console.warn('[site-settings] public read failed, using defaults:', error instanceof Error ? error.message : error);
+    return composePublicSettings(resolvePublicGlobals(stored, null));
+  }
 }
 
 // Read-only: edits go through the versioned globals service.

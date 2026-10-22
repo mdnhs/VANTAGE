@@ -70,7 +70,8 @@ export function StitchHeader({
   logoUseLottie = false,
 }: StitchHeaderProps) {
   // Figma 131:4: the desktop bar skips `mobileOnly` links, the mobile menu lists all of them.
-  const desktopLinks = navigation.links.filter((link) => !link.mobileOnly);
+  const desktopLinks = navigation.links.filter((link) => link.label && link.href && !link.mobileOnly);
+  const mobileLinks = navigation.links.filter((link) => link.label && link.href);
   const { cta } = navigation;
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
   const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 240 }) : FALLBACK_LOGO;
@@ -168,7 +169,7 @@ export function StitchHeader({
       {mobileMenuOpen && (
         <div className='border-t border-[#232328] bg-[#111113] px-4 pt-3 pb-5 sm:px-6 lg:hidden'>
           <nav className='flex flex-col'>
-            {navigation.links.map((link) => {
+            {mobileLinks.map((link) => {
               const active = pathname === link.href;
               return (
                 <Link

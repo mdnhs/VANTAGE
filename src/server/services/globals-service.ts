@@ -26,16 +26,28 @@ const isLegacyKey = (key: string): key is PublicSettingsKey =>
 // Drift-safe read: a malformed row yields the defaults at the stored version, so the next
 // save heals it. A key that was never saved (version 0) shows what the public site shows:
 // the legacy site_settings copy until the migration has run, else the defaults.
-export async function getGlobal<K extends EditableGlobalKey>(key: K) {
+export async function readEffectiveGlobal<K extends EditableGlobalKey>(key: K) {
   const row = await settingsRepository.get(key);
   let source: unknown = row?.value;
   if (!row && isLegacyKey(key)) {
     const legacy = await siteSettingsRepository.get();
-    if (legacy) source = buildDocs(legacy).docs[key];
+    try {
+      if (legacy) source = buildDocs(legacy).docs[key];
+    } catch (error) {
+      console.warn(
+        `[globals] legacy fallback for ${key} failed, using defaults:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
   }
+  return { row, value: parseGlobal(key, source) };
+}
+
+export async function getGlobal<K extends EditableGlobalKey>(key: K) {
+  const { row, value } = await readEffectiveGlobal(key);
   return {
     key,
-    value: parseGlobal(key, source),
+    value,
     version: row?.version ?? 0,
     updatedAt: row?.updatedAt ?? null,
     updatedBy: await userName(db, row?.updatedBy ?? null),

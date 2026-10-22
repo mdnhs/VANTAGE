@@ -1,4 +1,4 @@
-import { formatOpeningHoursSummary, type DaySchedule } from '@/features/site-settings/lib/opening-hours';
+import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
 import type { GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
 import type { SiteSettings } from '@/server/db/schema';

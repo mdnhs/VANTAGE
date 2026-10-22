@@ -1,10 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import {
-  formatOpeningHoursSummary,
-  parseOpeningHours,
-  type DaySchedule,
-} from '@/features/site-settings/lib/opening-hours';
+import { formatOpeningHoursSummary, parseOpeningHours, type DaySchedule } from '@/lib/content/opening-hours';
 import { resolveAboutContent } from '@/features/about-page/defaults';
 import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
 import { resolveProcessPageContent } from '@/features/process-page/defaults';

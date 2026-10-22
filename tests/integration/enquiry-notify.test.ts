@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { contactMessages, quoteRequests } from '@/server/db/schema';
+import { contactMessages, quoteRequests, siteSettings } from '@/server/db/schema';
 import { resetMailerForTests } from '@/server/lib/email/mailer';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 import { contactMessageService } from '@/server/services/contact-message-service';
@@ -48,7 +48,9 @@ const transport = () => {
 const saveSetting = (key: string, value: unknown) => settingsRepository.save(key, { version: 0, value }, null);
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs, quote_requests, contact_messages`);
+  await db.execute(
+    sql`truncate table settings, site_settings, revisions, audit_logs, quote_requests, contact_messages`,
+  );
 });
 
 afterEach(() => {
@@ -155,6 +157,29 @@ describe('SMTP configured (injected transport)', () => {
     expect(sent[0]!.to).toEqual(['hello@shop.ie']);
     expect(sent[0]!.subject).toBe('New enquiry from Ann Byrne');
     expect(sent[0]!.text).not.toContain('CONTACT-BODY');
+  });
+
+  it('falls back to the legacy site_settings email when the contact key was never saved', async () => {
+    const sent = transport();
+    await db.insert(siteSettings).values({
+      id: 1,
+      email: 'legacy@shop.ie',
+      phone: '01 234 5678',
+      address: '1 Main St',
+      businessName: 'Shop',
+      openingHours: 'Mon-Fri',
+    });
+    await contactMessageService.create({
+      firstName: 'Ann',
+      lastName: 'Byrne',
+      email: 'ann@example.com',
+      phone: '0871234567',
+      message: 'hi',
+      source: 'contact_page',
+    } as never);
+    await settleNotifications();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toEqual(['legacy@shop.ie']);
   });
 
   it('escapes customer data in html and keeps line breaks out of headers', async () => {

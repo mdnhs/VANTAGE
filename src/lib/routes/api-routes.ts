@@ -9,9 +9,6 @@ export const API_ROUTES = {
     sign: '/media/sign',
     delete: (publicId: string) => `/media/${publicId}`,
   },
-  siteSettings: {
-    public: '/site-settings',
-  },
   services: {
     public: '/services',
     adminList: '/services/admin/list',

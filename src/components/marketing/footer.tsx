@@ -89,11 +89,13 @@ export async function MarketingFooter() {
             >
               <h4 className={headingClass}>{column.title}</h4>
               <nav className='flex flex-col items-start gap-[14px]'>
-                {column.links.map((link, i) => (
-                  <Link key={`${link.label}-${link.href}-${i}`} href={link.href} className={linkClass}>
-                    {link.label}
-                  </Link>
-                ))}
+                {column.links
+                  .filter((link) => link.label && link.href)
+                  .map((link, i) => (
+                    <Link key={`${link.label}-${link.href}-${i}`} href={link.href} className={linkClass}>
+                      {link.label}
+                    </Link>
+                  ))}
               </nav>
             </div>
           ))}
@@ -155,11 +157,13 @@ export async function MarketingFooter() {
             © 2026 {footer.copyrightName || settings.businessName}. {footer.legalNote}
           </span>
           <div className='flex flex-wrap gap-x-[28px] gap-y-2'>
-            {footer.legalLinks.map((link) => (
-              <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
-                {link.label}
-              </Link>
-            ))}
+            {footer.legalLinks
+              .filter((link) => link.label && link.href)
+              .map((link) => (
+                <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
+                  {link.label}
+                </Link>
+              ))}
           </div>
         </div>
       </div>

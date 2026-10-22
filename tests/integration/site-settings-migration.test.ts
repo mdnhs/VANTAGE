@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ABOUT_DEFAULTS, resolveAboutContent } from '@/features/about-page/defaults';
 import { INSURANCE_DEFAULTS, resolveInsuranceContent } from '@/features/insurance-page/defaults';
 import { PROCESS_PAGE_DEFAULTS, resolveProcessPageContent } from '@/features/process-page/defaults';
-import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
+import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
 import { auditLogs, revisions, siteSettings } from '@/server/db/schema';

@@ -350,9 +350,9 @@ export const SeoGlobal = z.object({
     .trim()
     .max(60)
     .refine((v) => v === '' || v.includes('%s'), 'The template needs "%s"')
-    .default('%s | Vantage Autobody'),
-  defaultTitle: s(255, 'Vantage Autobody'),
-  defaultDescription: s(500, 'Vantage Autobody — Mon–Fri: 8:00 – 18:00'),
+    .default(''),
+  defaultTitle: s(255),
+  defaultDescription: s(500),
   defaultOgImage: image(),
   twitterHandle: s(50),
   robots: z.enum(['index', 'noindex']).default('index'),
