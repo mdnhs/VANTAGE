@@ -150,6 +150,17 @@ function SettingsForm({
   const unsaved = isDirty || keyMode === 'remove';
   const losesKey = doc.apiKey.hasKey && !keyFollows && keyMode !== 'remove' && !newKey.trim();
 
+  const aria = (name: keyof Values) =>
+    errors[name] ? { 'aria-invalid': true, 'aria-describedby': `${ids}-${name}-e` } : {};
+  // Fields that have a message slot on screen; any other server cause goes in the alert.
+  const showsError = (name: keyof Values) =>
+    name === 'enabled' ||
+    name === 'apiKey' ||
+    name === 'model' ||
+    name === 'maxOutputTokens' ||
+    (name === 'baseUrl' && oac) ||
+    (name === 'acknowledge' && isOwner && share && !saved.shareEnquiryDetails.enabled);
+
   const onSubmit = handleSubmit(async (v) => {
     setFormError(null);
     setNotice(null);
@@ -171,24 +182,33 @@ function SettingsForm({
         maxOutputTokens: Number(v.maxOutputTokens),
       });
       toast.success('Saved');
+      // The variables held the typed key: drop the finished mutation from memory.
+      save.reset();
     } catch (error) {
+      save.reset();
       if (error instanceof AiApiError && error.status === 409) {
         // The refetch re-keys the form with the other person's version.
         setNotice(CONFLICT_NOTICE);
         return;
       }
+      let rendered = false;
       if (error instanceof AiApiError && error.causes) {
         for (const [field, messages] of Object.entries(error.causes)) {
-          const name = field === 'shareEnquiryDetails.acknowledge' ? 'acknowledge' : field;
-          setError(name as keyof Values, { message: messages[0] });
+          const name = (field === 'shareEnquiryDetails.acknowledge' ? 'acknowledge' : field) as keyof Values;
+          if (!showsError(name)) continue;
+          setError(name, { message: messages[0] });
+          rendered = true;
         }
       }
+      if (rendered) return;
       setFormError(
         error instanceof AiApiError && error.status === 403 && viewingAs
           ? 'View-as is read-only: settings cannot be changed'
-          : error instanceof Error
-            ? error.message
-            : "Couldn't save",
+          : error instanceof AiApiError
+            ? errorText(error)
+            : error instanceof Error
+              ? error.message
+              : "Couldn't save",
       );
     }
   });
@@ -198,6 +218,7 @@ function SettingsForm({
     listModels.mutate(
       { provider: v.provider, baseUrl: v.baseUrl, ...(v.apiKey.trim() ? { apiKey: v.apiKey.trim() } : {}) },
       {
+        onSettled: () => listModels.reset(),
         onSuccess: (r) => {
           if (r.ok) {
             setModels(r.models);
@@ -235,7 +256,7 @@ function SettingsForm({
                   checked={field.value}
                   onCheckedChange={field.onChange}
                   disabled={readOnly}
-                  aria-describedby={`${ids}-enabled-e`}
+                  {...aria('enabled')}
                 />
                 <FieldLabel htmlFor={`${ids}-enabled`}>Turn on the AI assistant</FieldLabel>
                 <FieldError id={`${ids}-enabled-e`}>{errors.enabled?.message}</FieldError>
@@ -281,13 +302,14 @@ function SettingsForm({
               <Input
                 id={`${ids}-base`}
                 placeholder='https://api.groq.com/openai/v1'
+                {...aria('baseUrl')}
                 {...register('baseUrl', { validate: (v) => baseUrlProblem(v, doc.localHttpAllowed) ?? true })}
               />
               <FieldDescription>
                 OpenAI, Groq, OpenRouter, DeepSeek, Mistral, Together, Ollama or LM Studio. Use the address that ends
                 before /chat/completions.
               </FieldDescription>
-              <FieldError>{errors.baseUrl?.message}</FieldError>
+              <FieldError id={`${ids}-baseUrl-e`}>{errors.baseUrl?.message}</FieldError>
             </Field>
           ) : null}
 
@@ -320,7 +342,14 @@ function SettingsForm({
               </div>
             ) : null}
             {showKeyInput ? (
-              <Input id={`${ids}-key`} type='password' autoComplete='off' spellCheck={false} {...register('apiKey')} />
+              <Input
+                id={`${ids}-key`}
+                type='password'
+                autoComplete='off'
+                spellCheck={false}
+                {...aria('apiKey')}
+                {...register('apiKey')}
+              />
             ) : null}
             {keyMode === 'remove' && doc.apiKey.hasKey && keyFollows ? (
               <p role='note' className='text-sm text-destructive'>
@@ -338,7 +367,7 @@ function SettingsForm({
                 The server has no APP_ENCRYPTION_KEY, so a key can&apos;t be saved yet.
               </FieldDescription>
             ) : null}
-            <FieldError>{errors.apiKey?.message}</FieldError>
+            <FieldError id={`${ids}-apiKey-e`}>{errors.apiKey?.message}</FieldError>
           </Field>
 
           <Field>
@@ -347,6 +376,7 @@ function SettingsForm({
               <Input
                 id={`${ids}-model`}
                 list={`${ids}-models`}
+                {...aria('model')}
                 {...register('model', {
                   validate: (v) => ModelId.safeParse(v).success || "Use the model's ID, like gemini-flash-lite-latest",
                 })}
@@ -361,7 +391,7 @@ function SettingsForm({
                 <option key={m} value={m} />
               ))}
             </datalist>
-            <FieldError>{errors.model?.message}</FieldError>
+            <FieldError id={`${ids}-model-e`}>{errors.model?.message}</FieldError>
           </Field>
 
           <Field>
@@ -417,9 +447,14 @@ function SettingsForm({
               name='acknowledge'
               render={({ field }) => (
                 <Field orientation='horizontal'>
-                  <Checkbox id={`${ids}-ack`} checked={field.value} onCheckedChange={field.onChange} />
+                  <Checkbox
+                    id={`${ids}-ack`}
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    {...aria('acknowledge')}
+                  />
                   <FieldLabel htmlFor={`${ids}-ack`}>{SHARE_ACK}</FieldLabel>
-                  <FieldError>{errors.acknowledge?.message}</FieldError>
+                  <FieldError id={`${ids}-acknowledge-e`}>{errors.acknowledge?.message}</FieldError>
                 </Field>
               )}
             />
@@ -442,13 +477,14 @@ function SettingsForm({
               type='number'
               min={OUTPUT_TOKENS.min}
               max={OUTPUT_TOKENS.max}
+              {...aria('maxOutputTokens')}
               {...register('maxOutputTokens', {
                 valueAsNumber: true,
                 min: { value: OUTPUT_TOKENS.min, message: `At least ${OUTPUT_TOKENS.min}` },
                 max: { value: OUTPUT_TOKENS.max, message: `At most ${OUTPUT_TOKENS.max}` },
               })}
             />
-            <FieldError>{errors.maxOutputTokens?.message}</FieldError>
+            <FieldError id={`${ids}-maxOutputTokens-e`}>{errors.maxOutputTokens?.message}</FieldError>
           </Field>
         </FieldGroup>
       </FieldSet>
@@ -458,9 +494,9 @@ function SettingsForm({
           {notice ?? formError}
         </p>
       ) : null}
-      {test.data ? (
-        <p role='status' className={test.data.ok ? 'text-sm' : 'text-sm text-destructive'}>
-          {test.data.message}
+      {test.data || test.error ? (
+        <p role='status' className={test.data?.ok ? 'text-sm' : 'text-sm text-destructive'}>
+          {test.data ? test.data.message : errorText(test.error)}
         </p>
       ) : null}
       {readOnly ? null : (
@@ -474,7 +510,7 @@ function SettingsForm({
             className={FORM_ACTION}
             disabled={unsaved || test.isPending}
             title={unsaved ? 'Save first' : undefined}
-            onClick={() => test.mutate()}
+            onClick={() => test.mutate(undefined, { onError: (error) => toast.error(errorText(error)) })}
           >
             {test.isPending ? <Spinner data-icon='inline-start' /> : null}Test connection
           </Button>

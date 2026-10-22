@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ActorProvider } from '@/contexts/actor-provider';
 import type { MePayload } from '@/lib/auth/me';
 
+import { toast } from 'sonner';
+
 import { CONFLICT_NOTICE, SettingsView } from './settings-view';
 
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -72,9 +74,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+let queryClient: QueryClient;
 function setup(actor = owner) {
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider client={queryClient}>
       <ActorProvider actor={actor}>
         <SettingsView />
       </ActorProvider>
@@ -170,15 +174,81 @@ describe('SettingsView', () => {
     expect(puts()[1]!.body).toHaveProperty('apiKey', null);
   });
 
-  it('sends a typed replacement key and never caches it', async () => {
+  it('sends a typed replacement key and keeps it out of every cache', async () => {
+    const KEY = 'sk-new-0123456789';
     responses['PUT /admin/ai/settings'] = ok(doc());
+    responses['POST /admin/ai/settings/models'] = ok({ ok: true, models: ['m'] });
     setup();
     fireEvent.click(await screen.findByRole('button', { name: 'Replace key' }));
-    fireEvent.change(screen.getByLabelText('API key'), { target: { value: 'sk-new-0123456789' } });
+    fireEvent.change(screen.getByLabelText('API key'), { target: { value: KEY } });
+    fireEvent.click(screen.getByRole('button', { name: 'List models' }));
+    await waitFor(() => expect(document.querySelectorAll('datalist option')).toHaveLength(1));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(puts()).toHaveLength(1));
-    expect(puts()[0]!.body).toHaveProperty('apiKey', 'sk-new-0123456789');
-    await waitFor(() => expect(document.body.innerHTML).not.toContain('sk-new-0123456789'));
+    expect(puts()[0]!.body).toHaveProperty('apiKey', KEY);
+    expect(calls.find((c) => c.path.endsWith('/models'))!.body).toHaveProperty('apiKey', KEY);
+    await waitFor(() => expect(queryClient.getMutationCache().getAll()).toHaveLength(0));
+    const held = JSON.stringify([
+      queryClient
+        .getQueryCache()
+        .getAll()
+        .map((q) => q.state),
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .map((m) => m.state),
+    ]);
+    expect(held).not.toContain(KEY);
+  });
+
+  it('shows a rate-limited Test connection as an error', async () => {
+    responses['POST /admin/ai/settings/test'] = {
+      status: 429,
+      body: {
+        success: false,
+        error: { code: 'RATE_LIMITED', message: 'Too many requests. Wait a moment and try again.' },
+      },
+    };
+    setup();
+    fireEvent.click(await screen.findByRole('button', { name: 'Test connection' }));
+    expect((await screen.findByRole('status')).textContent).toBe('Too many requests. Wait a moment and try again.');
+    expect(vi.mocked(toast.error)).toHaveBeenCalledWith('Too many requests. Wait a moment and try again.');
+  });
+
+  it('shows a server-rejected acknowledgement inline', async () => {
+    responses['PUT /admin/ai/settings'] = {
+      status: 422,
+      body: {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Validation failed',
+          causes: { 'shareEnquiryDetails.acknowledge': ['Confirm the acknowledgement first'] },
+        },
+      },
+    };
+    setup();
+    fireEvent.click(await screen.findByRole('switch', { name: /enquiry details/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    const message = await screen.findByText('Confirm the acknowledgement first');
+    expect(message.id).toBeTruthy();
+    const ack = screen.getByRole('checkbox', { name: /kept for up to 90 days/ });
+    expect(ack.getAttribute('aria-describedby')).toBe(message.id);
+    expect(screen.queryByText('Validation failed')).toBeNull();
+  });
+
+  it('puts a cause with no field on screen in the alert', async () => {
+    responses['PUT /admin/ai/settings'] = {
+      status: 422,
+      body: {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Validation failed', causes: { allowedRoles: ['Each role once'] } },
+      },
+    };
+    setup();
+    fireEvent.click(await screen.findByRole('switch', { name: 'Turn on the AI assistant' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('Each role once');
   });
 
   it('treats Remove key as an unsaved change, so Test waits for Save', async () => {

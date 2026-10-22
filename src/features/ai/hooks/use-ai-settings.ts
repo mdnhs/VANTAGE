@@ -21,6 +21,8 @@ export function useSaveAiSettings() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: AiSettingsUpdate) => aiApi.saveSettings(input),
+    // Variables can hold the typed API key: never keep a finished mutation around.
+    gcTime: 0,
     onSuccess: async (saved: AiAdmin) => {
       queryClient.setQueryData(AI_KEYS.settings, saved);
       // The topbar status and the history list depend on these settings.
@@ -36,6 +38,7 @@ export function useSaveAiSettings() {
   });
 }
 
-export const useListModels = () => useMutation({ mutationFn: (input: ListModelsInput) => aiApi.listModels(input) });
+export const useListModels = () =>
+  useMutation({ mutationFn: (input: ListModelsInput) => aiApi.listModels(input), gcTime: 0 });
 
 export const useTestConnection = () => useMutation({ mutationFn: () => aiApi.testConnection() });
