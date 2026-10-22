@@ -41,7 +41,8 @@ const forPage = (health: Awaited<ReturnType<typeof computeSeoHealth>>, id: strin
   health.issues.filter((i) => i.kind === 'page' && i.id === id);
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, partner_logos, media cascade`);
+  // site_settings too: titles use the legacy business name, and other files leave a row behind.
+  await db.execute(sql`truncate table settings, site_settings, partner_logos, media cascade`);
 });
 
 describe('computeSeoHealth', () => {
