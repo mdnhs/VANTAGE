@@ -89,4 +89,13 @@ describe('trackingFrame', () => {
     });
     expect(frame).toMatchObject({ active: true, ga4Id: null });
   });
+
+  it('renders nothing in an Appearance preview, necessary snippets included', () => {
+    const frame = trackingFrame({
+      ...base,
+      preview: true,
+      scripts: ScriptsGlobal.parse({ snippets: [snippet('necessary'), snippet('analytics')] }),
+    });
+    expect(frame).toMatchObject({ active: false, gtmId: null, ga4Id: null, pixelId: null, scripts: [] });
+  });
 });

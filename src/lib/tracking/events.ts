@@ -11,7 +11,8 @@ export type TrackEvent =
         lead_source: 'quote_form' | 'contact_form';
         form_id: 'quote' | 'estimator' | 'contact';
       };
-      eventId: string;
+      // Omitted when the browser cannot make one; a fresh id is used for the dataLayer then.
+      eventId?: string;
     }
   | {
       event: 'contact_click';
@@ -61,7 +62,7 @@ const cap = (params: Record<string, string>) =>
   Object.fromEntries(Object.entries(params).map(([k, v]) => [k, v.slice(0, MAX_VALUE)]));
 
 export function pushEvent(dataLayer: unknown[], e: TrackEvent, newId: () => string): { eventId: string } {
-  const eventId = e.event === 'generate_lead' ? e.eventId : newId();
+  const eventId = (e.event === 'generate_lead' ? e.eventId : undefined) ?? newId();
   dataLayer.push({ event_params: null });
   dataLayer.push({
     event: e.event,

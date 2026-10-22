@@ -88,21 +88,26 @@ export function saveConsent(
   w.__vantageConsent = choice;
   w.gtag?.('consent', 'update', consentModeUpdate(choice));
   (w.dataLayer ??= []).push({ event: 'consent_update' });
-  env.beacon?.(
-    '/api/v1/public/consent',
-    new Blob(
-      [
-        JSON.stringify({
-          id,
-          v: policy.version,
-          a: choice.analytics,
-          m: choice.marketing,
-          action,
-        }),
-      ],
-      { type: 'application/json' },
-    ),
-  );
+  // Best effort: a throwing beacon must never stop the consent from taking effect.
+  try {
+    env.beacon?.(
+      '/api/v1/public/consent',
+      new Blob(
+        [
+          JSON.stringify({
+            id,
+            v: policy.version,
+            a: choice.analytics,
+            m: choice.marketing,
+            action,
+          }),
+        ],
+        { type: 'application/json' },
+      ),
+    );
+  } catch {
+    // ignore
+  }
   // A lapsed consent (window.__vantageConsent null) can still leave GA/Meta cookies
   // behind, so a choice that grants nothing clears them whatever the action.
   const none = !choice.analytics && !choice.marketing;

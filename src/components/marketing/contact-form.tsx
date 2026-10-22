@@ -8,6 +8,7 @@ import { fillCopy } from '@/components/marketing/ui/copy-template';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 import { track } from '@/lib/tracking/track';
+import { newEventId } from '@/lib/tracking/event-id';
 
 // Figma-exported glyphs shared with the homepage quote form (stitch-estimator.tsx, node 131:204).
 const ICONS = {
@@ -146,7 +147,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         }
       }
 
-      const eventId = crypto.randomUUID();
+      const eventId = newEventId();
       await submitContactMessage({
         firstName: firstName.trim(),
         lastName: lastName.trim(),

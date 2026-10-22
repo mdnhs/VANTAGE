@@ -1,4 +1,5 @@
 import type { ConsentChoice } from './consent';
+import { newEventId } from './event-id';
 import { META_EVENT, pushEvent, type TrackEvent } from './events';
 import { pageTitle, pixelAllowed, sanitizePath, sanitizeUrl } from './sanitize';
 
@@ -16,7 +17,7 @@ export type TrackEnv = {
 const browser = (): TrackEnv => ({
   window: window as unknown as TrackWindow,
   document,
-  newId: () => crypto.randomUUID(),
+  newId: () => newEventId() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
 });
 
 // The dataLayer always gets the event; Meta gets a

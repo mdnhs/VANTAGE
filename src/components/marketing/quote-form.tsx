@@ -10,6 +10,7 @@ import { track } from '@/lib/tracking/track';
 import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
+import { newEventId } from '@/lib/tracking/event-id';
 
 const DEFAULT_SERVICE_ICON = '/assets/marketing/icon-crash-repair.svg';
 
@@ -228,7 +229,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
       const converted = await Promise.all(photos.map(imageFileToDataUrl));
       const photoUrls = converted.filter((url): url is string => Boolean(url));
 
-      const eventId = crypto.randomUUID();
+      const eventId = newEventId();
       await submitQuoteRequest({
         name,
         phone,
