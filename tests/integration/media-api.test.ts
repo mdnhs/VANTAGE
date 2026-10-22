@@ -9,6 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { GET as serveUpload } from '@/app/uploads/[...key]/route';
 import { api } from '@/server/api';
 import { db } from '@/server/db';
+import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { resetStorageForTests } from '@/server/lib/media/storage';
 import type { MediaItem } from '@/server/services/media-library-service';
 
@@ -151,6 +152,26 @@ describe('admin media API', () => {
     expect(replaced.id).toBe(data.id);
     expect(replaced.url).not.toBe(data.url);
   });
+
+  it('refuses to replace an image with a video (422)', async () => {
+    const { data } = await json(await upload(await png('#111'), 'a.png'));
+    const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(64)]);
+    const res = await api.request(`${BASE}/${data.id}/replace`, {
+      method: 'POST',
+      headers: { cookie },
+      body: form(mp4, 'clip.mp4'),
+    });
+    expect(res.status).toBe(422);
+    expect((await json(await api.request(`${BASE}/${data.id}`, { headers: { cookie } }))).data.url).toBe(data.url);
+  });
+
+  it('rejects a body over the request cap with 413 before parsing', async () => {
+    const big = new Uint8Array(MAX_VIDEO_BYTES + 2 * 1024 * 1024);
+    for (const url of [BASE, `${BASE}/00000000-0000-4000-8000-000000000000/replace`]) {
+      const res = await api.request(url, { method: 'POST', headers: { cookie }, body: form(big, 'huge.mp4') });
+      expect(res.status).toBe(413);
+    }
+  }, 60_000);
 
   it('serves uploaded files with immutable caching and rejects bad keys', async () => {
     const { data } = await json(await upload(await png(), 'serve.png'));

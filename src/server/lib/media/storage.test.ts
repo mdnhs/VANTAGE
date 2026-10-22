@@ -103,10 +103,48 @@ describe('local driver', () => {
   });
 });
 
+describe('s3 put', () => {
+  it('sets cache and disposition headers per kind', async () => {
+    const inputs: Record<string, unknown>[] = [];
+    vi.doMock('@aws-sdk/client-s3', () => ({
+      S3Client: class {
+        send = vi.fn(async (command: { input: Record<string, unknown> }) => void inputs.push(command.input));
+      },
+      PutObjectCommand: class {
+        constructor(public input: Record<string, unknown>) {}
+      },
+    }));
+    vi.stubEnv('MEDIA_DRIVER', 's3');
+    vi.stubEnv('MEDIA_PUBLIC_URL', 'https://cdn.example.com');
+    vi.stubEnv('S3_ACCOUNT_ID', 'acct');
+    vi.stubEnv('S3_BUCKET', 'b');
+    vi.stubEnv('S3_ACCESS_KEY_ID', 'k');
+    vi.stubEnv('S3_SECRET_ACCESS_KEY', 's');
+    resetStorageForTests();
+    const storage = getStorage();
+    await storage.put(KEY, Buffer.from('x'), 'image/jpeg');
+    await storage.put('vantage/media/2026/10/0123456789abcdef-brochure.pdf', Buffer.from('x'), 'application/pdf');
+    vi.doUnmock('@aws-sdk/client-s3');
+    expect(inputs[0]).toMatchObject({
+      Bucket: 'b',
+      Key: KEY,
+      ContentType: 'image/jpeg',
+      CacheControl: 'public, max-age=31536000, immutable',
+    });
+    expect(inputs[0]?.ContentDisposition).toBeUndefined();
+    expect(inputs[1]).toMatchObject({
+      ContentType: 'application/pdf',
+      ContentDisposition: 'attachment; filename="brochure.pdf"',
+      CacheControl: 'public, max-age=31536000, immutable',
+    });
+  });
+});
+
 describe('s3 driver', () => {
   it('builds public urls from MEDIA_PUBLIC_URL and rejects keys outside the prefix', async () => {
     vi.stubEnv('MEDIA_DRIVER', 's3');
     vi.stubEnv('MEDIA_PUBLIC_URL', 'https://cdn.example.com/');
+    vi.stubEnv('S3_ACCOUNT_ID', 'acct');
     vi.stubEnv('S3_BUCKET', 'b');
     vi.stubEnv('S3_ACCESS_KEY_ID', 'k');
     vi.stubEnv('S3_SECRET_ACCESS_KEY', 's');
