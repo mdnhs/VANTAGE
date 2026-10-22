@@ -11,7 +11,7 @@ import {
 } from './global-access';
 import { GLOBALS, PUBLIC_GLOBAL_KEYS, type GlobalKey } from './globals';
 
-type Group = 'settings' | 'globals' | 'seo' | 'page';
+type Group = 'settings' | 'globals' | 'seo' | 'page' | 'tracking' | 'code';
 
 const GROUP: Record<GlobalKey, Group> = {
   site: 'settings',
@@ -30,17 +30,68 @@ const GROUP: Record<GlobalKey, Group> = {
   'page.insurance': 'page',
   'page.about': 'page',
   'page.process': 'page',
+  consent: 'tracking',
+  scripts: 'code',
 };
 
 // What the MK matrix grants each role, per resource group: [read, update].
 const GRANTS: Record<RoleName, Record<Group, [boolean, boolean]>> = {
-  owner: { settings: [true, true], globals: [true, true], seo: [true, true], page: [true, true] },
-  admin: { settings: [true, true], globals: [true, true], seo: [true, true], page: [true, true] },
-  editor: { settings: [false, false], globals: [true, true], seo: [true, true], page: [true, true] },
-  author: { settings: [false, false], globals: [false, false], seo: [false, false], page: [true, false] },
-  marketer: { settings: [false, false], globals: [true, false], seo: [true, true], page: [true, false] },
-  intake: { settings: [false, false], globals: [false, false], seo: [false, false], page: [false, false] },
-  viewer: { settings: [false, false], globals: [true, false], seo: [true, false], page: [true, false] },
+  owner: {
+    settings: [true, true],
+    globals: [true, true],
+    seo: [true, true],
+    page: [true, true],
+    tracking: [true, true],
+    code: [true, true],
+  },
+  admin: {
+    settings: [true, true],
+    globals: [true, true],
+    seo: [true, true],
+    page: [true, true],
+    tracking: [true, true],
+    code: [false, false],
+  },
+  editor: {
+    settings: [false, false],
+    globals: [true, true],
+    seo: [true, true],
+    page: [true, true],
+    tracking: [false, false],
+    code: [false, false],
+  },
+  author: {
+    settings: [false, false],
+    globals: [false, false],
+    seo: [false, false],
+    page: [true, false],
+    tracking: [false, false],
+    code: [false, false],
+  },
+  marketer: {
+    settings: [false, false],
+    globals: [true, false],
+    seo: [true, true],
+    page: [true, false],
+    tracking: [true, true],
+    code: [false, false],
+  },
+  intake: {
+    settings: [false, false],
+    globals: [false, false],
+    seo: [false, false],
+    page: [false, false],
+    tracking: [false, false],
+    code: [false, false],
+  },
+  viewer: {
+    settings: [false, false],
+    globals: [true, false],
+    seo: [true, false],
+    page: [true, false],
+    tracking: [false, false],
+    code: [false, false],
+  },
 };
 
 describe('global access', () => {
