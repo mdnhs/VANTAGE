@@ -8,6 +8,9 @@ import type { MediaListQuery } from '@/validations/media-schema';
 type NewMedia = typeof media.$inferInsert;
 
 const live = isNull(media.deletedAt);
+// The library (admin routes) only ever sees library-scope rows; enquiry photos are reached
+// through their lead (enquiry_photos join) and the migration (legacy_source), never by id here.
+const inLibrary = and(live, eq(media.scope, 'library'));
 
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
 
@@ -44,7 +47,7 @@ export const mediaRepository = {
     const [row] = await dbLike
       .select()
       .from(media)
-      .where(and(eq(media.id, id), live))
+      .where(and(eq(media.id, id), inLibrary))
       .limit(1);
     return row;
   },
@@ -91,7 +94,7 @@ export const mediaRepository = {
     const [row] = await db
       .update(media)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(media.id, id), live))
+      .where(and(eq(media.id, id), inLibrary))
       .returning();
     return row;
   },
@@ -100,7 +103,7 @@ export const mediaRepository = {
     const [row] = await dbLike
       .update(media)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(media.id, id), live))
+      .where(and(eq(media.id, id), inLibrary))
       .returning({ id: media.id });
     return Boolean(row);
   },

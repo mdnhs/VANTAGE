@@ -11,6 +11,12 @@ export const isMediaId = (id: string) => UUID.test(id);
 
 // Every id a save names must be a live (not soft-deleted) library media row;
 // anonymous enquiry uploads (scope 'enquiry') are never valid references.
+//
+// Known gap (not closed on purpose): this check runs before the content write, outside the
+// referrer-table lock that `mediaLibraryService.remove` holds. A delete committing in that
+// window leaves a reference to a soft-deleted row, which renders as no image (or the legacy
+// URL). Closing it means threading one transaction through every content service and
+// repository (services, catalogs, logos, projects, testimonials, globals), which is not small.
 export async function assertMediaExists(ids: string[], dbLike: DbLike = db): Promise<void> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return;

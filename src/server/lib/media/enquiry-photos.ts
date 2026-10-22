@@ -6,6 +6,7 @@ import type { EnquiryPhoto } from '@/lib/media/enquiry-photo';
 import { db } from '@/server/db';
 import { enquiryPhotos, media } from '@/server/db/schema';
 import { ApiError } from '@/server/lib/errors';
+import { legacySourceOf, publicIdFromUrl } from '@/server/lib/media/cloudinary-migration';
 import { sniff } from '@/server/lib/media/sniff';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 
@@ -85,6 +86,7 @@ export async function attachPhotos<T extends { id: string; photoUrls: string[] |
             parentId: enquiryPhotos[parent],
             id: media.id,
             url: media.url,
+            legacySource: media.legacySource,
             width: media.width,
             height: media.height,
           })
@@ -97,13 +99,21 @@ export async function attachPhotos<T extends { id: string; photoUrls: string[] |
             ),
           )
           .orderBy(asc(enquiryPhotos.position));
-  return rows.map(({ photoUrls, ...row }) => ({
-    ...row,
-    photos: [
-      ...links
-        .filter((l) => l.parentId === row.id)
-        .map(({ id, url, width, height }): EnquiryPhoto => ({ id, url, width, height })),
-      ...(photoUrls ?? []).map((url): EnquiryPhoto => ({ id: null, url, width: null, height: null })),
-    ],
-  }));
+  return rows.map(({ photoUrls, ...row }) => {
+    const mine = links.filter((l) => l.parentId === row.id);
+    // A migrated photo is listed once: its legacy `photo_urls` entry (kept in the database)
+    // is hidden when a linked copy carries the same Cloudinary source.
+    const migrated = new Set(mine.flatMap((l) => (l.legacySource ? [l.legacySource] : [])));
+    const legacy = (photoUrls ?? []).filter((url) => {
+      const publicId = publicIdFromUrl(url);
+      return !(publicId && migrated.has(legacySourceOf('image', publicId)));
+    });
+    return {
+      ...row,
+      photos: [
+        ...mine.map(({ id, url, width, height }): EnquiryPhoto => ({ id, url, width, height })),
+        ...legacy.map((url): EnquiryPhoto => ({ id: null, url, width: null, height: null })),
+      ],
+    };
+  });
 }

@@ -254,9 +254,12 @@ export async function migrateCloudinaryMedia(opts: {
   for (const ref of all) {
     const key = legacySourceOf(ref.resource, ref.publicId);
     const known = unique.get(key);
-    // Face framing and library scope win when one asset is used in several places.
+    // Face framing and library scope win when one asset is used in several places, whatever the list order.
     if (!known) unique.set(key, ref);
-    else if (ref.face) known.face = true;
+    else {
+      if (ref.face) known.face = true;
+      if (ref.scope === 'library') known.scope = 'library';
+    }
   }
 
   const report: MigrationReport = {
