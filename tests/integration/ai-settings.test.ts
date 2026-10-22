@@ -43,14 +43,12 @@ const post = (cookie: string, path: string, body?: unknown) =>
   call(`/admin/ai/${path}`, cookie, { method: 'POST', body });
 
 const cookies = {} as Record<RoleName, string>;
-let ownerId: string;
 let adminId: string;
 
 beforeAll(async () => {
   for (const role of ROLE_NAMES) {
     const user = await createTestUser(role);
     cookies[role] = await signInCookie(user.email);
-    if (role === 'owner') ownerId = user.id;
     if (role === 'admin') adminId = user.id;
   }
 });
@@ -258,7 +256,6 @@ describe('versions', () => {
     const body = await json(stale);
     expect(body.error.code).toBe('CONFLICT');
     expect(body.error.current).toMatchObject({ version: 1, updatedBy: 'Test owner' });
-    expect(ownerId).toBeTruthy();
   });
 });
 
@@ -307,6 +304,48 @@ describe('test connection', () => {
     const res = await json(await post(cookies.owner, 'settings/test'));
     expect(res.data.ok).toBe(false);
     expect(res.data.message).not.toContain(KEY);
+  });
+});
+
+describe('test connection setup errors', () => {
+  it('a missing key is the setup message, not a provider answer', async () => {
+    vi.stubEnv('AI_PROVIDER_MOCK', 'false');
+    const res = (await json(await post(cookies.owner, 'settings/test'))).data;
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/isn't set up/);
+    expect(res.message).not.toMatch(/provider answered/i);
+  });
+
+  it('an invalid stored base URL is the base-URL message', async () => {
+    vi.stubEnv('AI_PROVIDER_MOCK', 'false');
+    await db.insert(settings).values({
+      key: 'ai',
+      version: 1,
+      value: { provider: 'openai-compatible', model: 'm', baseUrl: 'http://example.com/v1' },
+    });
+    const res = (await json(await post(cookies.owner, 'settings/test'))).data;
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/https/);
+    expect(res.message).not.toMatch(/provider answered/i);
+  });
+});
+
+describe('database failures', () => {
+  it('never put the ciphertext in the error log', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await db.execute(sql`alter table settings add constraint tmp_ai_fail check (key <> 'ai')`);
+    try {
+      const res = await put(cookies.owner, settingsBody({ apiKey: KEY }));
+      expect(res.status).toBe(500);
+      expect(errorSpy).toHaveBeenCalled();
+      const logged = JSON.stringify(
+        errorSpy.mock.calls.map((call) => call.map((a) => (a instanceof Error ? a.message : a))),
+      );
+      expect(logged).not.toMatch(/v1\.[A-Za-z0-9_-]+\./);
+      expect(logged).not.toContain(KEY);
+    } finally {
+      await db.execute(sql`alter table settings drop constraint tmp_ai_fail`);
+    }
   });
 });
 

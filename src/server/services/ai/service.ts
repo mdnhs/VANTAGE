@@ -28,7 +28,7 @@ import {
 } from '@/server/lib/secrets';
 import { invalid } from '@/server/lib/validator';
 
-import { providerMessage } from './errors';
+import { errorTag, providerMessage } from './errors';
 import { listModels } from './models';
 import { getModel, localHttpAllowed, mockEnabled } from './provider';
 import {
@@ -174,22 +174,29 @@ export async function saveAiSettings(actor: Actor, input: AiSettingsUpdate): Pro
     const value = parsed.data;
 
     // No revision (V9-R4): a snapshot would hold the ciphertext.
-    if (before) {
-      await tx
-        .update(settings)
-        .set({ value, version: before.version + 1, updatedBy: actor.userId, updatedAt: new Date() })
-        .where(eq(settings.key, AI_SETTINGS_KEY));
-    } else {
-      const inserted = await tx
-        .insert(settings)
-        .values({ key: AI_SETTINGS_KEY, value, version: 1, updatedBy: actor.userId })
-        .onConflictDoNothing()
-        .returning();
-      // Lost the race to a concurrent first save: report the winner.
-      if (inserted.length === 0) {
-        const [winner] = await tx.select().from(settings).where(eq(settings.key, AI_SETTINGS_KEY)).limit(1);
-        throw conflictError(await conflictCurrent(tx, winner ?? null));
+    try {
+      if (before) {
+        await tx
+          .update(settings)
+          .set({ value, version: before.version + 1, updatedBy: actor.userId, updatedAt: new Date() })
+          .where(eq(settings.key, AI_SETTINGS_KEY));
+      } else {
+        const inserted = await tx
+          .insert(settings)
+          .values({ key: AI_SETTINGS_KEY, value, version: 1, updatedBy: actor.userId })
+          .onConflictDoNothing()
+          .returning();
+        // Lost the race to a concurrent first save: report the winner.
+        if (inserted.length === 0) {
+          const [winner] = await tx.select().from(settings).where(eq(settings.key, AI_SETTINGS_KEY)).limit(1);
+          throw conflictError(await conflictCurrent(tx, winner ?? null));
+        }
       }
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      // Drizzle's message carries the query parameters, i.e. the ciphertext: log the class only.
+      console.error('[ai] saving settings failed', errorTag(error));
+      throw new Error('Could not save the AI settings');
     }
 
     const diff = topLevelDiff(redact(current), redact(value));
@@ -268,7 +275,14 @@ export async function testConnection(actor: Actor): Promise<{ ok: boolean; messa
     });
     result = { ok: true, message: `Connected: ${value.model} replied.` };
   } catch (error) {
-    result = { ok: false, message: `The provider answered: ${providerMessage(error, [apiKey ?? ''])}` };
+    // Our own setup problems (no key, bad base URL) are not the provider's answer.
+    result = {
+      ok: false,
+      message:
+        error instanceof ApiError
+          ? (error.causes?.baseUrl?.[0] ?? error.message)
+          : `The provider answered: ${providerMessage(error, [apiKey ?? ''])}`,
+    };
   }
   await audit(actor, {
     action: 'ai.test_connection',
