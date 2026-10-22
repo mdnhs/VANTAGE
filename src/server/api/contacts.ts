@@ -7,7 +7,7 @@ import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
 import { can } from '@/server/middleware/auth';
 import { contactMessageService } from '@/server/services/contact-message-service';
-import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
+import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import {
   createContactMessageSchema,
   contactMessageListQuerySchema,
@@ -21,10 +21,12 @@ export const contacts = new Hono<AppEnv>()
   .post('/', rateLimit(30, 60_000), zValidator('json', createContactMessageSchema), async (c) => {
     const input = c.req.valid('json');
 
-    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/inquiries');
+    const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);
 
-    const row = await contactMessageService.create(input);
-    return ok(c, row, { status: 201 });
+    const row = await contactMessageService.create(input, photoMediaIds);
+    // Visitors never get the stored photo URLs back.
+    const { photos: _photos, ...echo } = row!;
+    return ok(c, echo, { status: 201 });
   })
 
   // Admin list with pagination, search, and status filtering

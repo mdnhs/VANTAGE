@@ -19,8 +19,8 @@ export const contactMessageService = {
     return contactMessageRepository.byId(id);
   },
 
-  async create(data: CreateContactMessageInput) {
-    const row = await contactMessageRepository.create(data);
+  async create(data: CreateContactMessageInput, photoMediaIds: string[] = []) {
+    const row = await contactMessageRepository.create(data, photoMediaIds);
     // After the row is committed; fire-and-forget, so mail never fails the request.
     if (row) notifyNewContact(row);
     return row;

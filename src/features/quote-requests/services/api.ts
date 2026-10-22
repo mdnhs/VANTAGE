@@ -2,6 +2,7 @@ import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { PaginationMeta } from '@/server/lib/response';
 import type {
   CreateQuoteRequestInput,
+  PublicQuoteRequestInput,
   QuoteRequest,
   QuoteRequestListQuery,
   QuoteRequestStats,
@@ -27,13 +28,13 @@ async function parseWithPagination<T>(res: Response): Promise<{ data: T; paginat
 }
 
 // Public submission
-export async function submitQuoteRequest(input: CreateQuoteRequestInput): Promise<QuoteRequest> {
+export async function submitQuoteRequest(input: PublicQuoteRequestInput): Promise<Omit<QuoteRequest, 'photos'>> {
   const res = await fetch(`${BASE_URL}${API_ROUTES.quotes.submit}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-  return parseOrThrow<QuoteRequest>(res);
+  return parseOrThrow<Omit<QuoteRequest, 'photos'>>(res);
 }
 
 // Staff-entered enquiry (phone / walk-in) with admin fields

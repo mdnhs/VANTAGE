@@ -6,7 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
 import { can } from '@/server/middleware/auth';
-import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
+import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
   createQuoteRequestSchema,
@@ -21,10 +21,12 @@ export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
-    const input = createQuoteRequestSchema.parse(c.req.valid('json'));
-    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/quotes');
-    const row = await quoteRequestService.create(input);
-    return ok(c, row, { status: 201 });
+    const { photoUrls, ...fields } = c.req.valid('json');
+    const photoMediaIds = await storeEnquiryPhotos(photoUrls);
+    const row = await quoteRequestService.create(createQuoteRequestSchema.parse(fields), { photoMediaIds });
+    // Visitors never get the stored photo URLs back.
+    const { photos: _photos, ...echo } = row!;
+    return ok(c, echo, { status: 201 });
   })
 
   // Staff-entered enquiry (phone / walk-in): full admin schema.

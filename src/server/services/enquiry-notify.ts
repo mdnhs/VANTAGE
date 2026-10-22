@@ -125,7 +125,7 @@ export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome
   return outcome;
 }
 
-const quoteEnquiry = (row: QuoteRequest): Enquiry => ({
+const quoteEnquiry = (row: Omit<QuoteRequest, 'photoUrls'>): Enquiry => ({
   id: row.id,
   kind: 'quote',
   name: row.name,
@@ -140,7 +140,7 @@ const quoteEnquiry = (row: QuoteRequest): Enquiry => ({
   adminPath: `/dashboard/quotes/${row.id}`,
 });
 
-const contactEnquiry = (row: ContactMessage): Enquiry => ({
+const contactEnquiry = (row: Omit<ContactMessage, 'photoUrls'>): Enquiry => ({
   id: row.id,
   kind: 'contact',
   name: `${row.firstName} ${row.lastName}`.trim(),
@@ -181,8 +181,10 @@ export function runAfterResponse(task: () => Promise<unknown>): void {
   }
 }
 
-export const notifyNewQuote = (row: QuoteRequest) => runAfterResponse(() => sendEnquiryEmails(quoteEnquiry(row)));
-export const notifyNewContact = (row: ContactMessage) => runAfterResponse(() => sendEnquiryEmails(contactEnquiry(row)));
+export const notifyNewQuote = (row: Omit<QuoteRequest, 'photoUrls'>) =>
+  runAfterResponse(() => sendEnquiryEmails(quoteEnquiry(row)));
+export const notifyNewContact = (row: Omit<ContactMessage, 'photoUrls'>) =>
+  runAfterResponse(() => sendEnquiryEmails(contactEnquiry(row)));
 
 export type TestEmailResult =
   { status: 'not_configured' } | { status: 'sent'; to: string } | { status: 'failed'; error: string };

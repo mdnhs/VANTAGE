@@ -76,7 +76,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
     }
   };
 
-  const photos = message.photoUrls ?? [];
+  const photos = message.photos;
 
   return (
     <div className='flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
@@ -263,7 +263,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
             </div>
 
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4'>
-              {photos.map((url, idx) => (
+              {photos.map(({ url }, idx) => (
                 <button
                   key={idx}
                   type='button'

@@ -137,7 +137,6 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
         description: description.trim() || null,
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
         adminNotes: adminNotes.trim() || null,
-        photoUrls: [],
       });
 
       resetForm();

@@ -146,7 +146,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
     try {
       // Convert attached files to base64 strings if any
       const photoUrls: string[] = [];
-      for (const file of files) {
+      for (const file of files.slice(0, 4)) {
         if (file.type.startsWith('image/')) {
           const dataUrl = await readFileAsDataUrl(file);
           photoUrls.push(dataUrl);
