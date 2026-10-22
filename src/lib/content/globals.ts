@@ -636,10 +636,12 @@ export const PUBLIC_GLOBAL_KEYS = [
 export type PublicGlobalKey = (typeof PUBLIC_GLOBAL_KEYS)[number];
 
 export function parseGlobal<K extends GlobalKey>(key: K, value: unknown): GlobalValue<K> {
+  // Zod fills missing fields with shared default objects; clone so a caller's mutation never
+  // leaks into the defaults used by later requests.
   const parsed = GLOBALS[key].safeParse(value ?? {});
-  if (parsed.success) return parsed.data as GlobalValue<K>;
+  if (parsed.success) return structuredClone(parsed.data) as GlobalValue<K>;
   // Writes are validated, so this is drift (a hand edit, a schema change).
   // Defaults keep the site up; the admin shows them and the next save heals.
   console.warn(`[content] global "${key}" is invalid; using defaults`, z.prettifyError(parsed.error));
-  return GLOBALS[key].parse({}) as GlobalValue<K>;
+  return structuredClone(GLOBALS[key].parse({})) as GlobalValue<K>;
 }
