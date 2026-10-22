@@ -13,6 +13,7 @@ import {
   NAV,
   reachableLinks,
   visibleNav,
+  visibleNavWith,
   type NavLink,
 } from './nav';
 import { permissionFor } from './route-permissions';
@@ -87,6 +88,22 @@ describe('visibleNav', () => {
     const ids = visibleNav(['intake', 'marketer']).map((i) => i.id);
     expect(ids).toContain('enquiries');
     expect(ids).toContain('marketing');
+  });
+});
+
+describe('any-of parents link to a child the actor can open', () => {
+  const only = (key: string) => (p: unknown) =>
+    Object.keys(Array.isArray(p) ? Object.assign({}, ...p) : (p as object)).includes(key);
+
+  it('contact-only actor: Enquiries opens Contact messages, not Quote requests', () => {
+    const enquiries = visibleNavWith(only('contact')).find((i) => i.id === 'enquiries')!;
+    expect(enquiries.children?.map((c) => c.id)).toEqual(['enquiries-contacts']);
+    expect(enquiries.href).toBe('/dashboard/contacts');
+  });
+
+  it('keeps the registered href when its own child is openable', () => {
+    expect(visibleNavWith(only('quote')).find((i) => i.id === 'enquiries')!.href).toBe('/dashboard/quotes');
+    expect(visibleNav(['owner']).find((i) => i.id === 'website')!.href).toBe('/dashboard/home-page');
   });
 });
 

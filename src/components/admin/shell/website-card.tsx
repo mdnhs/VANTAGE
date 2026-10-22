@@ -3,6 +3,15 @@ import { ExternalLinkIcon } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+// The host to show; a malformed URL falls back to the raw string.
+function hostOf(url: string) {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+}
+
 // The inspiration's "Download our Mobile App" slot, as "Your website".
 // A neutral gradient card: the reference art is client-specific.
 export function WebsiteCard({ siteUrl, children }: { siteUrl: string; children?: React.ReactNode }) {
@@ -13,7 +22,7 @@ export function WebsiteCard({ siteUrl, children }: { siteUrl: string; children?:
         Live
       </p>
       <p className='mt-3 text-lg leading-tight font-semibold'>Your website</p>
-      <p className='mt-1 truncate text-xs opacity-75'>{new URL(siteUrl).host}</p>
+      <p className='mt-1 truncate text-xs opacity-75'>{hostOf(siteUrl)}</p>
       {/* A real link (role "link"), styled as a button. */}
       <a
         href={siteUrl}
