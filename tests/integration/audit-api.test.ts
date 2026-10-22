@@ -5,7 +5,7 @@ import { ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
 import { auditLogs } from '@/server/db/schema';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
 
 type Row = { id: string; action: string; actorName: string | null; diff?: unknown };
 type Body = {
@@ -168,5 +168,55 @@ describe('export.csv', () => {
     expect((await res.text()).split('\r\n')).toHaveLength(2);
     const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, 'audit.export'));
     expect(row?.summary).toBe('Exported 1 activity entry');
+  });
+});
+
+describe('export edge cases', () => {
+  it('flags an export capped at 10,000 rows', async () => {
+    await db.insert(auditLogs).values(
+      Array.from({ length: 10_001 }, (_, i) => ({
+        action: 'bulk.seed',
+        entityType: 'bulk',
+        summary: `Row ${i}`,
+      })),
+    );
+    const res = await call('/admin/audit/export.csv?action=bulk.seed', cookies.owner);
+    const lines = (await res.text()).split('\r\n');
+    expect(lines).toHaveLength(1 + 10_000 + 1);
+    expect(lines.at(-1)).toContain('Export capped at 10000 entries');
+    const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, 'audit.export'));
+    expect(row?.summary).toBe('Exported 10000 activity entries (capped at 10000)');
+  });
+
+  it('records the real user on a View-as export', async () => {
+    const viewing = await viewAsCookie(cookies.owner, ids.admin);
+    expect((await call('/admin/audit/export.csv', viewing)).status).toBe(200);
+    const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, 'audit.export'));
+    expect(row?.actorId).toBe(ids.admin);
+    expect(row?.impersonatedBy).toBe(ids.owner);
+  });
+
+  it('neutralises tab and carriage-return leading cells', async () => {
+    await db.insert(auditLogs).values([
+      { action: 'x.tab', entityType: 'x', summary: '\tcmd' },
+      { action: 'x.cr', entityType: 'x', summary: '\rcmd' },
+    ]);
+    const text = await (await call('/admin/audit/export.csv?entityType=x', cookies.owner)).text();
+    expect(text).toContain('"\'\tcmd"');
+    expect(text).toContain('"\'\rcmd"');
+  });
+
+  it('answers a junk actor with an empty result and a page past the end with no rows', async () => {
+    const junk = await json(await call('/admin/audit?actor=not-a-user', cookies.owner));
+    expect(junk.data).toHaveLength(0);
+    const beyond = await json(await call('/admin/audit?page=99', cookies.owner));
+    expect(beyond.data).toHaveLength(0);
+    expect(beyond.pagination?.total).toBe(3);
+  });
+
+  it('rejects dates outside 1900-2100', async () => {
+    expect((await call('/admin/audit?from=0050-01-01', cookies.owner)).status).toBe(422);
+    expect((await call('/admin/audit?to=2101-01-01', cookies.owner)).status).toBe(422);
+    expect((await call('/admin/audit/export.csv?from=1899-12-31', cookies.owner)).status).toBe(422);
   });
 });
