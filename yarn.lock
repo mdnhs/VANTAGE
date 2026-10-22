@@ -2517,6 +2517,13 @@
   dependencies:
     undici-types "~6.21.0"
 
+"@types/nodemailer@8.0.2":
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-8.0.2.tgz#0f57798b2753dbad314f1ad9952713a4a9954f12"
+  integrity sha512-c7M5ox8p0nEOfbJ2E9Qcmt8/QCu/VzsiAhzBiZbvky2PhKZDHpKB3sQHBM5MEZNkCfBOaS6S9//AGPRTNB7IaA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/pg@^8.23.1":
   version "8.23.1"
   resolved "https://registry.npmjs.org/@types/pg/-/pg-8.23.1.tgz"
@@ -5552,6 +5559,11 @@ node-releases@^2.0.55:
   version "2.0.56"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-2.0.56.tgz"
   integrity sha512-x0InOIyzgdk+eyaWaRJFH5snEtiImgBgblZ2CyPrLmqqcuMQkEvcDPHbzqbD8eDsSeJbVOjn+crzyzHaM4D+/A==
+
+nodemailer@10.2.0:
+  version "10.2.0"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.2.0.tgz#92d4e0d6f951c7c529b2893eb2b855859a78dd09"
+  integrity sha512-/XyGw6kX2stMdKGUJdAQmYAeY1FscWfdRydfd2NtK3A3KDfUUXCqZzExSNAt2xhh90X2qLCR+o2Gd48YPJcJwA==
 
 npm-run-path@^4.0.1:
   version "4.0.1"
