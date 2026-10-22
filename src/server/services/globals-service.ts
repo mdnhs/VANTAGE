@@ -1,17 +1,20 @@
 import 'server-only';
 
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { redactForAudit } from '@/lib/audit/redact-for-audit';
 import { topLevelDiff } from '@/lib/audit/top-level-diff';
 import type { EditableGlobalKey } from '@/lib/content/global-access';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
+import { collectMediaIds, mapRefs } from '@/lib/content/image-ref';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
+import { media } from '@/server/db/schema/media';
 import { audit } from '@/server/lib/audit';
 import type { Actor } from '@/server/lib/auth/actor';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { userName } from '@/server/lib/conflict';
+import { assertMediaExists } from '@/server/lib/media/assert-media';
 import { ApiError } from '@/server/lib/errors';
 import { findRevision, listRevisions } from '@/server/lib/revisions';
 import { invalid } from '@/server/lib/validator';
@@ -65,6 +68,8 @@ export async function saveGlobal(
   const parsed = GLOBALS[key].safeParse(input.value);
   if (!parsed.success) throw invalid(parsed.error);
   const value = parsed.data;
+  // A removed or foreign image must not be saved: every media ref has to be a live library row.
+  await assertMediaExists(collectMediaIds(value));
   const saved = await settingsRepository.save(
     key,
     { version: input.version, value },
@@ -103,6 +108,29 @@ export async function globalRevisions(key: EditableGlobalKey) {
   };
 }
 
+// Old snapshots may still hold Cloudinary refs. Those already copied into the library
+// (`media.legacy_source`) become media refs; unknown ones stay Cloudinary refs.
+async function translateLegacyRefs(snapshot: unknown): Promise<unknown> {
+  const sourceOf = (publicId: string, path: string[]) =>
+    `cloudinary:${path[path.length - 1] === 'video' ? 'video' : 'image'}:${publicId}`;
+  const wanted = new Set<string>();
+  mapRefs(snapshot, (ref, path) => {
+    if (ref.kind === 'cloudinary') wanted.add(sourceOf(ref.publicId, path));
+    return ref;
+  });
+  if (wanted.size === 0) return snapshot;
+  const rows = await db
+    .select({ id: media.id, legacySource: media.legacySource })
+    .from(media)
+    .where(and(inArray(media.legacySource, [...wanted]), isNull(media.deletedAt), eq(media.scope, 'library')));
+  const bySource = new Map(rows.map((row) => [row.legacySource, row.id]));
+  return mapRefs(snapshot, (ref, path) => {
+    if (ref.kind !== 'cloudinary') return ref;
+    const id = bySource.get(sourceOf(ref.publicId, path));
+    return id ? { kind: 'media', id } : ref;
+  });
+}
+
 // Restores re-validate: an old snapshot may predate a schema change. The result is
 // saved as a NEW version (version + 1) with the note "Restored version N".
 export async function restoreGlobal(
@@ -118,7 +146,7 @@ export async function restoreGlobal(
   return saveGlobal(
     actor,
     key,
-    { version: input.version, value: revision.snapshot },
+    { version: input.version, value: await translateLegacyRefs(revision.snapshot) },
     `Restored version ${revision.version}`,
   );
 }

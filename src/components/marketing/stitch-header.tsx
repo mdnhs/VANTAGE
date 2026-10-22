@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
+import type { PublicImage } from '@/lib/media/public-image';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import type { GlobalValue } from '@/lib/content/globals';
 
@@ -18,7 +18,7 @@ interface StitchHeaderProps {
   navigation: GlobalValue<'navigation'>;
   phone: string;
   businessName: string;
-  logoPublicId: string | null;
+  logo: PublicImage | null;
   logoLottieJson?: string | null;
   logoUseLottie?: boolean;
 }
@@ -65,7 +65,7 @@ export function StitchHeader({
   navigation,
   phone,
   businessName,
-  logoPublicId,
+  logo,
   logoLottieJson,
   logoUseLottie = false,
 }: StitchHeaderProps) {
@@ -74,7 +74,7 @@ export function StitchHeader({
   const mobileLinks = navigation.links.filter((link) => link.label && link.href);
   const { cta } = navigation;
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
-  const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 240 }) : FALLBACK_LOGO;
+  const logoSrc = logo?.src ?? FALLBACK_LOGO;
 
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

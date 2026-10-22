@@ -1,4 +1,6 @@
+import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
+import type { PublicSiteSettings } from '@/server/lib/settings/public-settings';
 
 export interface AboutTeamMember {
   name: string;
@@ -144,5 +146,44 @@ export function resolveAboutContent(s: (AboutSource & object) | null | undefined
     standardsTitle: s?.aboutStandardsTitle || d.standardsTitle,
     standardsImagePublicId: s?.aboutStandardsImagePublicId || null,
     standardsItems: s?.aboutStandardsItems?.length ? s.aboutStandardsItems : d.standardsItems,
+  };
+}
+
+export interface AboutPageTeamMember {
+  name: string;
+  role: string;
+  image: PublicImage | null;
+}
+
+// What the public About page renders: the same copy, with each photo as a ready PublicImage.
+export interface AboutPageContent extends Omit<
+  AboutContent,
+  'heroImagePublicId' | 'heritageImagePublicId' | 'standardsImagePublicId' | 'teamMembers'
+> {
+  heroImage: PublicImage | null;
+  heritageImage: PublicImage | null;
+  standardsImage: PublicImage | null;
+  teamMembers: AboutPageTeamMember[];
+}
+
+export function resolveAboutPageContent(
+  s: Pick<PublicSiteSettings, 'aboutHeroImage' | 'aboutHeritageImage' | 'aboutStandardsImage' | 'aboutTeamMembers'> &
+    Partial<Pick<SiteSettings, Exclude<AboutKeys, 'aboutTeamMembers'>>>,
+): AboutPageContent {
+  const {
+    heroImagePublicId: _hero,
+    heritageImagePublicId: _heritage,
+    standardsImagePublicId: _standards,
+    teamMembers: _team,
+    ...copy
+  } = resolveAboutContent({ ...s, aboutTeamMembers: null });
+  return {
+    ...copy,
+    heroImage: s.aboutHeroImage,
+    heritageImage: s.aboutHeritageImage,
+    standardsImage: s.aboutStandardsImage,
+    teamMembers: s.aboutTeamMembers.length
+      ? s.aboutTeamMembers
+      : ABOUT_DEFAULTS.teamMembers.map((m) => ({ name: m.name, role: m.role, image: null })),
   };
 }

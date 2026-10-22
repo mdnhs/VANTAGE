@@ -1,12 +1,20 @@
+import { collectMediaIds } from '@/lib/content/image-ref';
+import { loadPublicImages } from '@/server/lib/media/resolve';
 import {
   composePublicSettings,
   PUBLIC_SETTINGS_KEYS,
   type PublicSiteSettings,
 } from '@/server/lib/settings/public-settings';
+import type { PublicGlobals } from '@/server/lib/settings/public-settings';
 import { resolvePublicGlobals } from '@/server/lib/settings/site-settings-migration';
 import { getLegacySettings, getStoredSetting } from '@/server/queries/get-setting';
 
 export type { PublicSiteSettings };
+
+// Media-library refs are loaded in one cached query; Cloudinary refs need no lookup.
+async function compose(globals: PublicGlobals): Promise<PublicSiteSettings> {
+  return composePublicSettings(globals, await loadPublicImages(collectMediaIds(globals)));
+}
 
 // Public marketing pages read the versioned settings keys (each cached under its own
 // `settings:<key>` tag, expired by a save of that key) and get them in the flat shape the
@@ -20,11 +28,11 @@ async function getPublic(): Promise<PublicSiteSettings> {
   // cached under every public key's tag, so saving any key also drops the cached fallback.
   const legacy = values.some((v) => v === null) ? await getLegacySettings() : null;
   try {
-    return composePublicSettings(resolvePublicGlobals(stored, legacy));
+    return await compose(resolvePublicGlobals(stored, legacy));
   } catch (error) {
     // A repair failure must never 500 the public site: render the defaults instead.
     console.warn('[site-settings] public read failed, using defaults:', error instanceof Error ? error.message : error);
-    return composePublicSettings(resolvePublicGlobals(stored, null));
+    return compose(resolvePublicGlobals(stored, null));
   }
 }
 

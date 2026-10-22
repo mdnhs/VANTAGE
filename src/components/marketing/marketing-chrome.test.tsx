@@ -14,7 +14,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/services' }));
 afterEach(cleanup);
 
 const header = (navigation = parseGlobal('navigation', {})) =>
-  render(<StitchHeader navigation={navigation} phone='+353 1 234' businessName='Shop' logoPublicId={null} />);
+  render(<StitchHeader navigation={navigation} phone='+353 1 234' businessName='Shop' logo={null} />);
 
 describe('StitchHeader from navigation defaults', () => {
   it('renders the same desktop links, in order, as the old hard-coded bar', () => {

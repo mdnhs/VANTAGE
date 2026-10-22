@@ -1,6 +1,5 @@
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
-import { ABOUT_FALLBACK_IMAGES, type AboutTeamMember } from '@/features/about-page/defaults';
+import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/defaults';
 import {
   SECTION_BG,
   SECTION_CONTAINER,
@@ -11,7 +10,7 @@ import {
 interface TeamSectionProps {
   title: string;
   subtext: string;
-  members: AboutTeamMember[];
+  members: AboutPageTeamMember[];
 }
 
 // Last word of the CMS title becomes the red accent, matching the homepage headings.
@@ -31,9 +30,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
 
         <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
           {members.map((member, index) => {
-            const photo = member.imagePublicId
-              ? cldUrl(member.imagePublicId, { width: 800, height: 946, crop: 'fill', gravity: 'face' })
-              : (ABOUT_FALLBACK_IMAGES.team[index] ?? null);
+            const photo = member.image?.src ?? ABOUT_FALLBACK_IMAGES.team[index] ?? null;
 
             return (
               <article

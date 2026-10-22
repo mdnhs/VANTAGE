@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import { getSetting } from '@/server/queries/get-setting';
@@ -51,7 +50,7 @@ export async function MarketingFooter() {
 
   const logoImage = (
     <Image
-      src={settings.logoPublicId ? cldUrl(settings.logoPublicId, { height: 200 }) : FALLBACK_LOGO}
+      src={settings.logo?.src ?? FALLBACK_LOGO}
       alt={settings.businessName}
       width={240}
       height={136}

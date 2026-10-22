@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
+import type { PublicImage } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/defaults';
 import {
   SECTION_BG,
@@ -16,7 +16,7 @@ const ICONS: LucideIcon[] = [Crosshair, SprayCan, BadgeCheck];
 interface StandardsSectionProps {
   eyebrow: string;
   title: string;
-  imagePublicId: string | null;
+  image: PublicImage | null;
   items: AboutStandard[];
 }
 
@@ -27,7 +27,7 @@ function splitAccent(title: string) {
   return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
 }
 
-export function StandardsSection({ eyebrow, title, imagePublicId, items }: StandardsSectionProps) {
+export function StandardsSection({ eyebrow, title, image, items }: StandardsSectionProps) {
   const { head, accent } = splitAccent(title);
 
   return (
@@ -35,7 +35,7 @@ export function StandardsSection({ eyebrow, title, imagePublicId, items }: Stand
       <div className={`${SECTION_CONTAINER} grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20`}>
         <div className='relative h-[260px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[380px] lg:h-[600px]'>
           <Image
-            src={imagePublicId ? cldUrl(imagePublicId, { width: 1200 }) : ABOUT_FALLBACK_IMAGES.standards}
+            src={image?.src ?? ABOUT_FALLBACK_IMAGES.standards}
             alt='Vantage Autobody facility'
             fill
             sizes='(min-width: 1024px) 560px, 100vw'

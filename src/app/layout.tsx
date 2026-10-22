@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next';
 import { inter, manrope, geistMono, jakarta } from '@/lib/font';
 import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
@@ -17,9 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = settings.metaTitle || settings.businessName;
   const description =
     settings.metaDescription || `${settings.businessName} — ${formatOpeningHoursSummary(settings.openingHours)}`;
-  const ogImage = settings.ogImagePublicId
-    ? cldUrl(settings.ogImagePublicId, { width: 1200, height: 630, crop: 'fill' })
-    : '/opengraph-image.png';
+  const ogImage = settings.ogImage?.src ?? '/opengraph-image.png';
 
   return {
     metadataBase: new URL(APP_URL),
