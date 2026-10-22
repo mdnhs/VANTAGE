@@ -96,7 +96,7 @@ export function SettingsPageSkeleton() {
 }
 
 // Website-page editors (home, services, our work, insurance, about, process): title, a
-// horizontal tab row, then stacked form cards — mirrors SectionTabs / HomePageTabs.
+// horizontal tab row, then stacked form cards — mirrors PageTabs / HomePageTabs.
 export function TabbedPageSkeleton({ tabs = 6 }: { tabs?: number }) {
   return (
     <div className='flex flex-col gap-6' aria-busy='true' aria-label='Loading'>

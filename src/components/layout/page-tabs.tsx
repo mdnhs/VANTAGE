@@ -4,7 +4,7 @@ import { useMemo, type ReactNode } from 'react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export interface SectionTab {
+export interface PageTab {
   value: string;
   label: string;
   content: ReactNode;
@@ -12,7 +12,7 @@ export interface SectionTab {
 
 // Horizontal in-page tabs shared by every website-page editor (same look as the Home page
 // tabs). Active tab lives in the URL (?tab=...) via nuqs; the first tab is the default.
-export function SectionTabs({ tabs }: { tabs: SectionTab[] }) {
+export function PageTabs({ tabs }: { tabs: PageTab[] }) {
   const values = useMemo(() => tabs.map((tab) => tab.value), [tabs]);
   const [tab, setTab] = useQueryState(
     'tab',

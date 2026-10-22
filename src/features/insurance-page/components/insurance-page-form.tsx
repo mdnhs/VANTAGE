@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useUpdateInsurancePage } from '@/features/site-settings/hooks/api/mutation/use-update-insurance-page';
-import { SectionTabs } from '@/components/layout/section-tabs';
+import { PageTabs } from '@/components/layout/page-tabs';
 import type { InsuranceContent } from '../defaults';
 
 interface FormValues {
@@ -72,7 +72,7 @@ export function InsurancePageForm({ initialContent }: { initialContent: Insuranc
 
   return (
     <form onSubmit={onSubmit} className='flex flex-col gap-6'>
-      <SectionTabs
+      <PageTabs
         tabs={[
           {
             value: 'hero',

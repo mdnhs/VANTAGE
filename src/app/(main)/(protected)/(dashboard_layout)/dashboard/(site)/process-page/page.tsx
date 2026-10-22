@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { SectionTabs } from '@/components/layout/section-tabs';
+import { PageTabs } from '@/components/layout/page-tabs';
 import { ProcessPanel } from '@/features/home-page/components/sections/process-panel';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { ProcessPageForm } from '@/features/process-page/components/process-page-form';
@@ -31,7 +31,7 @@ export default async function ProcessPageContentPage() {
           Header copy and steps shown on the public process page. The steps are shared with the homepage.
         </p>
       </div>
-      <SectionTabs
+      <PageTabs
         tabs={[
           {
             value: 'header',

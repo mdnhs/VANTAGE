@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
 import { useUpdateAboutPage } from '@/features/site-settings/hooks/api/mutation/use-update-about-page';
-import { SectionTabs } from '@/components/layout/section-tabs';
+import { PageTabs } from '@/components/layout/page-tabs';
 import type { AboutContent } from '../defaults';
 
 type ImageField = 'heroImagePublicId' | 'heritageImagePublicId' | 'standardsImagePublicId';
@@ -83,7 +83,7 @@ export function AboutPageForm({ initialContent }: { initialContent: AboutContent
 
   return (
     <form onSubmit={onSubmit} className='flex flex-col gap-6'>
-      <SectionTabs
+      <PageTabs
         tabs={[
           {
             value: 'hero',

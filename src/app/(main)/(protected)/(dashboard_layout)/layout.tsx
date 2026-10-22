@@ -1,18 +1,16 @@
 import './admin.css';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
-import { Globe } from 'lucide-react';
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { requireActor } from '@/server/lib/auth/session';
-import { toMePayload } from '@/lib/auth/me';
+import { cookies } from 'next/headers';
+import { AdminShell } from '@/components/admin/shell/admin-shell';
+import { SIDEBAR_COOKIE } from '@/components/admin/shell/constants';
+import { Toaster } from '@/components/ui/sonner';
 import { ActorProvider } from '@/contexts/actor-provider';
 import { ViewAsBanner } from '@/features/users/components/view-as-banner';
-import { Sidebar } from '@/components/layout/sidebar';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
-import { Separator } from '@/components/ui/separator';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { jakarta } from '@/lib/font';
+import { toMePayload } from '@/lib/auth/me';
+import { cn } from '@/lib/utils';
+import { requireActor } from '@/server/lib/auth/session';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // Every route under this layout reads the session cookie per request (auth check +
 // permission-filtered nav) — inherently dynamic, so it must not be prerendered.
@@ -22,41 +20,30 @@ export const instant = false;
 // the database-checked Better Auth session and redirects (to /login) when it is missing,
 // expired, or belongs to a site customer (role "user").
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const actor = await requireActor();
+  const [actor, settings, cookieStore] = await Promise.all([
+    requireActor(),
+    siteSettingsService.getPublic(),
+    cookies(),
+  ]);
+  // Only an explicit "false" collapses; a first visit starts open.
+  const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false';
+  const brand = {
+    name: settings.businessName?.trim() || 'Vantage',
+    logoPublicId: 'logoPublicId' in settings ? settings.logoPublicId : null,
+    logoLottieJson: 'logoLottieJson' in settings ? (settings.logoLottieJson ?? null) : null,
+    logoUseLottie: 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false,
+  };
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
   return (
-    <ActorProvider actor={toMePayload(actor)}>
-      <SidebarProvider className='font-sans'>
-        <Sidebar />
-        <SidebarInset className='h-svh overflow-y-auto md:peer-data-[variant=inset]:h-[calc(100svh-1rem)]'>
-          <header className='sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b border-border bg-background/70 backdrop-blur-md supports-[backdrop-filter]:bg-background/60'>
-            <div className='flex items-center gap-2 px-4'>
-              <SidebarTrigger className='-ml-1' />
-              <Separator orientation='vertical' className='mr-2 data-vertical:h-4 data-vertical:self-auto' />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-            <ThemeToggle className='ml-auto' />
-            <Link
-              href='/'
-              target='_blank'
-              rel='noopener noreferrer'
-              aria-label='View live site (opens in a new tab)'
-              title='View live site'
-              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'mr-4')}
-            >
-              <Globe className='size-4' />
-            </Link>
-          </header>
-          <div className='flex-1 p-6'>{children}</div>
-          <ViewAsBanner />
-        </SidebarInset>
-      </SidebarProvider>
-    </ActorProvider>
+    <div data-admin-root className={cn(jakarta.variable, 'font-sans')}>
+      <ActorProvider actor={toMePayload(actor)}>
+        <AdminShell defaultOpen={sidebarOpen} siteUrl={siteUrl} brand={brand}>
+          {children}
+        </AdminShell>
+        <ViewAsBanner />
+      </ActorProvider>
+      <Toaster position='top-center' />
+    </div>
   );
 }

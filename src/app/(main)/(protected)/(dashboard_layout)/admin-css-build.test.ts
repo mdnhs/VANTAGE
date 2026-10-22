@@ -11,8 +11,13 @@ function cssFiles(dir: string): string[] {
   );
 }
 
-// Needs a prior `yarn build`; skipped otherwise.
-describe.skipIf(!existsSync(staticDir))('built admin CSS', () => {
+// Opt-in: a dev server's .next (or a stale build) has different CSS, so this only runs
+// right after a production build:  yarn build && CHECK_BUILD_CSS=1 yarn vitest run admin-css-build
+describe.skipIf(process.env.CHECK_BUILD_CSS !== '1')('built admin CSS', () => {
+  it('has a build to check', () => {
+    expect(existsSync(staticDir), 'run `yarn build` first').toBe(true);
+  });
+
   const files = existsSync(staticDir) ? cssFiles(staticDir) : [];
   const all = files.map((f) => readFileSync(f, 'utf8')).join('\n');
 

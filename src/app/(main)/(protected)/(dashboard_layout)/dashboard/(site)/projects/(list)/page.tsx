@@ -6,7 +6,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { SectionTabs } from '@/components/layout/section-tabs';
+import { PageTabs } from '@/components/layout/page-tabs';
 import { OurWorkHeroForm } from '@/features/projects/components/our-work-hero-form';
 import { projectService } from '@/server/services/project-service';
 import { ProjectTable } from '@/features/projects/components/list/project-table';
@@ -34,7 +34,7 @@ export default async function ProjectsListPage() {
           Hero copy and the before/after projects shown on the Our Work page.
         </p>
       </div>
-      <SectionTabs
+      <PageTabs
         tabs={[
           { value: 'hero', label: 'Hero', content: <OurWorkHeroForm settings={settings ?? null} /> },
           {

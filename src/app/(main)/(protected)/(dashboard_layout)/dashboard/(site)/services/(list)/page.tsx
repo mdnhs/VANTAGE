@@ -6,7 +6,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { SectionTabs } from '@/components/layout/section-tabs';
+import { PageTabs } from '@/components/layout/page-tabs';
 import { ServicesHeroForm } from '@/features/services/components/services-hero-form';
 import { serviceService } from '@/server/services/service-service';
 import { ServiceTable } from '@/features/services/components/list/service-table';
@@ -34,7 +34,7 @@ export default async function ServicesListPage() {
           Hero copy and the service blocks shown on the public services page.
         </p>
       </div>
-      <SectionTabs
+      <PageTabs
         tabs={[
           { value: 'hero', label: 'Hero', content: <ServicesHeroForm settings={settings ?? null} /> },
           {
