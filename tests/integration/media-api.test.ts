@@ -16,7 +16,7 @@ import type { MediaItem } from '@/server/services/media-library-service';
 
 import { mediaLibraryService } from '@/server/services/media-library-service';
 
-import { ORIGIN, sessionCookie } from '../support/session';
+import { createTestUser, ORIGIN, sessionCookie, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -326,5 +326,30 @@ describe('admin media API', () => {
       const [update] = await audits('media.update');
       expect(update?.diff).toMatchObject({ alt: { from: '', to: 'described' } });
     });
+  });
+  it('refuses every write while viewing as someone (403) but still lists', async () => {
+    const { data } = await json(await upload(await png('#c01'), 'va.png'));
+    const target = await createTestUser('editor');
+    const viewing = await viewAsCookie(cookie, target.id);
+    expect((await upload(await png('#c02'), 'x.png', { cookie: viewing })).status).toBe(403);
+    const patch = await api.request(`${BASE}/${data.id}`, {
+      method: 'PATCH',
+      headers: { origin: ORIGIN, cookie: viewing, 'content-type': 'application/json' },
+      body: JSON.stringify({ alt: 'nope' }),
+    });
+    expect(patch.status).toBe(403);
+    const replace = await api.request(`${BASE}/${data.id}/replace`, {
+      method: 'POST',
+      headers: { origin: ORIGIN, cookie: viewing },
+      body: form(await png('#c03'), 'y.png'),
+    });
+    expect(replace.status).toBe(403);
+    const del = await api.request(`${BASE}/${data.id}`, {
+      method: 'DELETE',
+      headers: { origin: ORIGIN, cookie: viewing },
+    });
+    expect(del.status).toBe(403);
+    expect(((await del.json()) as { error: { code: string } }).error.code).toBe('IMPERSONATION_READ_ONLY');
+    expect((await api.request(BASE, { headers: { cookie: viewing } })).status).toBe(200);
   });
 });
