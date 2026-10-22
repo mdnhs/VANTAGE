@@ -54,7 +54,12 @@ function RedirectForm({ editing, onClose }: { editing: RedirectDto | 'new'; onCl
 
   function fail(error: Error) {
     const causes = error instanceof RedirectsApiError ? error.causes : {};
-    const fields = Object.fromEntries(Object.entries(causes).map(([k, v]) => [k, v[0] ?? '']));
+    const known = ['sourcePath', 'destination', 'statusCode', 'note'];
+    const fields = Object.fromEntries(
+      Object.entries(causes)
+        .filter(([k, v]) => known.includes(k) && v[0])
+        .map(([k, v]) => [k, v[0]!]),
+    );
     // A message with a field under it stays there; anything else is a form error.
     setErrors(Object.keys(fields).length > 0 ? fields : { form: error.message });
   }
@@ -159,11 +164,11 @@ function RedirectForm({ editing, onClose }: { editing: RedirectDto | 'new'; onCl
           </p>
         ) : null}
         <DialogFooter>
-          <Button type='button' variant='outline' onClick={onClose}>
+          <Button type='button' variant='outline' disabled={pending} onClick={onClose}>
             Cancel
           </Button>
           <Button type='submit' disabled={pending}>
-            Save
+            {pending ? 'Saving…' : 'Save'}
           </Button>
         </DialogFooter>
       </form>

@@ -15,7 +15,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { useActor, useCan } from '@/contexts/actor-provider';
 import type { RedirectDto } from '@/lib/seo/redirect-rules';
 import { cn } from '@/lib/utils';
-import { ConfirmDialog } from '@/features/users/components/confirm-dialog';
+import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 
 import { REDIRECTS_PAGE_SIZE, useDeleteRedirect, useRedirects, useUpdateRedirect } from '../hooks/use-redirects';
 import { RedirectDialog, STATUS_LABELS, type Editing } from './redirect-dialog';

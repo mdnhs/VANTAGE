@@ -36,7 +36,7 @@ beforeEach(() => {
   actor.can = true;
   actor.impersonatedBy = null;
   toast.success.mockClear();
-  writeResponse = () => json({ success: true, data: row });
+  writeResponse = () => json({ success: true, data: { ...row, isActive: false } });
   fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
     init?.method && init.method !== 'GET'
       ? writeResponse()
@@ -111,10 +111,21 @@ describe('RedirectsView', () => {
     expect(message.closest('[data-slot="field"]')?.querySelector('#redirect-from')).toBeTruthy();
   });
 
+  it('shows an unmapped error as a form-level alert', async () => {
+    writeResponse = () =>
+      json({ success: false, error: { message: 'Something went wrong', causes: { other: ['x'] } } }, 500);
+    renderView();
+    fireEvent.click(await screen.findByRole('button', { name: 'New redirect' }));
+    fireEvent.change(await screen.findByLabelText('From'), { target: { value: '/b' } });
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '/a' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('Something went wrong');
+  });
+
   it('turns a redirect off with a PATCH and a toast', async () => {
     renderView();
     fireEvent.click(await screen.findByRole('button', { name: 'Turn off /old-about' }));
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Redirect on'));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Redirect off'));
     const [url, init] = writes()[0]!;
     expect(String(url)).toContain(`/admin/redirects/${row.id}`);
     expect(init.method).toBe('PATCH');
