@@ -2,13 +2,13 @@
 
 import { usePathname } from 'next/navigation';
 
-import { API_ROUTES } from '@/lib/routes/api-routes';
+import { exitPreviewHref } from '../services/api';
 
 // Shown whenever draft mode is on. Exit is a full navigation (not a client route) so the
 // API clears the draft-mode cookie before the page reloads.
 export function PreviewBar() {
   const pathname = usePathname();
-  const href = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}${API_ROUTES.preview.exit(pathname || '/')}`;
+  const href = exitPreviewHref(pathname || '/');
   return (
     <div className='fixed bottom-4 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-3 rounded-full bg-black px-4 py-2 text-sm text-white shadow-lg ring-1 ring-white/20'>
       <span>Previewing the draft theme</span>

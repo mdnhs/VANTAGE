@@ -10,6 +10,8 @@ const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_P
 // Full-page navigations (the preview sets a cookie and redirects), so these
 // are hrefs, never fetch targets.
 export const previewHref = (path: string) => `${baseUrl()}${API_ROUTES.preview.enter(path)}`;
+// A path PreviewPath rejects (query string, dots, '//') makes the API fall back to '/'.
+export const exitPreviewHref = (path: string) => `${baseUrl()}${API_ROUTES.preview.exit(path)}`;
 
 async function parseOrThrow<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => null);

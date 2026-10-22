@@ -278,16 +278,24 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     const initialStyle = resolvedTheme === 'dark' ? mapStyles.dark : mapStyles.light;
     currentStyleRef.current = initialStyle;
 
-    const map = new MapLibreGL.Map({
-      container: containerRef.current,
-      style: initialStyle,
-      renderWorldCopies: false,
-      attributionControl: {
-        compact: true,
-      },
-      ...props,
-      ...viewport,
-    });
+    // MapLibre throws when WebGL is unavailable (disabled, blocklisted GPU, headless). Left
+    // uncaught it unmounts the whole page, so the map stays blank instead.
+    let map: MapLibreGL.Map;
+    try {
+      map = new MapLibreGL.Map({
+        container: containerRef.current,
+        style: initialStyle,
+        renderWorldCopies: false,
+        attributionControl: {
+          compact: true,
+        },
+        ...props,
+        ...viewport,
+      });
+    } catch (error) {
+      console.warn('Map unavailable (WebGL could not start):', error);
+      return;
+    }
 
     const styleLoadHandler = () => {
       styleSwapInFlightRef.current = false;

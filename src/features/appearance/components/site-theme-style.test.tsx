@@ -8,7 +8,9 @@ vi.mock('@/server/queries/get-theme', () => ({ getSiteThemeForRender: vi.fn() })
 import { siteThemeCss } from '@/lib/theme/css';
 import { DEFAULT_THEME, ThemeConfig } from '@/lib/theme/schema';
 
-import { SiteThemeMarkup } from './site-theme-style';
+import { getSiteThemeForRender } from '@/server/queries/get-theme';
+
+import { SiteThemeMarkup, SiteThemeStyle } from './site-theme-style';
 
 beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_API_PREFIX', '/api');
@@ -37,4 +39,12 @@ it('shows the preview bar with a full-navigation exit link while previewing', ()
   render(<SiteThemeMarkup site={DEFAULT_THEME.site} preview />);
   expect(screen.getByText('Previewing the draft theme')).toBeTruthy();
   expect(screen.getByText('Exit preview').getAttribute('href')).toBe('/api/v1/preview/exit?path=%2Fservices');
+});
+
+it('SiteThemeStyle renders the cached reader result: style tag and preview bar', async () => {
+  const site = ThemeConfig.parse({ site: { brand: '#2563eb' } }).site;
+  vi.mocked(getSiteThemeForRender).mockResolvedValue({ site, preview: true });
+  const { container } = render(await SiteThemeStyle());
+  expect(container.querySelector('style#theme-tokens')?.textContent).toBe(siteThemeCss(site));
+  expect(screen.getByText('Exit preview')).toBeTruthy();
 });
