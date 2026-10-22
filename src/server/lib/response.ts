@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { ERROR_CODES, type ErrorCode } from './errors';
+import { ERROR_CODES, type ConflictCurrent, type ErrorCode } from './errors';
 
 export interface PaginationMeta {
   total: number;
@@ -19,7 +19,7 @@ export interface SuccessBody<T> {
 
 export interface ErrorBody {
   success: false;
-  error: { code: ErrorCode; message: string; causes?: Record<string, string[]> };
+  error: { code: ErrorCode; message: string; causes?: Record<string, string[]>; current?: ConflictCurrent };
 }
 
 export const ok = <T>(c: Context, data: T, init?: { status?: ContentfulStatusCode; pagination?: PaginationMeta }) =>
@@ -34,7 +34,12 @@ export const fail = (
   message = 'Something went wrong',
   status: ContentfulStatusCode = 500,
   causes?: Record<string, string[]>,
-) => c.json<ErrorBody>({ success: false, error: { code, message, ...(causes ? { causes } : {}) } }, status);
+  current?: ConflictCurrent,
+) =>
+  c.json<ErrorBody>(
+    { success: false, error: { code, message, ...(causes ? { causes } : {}), ...(current ? { current } : {}) } },
+    status,
+  );
 
 export const buildPagination = (total: number, page: number, limit: number): PaginationMeta => {
   const totalPages = limit > 0 ? Math.ceil(total / limit) : 0;

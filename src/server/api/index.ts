@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
 import { account } from './account';
+import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
 import { adminSearch } from './admin-search';
 import { adminUsers } from './admin-users';
@@ -52,6 +53,7 @@ export const api = app
   .route('/auth', auth)
   .route('/media', media)
   .route('/admin/media', adminMedia)
+  .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
   .route('/account', account)

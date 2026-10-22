@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
+import { revisions } from '@/server/db/schema';
 import { listRevisions, REVISION_LIMITS, writeRevision } from '@/server/lib/revisions';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 
@@ -40,21 +41,53 @@ describe('settings repository', () => {
     expect((await settingsRepository.get('site'))?.value).toEqual({ a: 2 });
   });
 
-  it('writes a revision of the previous value on update', async () => {
+  it('writes a revision holding the new value and version on every save, including the first', async () => {
     await settingsRepository.save('site', { version: 0, value: { a: 1 } }, null);
     await settingsRepository.save('site', { version: 1, value: { a: 2 } }, null, 'edit');
     const { items } = await listRevisions(db, 'setting', 'site');
-    expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ version: 1, note: 'edit' });
+    expect(items.map((i) => i.version)).toEqual([2, 1]);
+    expect(items[0]).toMatchObject({ version: 2, note: 'edit' });
+    const rows = await db.select().from(revisions).where(eq(revisions.entityId, 'site'));
+    const byVersion = new Map(rows.map((r) => [r.version, r.snapshot]));
+    expect(byVersion.get(1)).toEqual({ a: 1 });
+    expect(byVersion.get(2)).toEqual({ a: 2 });
+  });
+
+  it('a stale save returns who holds the newer version', async () => {
+    await settingsRepository.save('site', { version: 0, value: { a: 1 } }, null);
+    await settingsRepository.save('site', { version: 1, value: { a: 2 } }, null);
+    await expect(settingsRepository.save('site', { version: 1, value: { a: 3 } }, null)).rejects.toMatchObject({
+      status: 409,
+      current: { version: 2, updatedBy: null, updatedAt: expect.any(String) },
+    });
+    await expect(settingsRepository.save('fresh', { version: 4, value: {} }, null)).rejects.toMatchObject({
+      status: 409,
+      current: { version: 0, updatedAt: null, updatedBy: null },
+    });
+  });
+
+  it('runs onSaved in the save transaction: a failing hook rolls the save back', async () => {
+    await expect(
+      settingsRepository.save('site', { version: 0, value: { a: 1 } }, null, undefined, async () => {
+        throw new Error('hook failed');
+      }),
+    ).rejects.toThrow('hook failed');
+    expect(await settingsRepository.get('site')).toBeNull();
+    expect((await listRevisions(db, 'setting', 'site')).items).toHaveLength(0);
   });
 
   it('restore re-saves a revision snapshot as a new version', async () => {
     await settingsRepository.save('site', { version: 0, value: { a: 1 } }, null);
     await settingsRepository.save('site', { version: 1, value: { a: 2 } }, null);
     const { items } = await listRevisions(db, 'setting', 'site');
-    const res = await settingsRepository.restore('site', items[0]!.id, null);
+    // Newest first: items[1] is version 1, holding { a: 1 }.
+    const res = await settingsRepository.restore('site', items[1]!.id, null);
     expect(res.version).toBe(3);
     expect((await settingsRepository.get('site'))?.value).toEqual({ a: 1 });
+    expect((await listRevisions(db, 'setting', 'site')).items[0]).toMatchObject({
+      version: 3,
+      note: 'Restored version 1',
+    });
   });
 
   it('restore of unknown revision is 404', async () => {
@@ -90,7 +123,7 @@ describe('settings text actor ids', () => {
     await settingsRepository.save('site', { version: 0, value: { a: 1 } }, 'user_abc123');
     await settingsRepository.save('site', { version: 1, value: { a: 2 } }, 'user_abc123');
     const { items } = await listRevisions(db, 'setting', 'site');
-    const res = await settingsRepository.restore('site', items[0]!.id, 'user_xyz789');
+    const res = await settingsRepository.restore('site', items[1]!.id, 'user_xyz789');
     expect(res.version).toBe(3);
     const row = await settingsRepository.get('site');
     expect(row?.updatedBy).toBe('user_xyz789');

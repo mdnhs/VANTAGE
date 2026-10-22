@@ -5,7 +5,7 @@ import { fail } from '@/server/lib/response';
 
 export const onError: ErrorHandler = (err, c) => {
   if (err instanceof ApiError) {
-    return fail(c, err.code, err.message, err.status as never, err.causes);
+    return fail(c, err.code, err.message, err.status as never, err.causes, err.current);
   }
 
   if (err instanceof HTTPException) {
