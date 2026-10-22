@@ -5,6 +5,7 @@ import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
 import { account } from './account';
 import { adminMedia } from './admin-media';
+import { adminSearch } from './admin-search';
 import { adminUsers } from './admin-users';
 import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
@@ -52,6 +53,7 @@ export const api = app
   .route('/media', media)
   .route('/admin/media', adminMedia)
   .route('/admin/users', adminUsers)
+  .route('/admin/search', adminSearch)
   .route('/account', account)
   .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)

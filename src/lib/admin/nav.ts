@@ -256,10 +256,21 @@ export function canOpen(roles: readonly RoleName[], permission: Permissions | re
   return anyOf.some((p) => hasPermission(roles, p));
 }
 
+type Allows = (permission: Permissions | readonly Permissions[]) => boolean;
+
+// A section whose own href belongs to a child the actor cannot open (an any-of
+// parent such as Enquiries) links to its first child they can.
+export function visibleNavWith(allows: Allows): NavItem[] {
+  return NAV.filter((item) => allows(item.permission)).map((item) => {
+    if (!item.children) return item;
+    const children = item.children.filter((child) => allows(child.permission));
+    const own = children.some((child) => child.href === item.href);
+    return { ...item, children, href: own ? item.href : (children[0]?.href ?? item.href) };
+  });
+}
+
 export function visibleNav(roles: readonly RoleName[]): NavItem[] {
-  return NAV.filter((item) => canOpen(roles, item.permission)).map((item) =>
-    item.children ? { ...item, children: item.children.filter((child) => canOpen(roles, child.permission)) } : item,
-  );
+  return visibleNavWith((permission) => canOpen(roles, permission));
 }
 
 // Every page the actor may open, once each, labelled with its section.
