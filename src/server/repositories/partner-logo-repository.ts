@@ -1,11 +1,25 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { partnerLogos } from '@/server/db/schema';
+import { contentImage } from '@/server/lib/media/content-images';
 import type {
   CreatePartnerLogoInput,
   PartnerLogoListQuery,
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
+
+const withMedia = { logoMedia: true } as const;
+
+function findOne(id: string) {
+  return db.query.partnerLogos.findFirst({ where: eq(partnerLogos.id, id), with: withMedia });
+}
+
+type WithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
+
+// Rows carry both the *MediaId column and the resolved PublicImage.
+function present({ logoMedia, ...row }: WithMedia) {
+  return { ...row, logo: contentImage(logoMedia, row.logoPublicId) };
+}
 
 export const partnerLogoRepository = {
   // Admin list: every row (enabled + disabled), ordered for the reorder UI, with a total
@@ -14,30 +28,34 @@ export const partnerLogoRepository = {
     const offset = (page - 1) * limit;
     const [rows, [{ count }]] = await Promise.all([
       db.query.partnerLogos.findMany({
+        with: withMedia,
         orderBy: [asc(partnerLogos.displayOrder)],
         limit,
         offset,
       }),
       db.select({ count: sql<number>`count(*)::int` }).from(partnerLogos),
     ]);
-    return { rows, total: count };
+    return { rows: rows.map(present), total: count };
   },
 
   // Public list: small dataset, no pagination — every enabled logo, in display order.
   async listEnabled() {
-    return db.query.partnerLogos.findMany({
+    const rows = await db.query.partnerLogos.findMany({
       where: eq(partnerLogos.isEnabled, true),
+      with: withMedia,
       orderBy: [asc(partnerLogos.displayOrder)],
     });
+    return rows.map(present);
   },
 
   async byId(id: string) {
-    return db.query.partnerLogos.findFirst({ where: eq(partnerLogos.id, id) });
+    const row = await findOne(id);
+    return row ? present(row) : undefined;
   },
 
   async create(data: CreatePartnerLogoInput) {
-    const [row] = await db.insert(partnerLogos).values(data).returning();
-    return row;
+    const [row] = await db.insert(partnerLogos).values(data).returning({ id: partnerLogos.id });
+    return partnerLogoRepository.byId(row.id);
   },
 
   async update(id: string, data: UpdatePartnerLogoInput) {
@@ -45,8 +63,8 @@ export const partnerLogoRepository = {
       .update(partnerLogos)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(partnerLogos.id, id))
-      .returning();
-    return row;
+      .returning({ id: partnerLogos.id });
+    return row ? partnerLogoRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

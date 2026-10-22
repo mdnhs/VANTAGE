@@ -6,22 +6,21 @@ import { ArrowDown, ArrowUp, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { usePartnerLogoList } from '../../hooks/api/query/use-partner-logo-list';
 import { useUpdatePartnerLogo } from '../../hooks/api/mutation/use-update-partner-logo';
 import { useDeletePartnerLogo } from '../../hooks/api/mutation/use-delete-partner-logo';
 import { useReorderPartnerLogos } from '../../hooks/api/mutation/use-reorder-partner-logos';
-import type { PartnerLogo } from '../../types';
+import type { PartnerLogoPublic } from '../../types';
 
 interface PartnerLogoTableProps {
-  initialData: { data: PartnerLogo[]; total: number };
+  initialData: { data: PartnerLogoPublic[]; total: number };
 }
 
 const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
-function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogo }) {
+function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
   return (
     <Switch
@@ -100,12 +99,16 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                 </div>
               </td>
               <td className='px-4 py-2.5'>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cldUrl(partnerLogo.logoPublicId ?? '', { width: 96, height: 96, crop: 'fit' })}
-                  alt={partnerLogo.companyName}
-                  className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
-                />
+                {partnerLogo.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={partnerLogo.logo.src}
+                    alt={partnerLogo.companyName}
+                    className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
+                  />
+                ) : (
+                  <div className='h-10 w-16 rounded border border-dashed border-border' aria-hidden />
+                )}
               </td>
               <td className='px-4 py-2.5 font-medium'>{partnerLogo.companyName}</td>
               <td className='px-4 py-2.5 text-muted-foreground'>

@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { prepareMediaWrite } from '@/server/lib/media/content-images';
 import { partnerLogoRepository } from '@/server/repositories/partner-logo-repository';
 import type {
   CreatePartnerLogoInput,
@@ -7,6 +9,8 @@ import type {
   ReorderPartnerLogosInput,
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
+
+const MEDIA_PAIRS = [['logoMediaId', 'logoPublicId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('partner-logos');
 const detailTag = (id: string) => CACHE_TAGS.detail('partner-logos', id);
@@ -19,6 +23,7 @@ async function listEnabledUncached() {
 // explicit revalidations on mutation.
 async function listEnabledCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
   cacheLife('hours');
   return listEnabledUncached();
@@ -37,14 +42,16 @@ export const partnerLogoService = {
   },
 
   async create(data: CreatePartnerLogoInput) {
-    const row = await partnerLogoRepository.create(data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await partnerLogoRepository.create(input);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
     revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdatePartnerLogoInput) {
-    const row = await partnerLogoRepository.update(id, data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await partnerLogoRepository.update(id, input);
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');
     return row;

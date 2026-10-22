@@ -7,7 +7,6 @@ import {
   SECTION_PADDING,
   SectionHeader,
 } from '@/components/marketing/ui/landing-primitives';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
@@ -52,15 +51,14 @@ export default async function ServicesPage() {
                   key={service.id}
                   index={index}
                   reverse={index % 2 === 1}
-                  image={
-                    service.imagePublicId
-                      ? cldUrl(service.imagePublicId, { width: 1200, height: 900, crop: 'fill' })
-                      : FALLBACK_IMAGE
+                  image={service.image ? service.image.src : FALLBACK_IMAGE}
+                  imagePosition={
+                    service.image ? `${service.image.focal.x * 100}% ${service.image.focal.y * 100}%` : undefined
                   }
                   heading={service.name}
                   description={service.description}
                   checklist={service.checklist}
-                  iconPublicId={service.iconPublicId}
+                  iconSrc={service.icon?.src}
                   startingPrice={service.startingPrice}
                 />
               ))}

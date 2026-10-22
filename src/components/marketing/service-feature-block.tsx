@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { BODY_TEXT, ButtonLink, CARD } from '@/components/marketing/ui/landing-primitives';
 
 const ASSET = '/assets/landing';
@@ -32,7 +31,8 @@ type ServiceFeatureBlockProps = {
   heading: string;
   description: string;
   checklist: string[];
-  iconPublicId?: string | null;
+  iconSrc?: string | null;
+  imagePosition?: string;
   startingPrice?: number | null;
 };
 
@@ -44,7 +44,8 @@ export function ServiceFeatureBlock({
   heading,
   description,
   checklist,
-  iconPublicId,
+  iconSrc,
+  imagePosition,
   startingPrice,
 }: ServiceFeatureBlockProps) {
   const icon = FIGMA_ICONS[index % FIGMA_ICONS.length];
@@ -59,6 +60,7 @@ export function ServiceFeatureBlock({
       >
         <Image
           src={image}
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
           alt={heading}
           fill
           sizes='(min-width: 1024px) 590px, 100vw'
@@ -75,14 +77,8 @@ export function ServiceFeatureBlock({
       >
         <div className='flex w-full items-center justify-between gap-3'>
           <div className='flex items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
-            {iconPublicId ? (
-              <Image
-                src={cldUrl(iconPublicId, { width: 48, height: 48 })}
-                alt=''
-                width={24}
-                height={24}
-                className='size-6'
-              />
+            {iconSrc ? (
+              <Image src={iconSrc} alt='' width={24} height={24} className='size-6' />
             ) : (
               <span className='relative block size-6 shrink-0 overflow-hidden'>
                 <span className={`absolute flex items-center justify-center ${icon.inset}`}>

@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
 import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 
@@ -21,9 +20,10 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
           </p>
           <div className='flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-12 sm:gap-y-6'>
             {logos.map((logo) => {
+              if (!logo.logo) return null;
               const image = (
                 <Image
-                  src={cldUrl(logo.logoPublicId ?? '', { width: 320, height: 160, crop: 'fit' })}
+                  src={logo.logo.src}
                   alt={logo.companyName}
                   width={120}
                   height={60}

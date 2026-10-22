@@ -1,7 +1,25 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { services } from '@/server/db/schema';
+import { contentImage } from '@/server/lib/media/content-images';
 import type { CreateServiceInput, ServiceListQuery, UpdateServiceInput } from '@/validations/service-schema';
+
+const withMedia = { iconMedia: true, imageMedia: true } as const;
+
+type ServiceWithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
+
+function findOne(id: string) {
+  return db.query.services.findFirst({ where: eq(services.id, id), with: withMedia });
+}
+
+// Rows carry both the *MediaId columns and the resolved PublicImage.
+function present({ iconMedia, imageMedia, ...row }: ServiceWithMedia) {
+  return {
+    ...row,
+    icon: contentImage(iconMedia, row.iconPublicId),
+    image: contentImage(imageMedia, row.imagePublicId),
+  };
+}
 
 export const serviceRepository = {
   // Admin list: every row (enabled + disabled), ordered for the reorder UI, with a total
@@ -12,34 +30,39 @@ export const serviceRepository = {
     const offset = (page - 1) * limit;
     const [rows, [{ count }]] = await Promise.all([
       db.query.services.findMany({
+        with: withMedia,
         orderBy: [asc(services.displayOrder)],
         limit,
         offset,
       }),
       db.select({ count: sql<number>`count(*)::int` }).from(services),
     ]);
-    return { rows, total: count };
+    return { rows: rows.map(present), total: count };
   },
 
   // Public list: small dataset, no pagination — every enabled service, in display order.
   async listPublished() {
-    return db.query.services.findMany({
+    const rows = await db.query.services.findMany({
       where: eq(services.isEnabled, true),
+      with: withMedia,
       orderBy: [asc(services.displayOrder)],
     });
+    return rows.map(present);
   },
 
   async byId(id: string) {
-    return db.query.services.findFirst({ where: eq(services.id, id) });
+    const row = await findOne(id);
+    return row ? present(row) : undefined;
   },
 
   async bySlug(slug: string) {
-    return db.query.services.findFirst({ where: eq(services.slug, slug) });
+    const row = await db.query.services.findFirst({ where: eq(services.slug, slug), with: withMedia });
+    return row ? present(row) : undefined;
   },
 
   async create(data: CreateServiceInput) {
-    const [row] = await db.insert(services).values(data).returning();
-    return row;
+    const [row] = await db.insert(services).values(data).returning({ id: services.id });
+    return serviceRepository.byId(row.id);
   },
 
   async update(id: string, data: UpdateServiceInput) {
@@ -47,8 +70,8 @@ export const serviceRepository = {
       .update(services)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(services.id, id))
-      .returning();
-    return row;
+      .returning({ id: services.id });
+    return row ? serviceRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

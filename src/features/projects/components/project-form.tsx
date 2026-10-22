@@ -56,7 +56,8 @@ function toFormState(data: ProjectWithGallery | null): FormState {
     isFeatured: data?.isFeatured ?? false,
     beforeImagePublicId: data?.beforeImagePublicId ?? '',
     afterImagePublicId: data?.afterImagePublicId ?? '',
-    galleryImagePublicIds: data?.galleryImages?.map((g) => g.imagePublicId ?? '') ?? [],
+    // Media-backed rows have no legacy id; they are kept untouched unless replaced.
+    galleryImagePublicIds: data?.galleryImages?.flatMap((g) => (g.imagePublicId ? [g.imagePublicId] : [])) ?? [],
   };
 }
 
@@ -68,9 +69,9 @@ export interface ProjectFormSubmitInput {
   description: string;
   completedAt: string | null;
   isFeatured: boolean;
-  beforeImagePublicId: string;
-  afterImagePublicId: string;
-  galleryImagePublicIds: string[];
+  beforeImagePublicId?: string;
+  afterImagePublicId?: string;
+  galleryImagePublicIds?: string[];
 }
 
 interface ProjectFormProps {
@@ -92,6 +93,7 @@ export function ProjectForm({
 }: ProjectFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
+  const hasMediaGallery = Boolean(initialData?.galleryImages?.some((g) => g.mediaId));
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -115,9 +117,11 @@ export function ProjectForm({
       description: form.description,
       completedAt: form.completedAt || null,
       isFeatured: form.isFeatured,
-      beforeImagePublicId: form.beforeImagePublicId,
-      afterImagePublicId: form.afterImagePublicId,
-      galleryImagePublicIds: form.galleryImagePublicIds,
+      // Left out when empty so a media-backed image on the row stays as it is.
+      beforeImagePublicId: form.beforeImagePublicId || undefined,
+      afterImagePublicId: form.afterImagePublicId || undefined,
+      galleryImagePublicIds:
+        hasMediaGallery && form.galleryImagePublicIds.length === 0 ? undefined : form.galleryImagePublicIds,
     });
   };
 

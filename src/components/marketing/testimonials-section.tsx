@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { Star } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { TestimonialPublic } from '@/features/testimonials/types';
 
 // Literal class names so Tailwind's content scanner can pick them up statically.
@@ -62,9 +61,12 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             </p>
 
             <div className='flex items-center gap-3 border-t border-white/10 pt-6'>
-              {testimonial.avatarPublicId ? (
+              {testimonial.avatar ? (
                 <Image
-                  src={cldUrl(testimonial.avatarPublicId, { width: 88, height: 88, crop: 'fill', gravity: 'face' })}
+                  src={testimonial.avatar.src}
+                  style={{
+                    objectPosition: `${testimonial.avatar.focal.x * 100}% ${testimonial.avatar.focal.y * 100}%`,
+                  }}
                   alt=''
                   width={44}
                   height={44}

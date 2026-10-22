@@ -1,5 +1,8 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { assertMediaExists } from '@/server/lib/media/assert-media';
+import { prepareMediaWrite } from '@/server/lib/media/content-images';
 import { projectRepository } from '@/server/repositories/project-repository';
 import type {
   CreateProjectInput,
@@ -8,6 +11,11 @@ import type {
   ReorderProjectsInput,
   UpdateProjectInput,
 } from '@/validations/project-schema';
+
+const MEDIA_PAIRS = [
+  ['beforeImageMediaId', 'beforeImagePublicId'],
+  ['afterImageMediaId', 'afterImagePublicId'],
+] as const;
 
 const LIST_TAG = CACHE_TAGS.all('projects');
 const FEATURED_TAG = CACHE_TAGS.list('projects-featured');
@@ -26,6 +34,7 @@ async function listFeaturedUncached() {
 // services'/settings' 'hours' — fresher without going all the way to per-request.
 async function listPublishedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
   cacheLife('minutes');
   return listPublishedUncached();
@@ -33,6 +42,7 @@ async function listPublishedCached() {
 
 async function listFeaturedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(FEATURED_TAG);
   cacheLife('minutes');
   return listFeaturedUncached();
@@ -56,7 +66,9 @@ export const projectService = {
   },
 
   async create(data: CreateProjectInput) {
-    const row = await projectRepository.create(data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    await assertMediaExists(input.galleryMediaIds ?? []);
+    const row = await projectRepository.create(input);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -64,7 +76,9 @@ export const projectService = {
   },
 
   async update(id: string, data: UpdateProjectInput) {
-    const row = await projectRepository.update(id, data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    await assertMediaExists(input.galleryMediaIds ?? []);
+    const row = await projectRepository.update(id, input);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
     revalidateTag(detailTag(id), 'minutes');

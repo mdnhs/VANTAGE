@@ -9,6 +9,8 @@ export const createServiceSchema = z.object({
   description: z.string().min(1),
   iconPublicId: z.string().max(255).nullable().optional(),
   imagePublicId: z.string().max(255).nullable().optional(),
+  iconMediaId: z.string().uuid().nullable().optional(),
+  imageMediaId: z.string().uuid().nullable().optional(),
   checklist: z.array(z.string().min(1).max(160)).max(10).optional(),
   startingPrice: z.number().int().nonnegative().nullable().optional(),
   displayOrder: z.number().int().optional(),

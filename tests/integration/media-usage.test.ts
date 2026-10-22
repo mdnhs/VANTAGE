@@ -4,12 +4,15 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/server/db';
 import {
   enquiryPhotos,
+  homepageCatalogs,
   media,
+  partnerLogos,
   projectGalleryImages,
   projects,
   quoteRequests,
   services,
   settings,
+  testimonials,
 } from '@/server/db/schema';
 import { ApiError } from '@/server/lib/errors';
 import { assertMediaExists } from '@/server/lib/media/assert-media';
@@ -34,7 +37,9 @@ async function insertMedia(deletedAt: Date | null = null) {
 }
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table media, services, projects, quote_requests, settings cascade`);
+  await db.execute(
+    sql`truncate table media, services, projects, partner_logos, testimonials, homepage_catalogs, quote_requests, settings cascade`,
+  );
 });
 
 describe('mediaUsage', () => {
@@ -60,6 +65,47 @@ describe('mediaUsage', () => {
     expect(await mediaUsage(db, row.id)).toEqual([
       { kind: 'content', id: service!.id, label: 'Service "Dents"', href: '/dashboard/services' },
     ]);
+  });
+
+  it('finds a service image, project before/after, partner logo, catalog icon and avatar', async () => {
+    const row = await insertMedia();
+    const [service] = await db
+      .insert(services)
+      .values({ name: 'Paint', slug: 'paint', description: 'd', imageMediaId: row.id })
+      .returning();
+    const [project] = await db
+      .insert(projects)
+      .values({
+        title: 'BMW',
+        slug: 'bmw',
+        vehicleModel: 'M3',
+        serviceCategory: 'Paint',
+        description: 'd',
+        beforeImageMediaId: row.id,
+        afterImageMediaId: row.id,
+      })
+      .returning();
+    const [logo] = await db.insert(partnerLogos).values({ companyName: 'Aviva', logoMediaId: row.id }).returning();
+    const [catalog] = await db
+      .insert(homepageCatalogs)
+      .values({ title: 'Card', description: 'd', iconMediaId: row.id })
+      .returning();
+    const [testimonial] = await db
+      .insert(testimonials)
+      .values({ customerName: 'Sam', rating: 5, reviewText: 'r', avatarMediaId: row.id })
+      .returning();
+    const uses = await mediaUsage(db, row.id);
+    expect(uses.every((u) => u.kind === 'content')).toBe(true);
+    expect(uses).toEqual(
+      expect.arrayContaining([
+        { kind: 'content', id: service!.id, label: 'Service "Paint"', href: '/dashboard/services' },
+        { kind: 'content', id: project!.id, label: 'Project "BMW"', href: '/dashboard/projects' },
+        { kind: 'content', id: logo!.id, label: 'Partner logo "Aviva"', href: '/dashboard/partner-logos' },
+        { kind: 'content', id: catalog!.id, label: 'Catalog card "Card"', href: '/dashboard/homepage-catalogs' },
+        { kind: 'content', id: testimonial!.id, label: 'Testimonial "Sam"', href: '/dashboard/testimonials' },
+      ]),
+    );
+    expect(uses).toHaveLength(5);
   });
 
   it('finds a project gallery image', async () => {

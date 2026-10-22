@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { prepareMediaWrite } from '@/server/lib/media/content-images';
 import { testimonialRepository } from '@/server/repositories/testimonial-repository';
 import type {
   CreateTestimonialInput,
@@ -8,6 +10,8 @@ import type {
   TestimonialStatusInput,
   UpdateTestimonialInput,
 } from '@/validations/testimonial-schema';
+
+const MEDIA_PAIRS = [['avatarMediaId', 'avatarPublicId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('testimonials');
 const FEATURED_TAG = CACHE_TAGS.list('testimonials-featured');
@@ -25,6 +29,7 @@ async function listFeaturedUncached() {
 // projects cache profile rather than services'/settings' 'hours'.
 async function listPublishedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
   cacheLife('minutes');
   return listPublishedUncached();
@@ -32,6 +37,7 @@ async function listPublishedCached() {
 
 async function listFeaturedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(FEATURED_TAG);
   cacheLife('minutes');
   return listFeaturedUncached();
@@ -51,7 +57,8 @@ export const testimonialService = {
   },
 
   async create(data: CreateTestimonialInput) {
-    const row = await testimonialRepository.create(data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await testimonialRepository.create(input);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -59,7 +66,8 @@ export const testimonialService = {
   },
 
   async update(id: string, data: UpdateTestimonialInput) {
-    const row = await testimonialRepository.update(id, data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await testimonialRepository.update(id, input);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
     revalidateTag(detailTag(id), 'minutes');

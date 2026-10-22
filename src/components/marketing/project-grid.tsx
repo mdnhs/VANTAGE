@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { ProjectPublic } from '@/features/projects/types';
 import { ALL_FILTER, DEFAULT_FILTERS, PortfolioFilters } from '@/components/marketing/portfolio-filters';
 import { BUTTON_SECONDARY } from '@/components/marketing/ui/landing-primitives';
@@ -15,22 +14,25 @@ const normalize = (value: string) => value.trim().toLowerCase();
 // Same card as the homepage Results section (stitch-case-studies.tsx): 256px photo with a
 // before/after toggle, category + title + description, VEHICLE / COMPLETED meta rows.
 function ProjectCard({ project }: { project: ProjectPublic }) {
-  const hasBefore = Boolean(project.beforeImagePublicId);
+  const hasBefore = Boolean(project.beforeImage);
   const [mode, setMode] = useState<'after' | 'before'>('after');
   const currentMode = hasBefore ? mode : 'after';
-  const publicId = currentMode === 'after' ? project.afterImagePublicId : project.beforeImagePublicId;
+  const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
   return (
     <article className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-[#dc2626]/50'>
       {/* Photo with Before/After toggle */}
       <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
-        <Image
-          src={cldUrl(publicId ?? '', { width: 800, height: 512, crop: 'fill' })}
-          alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
-          fill
-          sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
-          className='object-cover transition-transform duration-500 group-hover:scale-105'
-        />
+        {current && (
+          <Image
+            src={current.src}
+            style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
+            alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
+            fill
+            sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
+            className='object-cover transition-transform duration-500 group-hover:scale-105'
+          />
+        )}
 
         {hasBefore && (
           <button

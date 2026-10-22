@@ -18,7 +18,6 @@ import {
   Flame,
   type LucideIcon,
 } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { ServicePublic } from '@/features/services/types';
 import type { HomepageCatalogPublic } from '@/features/homepage-catalogs/types';
 
@@ -99,7 +98,7 @@ interface ServiceCard {
   badge: string | null;
   footnote: string;
   icon: CardIcon;
-  iconPublicId: string | null;
+  iconSrc: string | null;
 }
 
 function fallbackIcon(index: number): CardIcon {
@@ -161,7 +160,7 @@ const DEFAULT_SERVICES: ServiceCard[] = [
   badge: null,
   footnote,
   icon: fallbackIcon(i),
-  iconPublicId: null,
+  iconSrc: null,
 }));
 
 function toCard(service: ServicePublic, index: number): ServiceCard {
@@ -172,7 +171,7 @@ function toCard(service: ServicePublic, index: number): ServiceCard {
     badge: service.startingPrice != null ? `From €${service.startingPrice}` : null,
     footnote: 'Free Estimate',
     icon: fallbackIcon(index),
-    iconPublicId: service.iconPublicId,
+    iconSrc: service.icon?.src ?? null,
   };
 }
 
@@ -184,7 +183,7 @@ function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceC
     badge: item.badge,
     footnote: item.footnote || 'Free Estimate',
     icon: resolveIcon(item.icon, index),
-    iconPublicId: item.iconPublicId,
+    iconSrc: item.iconImage?.src ?? null,
   };
 }
 
@@ -301,14 +300,8 @@ export function StitchServices({
                 <div className='flex flex-col items-start gap-5 pb-6'>
                   <div className='flex w-full items-center justify-between'>
                     <div className='flex items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
-                      {card.iconPublicId ? (
-                        <Image
-                          src={cldUrl(card.iconPublicId, { width: 48, height: 48 })}
-                          alt=''
-                          width={24}
-                          height={24}
-                          className='size-6'
-                        />
+                      {card.iconSrc ? (
+                        <Image src={card.iconSrc} alt='' width={24} height={24} className='size-6' />
                       ) : card.icon.kind === 'figma' ? (
                         <span className='relative block size-6 shrink-0 overflow-hidden'>
                           <span className={`absolute flex items-center justify-center ${card.icon.icon.inset}`}>

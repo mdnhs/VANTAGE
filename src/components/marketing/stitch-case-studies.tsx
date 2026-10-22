@@ -3,19 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { cldUrl } from '@/lib/cloudinary/url';
-import type { Project } from '@/server/db/schema';
+import type { ProjectPublic } from '@/features/projects/types';
 
 type FeaturedProject = Pick<
-  Project,
-  | 'id'
-  | 'title'
-  | 'vehicleModel'
-  | 'serviceCategory'
-  | 'beforeImagePublicId'
-  | 'afterImagePublicId'
-  | 'description'
-  | 'completedAt'
+  ProjectPublic,
+  'id' | 'title' | 'vehicleModel' | 'serviceCategory' | 'beforeImage' | 'afterImage' | 'description' | 'completedAt'
 >;
 
 interface StitchCaseStudiesProps {
@@ -68,7 +60,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
         <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
           {projects.map((project) => {
             const currentMode = viewState[project.id] ?? 'after';
-            const currentPublicId = currentMode === 'after' ? project.afterImagePublicId : project.beforeImagePublicId;
+            const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
             return (
               <article
@@ -77,13 +69,16 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
               >
                 {/* Photo with Before/After toggle */}
                 <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
-                  <Image
-                    src={cldUrl(currentPublicId ?? '', { width: 800, height: 512, crop: 'fill' })}
-                    alt={`${project.title} ${currentMode}`}
-                    fill
-                    sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
-                    className='object-cover transition-transform duration-500 group-hover:scale-105'
-                  />
+                  {current && (
+                    <Image
+                      src={current.src}
+                      style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
+                      alt={`${project.title} ${currentMode}`}
+                      fill
+                      sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
+                      className='object-cover transition-transform duration-500 group-hover:scale-105'
+                    />
+                  )}
 
                   <button
                     type='button'
