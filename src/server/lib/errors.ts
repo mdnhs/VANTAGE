@@ -5,6 +5,9 @@ export const ERROR_CODES = {
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
   RATE_LIMITED: 'RATE_LIMITED',
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
+  UNSUPPORTED_MEDIA_TYPE: 'UNSUPPORTED_MEDIA_TYPE',
+  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
   INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
@@ -32,5 +35,14 @@ export class ApiError extends Error {
   }
   static conflict(message = 'Conflict') {
     return new ApiError(ERROR_CODES.CONFLICT, message, 409);
+  }
+  static payloadTooLarge(message: string) {
+    return new ApiError(ERROR_CODES.PAYLOAD_TOO_LARGE, message, 413);
+  }
+  static unsupportedMediaType(message: string) {
+    return new ApiError(ERROR_CODES.UNSUPPORTED_MEDIA_TYPE, message, 415);
+  }
+  static serviceUnavailable(message: string) {
+    return new ApiError(ERROR_CODES.SERVICE_UNAVAILABLE, message, 503);
   }
 }

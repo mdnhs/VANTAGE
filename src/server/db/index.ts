@@ -27,3 +27,6 @@ export const db = drizzle(pool, { schema, logger: process.env.NODE_ENV === 'deve
 
 export type Db = typeof db;
 export { schema };
+
+// Either the pool-backed client or a transaction handle, so helpers work in both.
+export type DbLike = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
