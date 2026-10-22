@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -16,10 +17,7 @@ export default async function CreateServicePage() {
   await requirePermission(permissionFor('/dashboard/services/create'));
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Add service</h1>
-        <p className='text-sm text-muted-foreground'>Create a new service shown on the public site.</p>
-      </div>
+      <PageHeader title='Add service' description='Create a new service shown on the public site.' />
       <CreateServiceForm />
     </div>
   );

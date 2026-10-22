@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, Car, Clock, Inbox } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
 import { QuoteStatusBadge } from '@/features/quote-requests/components/quote-status-badge';
 import { QuoteSourceBadge } from '@/features/quote-requests/components/quote-source-badge';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
@@ -27,17 +27,9 @@ function formatRelativeTime(dateStr: string | Date): string {
 
 export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
   return (
-    <Card className='flex flex-col'>
-      <CardHeader className='flex flex-row items-center justify-between pb-3'>
-        <div>
-          <CardTitle className='text-sm font-bold tracking-wider text-foreground uppercase'>
-            Recent Customer Enquiries
-          </CardTitle>
-          <CardDescription className='text-xs'>
-            Latest incoming leads across all workshop intake channels
-          </CardDescription>
-        </div>
-
+    <DashboardCard
+      title='Recent Customer Enquiries'
+      action={
         <Link
           href={APP_ROUTES.leads.quotes.index}
           className='flex items-center gap-1 text-xs font-semibold text-red-600 transition-colors hover:text-red-700 dark:text-red-400'
@@ -45,9 +37,10 @@ export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
           <span>Open Pipeline</span>
           <ArrowRight className='size-3' />
         </Link>
-      </CardHeader>
-
-      <CardContent className='flex flex-1 flex-col p-0'>
+      }
+    >
+      <p className='-mt-3 text-xs text-muted-foreground'>Latest incoming leads across all workshop intake channels</p>
+      <div className='-mx-5 flex flex-1 flex-col sm:-mx-6'>
         {leads.length === 0 ? (
           <div className='flex flex-col items-center justify-center p-8 text-center text-muted-foreground'>
             <Inbox className='mb-2 size-8 text-muted-foreground/50' />
@@ -114,7 +107,7 @@ export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </DashboardCard>
   );
 }

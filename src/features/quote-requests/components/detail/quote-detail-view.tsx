@@ -1,11 +1,11 @@
 'use client';
 
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
   ArrowLeft,
-  Calendar,
   Car,
   Check,
   Mail,
@@ -198,102 +198,91 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
 
   return (
     <div className='flex max-w-5xl flex-col gap-6'>
-      {/* Top Bar with Back and Direct Actions */}
+      <PageHeader
+        breadcrumbs={
+          <Link
+            href={APP_ROUTES.leads.quotes.index}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-xs text-muted-foreground')}
+          >
+            <ArrowLeft className='size-3.5' />
+            <span>Back to all quotes</span>
+          </Link>
+        }
+        title={initialQuote.name}
+        description={`Received ${formatDate(initialQuote.createdAt)} • Source: ${initialQuote.source.replace('_', ' ')}`}
+        actions={
+          <>
+            <a
+              href={`https://wa.me/${phoneDigits.replace('+', '')}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                'gap-1.5 border-emerald-500/30 text-xs text-emerald-500 hover:bg-emerald-500/10',
+              )}
+            >
+              <MessageSquare className='size-3.5' />
+              <span>WhatsApp</span>
+            </a>
+
+            <a
+              href={`tel:${phoneDigits}`}
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                'gap-1.5 border-blue-500/30 text-xs text-blue-500 hover:bg-blue-500/10',
+              )}
+            >
+              <Phone className='size-3.5' />
+              <span>Call Customer</span>
+            </a>
+
+            <a
+              href={`mailto:${initialQuote.email}?subject=Regarding Your Quote Request — Vantage Autobody`}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5 text-xs')}
+            >
+              <Mail className='size-3.5' />
+              <span>Email</span>
+            </a>
+
+            <Button
+              type='button'
+              variant='destructive'
+              size='sm'
+              onClick={handleDelete}
+              disabled={deleteQuote.isPending}
+              className='gap-1.5 text-xs'
+            >
+              <Trash2 className='size-3.5' />
+              <span>Delete</span>
+            </Button>
+          </>
+        }
+      />
+
       <div className='flex flex-wrap items-center justify-between gap-4'>
-        <Link
-          href={APP_ROUTES.leads.quotes.index}
-          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-xs text-muted-foreground')}
-        >
-          <ArrowLeft className='size-3.5' />
-          <span>Back to all quotes</span>
-        </Link>
-
-        {/* Quick Contact Buttons */}
-        <div className='flex items-center gap-2'>
-          <a
-            href={`https://wa.me/${phoneDigits.replace('+', '')}`}
-            target='_blank'
-            rel='noopener noreferrer'
+        <div className='flex flex-wrap items-center gap-3'>
+          <QuoteStatusBadge status={status} />
+          <span
             className={cn(
-              buttonVariants({ variant: 'outline', size: 'sm' }),
-              'gap-1.5 border-emerald-500/30 text-xs text-emerald-500 hover:bg-emerald-500/10',
+              'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+              PAYMENT_STATUS_CONFIG[paymentStatus]?.badgeClass ?? 'bg-muted text-muted-foreground',
             )}
           >
-            <MessageSquare className='size-3.5' />
-            <span>WhatsApp</span>
-          </a>
-
-          <a
-            href={`tel:${phoneDigits}`}
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'sm' }),
-              'gap-1.5 border-blue-500/30 text-xs text-blue-500 hover:bg-blue-500/10',
-            )}
-          >
-            <Phone className='size-3.5' />
-            <span>Call Customer</span>
-          </a>
-
-          <a
-            href={`mailto:${initialQuote.email}?subject=Regarding Your Quote Request — Vantage Autobody`}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5 text-xs')}
-          >
-            <Mail className='size-3.5' />
-            <span>Email</span>
-          </a>
-
-          <Button
-            type='button'
-            variant='destructive'
-            size='sm'
-            onClick={handleDelete}
-            disabled={deleteQuote.isPending}
-            className='gap-1.5 text-xs'
-          >
-            <Trash2 className='size-3.5' />
-            <span>Delete</span>
-          </Button>
+            <span className={cn('size-1.5 rounded-full', PAYMENT_STATUS_CONFIG[paymentStatus]?.dotClass)} />
+            {PAYMENT_STATUS_CONFIG[paymentStatus]?.label ?? paymentStatus}
+          </span>
         </div>
-      </div>
 
-      {/* Main Header Card */}
-      <Card>
-        <CardHeader className='pb-4'>
-          <div className='flex flex-wrap items-center justify-between gap-4'>
-            <div>
-              <div className='flex flex-wrap items-center gap-3'>
-                <CardTitle className='text-2xl'>{initialQuote.name}</CardTitle>
-                <QuoteStatusBadge status={status} />
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
-                    PAYMENT_STATUS_CONFIG[paymentStatus]?.badgeClass ?? 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  <span className={cn('size-1.5 rounded-full', PAYMENT_STATUS_CONFIG[paymentStatus]?.dotClass)} />
-                  {PAYMENT_STATUS_CONFIG[paymentStatus]?.label ?? paymentStatus}
-                </span>
-              </div>
-              <CardDescription className='mt-1 flex items-center gap-2 text-xs'>
-                <Calendar className='size-3.5' />
-                <span>Received {formatDate(initialQuote.createdAt)}</span>
-                <span>•</span>
-                <span className='capitalize'>Source: {initialQuote.source.replace('_', ' ')}</span>
-              </CardDescription>
-            </div>
-
-            {/* Registration badge if present */}
-            {initialQuote.registration && (
-              <div className='flex flex-col items-end'>
-                <span className='rounded border border-neutral-300 bg-amber-400 px-3 py-1 font-mono text-sm font-bold text-black uppercase shadow-xs'>
-                  {initialQuote.registration}
-                </span>
-                <span className='mt-1 text-[11px] text-muted-foreground'>Irish Reg Plate</span>
-              </div>
-            )}
+        {/* Registration badge if present */}
+        {initialQuote.registration && (
+          <div className='flex flex-col items-end'>
+            <span className='rounded border border-neutral-300 bg-amber-400 px-3 py-1 font-mono text-sm font-bold text-black uppercase shadow-xs'>
+              {initialQuote.registration}
+            </span>
+            <span className='mt-1 text-[11px] text-muted-foreground'>Irish Reg Plate</span>
           </div>
-        </CardHeader>
-      </Card>
+        )}
+      </div>
 
       {/* 3-Column Info Layout */}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>

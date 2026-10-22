@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { useState, useMemo } from 'react';
 import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -81,45 +82,35 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
 
   return (
     <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
-      {/* Top Header: Title & Global Counter */}
-      <div className='flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex items-center gap-3'>
-          <div className='flex size-9 items-center justify-center rounded-lg bg-red-600/10 text-red-600 dark:bg-red-600/20'>
-            <Inbox className='size-4.5' />
-          </div>
-          <div>
-            <h1 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>Contact Messages Inbox</h1>
-            <p className='text-xs text-muted-foreground'>
-              General enquiries and questions submitted through the Contact page.
-            </p>
-          </div>
-        </div>
-
-        {/* Global Stats Counter */}
-        <div className='flex items-center gap-2 text-xs'>
-          <Button
-            type='button'
-            variant='outline'
-            size='icon'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title='Refresh'
-            aria-label='Refresh inbox'
-            className='size-7'
-          >
-            <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
-          </Button>
-          {currentStats.new > 0 && (
-            <span className='inline-flex items-center gap-1.5 rounded-full bg-red-600/10 px-2.5 py-1 font-semibold text-red-600 dark:bg-red-600/20 dark:text-red-400'>
-              <span className='size-1.5 animate-pulse rounded-full bg-red-600' />
-              {currentStats.new} new
+      <PageHeader
+        title='Contact Messages Inbox'
+        description='General enquiries and questions submitted through the Contact page.'
+        actions={
+          <>
+            <Button
+              type='button'
+              variant='outline'
+              size='icon'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title='Refresh'
+              aria-label='Refresh inbox'
+              className='size-7'
+            >
+              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
+            </Button>
+            {currentStats.new > 0 && (
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-red-600/10 px-2.5 py-1 font-semibold text-red-600 dark:bg-red-600/20 dark:text-red-400'>
+                <span className='size-1.5 animate-pulse rounded-full bg-red-600' />
+                {currentStats.new} new
+              </span>
+            )}
+            <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
+              {messages.length} of {currentStats.all} total
             </span>
-          )}
-          <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
-            {messages.length} of {currentStats.all} total
-          </span>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Mobile-Only Horizontal Filter Tabs Bar (< md) */}
       <div className='flex w-full [scrollbar-width:none] items-center gap-1.5 overflow-x-auto pb-1 md:hidden [&::-webkit-scrollbar]:hidden'>

@@ -1,5 +1,6 @@
 'use client';
 
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -138,90 +139,80 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
   return (
     <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
-      {/* Top Header: Title, View Switcher & Action Buttons */}
-      <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex items-center gap-3'>
-          <div className='flex size-9 items-center justify-center rounded-lg bg-red-600/10 text-red-600 dark:bg-red-600/20'>
-            {viewMode === 'kanban' ? <Kanban className='size-4.5' /> : <Inbox className='size-4.5' />}
-          </div>
-          <div>
-            <h1 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>
-              {viewMode === 'kanban' ? 'Quote & Job Pipeline' : 'Quote Requests Inbox'}
-            </h1>
-            <p className='text-xs text-muted-foreground'>
-              {viewMode === 'kanban'
-                ? 'Visual real-time workflow pipeline from initial enquiry to vehicle handover.'
-                : 'Customer collision, dent repair, and respray estimates received in real time.'}
-            </p>
-          </div>
-        </div>
+      <PageHeader
+        title={viewMode === 'kanban' ? 'Quote & Job Pipeline' : 'Quote Requests Inbox'}
+        description={
+          viewMode === 'kanban'
+            ? 'Visual real-time workflow pipeline from initial enquiry to vehicle handover.'
+            : 'Customer collision, dent repair, and respray estimates received in real time.'
+        }
+        actions={
+          <>
+            {/* View Mode Switcher */}
+            <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
+              <Button
+                type='button'
+                size='sm'
+                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('kanban')}
+                className={cn(
+                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
+                  viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs',
+                )}
+              >
+                <Kanban className='size-3.5 text-red-600' />
+                <span>Pipeline</span>
+              </Button>
+              <Button
+                type='button'
+                size='sm'
+                variant={viewMode === 'inbox' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('inbox')}
+                className={cn(
+                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
+                  viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs',
+                )}
+              >
+                <LayoutList className='size-3.5 text-red-600' />
+                <span>Inbox</span>
+              </Button>
+            </div>
 
-        {/* Action Controls Toolbar */}
-        <div className='flex flex-wrap items-center gap-2 text-xs'>
-          {/* View Mode Switcher */}
-          <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
+            {/* New Enquiry Action Button */}
+            <NewEnquiryDialog
+              onCreated={(newId) => {
+                setSelectedId(newId);
+                // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
+              }}
+            />
+
+            {/* Refresh Button */}
             <Button
               type='button'
-              size='sm'
-              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-              onClick={() => setViewMode('kanban')}
-              className={cn(
-                'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs',
-              )}
+              variant='outline'
+              size='icon'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title='Refresh data'
+              aria-label='Refresh data'
+              className='size-8'
             >
-              <Kanban className='size-3.5 text-red-600' />
-              <span>Pipeline</span>
+              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
             </Button>
-            <Button
-              type='button'
-              size='sm'
-              variant={viewMode === 'inbox' ? 'secondary' : 'ghost'}
-              onClick={() => setViewMode('inbox')}
-              className={cn(
-                'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs',
-              )}
-            >
-              <LayoutList className='size-3.5 text-red-600' />
-              <span>Inbox</span>
-            </Button>
-          </div>
 
-          {/* New Enquiry Action Button */}
-          <NewEnquiryDialog
-            onCreated={(newId) => {
-              setSelectedId(newId);
-              // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
-            }}
-          />
-
-          {/* Refresh Button */}
-          <Button
-            type='button'
-            variant='outline'
-            size='icon'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title='Refresh data'
-            aria-label='Refresh data'
-            className='size-8'
-          >
-            <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
-          </Button>
-
-          {/* Pipeline Summary Counter Badge */}
-          {currentStats.new > 0 && (
-            <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'>
-              <span className='size-1.5 animate-pulse rounded-full bg-rose-500' />
-              {currentStats.new} new
+            {/* Pipeline Summary Counter Badge */}
+            {currentStats.new > 0 && (
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'>
+                <span className='size-1.5 animate-pulse rounded-full bg-rose-500' />
+                {currentStats.new} new
+              </span>
+            )}
+            <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
+              {quotes.length} total
             </span>
-          )}
-          <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
-            {quotes.length} total
-          </span>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* VIEW MODE 1: KANBAN PIPELINE BOARD */}
       {viewMode === 'kanban' ? (

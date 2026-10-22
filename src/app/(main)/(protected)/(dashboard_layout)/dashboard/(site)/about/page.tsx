@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -19,13 +20,10 @@ export default async function AboutPageContentPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>About page</h1>
-        <p className='text-sm text-muted-foreground'>
-          Hero, heritage story, team members and standards shown on the public about page. Empty image slots show the
-          bundled photo.
-        </p>
-      </div>
+      <PageHeader
+        title='About page'
+        description='Hero, heritage story, team members and standards shown on the public about page. Empty image slots show the bundled photo.'
+      />
       <AboutPageForm initialContent={resolveAboutContent(settings)} />
     </div>
   );

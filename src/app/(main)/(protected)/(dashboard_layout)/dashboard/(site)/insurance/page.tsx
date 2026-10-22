@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -19,13 +20,10 @@ export default async function InsurancePageContentPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Insurance page</h1>
-        <p className='text-sm text-muted-foreground'>
-          Copy, feature cards and process steps shown on the public insurance page. Partner logos are managed under Home
-          page.
-        </p>
-      </div>
+      <PageHeader
+        title='Insurance page'
+        description='Copy, feature cards and process steps shown on the public insurance page. Partner logos are managed under Home page.'
+      />
       <InsurancePageForm initialContent={resolveInsuranceContent(settings)} />
     </div>
   );

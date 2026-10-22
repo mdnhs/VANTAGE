@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -19,12 +20,10 @@ export default async function SiteSettingsPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Site settings</h1>
-        <p className='text-sm text-muted-foreground'>
-          Business contact info, social links, branding and SEO shown across the public site.
-        </p>
-      </div>
+      <PageHeader
+        title='Site settings'
+        description='Business contact info, social links, branding and SEO shown across the public site.'
+      />
       <SettingsTabs initialData={initialData ?? null} />
     </div>
   );
