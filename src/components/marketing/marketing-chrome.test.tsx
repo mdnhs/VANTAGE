@@ -6,12 +6,34 @@ import { cldUrl } from '@/lib/cloudinary/url';
 import { parseGlobal } from '@/lib/content/globals';
 import type { PublicImage } from '@/lib/media/public-image';
 
+import { MarketingFooter } from './footer';
 import { ContactForm } from './contact-form';
 import { QuoteForm } from './quote-form';
 import { StitchHeader } from './stitch-header';
 import { fillCopy } from './ui/copy-template';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/services' }));
+vi.mock('@/server/services/site-settings-service', () => ({
+  siteSettingsService: {
+    getPublic: async () => ({
+      businessName: 'Shop',
+      logo: null,
+      address: '1 Road',
+      phone: '+353 1 234',
+      email: 'a@b.ie',
+    }),
+  },
+}));
+vi.mock('@/server/queries/get-setting', () => ({
+  getSetting: async () => ({
+    blurb: '',
+    columns: [],
+    contactNote: '',
+    copyrightName: '',
+    legalNote: '',
+    legalLinks: [{ label: 'Privacy', href: '/privacy' }],
+  }),
+}));
 
 afterEach(cleanup);
 
@@ -131,5 +153,27 @@ describe('fillCopy', () => {
     const { container } = render(<p>{fillCopy('Hi {name}, {nope} at {phone}.', { name: 'Ann', phone: '1' })}</p>);
     expect(container.textContent).toBe('Hi Ann, {nope} at 1.');
     expect(container.querySelectorAll('strong')).toHaveLength(2);
+  });
+});
+
+describe('MarketingFooter cookie settings slot', () => {
+  const legalRow = (container: HTMLElement) => container.querySelector('a[href="/privacy"]')!.parentElement!;
+
+  it('renders the same legal row with no slot as with a null slot', async () => {
+    const without = render(await MarketingFooter({}));
+    const before = legalRow(without.container).outerHTML;
+    cleanup();
+    const withNull = render(await MarketingFooter({ cookieSettings: null }));
+    expect(legalRow(withNull.container).outerHTML).toBe(before);
+    expect(before).not.toContain('data-cookie-settings');
+  });
+
+  it('renders the slot at the end of the legal row', async () => {
+    const { container } = render(
+      await MarketingFooter({ cookieSettings: <button data-cookie-settings>Cookie settings</button> }),
+    );
+    const row = legalRow(container);
+    expect(row.lastElementChild?.textContent).toBe('Cookie settings');
+    expect(row.querySelectorAll('a')).toHaveLength(1);
   });
 });

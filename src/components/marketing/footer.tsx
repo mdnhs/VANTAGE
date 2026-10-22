@@ -44,7 +44,7 @@ function ContactIcon({
 // prop-drilling required since this is the only place these fields are needed). Rendered
 // on every marketing page, so this is a repeated call to a `'use cache'`-wrapped function:
 // Next.js dedupes identical cache-key reads within the same render, so it costs nothing extra.
-export async function MarketingFooter() {
+export async function MarketingFooter({ cookieSettings }: { cookieSettings?: React.ReactNode }) {
   const [settings, footer] = await Promise.all([siteSettingsService.getPublic(), getSetting('footer')]);
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
@@ -164,6 +164,7 @@ export async function MarketingFooter() {
                   {link.label}
                 </Link>
               ))}
+            {cookieSettings}
           </div>
         </div>
       </div>
