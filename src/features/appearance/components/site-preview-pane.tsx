@@ -14,8 +14,8 @@ type Device = keyof typeof DEVICES;
 
 // The public site in draft mode, scaled to the pane. `GET /preview` enables
 // draft mode (cookie) and redirects to the path, so the frame loads the
-// draft theme. `refreshKey` changes after each autosave; a same-origin reload
-// keeps the frame's scroll.
+// draft theme. `refreshKey` changes after each save, adopt (discard, reset,
+// restore) and publish; the frame re-enters preview at `src`.
 export function SitePreviewPane({ path, refreshKey }: { path: string; refreshKey: number | null }) {
   const [device, setDevice] = useState<Device>('desktop');
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -23,6 +23,7 @@ export function SitePreviewPane({ path, refreshKey }: { path: string; refreshKey
   const boxRef = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const width = DEVICES[device];
+  const src = previewHref(path);
   const scale = box.width ? Math.min(1, box.width / width) : 1;
 
   useEffect(() => {
@@ -37,13 +38,13 @@ export function SitePreviewPane({ path, refreshKey }: { path: string; refreshKey
 
   useEffect(() => {
     if (!refreshKey) return;
-    const win = frame.current?.contentWindow;
-    if (!win) return;
+    const el = frame.current;
+    if (!el) return;
     setLoading(true);
-    win.location.reload();
-  }, [refreshKey]);
-
-  const src = previewHref(path);
+    // Re-enter through the preview endpoint rather than reloading: the frame may have left
+    // draft mode (or the page), and this puts it back on the draft.
+    el.src = src;
+  }, [refreshKey, src]);
   return (
     <section
       aria-label='Site preview'

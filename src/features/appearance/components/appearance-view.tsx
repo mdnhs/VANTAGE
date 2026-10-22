@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -89,6 +90,7 @@ function statusText(state: AutosaveState, hasDraft: boolean) {
 
 function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<void>; delay?: number }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   // View-as is read-only: the API refuses it, so the controls do not offer it.
   const viewingAs = Boolean(useActor().impersonatedBy);
   const canUpdate = useCan({ appearance: ['update'] }) && !viewingAs;
@@ -109,6 +111,11 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
     },
   });
   const { state, exclusive } = autosave;
+  // The site preview reloads on a save, and on anything else that changes what it should show.
+  const [bumps, setBumps] = useState(0);
+  // A save stamps savedAt; adopt and publish bump the counter. Either changes the key.
+  const previewKey = (state.savedAt ?? 0) + bumps;
+  const bumpPreview = () => setBumps((n) => n + 1);
   useLiveAdmin(draft.admin);
 
   const publish = usePublishTheme();
@@ -126,6 +133,7 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
   // Discard, reset and restore answer with the new draft.
   const adopt = (res: ThemeAdminDoc) => {
     autosave.reset(res.version);
+    bumpPreview();
     setDraft(res.draft);
     setServerError(null);
   };
@@ -157,8 +165,11 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
       (version) => publish.mutateAsync({ version }),
       (res) => {
         autosave.reset(res.version);
+        bumpPreview();
         setServerError(null);
         toast.success('Theme published');
+        // The admin layout reads the published theme on the server.
+        router.refresh();
       },
     );
   const onDiscard = () =>
@@ -265,7 +276,7 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
               <SiteControls draft={draft} update={update} />
               <ContrastPanel config={draft} scope='site' onChange={update} />
             </fieldset>
-            <SitePreviewPane path='/' refreshKey={state.savedAt} />
+            <SitePreviewPane path='/' refreshKey={previewKey} />
           </div>
         </TabsContent>
         <TabsContent value='admin' className='pt-2'>

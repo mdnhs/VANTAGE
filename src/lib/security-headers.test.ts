@@ -32,6 +32,15 @@ describe('frame headers', () => {
     },
   );
 
+  it('keeps the sandbox CSP on uploads (the last matching rule wins)', async () => {
+    const h = await framing('/uploads/vantage/a/b.jpg');
+    expect(h['Content-Security-Policy']).toBe("default-src 'none'; sandbox; frame-ancestors 'self'");
+    expect(h['X-Frame-Options']).toBe('SAMEORIGIN');
+    const rules = (await nextConfig.headers!()) as Rule[];
+    const last = rules.filter((r) => r.headers.some((x) => x.key === 'Content-Security-Policy')).at(-1)!;
+    expect(last.source).toBe('/uploads/:path*');
+  });
+
   it('keeps the other security headers everywhere', async () => {
     const h = await framing('/dashboard');
     expect(h['X-Content-Type-Options']).toBe('nosniff');
