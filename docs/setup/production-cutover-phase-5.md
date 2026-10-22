@@ -4,6 +4,30 @@ The owner runs this; agents never run it against production. Copying is safe to 
 never deletes anything. The deploy alone changes nothing visible: until the migration runs, the
 site keeps rendering the legacy Cloudinary URLs.
 
+## Before you start
+
+- **Where the CLIs run.** `yarn media:migrate`, `yarn media:cloudinary-cleanup`, `yarn media:smoke`,
+  `yarn settings:migrate` and `yarn db:deploy` use `tsx`, `drizzle-kit` and `scripts/`. They are not
+  in the standalone runner image (`node server.js` only). Run them from a repo checkout of the
+  deployed commit with `yarn install` done and the production environment loaded
+  (`DATABASE_URL` plus the media variables below), never inside the running container.
+- **R2 setup.**
+  1. Create the bucket.
+  2. Give it public read access: attach a custom domain (recommended) or enable the r2.dev URL.
+     That https origin is `MEDIA_PUBLIC_URL` (https is required).
+  3. Create an R2 API token with Object Read & Write scoped to that bucket only.
+  4. Set `MEDIA_DRIVER=s3`, `S3_ACCOUNT_ID` (or `S3_ENDPOINT`), `S3_BUCKET`, `S3_ACCESS_KEY_ID`,
+     `S3_SECRET_ACCESS_KEY` and `MEDIA_PUBLIC_URL` in the production environment.
+  5. Go/no-go check: `yarn media:smoke` (with that environment) uploads a 1x1 test image to the
+     bucket and reads it back from `MEDIA_PUBLIC_URL`. Do not continue until it passes.
+- **`MEDIA_PUBLIC_URL` is also a build argument.** `next.config.ts` reads it at build time to allow the
+  R2 host for `next/image`. Without it every R2 image fails with a 400 ("hostname not configured").
+  Pass `--build-arg MEDIA_PUBLIC_URL=https://media.example.com` (docker-compose passes it from the
+  environment) and rebuild; setting it only at runtime is not enough.
+- **Reverse proxy body size.** nginx `client_max_body_size` must be `111m` (see the Phase 2 runbook): the
+  public forms accept bodies up to 110 MB and admin uploads 101 MB. With the older `101m` a large
+  enquiry is cut off by nginx with a 413 before the app sees it.
+
 ## Steps
 
 1. **Back up first.** `pg_dump "$DATABASE_URL" -Fc -f vantage-before-phase5.dump`
@@ -12,7 +36,10 @@ site keeps rendering the legacy Cloudinary URLs.
 3. **Check the production environment:** `MEDIA_DRIVER=s3`, the S3 variables, `MEDIA_PUBLIC_URL`,
    and keep `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` set (it powers the fallback until Phase 11).
    The migration reads the originals from Cloudinary, so the cloud name must be correct.
-4. **Deploy.** This applies the Phase 5 database migration. Nothing is converted yet.
+4. **Deploy, then migrate the database.** Nothing runs migrations on start (the image runs
+   `node server.js`). From the repo checkout run `yarn db:deploy` (migration 0024 adds `media.scope`
+   and the `*_media_id` columns) **before** switching traffic to the new build, or the new code
+   queries columns that do not exist yet. Nothing is converted yet.
 5. **Migrate:**
    1. `yarn settings:migrate --verify` must pass first (the media migration refuses with
       "Run yarn settings:migrate first" if a public settings key is missing).
@@ -29,11 +56,13 @@ site keeps rendering the legacy Cloudinary URLs.
       photos) at the copies. The old Cloudinary ids stay in place.
 6. **Verify:** `yarn media:migrate --verify` prints `OK` and exits 0. Any `UNMIGRATED <where>` or
    `UNREADABLE <mediaId>` line is a problem: fix or re-run step 5 (idempotent, safe any time).
-   Then **restart or redeploy the app**: the CLI runs outside Next and cannot expire the page cache.
-   Pages the site already prerendered keep showing the old Cloudinary URLs (same images) until the
-   app restarts or is redeployed, or until each document or content row is saved in the admin.
-   `yarn settings:migrate --verify` keeps passing after this step.
-7. **Weeks later, optional:** keep Cloudinary and the dump until you are fully confident.
+   Then **redeploy (rebuild) the app**: the CLI runs outside Next and cannot expire the page cache,
+   and statically built pages live on disk, so a plain restart does not re-render them. Pages the
+   site already built keep showing the old Cloudinary URLs (same images) until a rebuild, or until
+   each document or content row is saved in the admin.
+   **Check before any cleanup:** view-source on `/` and `/about` (and the other public pages) must
+   contain no `res.cloudinary.com`. `yarn settings:migrate --verify` keeps passing after this step.
+7. **Weeks later, optional:** only after the view-source check in step 6 is clean, keep Cloudinary and the dump until you are fully confident.
    `yarn media:cloudinary-cleanup` is a dry run: counts per folder under `vantage/` (images and
    videos) and, per folder, how many unreferenced files would be kept.
    **Take a fresh `pg_dump` immediately before deleting**, then `yarn media:cloudinary-cleanup --delete`.
@@ -49,6 +78,12 @@ site keeps rendering the legacy Cloudinary URLs.
 
 - Project galleries that still have old-storage images are read-only in the admin ("It can be edited
   after the media migration runs"); step 5 moves them to the library and unlocks editing.
+- Enquiry photos already copied show once in the admin: the old `photo_urls` entry stays in the
+  database but is hidden while its copy exists.
+- Public forms refuse HEIC and GIF photos with a message naming the allowed types (JPG, PNG, WebP,
+  AVIF). Safari and most phones convert HEIC before upload.
+- The `local` driver serves `/uploads` with byte ranges and streams from disk; production should
+  still use `s3`.
 - Files Cloudinary cannot serve as a supported type (HEIC, GIF, SVG) are fetched once as a PNG.
 - About-page team photos and testimonial avatars get an automatic focal point (attention
   detection) so the portrait crop stays on the face; adjust it in the Media library if needed.

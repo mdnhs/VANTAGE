@@ -26,7 +26,7 @@ with the connecting address, never pass a client-supplied value through.
 ```nginx
 server {
   # ...
-  client_max_body_size 101m;   # media uploads (videos up to 100 MB)
+  client_max_body_size 111m;   # media uploads (100 MB) and public forms (110 MB)
 
   location / {
     proxy_pass http://127.0.0.1:3000;

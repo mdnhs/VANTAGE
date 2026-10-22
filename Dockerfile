@@ -5,10 +5,10 @@
 #     --build-arg DATABASE_URL=postgresql://vantage:vantage@localhost:5433/vantage \
 #     --build-arg AUTH_SECRET=<32+ char value> \
 #     --build-arg NEXT_PUBLIC_APP_URL=https://example.com \
-#     [--build-arg MEDIA_PUBLIC_URL=https://media.example.com] \
+#     --build-arg MEDIA_PUBLIC_URL=https://media.example.com \   (required with MEDIA_DRIVER=s3)
 #     -t vantage .
-# Behind a reverse proxy, allow uploads of up to ~101 MB (nginx: client_max_body_size 101m);
-# the app itself rejects larger bodies with 413.
+# Behind a reverse proxy, allow bodies of up to ~111 MB (nginx: client_max_body_size 111m: the public
+# forms accept 110 MB, admin uploads 101 MB); the app itself rejects larger bodies with 413.
 # Build args live in the builder stage only; the runner stage gets runtime env from the host.
 FROM node:24-alpine AS base
 RUN apk add --no-cache libc6-compat
