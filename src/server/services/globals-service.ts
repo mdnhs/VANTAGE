@@ -14,7 +14,7 @@ import { audit } from '@/server/lib/audit';
 import type { Actor } from '@/server/lib/auth/actor';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { userName } from '@/server/lib/conflict';
-import { assertMediaExists } from '@/server/lib/media/assert-media';
+import { assertMediaExists, assertShareImage } from '@/server/lib/media/assert-media';
 import { ApiError } from '@/server/lib/errors';
 import { findRevision, listRevisions } from '@/server/lib/revisions';
 import { invalid } from '@/server/lib/validator';
@@ -70,6 +70,9 @@ export async function saveGlobal(
   const value = parsed.data;
   // A removed or foreign image must not be saved: every media ref has to be a live library row.
   await assertMediaExists(collectMediaIds(value));
+  // Share images are held to the 1200×630 rule on save (per-page SEO and the site default).
+  if (key.startsWith('seo.page.')) await assertShareImage((value as { ogImage?: never }).ogImage, 'ogImage');
+  if (key === 'seo') await assertShareImage((value as { defaultOgImage?: never }).defaultOgImage, 'defaultOgImage');
   const saved = await settingsRepository.save(
     key,
     { version: input.version, value },

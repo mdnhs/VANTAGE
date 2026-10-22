@@ -4,6 +4,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { db, type DbLike } from '@/server/db';
 import { media } from '@/server/db/schema/media';
+import { isShareImageSize, SHARE_IMAGE_MESSAGE } from '@/lib/seo/share-image';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,4 +35,23 @@ export async function assertMediaExists(ids: string[], dbLike: DbLike = db): Pro
   throw new ApiError(ERROR_CODES.VALIDATION_ERROR, 'Some images were deleted. Choose new ones before saving.', 422, {
     _media: missing.map((id) => `Image ${id} no longer exists`),
   });
+}
+
+// A custom share image must be at least 1200×630 at 1.91:1 (docs/brief.md §11). Media whose
+// dimensions are unknown is allowed; a missing row is assertMediaExists's job.
+export async function assertShareImage(
+  ref: { kind: string; id?: string } | null | undefined,
+  field: string,
+  dbLike: DbLike = db,
+): Promise<void> {
+  if (ref?.kind !== 'media' || !ref.id || !isMediaId(ref.id)) return;
+  const [row] = await dbLike
+    .select({ width: media.width, height: media.height, mimeType: media.mimeType })
+    .from(media)
+    .where(eq(media.id, ref.id))
+    .limit(1);
+  if (!row) return;
+  const known = row.width !== null && row.height !== null;
+  const ok = row.mimeType.startsWith('image/') && (!known || isShareImageSize({ width: row.width!, height: row.height! }));
+  if (!ok) throw new ApiError(ERROR_CODES.VALIDATION_ERROR, SHARE_IMAGE_MESSAGE, 422, { [field]: [SHARE_IMAGE_MESSAGE] });
 }
