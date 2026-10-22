@@ -32,6 +32,14 @@ describe('globals schemas', () => {
         'page.process',
         'consent',
         'scripts',
+        'seo.page.home',
+        'seo.page.services',
+        'seo.page.our-work',
+        'seo.page.insurance',
+        'seo.page.about',
+        'seo.page.process',
+        'seo.page.contact',
+        'seo.page.get-a-quote',
       ].sort(),
     );
   });
@@ -156,6 +164,23 @@ describe('defaults equal today’s public copy', () => {
 
   it('page.process equals the Process defaults', () => {
     expect(parseGlobal('page.process', {})).toEqual(PROCESS_PAGE_DEFAULTS);
+  });
+
+  it('seo gains verification and business without drift for a stored Phase 4 value', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(parseGlobal('seo', {})).toMatchObject({
+      verification: { google: '', bing: '' },
+      business: { type: 'AutoBodyShop', priceRange: '', sameAs: [] },
+    });
+    const stored = { titleTemplate: '%s | Vantage', defaultTitle: 'T', robots: 'noindex' };
+    expect(parseGlobal('seo', stored)).toMatchObject({ ...stored, verification: { google: '', bing: '' } });
+    expect(warn).not.toHaveBeenCalled();
+    expect(GLOBALS.seo.safeParse({ verification: { google: '<meta name=x>' } }).success).toBe(false);
+    expect(GLOBALS.seo.safeParse({ verification: { google: 'abc_DEF-123' } }).success).toBe(true);
+    expect(GLOBALS.seo.safeParse({ business: { type: 'Bakery' } }).success).toBe(false);
+    expect(GLOBALS.seo.safeParse({ business: { sameAs: ['http://x.ie', 'nope'] } }).success).toBe(false);
+    expect(GLOBALS.seo.safeParse({ business: { sameAs: Array(11).fill('https://x.ie') } }).success).toBe(false);
+    expect(parseGlobal('seo.page.services', {})).toMatchObject({ title: '', ogImage: null, noindex: false });
   });
 
   it('seo and privacy defaults', () => {

@@ -1,7 +1,9 @@
 import type { Permissions } from '@/lib/auth/permissions';
 
 import { MARKETING_EDITABLE_KEYS, MARKETING_GLOBAL_ACCESS, MARKETING_GLOBAL_LABELS } from './global-access-marketing';
+import { SEO_PAGE_GLOBAL_ACCESS, SEO_PAGE_GLOBAL_LABELS } from './global-access-seo';
 import type { GlobalKey } from './globals';
+import { SEO_PAGE_KEYS } from './globals-seo';
 
 // Every versioned global is edited through the generic globals API.
 export const EDITABLE_GLOBAL_KEYS = [
@@ -22,6 +24,7 @@ export const EDITABLE_GLOBAL_KEYS = [
   'page.about',
   'page.process',
   ...MARKETING_EDITABLE_KEYS,
+  ...SEO_PAGE_KEYS,
 ] as const satisfies readonly GlobalKey[];
 export type EditableGlobalKey = (typeof EDITABLE_GLOBAL_KEYS)[number];
 
@@ -57,6 +60,7 @@ export const GLOBAL_ACCESS: Record<EditableGlobalKey, Access> = {
   'page.about': pageAccess,
   'page.process': pageAccess,
   ...MARKETING_GLOBAL_ACCESS,
+  ...SEO_PAGE_GLOBAL_ACCESS,
 };
 
 // /dashboard/settings/<slug> → the documents it edits.
@@ -99,4 +103,5 @@ export const GLOBAL_LABELS: Record<EditableGlobalKey, string> = {
   'page.about': 'About page',
   'page.process': 'Process page',
   ...MARKETING_GLOBAL_LABELS,
+  ...SEO_PAGE_GLOBAL_LABELS,
 };

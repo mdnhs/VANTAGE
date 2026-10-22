@@ -10,6 +10,7 @@ import {
   SETTINGS_PAGE_LABELS,
 } from './global-access';
 import { GLOBALS, PUBLIC_GLOBAL_KEYS, type GlobalKey } from './globals';
+import { SEO_PAGE_KEYS } from './globals-seo';
 
 type Group = 'settings' | 'globals' | 'seo' | 'page' | 'tracking' | 'code';
 
@@ -32,6 +33,14 @@ const GROUP: Record<GlobalKey, Group> = {
   'page.process': 'page',
   consent: 'tracking',
   scripts: 'code',
+  'seo.page.home': 'seo',
+  'seo.page.services': 'seo',
+  'seo.page.our-work': 'seo',
+  'seo.page.insurance': 'seo',
+  'seo.page.about': 'seo',
+  'seo.page.process': 'seo',
+  'seo.page.contact': 'seo',
+  'seo.page.get-a-quote': 'seo',
 };
 
 // What the MK matrix grants each role, per resource group: [read, update].
@@ -95,6 +104,18 @@ const GRANTS: Record<RoleName, Record<Group, [boolean, boolean]>> = {
 };
 
 describe('global access', () => {
+  it('guards every seo.page.* key with seo.read / seo.update', () => {
+    expect(SEO_PAGE_KEYS).toHaveLength(8);
+    for (const key of SEO_PAGE_KEYS) {
+      expect(EDITABLE_GLOBAL_KEYS).toContain(key);
+      expect(GLOBAL_ACCESS[key]).toEqual({ read: { seo: ['read'] }, update: { seo: ['update'] } });
+      expect(hasPermission(['marketer'], GLOBAL_ACCESS[key].update)).toBe(true);
+      expect(hasPermission(['author'], GLOBAL_ACCESS[key].read)).toBe(false);
+    }
+    expect(GLOBAL_LABELS['seo.page.home']).toBe('Home page SEO');
+    expect(GLOBAL_LABELS['seo.page.get-a-quote']).toBe('Get a quote page SEO');
+  });
+
   it('covers every global exactly once', () => {
     expect([...EDITABLE_GLOBAL_KEYS].sort()).toEqual(Object.keys(GLOBALS).sort());
     expect(Object.keys(GLOBAL_ACCESS).sort()).toEqual(Object.keys(GLOBALS).sort());
