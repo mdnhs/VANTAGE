@@ -2,7 +2,14 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { deleteMedia, fetchMediaPage, fetchMediaUsage, patchMedia, type MediaDetailsPatch } from '../services/api';
+import {
+  deleteMedia,
+  fetchMediaByIds,
+  fetchMediaPage,
+  fetchMediaUsage,
+  patchMedia,
+  type MediaDetailsPatch,
+} from '../services/api';
 import type { MediaItem, MediaListParams } from '../types';
 
 export const mediaKeys = {
@@ -29,7 +36,7 @@ export function useMediaByIds(ids: string[]) {
   const sorted = [...new Set(ids)].sort();
   return useQuery({
     queryKey: mediaKeys.byIds(sorted),
-    queryFn: async () => (await fetchMediaPage({ ids: sorted }, 1, Math.min(sorted.length, 100))).items,
+    queryFn: () => fetchMediaByIds(sorted.slice(0, 100)),
     enabled: sorted.length > 0,
   });
 }

@@ -4,7 +4,7 @@ import { ERROR_CODES, ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
-import { actorOf, can } from '@/server/middleware/auth';
+import { actorOf, can, canAny } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
@@ -37,6 +37,19 @@ export const adminMedia = new Hono<AppEnv>()
     const { items, total } = await mediaLibraryService.list(query);
     return ok(c, items, { pagination: buildPagination(total, query.page, query.limit) });
   })
+
+  // The thumbnails of images a form already holds. Anyone who may read content or globals
+  // (viewers included) sees images those forms name; browsing the library still needs media.read.
+  .get(
+    '/by-ids',
+    canAny({ media: ['read'] }, { content: ['read'] }, { globals: ['read'] }),
+    zValidator('query', mediaListQuerySchema),
+    async (c) => {
+      const query = c.req.valid('query');
+      const { items, total } = await mediaLibraryService.list({ ...query, ids: query.ids ?? [], page: 1 });
+      return ok(c, items, { pagination: buildPagination(total, 1, query.limit) });
+    },
+  )
 
   .get('/:id', can({ media: ['read'] }), zValidator('param', mediaIdParamSchema), async (c) => {
     return ok(c, await mediaLibraryService.get(c.req.valid('param').id));

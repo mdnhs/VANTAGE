@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { photoDataUrlSchema } from '@/validations/photo-url';
+
 // The 8 canonical workflow pipeline states from the specification
 export const PIPELINE_STATUSES = [
   'new',
@@ -69,7 +71,7 @@ export const createQuoteRequestSchema = z.object({
 
 // Public website forms: customer-supplied fields only. Admin-only columns (status,
 // assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
-export const publicPhotoUrlsSchema = z.array(z.string().startsWith('data:image/').max(30_000_000)).max(4).optional();
+export const publicPhotoUrlsSchema = z.array(photoDataUrlSchema).max(4).optional();
 
 export const publicQuoteRequestSchema = createQuoteRequestSchema
   .pick({

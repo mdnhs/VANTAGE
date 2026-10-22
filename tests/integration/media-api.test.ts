@@ -44,6 +44,11 @@ const upload = (bytes: Uint8Array, name: string, headers: Record<string, string>
 
 const json = async (res: Response) => (await res.json()) as { data: MediaItem & MediaItem[] };
 
+const fetchUpload = (key: string, range?: string) =>
+  serveUpload(new Request(`http://localhost/uploads/${key}`, { headers: range ? { range } : {} }), {
+    params: Promise.resolve({ key: key.split('/') }),
+  } as Parameters<typeof serveUpload>[1]);
+
 describe('admin media API', () => {
   beforeAll(async () => {
     cookie = await sessionCookie('owner');
@@ -200,6 +205,37 @@ describe('admin media API', () => {
     expect((await get('vantage/media/../../etc/passwd')).status).toBe(404);
     expect((await get('vantage/media/2026/01/0123456789abcdef-missing.png')).status).toBe(404);
   });
+  it('streams byte ranges: 206 with Content-Range, 416 past the end, whole file otherwise', async () => {
+    const bytes = await png();
+    const { data } = await json(await upload(bytes, 'range.png'));
+    const key = data.url.replace('/uploads/', '');
+    const size = (await (await fetchUpload(key)).arrayBuffer()).byteLength;
+    const whole = await fetchUpload(key);
+    expect(whole.status).toBe(200);
+    expect(whole.headers.get('accept-ranges')).toBe('bytes');
+    expect(whole.headers.get('content-length')).toBe(String(size));
+
+    const part = await fetchUpload(key, 'bytes=2-9');
+    expect(part.status).toBe(206);
+    expect(part.headers.get('content-range')).toBe(`bytes 2-9/${size}`);
+    expect(part.headers.get('content-length')).toBe('8');
+    expect((await part.arrayBuffer()).byteLength).toBe(8);
+
+    const tail = await fetchUpload(key, 'bytes=-5');
+    expect(tail.status).toBe(206);
+    expect(tail.headers.get('content-range')).toBe(`bytes ${size - 5}-${size - 1}/${size}`);
+
+    const open = await fetchUpload(key, `bytes=${size - 3}-`);
+    expect(open.status).toBe(206);
+    expect((await open.arrayBuffer()).byteLength).toBe(3);
+
+    const past = await fetchUpload(key, `bytes=${size}-`);
+    expect(past.status).toBe(416);
+    expect(past.headers.get('content-range')).toBe(`bytes */${size}`);
+
+    expect((await fetchUpload(key, 'items=0-1')).status).toBe(200);
+  });
+
   describe('references, ownership and audit', () => {
     const del = (id: string, c = cookie) =>
       api.request(`${BASE}/${id}`, { method: 'DELETE', headers: { origin: ORIGIN, cookie: c } });
@@ -267,6 +303,17 @@ describe('admin media API', () => {
       expect((await api.request(`${BASE}?ids=not-a-uuid`, { headers: { cookie } })).status).toBe(422);
     });
 
+    it('lets a viewer load thumbnails of held ids but not browse the library', async () => {
+      const { data } = await json(await upload(await png('#702'), 'held.png'));
+      const viewer = await sessionCookie('viewer');
+      const intake = await sessionCookie('intake');
+      const held = await api.request(`${BASE}/by-ids?ids=${data.id}`, { headers: { cookie: viewer } });
+      expect(held.status).toBe(200);
+      expect((await json(held)).data.map((m: { id: string }) => m.id)).toEqual([data.id]);
+      expect((await api.request(BASE, { headers: { cookie: viewer } })).status).toBe(403);
+      expect((await api.request(`${BASE}/by-ids?ids=${data.id}`, { headers: { cookie: intake } })).status).toBe(403);
+    });
+
     it('never lists enquiry-scope media', async () => {
       const row = await mediaLibraryService.ingest({
         bytes: await png('#801'),
@@ -276,7 +323,33 @@ describe('admin media API', () => {
       });
       const list = await json(await api.request(BASE, { headers: { cookie } }));
       expect(list.data.map((m: { id: string }) => m.id)).not.toContain(row.id);
-      expect((await api.request(`${BASE}/${row.id}`, { headers: { cookie } })).status).toBe(200);
+    });
+
+    it('answers 404 for an enquiry-scope id on every library route', async () => {
+      const row = await mediaLibraryService.ingest({
+        bytes: await png('#802'),
+        filename: 'lead2.png',
+        actorId: null,
+        scope: 'enquiry',
+      });
+      const h = { origin: ORIGIN, cookie };
+      const url = `${BASE}/${row.id}`;
+      expect((await api.request(url, { headers: h })).status).toBe(404);
+      expect(
+        (
+          await api.request(url, {
+            method: 'PATCH',
+            headers: { ...h, 'content-type': 'application/json' },
+            body: JSON.stringify({ alt: 'x' }),
+          })
+        ).status,
+      ).toBe(404);
+      expect(
+        (await api.request(`${url}/replace`, { method: 'POST', headers: h, body: form(await png('#803'), 'r.png') }))
+          .status,
+      ).toBe(404);
+      expect((await api.request(`${url}/usage`, { headers: h })).status).toBe(404);
+      expect((await api.request(url, { method: 'DELETE', headers: h })).status).toBe(404);
     });
 
     it('ingest with a legacySource is idempotent', async () => {

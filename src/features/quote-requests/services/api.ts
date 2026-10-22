@@ -1,3 +1,4 @@
+import { photoErrorOf } from '@/lib/media/photo-error';
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { PaginationMeta } from '@/server/lib/response';
 import type {
@@ -34,6 +35,12 @@ export async function submitQuoteRequest(input: PublicQuoteRequestInput): Promis
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
+  const body = await res
+    .clone()
+    .json()
+    .catch(() => null);
+  const photoError = res.status === 422 ? photoErrorOf(body) : null;
+  if (photoError) throw new Error(photoError);
   return parseOrThrow<Omit<QuoteRequest, 'photos'>>(res);
 }
 

@@ -58,6 +58,13 @@ export async function fetchMediaPage(params: MediaListParams, page: number, limi
   return { items: body.data as MediaItem[], hasNextPage: Boolean(body.pagination?.hasNextPage) };
 }
 
+// Items a form already holds, readable by anyone who can read the form (viewers included).
+export async function fetchMediaByIds(ids: string[]): Promise<MediaItem[]> {
+  const query = new URLSearchParams({ ids: ids.join(','), limit: String(Math.min(ids.length, 100)) });
+  const body = await parse(await fetch(`${MEDIA_URL}/by-ids?${query.toString()}`, { credentials: 'include' }));
+  return body.data as MediaItem[];
+}
+
 export async function fetchMediaUsage(id: string): Promise<MediaUse[]> {
   return (await parse(await send(`/${id}/usage`, 'GET'))).data as MediaUse[];
 }
