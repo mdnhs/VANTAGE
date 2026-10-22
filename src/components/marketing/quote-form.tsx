@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { sizedSrc } from '@/lib/media/public-image';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
+import { track } from '@/lib/tracking/track';
 import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
@@ -227,6 +228,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
       const converted = await Promise.all(photos.map(imageFileToDataUrl));
       const photoUrls = converted.filter((url): url is string => Boolean(url));
 
+      const eventId = crypto.randomUUID();
       await submitQuoteRequest({
         name,
         phone,
@@ -239,6 +241,13 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
         description: damageDescription.trim() || null,
         photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
         source: 'quote_page',
+        eventId,
+        sourcePath: window.location.pathname,
+      });
+      track({
+        event: 'generate_lead',
+        params: { lead_source: 'quote_form', form_id: 'quote' },
+        eventId,
       });
       setSubmitted(true);
     } catch (err: unknown) {

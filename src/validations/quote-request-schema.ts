@@ -70,22 +70,27 @@ export const createQuoteRequestSchema = z.object({
 
 // Public website forms: customer-supplied fields only. Admin-only columns (status,
 // assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
-export const publicQuoteRequestSchema = createQuoteRequestSchema.pick({
-  name: true,
-  email: true,
-  phone: true,
-  address: true,
-  city: true,
-  eircode: true,
-  registration: true,
-  make: true,
-  model: true,
-  year: true,
-  serviceType: true,
-  description: true,
-  photoUrls: true,
-  source: true,
-});
+export const publicQuoteRequestSchema = createQuoteRequestSchema
+  .pick({
+    name: true,
+    email: true,
+    phone: true,
+    address: true,
+    city: true,
+    eircode: true,
+    registration: true,
+    make: true,
+    model: true,
+    year: true,
+    serviceType: true,
+    description: true,
+    photoUrls: true,
+    source: true,
+  })
+  .extend({
+    eventId: z.uuid().optional(),
+    sourcePath: z.string().max(300).optional(),
+  });
 
 export const updateQuoteRequestSchema = z.object({
   status: z.enum(ALL_QUOTE_STATUSES).optional(),
@@ -112,6 +117,7 @@ export const quoteRequestListQuerySchema = z.object({
 });
 
 export type CreateQuoteRequestInput = z.input<typeof createQuoteRequestSchema>;
+export type PublicQuoteRequestInput = z.input<typeof publicQuoteRequestSchema>;
 export type CreateQuoteRequestOutput = z.infer<typeof createQuoteRequestSchema>;
 export type UpdateQuoteRequestInput = z.input<typeof updateQuoteRequestSchema>;
 export type UpdateQuoteRequestOutput = z.infer<typeof updateQuoteRequestSchema>;

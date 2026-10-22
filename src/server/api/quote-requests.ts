@@ -7,6 +7,7 @@ import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
 import { can } from '@/server/middleware/auth';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
+import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
   createQuoteRequestSchema,
@@ -21,9 +22,21 @@ export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
+    const { eventId, sourcePath } = c.req.valid('json');
     const input = createQuoteRequestSchema.parse(c.req.valid('json'));
     input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/quotes');
     const row = await quoteRequestService.create(input);
+    if (row)
+      queueLeadConversionAfterResponse({
+        leadId: row.id,
+        eventId,
+        sourcePath,
+        email: row.email,
+        phone: row.phone ?? null,
+        cookieHeader: c.req.header('cookie'),
+        ip: clientIp(c.req.raw.headers),
+        userAgent: c.req.header('user-agent') ?? '',
+      });
     return ok(c, row, { status: 201 });
   })
 

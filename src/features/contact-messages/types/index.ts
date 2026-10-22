@@ -2,6 +2,7 @@ import type { ContactMessage, NewContactMessage } from '@/server/db/schema';
 import {
   CONTACT_STATUSES,
   type CreateContactMessageInput,
+  type PublicContactMessageInput,
   type ContactMessageListQuery,
   type ContactStatus,
   type UpdateContactMessageInput,
@@ -13,6 +14,7 @@ export type {
   ContactMessage,
   NewContactMessage,
   CreateContactMessageInput,
+  PublicContactMessageInput,
   UpdateContactMessageInput,
   ContactMessageListQuery,
   ContactStatus,
