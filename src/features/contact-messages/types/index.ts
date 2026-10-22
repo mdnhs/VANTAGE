@@ -3,6 +3,7 @@ import type { ContactMessage as DbContactMessage, NewContactMessage } from '@/se
 import {
   CONTACT_STATUSES,
   type CreateContactMessageInput,
+  type PublicContactMessageInput,
   type ContactMessageListQuery,
   type ContactStatus,
   type UpdateContactMessageInput,
@@ -16,6 +17,7 @@ export type {
   DbContactMessage,
   NewContactMessage,
   CreateContactMessageInput,
+  PublicContactMessageInput,
   UpdateContactMessageInput,
   ContactMessageListQuery,
   ContactStatus,

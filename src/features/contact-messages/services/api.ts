@@ -4,7 +4,7 @@ import type {
   ContactMessage,
   ContactMessageListQuery,
   ContactMessageStats,
-  CreateContactMessageInput,
+  PublicContactMessageInput,
   UpdateContactMessageInput,
 } from '../types';
 
@@ -27,7 +27,7 @@ async function parseWithPagination<T>(res: Response): Promise<{ data: T; paginat
 }
 
 // Public submission
-export async function submitContactMessage(input: CreateContactMessageInput): Promise<Omit<ContactMessage, 'photos'>> {
+export async function submitContactMessage(input: PublicContactMessageInput): Promise<Omit<ContactMessage, 'photos'>> {
   const res = await fetch(`${BASE_URL}${API_ROUTES.contacts.submit}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

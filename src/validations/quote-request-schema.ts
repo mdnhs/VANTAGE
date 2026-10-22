@@ -87,7 +87,11 @@ export const publicQuoteRequestSchema = createQuoteRequestSchema
     description: true,
     source: true,
   })
-  .extend({ photoUrls: publicPhotoUrlsSchema });
+  .extend({
+    photoUrls: publicPhotoUrlsSchema,
+    eventId: z.uuid().optional(),
+    sourcePath: z.string().max(300).optional(),
+  });
 
 export const updateQuoteRequestSchema = z.object({
   status: z.enum(ALL_QUOTE_STATUSES).optional(),

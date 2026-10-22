@@ -4,6 +4,7 @@ import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { useState, type CSSProperties } from 'react';
 
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
+import { track } from '@/lib/tracking/track';
 
 // Figma-exported icon glyphs (node 131:204)
 const ICONS = {
@@ -195,6 +196,7 @@ export function StitchEstimator() {
       const converted = await Promise.all(photos.map(imageFileToDataUrl));
       const photoUrls = converted.filter((url): url is string => Boolean(url));
 
+      const eventId = crypto.randomUUID();
       await submitQuoteRequest({
         name,
         phone,
@@ -204,8 +206,19 @@ export function StitchEstimator() {
         serviceType: selectedCategory,
         photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
         source: 'homepage_estimator',
+        eventId,
+        sourcePath: window.location.pathname,
       });
       setSubmitted(true);
+      try {
+        track({
+          event: 'generate_lead',
+          params: { lead_source: 'quote_form', form_id: 'estimator' },
+          eventId,
+        });
+      } catch {
+        // Tracking must never turn a saved lead into an error.
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to submit quote. Please try again.';
       setErrorMsg(msg);

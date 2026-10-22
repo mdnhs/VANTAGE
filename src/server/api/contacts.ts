@@ -11,8 +11,9 @@ import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
 import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
+import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import {
-  createContactMessageSchema,
+  publicContactMessageSchema,
   contactMessageListQuerySchema,
   updateContactMessageSchema,
 } from '@/validations/contact-message-schema';
@@ -29,12 +30,22 @@ const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const contacts = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', createContactMessageSchema), async (c) => {
-    const input = c.req.valid('json');
+  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicContactMessageSchema), async (c) => {
+    const { eventId, sourcePath, ...input } = c.req.valid('json');
 
     const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);
 
     const row = await contactMessageService.create(input, photoMediaIds);
+    queueLeadConversionAfterResponse({
+      leadId: row!.id,
+      eventId,
+      sourcePath,
+      email: row!.email,
+      phone: row!.phone,
+      cookieHeader: c.req.header('cookie'),
+      ip: clientIp(c.req.raw.headers),
+      userAgent: c.req.header('user-agent') ?? '',
+    });
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row!;
     return ok(c, echo, { status: 201 });

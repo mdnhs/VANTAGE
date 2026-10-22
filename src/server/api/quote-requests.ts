@@ -10,6 +10,7 @@ import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
+import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
   createQuoteRequestSchema,
@@ -32,10 +33,21 @@ export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
-    const { photoUrls, ...fields } = c.req.valid('json');
+    const { photoUrls, eventId, sourcePath, ...fields } = c.req.valid('json');
     const input = createQuoteRequestSchema.parse(fields);
     const photoMediaIds = await storeEnquiryPhotos(photoUrls);
     const row = await quoteRequestService.create(input, { photoMediaIds });
+    if (row)
+      queueLeadConversionAfterResponse({
+        leadId: row.id,
+        eventId,
+        sourcePath,
+        email: row.email,
+        phone: row.phone ?? null,
+        cookieHeader: c.req.header('cookie'),
+        ip: clientIp(c.req.raw.headers),
+        userAgent: c.req.header('user-agent') ?? '',
+      });
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row!;
     return ok(c, echo, { status: 201 });

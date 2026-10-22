@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
 import { SchemaForm } from '@/components/admin/schema-form/schema-form';
 import { Button } from '@/components/ui/button';
-import { useCan } from '@/contexts/actor-provider';
+import { useActor, useCan } from '@/contexts/actor-provider';
 import { GLOBAL_ACCESS, GLOBAL_LABELS, type EditableGlobalKey } from '@/lib/content/global-access';
 import { GLOBALS } from '@/lib/content/globals';
 
@@ -29,7 +29,10 @@ export function GlobalForm({
 }) {
   const doc = useGlobal(settingKey);
   const { save } = useSaveGlobal(settingKey);
-  const canUpdate = useCan(GLOBAL_ACCESS[settingKey].update);
+  // View-as is read-only: the API refuses the write, so the form says so up front.
+  const allowed = useCan(GLOBAL_ACCESS[settingKey].update);
+  const viewingAs = useActor().impersonatedBy;
+  const canUpdate = allowed && !viewingAs;
   const [historyOpen, setHistoryOpen] = useState(false);
   // Held here, outside the version-keyed SchemaForm: the conflict reload
   // remounts the form, which would drop an error set on the old instance.
