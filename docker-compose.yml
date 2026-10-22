@@ -12,6 +12,7 @@ services:
       - '127.0.0.1:5433:5432'
     volumes:
       - vantage-pgdata:/var/lib/postgresql
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U vantage -d vantage']
       interval: 5s

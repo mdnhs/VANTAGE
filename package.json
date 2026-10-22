@@ -12,7 +12,11 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
-    "db:deploy": "drizzle-kit migrate"
+    "db:deploy": "drizzle-kit migrate",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -72,7 +76,9 @@
     "tailwindcss-intersect": "^2.2.0",
     "tailwindcss-motion": "^1.1.1",
     "tsx": "^4.23.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "7.3.7",
+    "vitest": "5.0.3"
   },
   "packageManager": "yarn@1.22.22"
 }
