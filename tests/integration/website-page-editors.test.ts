@@ -7,7 +7,7 @@ import { db } from '@/server/db';
 import { siteSettings } from '@/server/db/schema';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
 
 // Cache directives and invalidation need the Next.js runtime; the save path and the
 // public adapter are what is under test.
@@ -187,5 +187,27 @@ describe('roles without page.update', () => {
     }
     expect((await call('/site-settings/admin', cookies.owner)).status).toBe(404);
     expect((await call('/site-settings')).status).toBe(200);
+  });
+});
+
+describe('per-page SEO (seo.page.*)', () => {
+  it('an author cannot read it', async () => {
+    expect((await call('/admin/globals/seo.page.home', cookies.author)).status).toBe(403);
+  });
+
+  it('a marketer edits page SEO but not page copy', async () => {
+    const seo = parseGlobal('seo.page.home', {});
+    seo.title = 'Dublin crash repair';
+    expect((await put('seo.page.home', cookies.marketer, { version: 0, value: seo })).status).toBe(200);
+    expect(vi.mocked(revalidateTag)).toHaveBeenCalledWith('settings:seo.page.home', { expire: 0 });
+    const copy = parseGlobal('page.home', {});
+    expect((await put('page.home', cookies.marketer, { version: 0, value: copy })).status).toBe(403);
+  });
+
+  it('View-as is read-only', async () => {
+    const editor = await createTestUser('editor');
+    const viewing = await viewAsCookie(cookies.owner, editor.id);
+    const seo = parseGlobal('seo.page.home', {});
+    expect((await put('seo.page.home', viewing, { version: 0, value: seo })).status).toBe(403);
   });
 });

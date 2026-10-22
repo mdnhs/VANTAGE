@@ -54,6 +54,7 @@ describe('permissionFor', () => {
     expect(permissionFor('/dashboard')).toEqual({ dashboard: ['view'] });
     expect(permissionFor('/dashboard/quotes/q1')).toEqual({ quote: ['read'] });
     expect(permissionFor('/dashboard/contacts')).toEqual({ contact: ['read'] });
+    expect(permissionFor('/dashboard/seo/pages/contact')).toEqual({ seo: ['read'] });
     expect(permissionFor('/dashboard/settings')).toEqual({ globals: ['read'] });
     expect(permissionFor('/dashboard/settings/identity')).toEqual({ settings: ['read'] });
     expect(permissionFor('/dashboard/settings/privacy')).toEqual({ settings: ['read'] });

@@ -5,6 +5,7 @@ import { permissionFor } from '@/lib/admin/route-permissions';
 import { PageTabs } from '@/components/layout/page-tabs';
 import { ProcessPanel } from '@/features/home-page/components/sections/process-panel';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
+import { seoTab } from '@/features/seo/components/seo-tab';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function ProcessPageContentPage() {
-  await requirePermission(permissionFor('/dashboard/process-page'));
+  const actor = await requirePermission(permissionFor('/dashboard/process-page'));
   const steps = await homepageProcessStepService.listAdmin({ page: 1, limit: 50 });
 
   return (
@@ -37,6 +38,7 @@ export default async function ProcessPageContentPage() {
             label: 'Steps',
             content: <ProcessPanel initialData={{ data: steps.rows, total: steps.total }} />,
           },
+          ...seoTab(actor, 'process'),
         ]}
       />
     </div>
