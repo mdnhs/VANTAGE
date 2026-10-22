@@ -1,22 +1,28 @@
 import type { Permissions } from '@/lib/auth/permissions';
 
+import { EXTRA_LINKS, HELP_LINK, NAV } from './nav';
+
 // Dashboard route -> the permission a role needs to open it. Page-level gate
 // (layer 2): the API authorises every call on its own. "[id]" matches any one
-// segment. Phase 3 replaces this with the nav registry.
+// segment. Base pages come from the nav registry (so a link is listed exactly
+// when its page opens, including pages that land in later phases); record
+// screens (create / edit / detail) are pattern rows below.
+const REGISTRY_ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]> = [
+  ...NAV.flatMap((item) =>
+    // A section's own href is its first child's page; the child carries the gate.
+    item.children
+      ? item.children.map((child): readonly [string, Permissions] => [child.href, child.permission])
+      : [[item.href, item.permission as Permissions] as const],
+  ),
+  [HELP_LINK.href, HELP_LINK.permission],
+  ...EXTRA_LINKS.map((link): readonly [string, Permissions] => [link.href, link.permission]),
+];
+
 const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]> = [
-  ['/dashboard', { dashboard: ['view'] }],
+  ...REGISTRY_ROUTES,
 
-  ['/dashboard/quotes', { quote: ['read'] }],
   ['/dashboard/quotes/[id]', { quote: ['read'] }],
-  ['/dashboard/contacts', { contact: ['read'] }],
   ['/dashboard/contacts/[id]', { contact: ['read'] }],
-  ['/dashboard/settings', { settings: ['read'] }],
-
-  // Page copy.
-  ['/dashboard/home-page', { page: ['read'] }],
-  ['/dashboard/insurance', { page: ['read'] }],
-  ['/dashboard/about', { page: ['read'] }],
-  ['/dashboard/process-page', { page: ['read'] }],
 
   // Content records: list / create / edit.
   ...(
@@ -34,8 +40,6 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
     [`/dashboard/${name}/create`, { content: ['create'] }],
     [`/dashboard/${name}/[id]/edit`, { content: ['update'] }],
   ]),
-
-  ['/dashboard/users', { user: ['list'] }],
 ];
 
 const segmentsOf = (path: string) => path.split('/').filter(Boolean);

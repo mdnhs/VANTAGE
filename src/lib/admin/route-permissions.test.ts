@@ -50,6 +50,16 @@ describe('permissionFor', () => {
     expect(() => permissionFor('/dashboard/admins')).toThrow(/No permission mapped/);
   });
 
+  it('resolves registry pages that have no page file yet', () => {
+    expect(permissionFor('/dashboard/media')).toEqual({ media: ['read'] });
+    expect(permissionFor('/dashboard/seo/redirects')).toEqual({ redirect: ['read'] });
+    expect(permissionFor('/dashboard/marketing/code')).toEqual({ code: ['update'] });
+    expect(permissionFor('/dashboard/appearance')).toEqual({ appearance: ['read'] });
+    expect(permissionFor('/dashboard/activity')).toEqual({ audit: ['read'] });
+    expect(permissionFor('/dashboard/help')).toEqual({ dashboard: ['view'] });
+    expect(permissionFor('/dashboard/account')).toEqual({ dashboard: ['view'] });
+  });
+
   it('ignores a query string and trailing slash', () => {
     expect(permissionFor('/dashboard/home-page?tab=pillars')).toEqual({ page: ['read'] });
     expect(permissionFor('/dashboard/quotes/')).toEqual({ quote: ['read'] });
