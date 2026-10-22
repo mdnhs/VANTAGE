@@ -12,15 +12,18 @@ export function GlobalEditor({
   title,
   keys,
   onValuesChange,
+  embedded = false,
 }: {
   title: string;
   keys: readonly EditableGlobalKey[];
   // Single-key editors only: live values for previews.
   onValuesChange?: (values: unknown) => void;
+  // Inside a page that already has its own header (e.g. a tab of a website page).
+  embedded?: boolean;
 }) {
   return (
     <div className='flex flex-col gap-6'>
-      <PageHeader title={title} description='Changes go live as soon as you save.' />
+      {!embedded && <PageHeader title={title} description='Changes go live as soon as you save.' />}
       {keys.length === 1 ? (
         <GlobalForm settingKey={keys[0]!} onValuesChange={onValuesChange} />
       ) : (

@@ -1,10 +1,7 @@
-import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
-import { AboutPageForm } from '@/features/about-page/components/about-page-form';
-import { resolveAboutContent } from '@/features/about-page/defaults';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
 
 export const metadata: Metadata = {
   title: 'About page',
@@ -16,15 +13,5 @@ export const instant = false;
 
 export default async function AboutPageContentPage() {
   await requirePermission(permissionFor('/dashboard/about'));
-  const settings = await siteSettingsService.getAdmin();
-
-  return (
-    <div className='flex flex-col gap-6'>
-      <PageHeader
-        title='About page'
-        description='Hero, heritage story, team members and standards shown on the public about page. Empty image slots show the bundled photo.'
-      />
-      <AboutPageForm initialContent={resolveAboutContent(settings)} />
-    </div>
-  );
+  return <GlobalEditor title='About page' keys={['page.about']} />;
 }

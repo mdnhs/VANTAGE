@@ -25,7 +25,6 @@ type Key =
   | 'page.update'
   | 'settings.update'
   | 'seo.update'
-  | 'settings.admin-read'
   | 'quote.read'
   | 'quote.update'
   | 'quote.delete'
@@ -44,11 +43,10 @@ const ENDPOINTS: Endpoint[] = [
   { key: 'content.create', method: 'POST', path: '/services', body: {} },
   { key: 'content.update', method: 'PATCH', path: `/testimonials/${ID}`, body: {} },
   { key: 'content.delete', method: 'DELETE', path: `/partner-logos/${ID}` },
-  { key: 'page.update', method: 'PATCH', path: '/site-settings/about-page', body: {} },
-  { key: 'page.update', method: 'PATCH', path: '/site-settings/homepage-hero', body: {} },
-  { key: 'settings.update', method: 'PATCH', path: '/site-settings/business-info', body: {} },
-  { key: 'seo.update', method: 'PATCH', path: '/site-settings/seo', body: {} },
-  { key: 'settings.admin-read', method: 'GET', path: '/site-settings/admin' },
+  { key: 'page.update', method: 'PUT', path: '/admin/globals/page.about', body: {} },
+  { key: 'page.update', method: 'PUT', path: '/admin/globals/page.home', body: {} },
+  { key: 'settings.update', method: 'PUT', path: '/admin/globals/site', body: {} },
+  { key: 'seo.update', method: 'PUT', path: '/admin/globals/seo', body: {} },
   { key: 'quote.read', method: 'GET', path: '/quotes/admin/list' },
   { key: 'quote.read', method: 'GET', path: '/admin/assignees' },
   { key: 'quote.update', method: 'PATCH', path: `/quotes/${ID}`, body: {} },
@@ -74,14 +72,13 @@ const GRANTED: Record<RoleName | 'user', Key[]> = {
     'content.delete',
     'page.update',
     'seo.update',
-    'settings.admin-read',
     'media.read',
     'media.delete',
   ],
-  author: ['content.read', 'content.create', 'content.update', 'settings.admin-read', 'media.read'],
-  marketer: ['content.read', 'seo.update', 'settings.admin-read', 'media.read'],
+  author: ['content.read', 'content.create', 'content.update', 'media.read'],
+  marketer: ['content.read', 'seo.update', 'media.read'],
   intake: ['quote.read', 'quote.update', 'contact.read', 'contact.update'],
-  viewer: ['content.read', 'settings.admin-read'],
+  viewer: ['content.read'],
   user: [],
 };
 
