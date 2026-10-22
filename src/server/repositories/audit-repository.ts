@@ -93,23 +93,26 @@ export async function getAudit(id: string) {
 export const EXPORT_LIMIT = 10_000;
 
 export async function exportAudit(filters: AuditFilters) {
-  return db
-    .select({
-      createdAt: auditLogs.createdAt,
-      actorName: users.name,
-      actorEmail: auditLogs.actorEmail,
-      impersonatorName: impersonator.name,
-      action: auditLogs.action,
-      entityType: auditLogs.entityType,
-      entityId: auditLogs.entityId,
-      summary: auditLogs.summary,
-    })
-    .from(auditLogs)
-    .leftJoin(users, eq(users.id, auditLogs.actorId))
-    .leftJoin(impersonator, eq(impersonator.id, auditLogs.impersonatedBy))
-    .where(where(filters))
-    .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-    .limit(EXPORT_LIMIT);
+  return (
+    db
+      .select({
+        createdAt: auditLogs.createdAt,
+        actorName: users.name,
+        actorEmail: auditLogs.actorEmail,
+        impersonatorName: impersonator.name,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        entityId: auditLogs.entityId,
+        summary: auditLogs.summary,
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(users.id, auditLogs.actorId))
+      .leftJoin(impersonator, eq(impersonator.id, auditLogs.impersonatedBy))
+      .where(where(filters))
+      .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
+      // One extra row tells the caller the export was capped.
+      .limit(EXPORT_LIMIT + 1)
+  );
 }
 
 export async function auditFacets(): Promise<{
