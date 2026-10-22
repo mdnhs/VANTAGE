@@ -17,7 +17,13 @@ import {
   settings,
   testimonials,
 } from '@/server/db/schema';
-import { CleanupRefused, cloudinaryCleanup, type CloudinaryAdminApi } from '@/server/lib/media/cloudinary-cleanup';
+import {
+  CleanupInterrupted,
+  CleanupRefused,
+  cloudinaryCleanup,
+  restAdminApi,
+  type CloudinaryAdminApi,
+} from '@/server/lib/media/cloudinary-cleanup';
 import {
   MigrationRefused,
   migrateCloudinaryMedia,
@@ -263,6 +269,66 @@ describe('media:migrate', () => {
   });
 });
 
+describe('media:migrate edge cases', () => {
+  it('labels a download error FAILED, not MISSING, and keeps going', async () => {
+    await seedSettings();
+    const report = await migrateCloudinaryMedia({
+      dryRun: false,
+      cloudName: CLOUD,
+      fetchAsset: async (url) => {
+        if (url.includes('vantage/site/logo')) throw new Error('HTTP 500');
+        return url.includes('/video/') ? MP4 : jpeg;
+      },
+    });
+    expect(report.plan.find((l) => l.legacySource.endsWith('vantage/site/logo'))?.action).toBe('FAILED');
+    expect(report.missing).toEqual([]);
+    expect(report.failed.join()).toContain('HTTP 500');
+    expect(report.copied).toBe(1); // the hero video still copied
+  });
+
+  it('keeps each enquiry photo at its index in the lead, even when an earlier one is missing', async () => {
+    await seedSettings();
+    const url = (id: string) => `https://res.cloudinary.com/${CLOUD}/image/upload/${id}.jpg`;
+    const [quote] = await db
+      .insert(quoteRequests)
+      .values({ name: 'A', email: 'a@example.com', phone: '1', photoUrls: [url('vantage/q/a'), url('vantage/q/b')] })
+      .returning();
+    missing.add('vantage/q/a');
+    await run();
+    expect((await db.select().from(enquiryPhotos)).map((p) => p.position)).toEqual([1]);
+    missing.clear();
+    await run();
+    const links = await db.select().from(enquiryPhotos).where(eq(enquiryPhotos.quoteRequestId, quote!.id));
+    expect(links.map((l) => l.position).sort()).toEqual([0, 1]);
+  });
+
+  it('a settings version conflict is reported and the rest of the rewrite carries on', async () => {
+    await seedSettings();
+    await seedContent();
+    const { settingsRepository } = await import('@/server/repositories/settings-repository');
+    const save = settingsRepository.save.bind(settingsRepository);
+    const spy = vi.spyOn(settingsRepository, 'save').mockImplementation(async (key, ...rest) => {
+      if (key === 'site') throw new Error('Someone else saved this first');
+      return save(key, ...rest);
+    });
+    const report = await run();
+    spy.mockRestore();
+    expect(report.failed.join()).toContain('settings site: Someone else saved this first');
+    expect(report.rewritten.settings).toContain('page.home');
+    expect(report.rewritten.columns).toBeGreaterThan(0);
+    expect(report.rewritten.enquiryPhotos).toBe(1);
+  });
+
+  it('strips any trailing format extension from a photo URL', () => {
+    expect(publicIdFromUrl(`https://res.cloudinary.com/${CLOUD}/image/upload/vantage/q/photo.heic`)).toBe(
+      'vantage/q/photo',
+    );
+    expect(publicIdFromUrl(`https://res.cloudinary.com/${CLOUD}/image/upload/v3/vantage/q/photo.tiff`)).toBe(
+      'vantage/q/photo',
+    );
+  });
+});
+
 describe('media:cloudinary-cleanup', () => {
   const api = (ids: Record<string, string[]>) => {
     const removed: string[] = [];
@@ -272,8 +338,13 @@ describe('media:cloudinary-cleanup', () => {
     };
     return { client, removed };
   };
+  const ok = async () => ({ ok: true, problems: [] as string[] });
+  const migrated =
+    (...ids: string[]) =>
+    async () =>
+      new Set(ids.map((id) => `cloudinary:${id}`));
 
-  it('dry run counts per folder and deletes nothing, without needing verify', async () => {
+  it('dry run counts migrated files per folder, counts the rest as kept, and needs no verify', async () => {
     const { client, removed } = api({
       image: ['vantage/a/1', 'vantage/a/2', 'other/x', 'vantage/b/3'],
       video: ['vantage/v/1'],
@@ -281,34 +352,107 @@ describe('media:cloudinary-cleanup', () => {
     const report = await cloudinaryCleanup({
       del: false,
       api: client,
+      sources: migrated('image:vantage/a/1', 'image:vantage/b/3', 'video:vantage/v/1'),
       verify: async () => {
         throw new Error('not called');
       },
     });
     expect(report.folders).toEqual({
-      'vantage/a': { image: 2, video: 0 },
+      'vantage/a': { image: 1, video: 0 },
       'vantage/b': { image: 1, video: 0 },
       'vantage/v': { image: 0, video: 1 },
     });
-    expect(report.total).toBe(4); // 'other/x' is outside the prefix
+    expect(report.keptFolders).toEqual({ 'vantage/a': { image: 1, video: 0 } });
+    expect([report.total, report.kept]).toEqual([3, 1]); // 'other/x' is outside the prefix
     expect(removed).toEqual([]);
+  });
+
+  it('--delete removes only migrated files; a listed but unmigrated id survives', async () => {
+    const { client, removed } = api({ image: ['vantage/a/migrated', 'vantage/a/unmigrated'] });
+    const report = await cloudinaryCleanup({
+      del: true,
+      api: client,
+      verify: ok,
+      sources: migrated('image:vantage/a/migrated'),
+    });
+    expect(removed).toEqual(['vantage/a/migrated']);
+    expect(report.kept).toBe(1);
+    // ...unless the owner explicitly asks for the rest too.
+    const more = api({ image: ['vantage/a/migrated', 'vantage/a/unmigrated'] });
+    await cloudinaryCleanup({
+      del: true,
+      includeUnreferenced: true,
+      api: more.client,
+      verify: ok,
+      sources: migrated('image:vantage/a/migrated'),
+    });
+    expect(more.removed).toEqual(['vantage/a/migrated', 'vantage/a/unmigrated']);
   });
 
   it('refuses --delete while the migration does not verify, and deletes in batches after it does', async () => {
     const many = Array.from({ length: 250 }, (_, i) => `vantage/m/${i}`);
     const { client, removed } = api({ image: many });
+    const sources = migrated(...many.map((id) => `image:${id}`));
     await expect(
-      cloudinaryCleanup({ del: true, api: client, verify: async () => ({ ok: false, problems: ['UNMIGRATED x'] }) }),
+      cloudinaryCleanup({
+        del: true,
+        api: client,
+        sources,
+        verify: async () => ({ ok: false, problems: ['UNMIGRATED x'] }),
+      }),
     ).rejects.toThrow(CleanupRefused);
     expect(removed).toEqual([]);
     const batches: number[] = [];
+    const logged: number[] = [];
     const counting: CloudinaryAdminApi = { ...client, remove: async (_r, b) => void batches.push(b.length) };
     const report = await cloudinaryCleanup({
       del: true,
       api: counting,
-      verify: async () => ({ ok: true, problems: [] }),
+      sources,
+      verify: ok,
+      onBatch: ({ removed }) => logged.push(removed),
     });
     expect(batches).toEqual([100, 100, 50]);
+    expect(logged).toEqual([100, 200, 250]);
     expect(report.removed).toBe(250);
+  });
+
+  it('a mid-run failure still reports how many were removed', async () => {
+    const ids = Array.from({ length: 150 }, (_, i) => `vantage/m/${i}`);
+    let calls = 0;
+    const flaky: CloudinaryAdminApi = {
+      list: async () => ({ ids }),
+      remove: async () => {
+        if (++calls === 2) throw new Error('Cloudinary delete failed (HTTP 500)');
+      },
+    };
+    const error = await cloudinaryCleanup({
+      del: true,
+      api: flaky,
+      verify: ok,
+      sources: migrated(...ids.map((id) => `image:${id}`)),
+    }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(CleanupInterrupted);
+    expect((error as CleanupInterrupted).report.removed).toBe(100);
+  });
+
+  it('retries rate limits and server errors twice with backoff, then gives up', async () => {
+    const waits: number[] = [];
+    const sleep = async (ms: number) => void waits.push(ms);
+    const responses = [429, 503, 200];
+    const fetchMock = vi.fn(async () =>
+      responses.length > 0
+        ? new Response(JSON.stringify({ resources: [{ public_id: 'vantage/a/1' }] }), { status: responses.shift()! })
+        : new Response('{}', { status: 500 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = restAdminApi({ cloudName: 'demo', apiKey: 'k', apiSecret: 's' }, sleep);
+    expect((await client.list('image', 'vantage/')).ids).toEqual(['vantage/a/1']);
+    expect(waits).toEqual([1000, 2000]);
+    waits.length = 0;
+    fetchMock.mockImplementation(async () => new Response('{}', { status: 500 }));
+    await expect(client.list('image', 'vantage/')).rejects.toThrow('HTTP 500');
+    expect(waits).toEqual([1000, 2000]);
+    vi.unstubAllGlobals();
   });
 });

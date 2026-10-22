@@ -113,7 +113,7 @@ const columns = (
 // must decide (the Cloudinary migration reports it) rather than relink to a deleted file.
 export class DeletedLegacySourceError extends Error {
   constructor(readonly mediaId: string) {
-    super('That legacy source belongs to a deleted media row');
+    super(`That legacy source belongs to deleted media row ${mediaId}`);
   }
 }
 const liveSource = (row: MediaRow) => {

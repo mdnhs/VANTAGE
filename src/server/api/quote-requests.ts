@@ -37,17 +37,18 @@ export const quoteRequests = new Hono<AppEnv>()
     const input = createQuoteRequestSchema.parse(fields);
     const photoMediaIds = await storeEnquiryPhotos(photoUrls);
     const row = await quoteRequestService.create(input, { photoMediaIds });
+    if (row)
+      queueLeadConversionAfterResponse({
+        leadId: row.id,
+        eventId,
+        sourcePath,
+        email: row.email,
+        phone: row.phone ?? null,
+        cookieHeader: c.req.header('cookie'),
+        ip: clientIp(c.req.raw.headers),
+        userAgent: c.req.header('user-agent') ?? '',
+      });
     if (!row) throw new Error('The quote request was not saved');
-    queueLeadConversionAfterResponse({
-      leadId: row.id,
-      eventId,
-      sourcePath,
-      email: row.email,
-      phone: row.phone ?? null,
-      cookieHeader: c.req.header('cookie'),
-      ip: clientIp(c.req.raw.headers),
-      userAgent: c.req.header('user-agent') ?? '',
-    });
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row;
     return ok(c, echo, { status: 201 });

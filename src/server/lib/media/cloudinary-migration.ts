@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { stat } from 'node:fs/promises';
+
 import { and, eq, isNotNull, isNull, like } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import sharp from 'sharp';
@@ -22,7 +24,7 @@ import {
 import { audit } from '@/server/lib/audit';
 import { ApiError } from '@/server/lib/errors';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
-import { readMediaBytes } from '@/server/lib/media/read';
+import { localFile } from '@/server/lib/media/storage';
 import { PUBLIC_SETTINGS_KEYS } from '@/server/lib/settings/public-settings';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 import { DeletedLegacySourceError, mediaLibraryService } from '@/server/services/media-library-service';
@@ -35,7 +37,11 @@ type Resource = 'image' | 'video';
 type Scope = 'library' | 'enquiry';
 type Ref = { publicId: string; resource: Resource; face: boolean; scope: Scope; where: string };
 
-export type PlanLine = { action: 'COPY' | 'REUSE' | 'MISSING' | 'BLOCKED'; source: string; legacySource: string };
+export type PlanLine = {
+  action: 'COPY' | 'REUSE' | 'MISSING' | 'FAILED' | 'BLOCKED';
+  source: string;
+  legacySource: string;
+};
 
 export type MigrationReport = {
   refs: number;
@@ -59,7 +65,7 @@ export function publicIdFromUrl(url: string): string | null {
   const segments = match[1]!.split('/');
   while (segments.length > 1 && /^(v\d+|([a-z]{1,4}_[^,/]*)(,[a-z]{1,4}_[^,/]*)*)$/i.test(segments[0]!))
     segments.shift();
-  const id = segments.join('/').replace(/\.(jpe?g|png|webp|avif|gif)$/i, '');
+  const id = segments.join('/').replace(/\.[a-z0-9]{2,5}$/i, '');
   return id || null;
 }
 
@@ -282,7 +288,7 @@ export async function migrateCloudinaryMedia(opts: {
     try {
       bytes = await fetchAsset(source);
     } catch (error) {
-      report.plan.push({ action: 'MISSING', source, legacySource });
+      report.plan.push({ action: 'FAILED', source, legacySource });
       report.failed.push(`${legacySource}: ${error instanceof Error ? error.message : 'download failed'}`);
       continue;
     }
@@ -365,14 +371,24 @@ async function rewrite(report: MigrationReport, owners: PhotoOwner[]) {
       return { kind: 'media' as const, id: mediaId };
     });
     if (!changed) continue;
-    await settingsRepository.save(row.key, { version: row.version, value }, null, MIGRATION_NOTE, async (tx) => {
-      await audit(
-        null,
-        { action: 'media.migrate', entityType: 'setting', entityId: row.key, summary: `Moved ${row.key} images to R2` },
-        tx,
-      );
-    });
-    report.rewritten.settings.push(row.key);
+    try {
+      await settingsRepository.save(row.key, { version: row.version, value }, null, MIGRATION_NOTE, async (tx) => {
+        await audit(
+          null,
+          {
+            action: 'media.migrate',
+            entityType: 'setting',
+            entityId: row.key,
+            summary: `Moved ${row.key} images to R2`,
+          },
+          tx,
+        );
+      });
+      report.rewritten.settings.push(row.key);
+    } catch (error) {
+      // e.g. an admin saved this document meanwhile: report it and carry on with the rest.
+      report.failed.push(`settings ${row.key}: ${error instanceof Error ? error.message : 'could not be saved'}`);
+    }
   }
 
   // Enquiry photos: link each migrated URL to its lead, once.
@@ -383,19 +399,34 @@ async function rewrite(report: MigrationReport, owners: PhotoOwner[]) {
         (l) => l.mediaId,
       ),
     );
-    let position = linked.size;
-    for (const url of owner.urls) {
+    for (const [position, url] of owner.urls.entries()) {
       const publicId = publicIdFromUrl(url);
       const mediaId = publicId ? image(publicId) : undefined;
       if (!mediaId || linked.has(mediaId)) continue;
       await db.insert(enquiryPhotos).values({
         ...(owner.table === 'quote' ? { quoteRequestId: owner.id } : { contactMessageId: owner.id }),
         mediaId,
-        position: position++,
+        position,
       });
       linked.add(mediaId);
       report.rewritten.enquiryPhotos += 1;
     }
+  }
+}
+
+// A stored file exists and is non-empty: a stat for local files, a HEAD request for R2 (no body is
+// downloaded, so verifying a big library stays cheap).
+async function isReachable(file: { driver: string; key: string; url: string }): Promise<boolean> {
+  try {
+    if (file.driver === 'local') {
+      const local = localFile(file.key);
+      return local ? (await stat(local.path)).size > 0 : false;
+    }
+    const res = await fetch(file.url, { method: 'HEAD', signal: AbortSignal.timeout(5000), redirect: 'error' });
+    const length = res.headers.get('content-length');
+    return res.ok && (length === null || Number(length) > 0);
+  } catch {
+    return false;
   }
 }
 
@@ -432,7 +463,7 @@ export async function verifyCloudinaryMigration(): Promise<{ ok: boolean; proble
     .from(media)
     .where(and(isNull(media.deletedAt), isNotNull(media.legacySource)));
   for (const file of migrated) {
-    if (!(await readMediaBytes(file))) problems.push(`UNREADABLE ${file.id}`);
+    if (!(await isReachable(file))) problems.push(`UNREADABLE ${file.id}`);
   }
   return { ok: problems.length === 0, problems };
 }
