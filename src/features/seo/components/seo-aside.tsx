@@ -87,7 +87,6 @@ export function SeoAside({ id, values }: { id: PublicPageId; values: GlobalValue
       <DashboardCard title='When shared'>
         <SocialCard
           siteHost={host}
-          siteName={siteName || page.label}
           title={ogTitle}
           description={ogDescription}
           imageSrc={image?.url}
