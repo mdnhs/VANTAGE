@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { cacheLife, cacheTag } from 'next/cache';
+import { cacheLife } from 'next/cache';
 
 import { getSitemapEntries } from '@/server/queries/get-page-seo';
 
@@ -7,7 +7,6 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   'use cache';
-  cacheTag('sitemap');
   cacheLife('max');
 
   // new Date() is non-deterministic and would otherwise force this route to render per

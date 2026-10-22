@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { geistMono, SITE_FONT_VARIABLES } from '@/lib/font';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
 import { rootMetadata } from '@/lib/seo/metadata';
+import { withLegacyMeta } from '@/server/queries/get-page-seo';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
@@ -15,7 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const [settings, seo] = await Promise.all([siteSettingsService.getPublic(), getSetting('seo')]);
   return rootMetadata({
     appUrl: APP_URL,
-    seo,
+    seo: withLegacyMeta(seo, settings),
     siteName: settings.businessName,
     hoursSummary: formatOpeningHoursSummary(settings.openingHours),
     defaultOgImage: settings.ogImage,

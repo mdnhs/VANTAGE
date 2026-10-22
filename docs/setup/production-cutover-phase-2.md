@@ -15,7 +15,7 @@ keep their passwords. Read the whole page before starting.
 | `MEDIA_DRIVER=s3`, `S3_ACCOUNT_ID` (or `S3_ENDPOINT`), `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `MEDIA_PUBLIC_URL` | R2 / S3 media storage.                                                                                                               |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`, `MAIL_FROM`                                                     | Optional. Without SMTP, invites and resets show a copyable link instead of sending mail.                                             |
 | `SEED_DEMO_USERS`                                                                                                                  | MUST be unset in production. Demo users are never seeded there.                                                                      |
-| `SITE_ENV` | REQUIRED=`production` on the live VPS. Without it `robots.txt` disallows all crawlers (only Vercel's production deployment counts as production by default). |
+| `SITE_ENV` | REQUIRED=`production` on the live VPS, as a build argument (`--build-arg SITE_ENV=production`) AND runtime env. `robots.txt` is prerendered at build, so rebuild after changing it. Without it `robots.txt` disallows all crawlers (only Vercel's production deployment counts as production by default). |
 | `INTERNAL_ORIGIN` | Optional. Defaults to `http://127.0.0.1:$PORT` on the VPS. Set it on Vercel preview deployments (the deployment origin); otherwise redirects are best-effort there. |
 
 `BETTER_AUTH_SECRET` is no longer used; remove it if it is set.

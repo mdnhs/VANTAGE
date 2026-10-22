@@ -83,4 +83,12 @@ describe('public page SEO', () => {
     expect((await put('seo', { robots: 'noindex' })).status).toBe(200);
     expect(await getSitemapEntries()).toEqual([]);
   });
+
+  it('skips a page whose canonical points elsewhere', async () => {
+    await put('seo.page.about', { canonical: 'https://elsewhere.ie/about' });
+    await put('seo.page.process', { canonical: '/process' });
+    const paths = (await getSitemapEntries()).map((e) => e.path);
+    expect(paths).not.toContain('/about');
+    expect(paths).toContain('/process');
+  });
 });
