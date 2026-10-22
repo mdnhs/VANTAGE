@@ -29,4 +29,5 @@ export interface ContactMessageStats {
   read: number;
   replied: number;
   archived: number;
+  spam: number;
 }

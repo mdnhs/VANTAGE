@@ -9,6 +9,7 @@ import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
+import { classifySubmission } from '@/server/lib/enquiries/classify';
 import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { quoteRequestService } from '@/server/services/quote-request-service';
@@ -33,11 +34,14 @@ export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
-    const { photoUrls, eventId, sourcePath, ...fields } = c.req.valid('json');
+    const { photoUrls, eventId, sourcePath, website, stamp, ...fields } = c.req.valid('json');
     const input = createQuoteRequestSchema.parse(fields);
-    const photoMediaIds = await storeEnquiryPhotos(photoUrls);
-    const row = await quoteRequestService.create(input, { photoMediaIds });
-    if (row)
+    // A bot gets the same 201 as a visitor, but its row is filed as spam: no photos stored,
+    // no email, no lead conversion.
+    const spamReason = classifySubmission({ website, stamp }) ?? undefined;
+    const photoMediaIds = spamReason ? [] : await storeEnquiryPhotos(photoUrls);
+    const row = await quoteRequestService.create(input, { photoMediaIds, spamReason });
+    if (row && !spamReason)
       queueLeadConversionAfterResponse({
         leadId: row.id,
         eventId,
@@ -117,6 +121,7 @@ export const quoteRequests = new Hono<AppEnv>()
         'invoiceNumber',
         'completedAt',
         'adminNotes',
+        'spamReason',
       ],
       redact: ['adminNotes', 'name', 'email', 'phone', 'address', 'city', 'eircode', 'registration', 'description'],
     }),

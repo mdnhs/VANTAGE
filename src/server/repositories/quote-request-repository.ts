@@ -1,4 +1,5 @@
-import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
+import { SPAM_STATUS, type SpamReason } from '@/lib/enquiries/spam';
 import { db } from '@/server/db';
 import { quoteRequests } from '@/server/db/schema';
 import { attachPhotos, linkEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
@@ -14,9 +15,10 @@ export const quoteRequestRepository = {
     const offset = (page - 1) * limit;
     const conditions = [];
 
-    if (status && status !== 'all') {
-      conditions.push(eq(quoteRequests.status, status));
-    }
+    // 'all' leaves spam out; it is listed only on its own.
+    conditions.push(
+      status && status !== 'all' ? eq(quoteRequests.status, status) : ne(quoteRequests.status, SPAM_STATUS),
+    );
 
     if (assignedUserId) {
       conditions.push(eq(quoteRequests.assignedUserId, assignedUserId));
@@ -85,9 +87,15 @@ export const quoteRequestRepository = {
       in_progress: 0,
       completed: 0,
       cancelled: 0,
+      spam: 0,
     };
 
     for (const r of rows) {
+      // Spam is counted on its own: it is in neither the total nor 'new'.
+      if (r.status === SPAM_STATUS) {
+        counts.spam = r.count;
+        continue;
+      }
       if (r.status in counts) {
         counts[r.status as keyof QuoteRequestStats] = r.count;
       } else if (r.status === 'quoted') {
@@ -119,7 +127,7 @@ export const quoteRequestRepository = {
     return withPhotos;
   },
 
-  async create(data: CreateQuoteRequestOutput, photoMediaIds: string[] = []) {
+  async create(data: CreateQuoteRequestOutput, photoMediaIds: string[] = [], spamReason?: SpamReason) {
     const row = await db.transaction(async (tx) => {
       const [inserted] = await tx
         .insert(quoteRequests)
@@ -137,7 +145,8 @@ export const quoteRequestRepository = {
           serviceType: data.serviceType || null,
           description: data.description || null,
           source: data.source || 'website',
-          status: data.status || 'new',
+          status: spamReason ? SPAM_STATUS : data.status || 'new',
+          spamReason: spamReason ?? (data.status === SPAM_STATUS ? 'manual' : null),
           assignedUserId: data.assignedUserId || null,
           inspectionDate: data.inspectionDate ?? null,
           estimatedCost:
@@ -158,7 +167,17 @@ export const quoteRequestRepository = {
 
   async update(id: string, data: UpdateQuoteRequestOutput) {
     const patch: Record<string, unknown> = { updatedAt: new Date() };
-    if (data.status !== undefined) patch.status = data.status;
+    if (data.status !== undefined) {
+      patch.status = data.status;
+      // Spam marked by staff says so; leaving spam clears the reason.
+      const [current] = await db
+        .select({ status: quoteRequests.status, spamReason: quoteRequests.spamReason })
+        .from(quoteRequests)
+        .where(eq(quoteRequests.id, id));
+      if (data.status === SPAM_STATUS)
+        patch.spamReason = current?.status === SPAM_STATUS ? current.spamReason : 'manual';
+      else if (current?.status === SPAM_STATUS) patch.spamReason = null;
+    }
     if (data.address !== undefined) patch.address = data.address;
     if (data.city !== undefined) patch.city = data.city;
     if (data.eircode !== undefined) patch.eircode = data.eircode;

@@ -53,6 +53,12 @@ export const STATUS_CONFIG: Record<
     dotClassName: 'bg-zinc-500',
     borderClassName: 'border-t-zinc-500',
   },
+  spam: {
+    label: 'Spam',
+    className: 'bg-zinc-500/10 text-zinc-600 border-zinc-500/25 dark:text-zinc-400',
+    dotClassName: 'bg-zinc-500',
+    borderClassName: 'border-t-zinc-500',
+  },
   // Legacy aliases
   quoted: {
     label: 'Quote Sent',

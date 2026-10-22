@@ -11,7 +11,7 @@ import { db } from '@/server/db';
 import { contactMessages, enquiryPhotos, media, quoteRequests } from '@/server/db/schema';
 import { resetStorageForTests } from '@/server/lib/media/storage';
 
-import { ORIGIN, sessionCookie } from '../support/session';
+import { ORIGIN, sessionCookie, stamped } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -31,7 +31,7 @@ const post = (route: string, body: unknown) =>
   api.request(`/api/v1${route}`, {
     method: 'POST',
     headers: { origin: ORIGIN, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(stamped(body)),
   });
 const get = (route: string, cookie: string) => api.request(`/api/v1${route}`, { headers: { origin: ORIGIN, cookie } });
 

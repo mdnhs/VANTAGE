@@ -10,6 +10,7 @@ import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
+import { classifySubmission } from '@/server/lib/enquiries/classify';
 import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import {
@@ -31,22 +32,26 @@ const idParamSchema = z.object({ id: z.string().uuid() });
 export const contacts = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
   .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicContactMessageSchema), async (c) => {
-    const { eventId, sourcePath, ...input } = c.req.valid('json');
+    const { eventId, sourcePath, website, stamp, ...input } = c.req.valid('json');
 
-    const photoMediaIds = await storeEnquiryPhotos(input.photoUrls);
+    // A bot gets the same 201 as a visitor, but its row is filed as spam: no photos stored,
+    // no email, no lead conversion.
+    const spamReason = classifySubmission({ website, stamp }) ?? undefined;
+    const photoMediaIds = spamReason ? [] : await storeEnquiryPhotos(input.photoUrls);
 
-    const row = await contactMessageService.create(input, photoMediaIds);
+    const row = await contactMessageService.create(input, { photoMediaIds, spamReason });
     if (!row) throw new Error('The contact message was not saved');
-    queueLeadConversionAfterResponse({
-      leadId: row.id,
-      eventId,
-      sourcePath,
-      email: row.email,
-      phone: row.phone,
-      cookieHeader: c.req.header('cookie'),
-      ip: clientIp(c.req.raw.headers),
-      userAgent: c.req.header('user-agent') ?? '',
-    });
+    if (!spamReason)
+      queueLeadConversionAfterResponse({
+        leadId: row.id,
+        eventId,
+        sourcePath,
+        email: row.email,
+        phone: row.phone,
+        cookieHeader: c.req.header('cookie'),
+        ip: clientIp(c.req.raw.headers),
+        userAgent: c.req.header('user-agent') ?? '',
+      });
     // Visitors never get the stored photo URLs back.
     const { photos: _photos, ...echo } = row;
     return ok(c, echo, { status: 201 });
@@ -83,7 +88,7 @@ export const contacts = new Hono<AppEnv>()
       entityType: 'contact',
       summary: 'Contact message updated',
       load: contactMessageService.byId,
-      fields: ['status', 'adminNotes'],
+      fields: ['status', 'adminNotes', 'spamReason'],
       redact: ['adminNotes'],
     }),
     zValidator('param', idParamSchema),

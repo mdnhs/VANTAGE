@@ -1,3 +1,4 @@
+import type { SpamReason } from '@/lib/enquiries/spam';
 import { contactMessageRepository } from '@/server/repositories/contact-message-repository';
 import { notifyNewContact } from '@/server/services/enquiry-notify';
 import type {
@@ -19,10 +20,11 @@ export const contactMessageService = {
     return contactMessageRepository.byId(id);
   },
 
-  async create(data: CreateContactMessageInput, photoMediaIds: string[] = []) {
-    const row = await contactMessageRepository.create(data, photoMediaIds);
+  // `spamReason` files the row as spam and sends nothing.
+  async create(data: CreateContactMessageInput, options: { photoMediaIds?: string[]; spamReason?: SpamReason } = {}) {
+    const row = await contactMessageRepository.create(data, options.photoMediaIds, options.spamReason);
     // After the row is committed; fire-and-forget, so mail never fails the request.
-    if (row) notifyNewContact(row);
+    if (row && !options.spamReason) notifyNewContact(row);
     return row;
   },
 

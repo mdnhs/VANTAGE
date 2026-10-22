@@ -5,13 +5,13 @@ import { api } from '@/server/api';
 import { db } from '@/server/db';
 import { quoteRequests } from '@/server/db/schema';
 
-import { sessionCookie } from '../support/session';
+import { sessionCookie, stamped } from '../support/session';
 
 const post = (path: string, body: unknown, cookie?: string) =>
   api.request(`/api/v1${path}`, {
     method: 'POST',
     headers: { origin: 'http://localhost:3000', 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
-    body: JSON.stringify(body),
+    body: JSON.stringify(stamped(body)),
   });
 
 const base = { name: 'Pat', email: 'pat@example.com', phone: '0871234567' };

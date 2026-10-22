@@ -12,7 +12,7 @@ import { settingsRepository } from '@/server/repositories/settings-repository';
 import { settleNotifications } from '@/server/services/enquiry-notify';
 import { queueLeadConversion } from '@/server/services/lead-conversion';
 
-import { sessionCookie } from '../support/session';
+import { sessionCookie, stamped } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -53,7 +53,7 @@ const post = (path: string, body: unknown, cookie?: string) =>
       'x-forwarded-for': '203.0.113.9, 10.0.0.1',
       ...(cookie ? { cookie } : {}),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify(stamped(body)),
   });
 
 let fetchMock: ReturnType<typeof vi.fn>;

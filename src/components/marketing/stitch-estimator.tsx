@@ -6,6 +6,8 @@ import { useState, type CSSProperties } from 'react';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 import { track } from '@/lib/tracking/track';
 import { newEventId } from '@/lib/tracking/event-id';
+import { HoneypotField } from '@/components/marketing/honeypot-field';
+import { useEnquiryStamp } from '@/features/enquiries/hooks/use-enquiry-stamp';
 
 // Figma-exported icon glyphs (node 131:204)
 const ICONS = {
@@ -171,6 +173,8 @@ export function StitchEstimator() {
   const [photos, setPhotos] = useState<File[]>([]);
   const photoCount = photos.length;
   const [submitted, setSubmitted] = useState(false);
+  const [website, setWebsite] = useState('');
+  const stamp = useEnquiryStamp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -209,6 +213,8 @@ export function StitchEstimator() {
         source: 'homepage_estimator',
         eventId,
         sourcePath: window.location.pathname,
+        website,
+        stamp,
       });
       setSubmitted(true);
       try {
@@ -444,6 +450,7 @@ export function StitchEstimator() {
               </>
             ) : (
               <form onSubmit={handleSubmit} className='flex w-full flex-col gap-[28px]'>
+                <HoneypotField value={website} onChange={setWebsite} />
                 <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
                   <ContactField
                     label='Your Full Name'
