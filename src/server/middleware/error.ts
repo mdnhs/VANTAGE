@@ -5,6 +5,7 @@ import { fail } from '@/server/lib/response';
 
 export const onError: ErrorHandler = (err, c) => {
   if (err instanceof ApiError) {
+    if (err.retryAfterSeconds) c.header('Retry-After', String(err.retryAfterSeconds));
     return fail(c, err.code, err.message, err.status as never, err.causes, err.current, err.details);
   }
 

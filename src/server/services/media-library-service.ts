@@ -13,6 +13,7 @@ import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { MEDIA_REFERRER_TABLES, mediaUsage } from '@/server/lib/media/usage';
 import { cleanFilename, MAX_VIDEO_BYTES, processUpload, type ProcessedUpload } from '@/server/lib/media/process';
 import { getStorage, variantKey } from '@/server/lib/media/storage';
+import { enqueueMediaPurge } from '@/server/services/media-purge-service';
 import { mediaRepository } from '@/server/repositories/media-repository';
 import type { MediaRow } from '@/server/db/schema/media';
 import type { MediaListQuery, MediaPatch } from '@/validations/media-schema';
@@ -221,7 +222,11 @@ export const mediaLibraryService = {
     const { storage, key } = await store(processed);
     let row: MediaRow | undefined;
     try {
-      row = await mediaRepository.update(id, columns(processed, filename, storage, key));
+      row = await db.transaction(async (tx) => {
+        const updated = await mediaRepository.update(id, columns(processed, filename, storage, key), tx);
+        if (updated && current.key !== updated.key) await enqueueMediaPurge(current.key, 'replaced', tx);
+        return updated;
+      });
     } catch (error) {
       if (isUniqueViolation(error)) throw ApiError.conflict('That file is already in the library');
       throw error;
@@ -252,6 +257,7 @@ export const mediaLibraryService = {
         throw new ApiError(ERROR_CODES.CONFLICT, 'This file is still in use', 409, undefined, undefined, { usage });
       }
       await mediaRepository.softDelete(id, tx);
+      await enqueueMediaPurge(row.key, 'deleted', tx);
       await audit(
         actor,
         { action: 'media.delete', entityType: 'media', entityId: id, summary: `Deleted ${row.filename}` },

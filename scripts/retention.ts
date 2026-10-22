@@ -12,12 +12,16 @@ async function main() {
       `quotes: ${r.quotes.expired} past ${r.windows.enquiryRetentionMonths} months + ${r.quotes.spam} spam past ${r.windows.spamRetentionDays} days; ` +
       `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos} (+ ${r.legacyPhotos} legacy left for cleanup); orphan photos: ${r.orphanPhotos}`,
   );
+  const { countDuePurges, purgeMediaObjects } = await import('@/server/services/media-purge-service');
   if (dryRun) {
     console.log('ai conversations: (not counted in dry run)');
+    console.log(`media files due: ${await countDuePurges()}`);
   } else {
     const { runAiRetention } = await import('@/server/repositories/ai-conversation-repository');
     const ai = await runAiRetention(new Date());
     console.log(`ai conversations: ${ai.conversations}, messages: ${ai.messages}`);
+    const m = await purgeMediaObjects();
+    console.log(`media files: ${m.purged} removed, ${m.kept} kept (still in use), ${m.skipped} skipped (outside prefix), ${m.failed} failed`);
   }
   process.exit(0);
 }
