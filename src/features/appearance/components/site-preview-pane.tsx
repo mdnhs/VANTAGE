@@ -16,7 +16,16 @@ type Device = keyof typeof DEVICES;
 // draft mode (cookie) and redirects to the path, so the frame loads the
 // draft theme. `refreshKey` changes after each save, adopt (discard, reset,
 // restore) and publish; the frame re-enters preview at `src`.
-export function SitePreviewPane({ path, refreshKey }: { path: string; refreshKey: number | null }) {
+export function SitePreviewPane({
+  path,
+  refreshKey,
+  onPreview,
+}: {
+  path: string;
+  refreshKey: number | null;
+  // Called when the preview is opened in its own tab, which keeps draft mode on.
+  onPreview?: () => void;
+}) {
   const [device, setDevice] = useState<Device>('desktop');
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
@@ -77,6 +86,7 @@ export function SitePreviewPane({ path, refreshKey }: { path: string; refreshKey
             href={src}
             target='_blank'
             rel='noopener'
+            onClick={onPreview}
             aria-label='Open the preview in a new tab'
             className='flex size-8 items-center justify-center rounded-lg border text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50'
           >

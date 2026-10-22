@@ -55,13 +55,16 @@ export function AppearanceView({
   const { refetch } = query;
   // Preview on site leaves the draft-mode cookie on purpose; any other way out of
   // Appearance ends draft mode, so the public site stops showing the draft.
+  // Never reset: the opened tab keeps relying on the cookie for as long as this
+  // mount lives, so once any preview was opened, leaving must not end draft mode.
   const openedPreview = useRef(false);
   const markPreviewed = useCallback(() => {
     openedPreview.current = true;
   }, []);
   useEffect(() => {
-    const exitDraftOnLeave = () => {
-      if (openedPreview.current) return;
+    const exitDraftOnLeave = (event?: PageTransitionEvent) => {
+      // A persisted pagehide goes into the back/forward cache and may come back.
+      if (event?.persisted || openedPreview.current) return;
       void fetch(decodeURIComponent(exitPreviewHref('/')), {
         keepalive: true,
         redirect: 'manual',
@@ -308,7 +311,7 @@ function Editor({
               <SiteControls draft={draft} update={update} />
               <ContrastPanel config={draft} scope='site' onChange={update} />
             </fieldset>
-            <SitePreviewPane path='/' refreshKey={previewKey} />
+            <SitePreviewPane path='/' refreshKey={previewKey} onPreview={onPreview} />
           </div>
         </TabsContent>
         <TabsContent value='admin' className='pt-2'>

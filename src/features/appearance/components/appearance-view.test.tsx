@@ -133,6 +133,26 @@ describe('AppearanceView', () => {
     });
   });
 
+  it('leaves draft mode on pagehide unless the page is going into the bfcache', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <AppearanceView autosaveDelay={0} />
+      </QueryClientProvider>,
+    );
+    await screen.findByRole('tab', { name: 'Site' });
+    const pagehide = (persisted: boolean) => {
+      const event = new Event('pagehide');
+      Object.defineProperty(event, 'persisted', { value: persisted });
+      window.dispatchEvent(event);
+    };
+    pagehide(true);
+    expect(exitCalls()).toHaveLength(0);
+    pagehide(false);
+    expect(exitCalls()).toHaveLength(1);
+    view.unmount();
+  });
+
   it('keeps draft mode when Preview on site was clicked during the mount', async () => {
     vi.stubGlobal('open', vi.fn());
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

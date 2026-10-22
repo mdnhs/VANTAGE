@@ -27,10 +27,12 @@ export function useLiveAdmin(admin: AdminThemeConfig) {
     // Wait for next-themes to resolve, so a dark user never sees light tokens.
     if (resolvedTheme === undefined) return;
     const root = document.documentElement;
+    const hadScheme = root.style.colorScheme;
     const had = (['light', 'dark'] as const).filter((name) => root.classList.contains(name));
     if (forced) {
       root.classList.remove('light', 'dark');
       root.classList.add(mode);
+      root.style.colorScheme = mode;
     }
     const restoreTokens = applyLive(root, liveDeclarations(admin, mode));
     return () => {
@@ -39,6 +41,7 @@ export function useLiveAdmin(admin: AdminThemeConfig) {
       // Back to the published mode.
       root.classList.remove('light', 'dark');
       root.classList.add(...had);
+      root.style.colorScheme = hadScheme;
     };
   }, [admin, mode, forced, resolvedTheme]);
 }

@@ -26,7 +26,9 @@ describe('useLiveAdmin mode', () => {
     const { unmount } = renderHook(() => useLiveAdmin(adminWith('dark')));
     expect(html().classList.contains('dark')).toBe(true);
     expect(html().classList.contains('light')).toBe(false);
+    expect(html().style.colorScheme).toBe('dark');
     unmount();
+    expect(html().style.colorScheme).toBe('');
     expect(html().classList.contains('dark')).toBe(false);
     expect(html().classList.contains('light')).toBe(true);
   });
