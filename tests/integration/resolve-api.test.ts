@@ -61,6 +61,17 @@ describe('GET /resolve', () => {
     expect(await hits('/old')).toBe(0);
   });
 
+  it('still answers the redirect, uncounted, when AUTH_SECRET is missing', async () => {
+    await db.insert(redirects).values({ sourcePath: '/old', destination: '/services' });
+    const headers = signed('/old');
+    vi.stubEnv('AUTH_SECRET', '');
+    const res = await resolve('/old', headers);
+    vi.unstubAllEnvs();
+    expect(await res.json()).toMatchObject({ kind: 'redirect' });
+    await Promise.all(pending);
+    expect(await hits('/old')).toBe(0);
+  });
+
   it('does not touch updated_at on a hit', async () => {
     const old = new Date('2024-01-01T00:00:00Z');
     await db.insert(redirects).values({ sourcePath: '/old', destination: '/services', updatedAt: old });

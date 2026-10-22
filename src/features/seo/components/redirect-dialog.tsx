@@ -145,7 +145,7 @@ function RedirectForm({ editing, onClose }: { editing: RedirectDto | 'new'; onCl
               ))}
             </SelectContent>
           </Select>
-          <FieldDescription>Browsers may keep a redirect for up to an hour, so a change can take that long to reach a returning visitor.</FieldDescription>
+          <FieldDescription>Browsers and CDNs may keep a permanent (301/308) redirect for up to an hour; temporary ones update straight away.</FieldDescription>
           {errors.statusCode ? <FieldError>{errors.statusCode}</FieldError> : null}
         </Field>
         <Field data-invalid={errors.note ? true : undefined}>

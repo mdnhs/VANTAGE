@@ -28,8 +28,10 @@ const noindex = <T extends NextResponse>(response: T): T => {
 };
 
 export const REDIRECT_TIMEOUT_MS = 300;
-// Redirect answers are cacheable for an hour so repeat visits skip the proxy round trip.
+// Permanent redirects are cacheable for an hour so repeat visits skip the proxy round trip;
+// temporary ones stay uncached so an edit takes effect straight away.
 export const REDIRECT_CACHE_CONTROL = 'public, max-age=3600';
+const PERMANENT_STATUSES = [301, 308];
 const REDIRECT_STATUSES = [301, 302, 307, 308];
 // Next's draft-mode cookie: an editor previewing a draft page must reach it.
 const DRAFT_COOKIE = '__prerender_bypass';
@@ -53,13 +55,14 @@ export const isPrefetch = (request: NextRequest) =>
 
 async function resolve(pathname: string, countHit: boolean): Promise<Resolution | null> {
   try {
+    const secret = process.env.AUTH_SECRET;
     const url = new URL('/api/v1/resolve', internalOrigin());
     url.searchParams.set('path', pathname);
     const res = await fetch(url, {
       cache: 'no-store',
       redirect: 'manual',
       // Signed, so only a real visit seen here (not a direct call to the public API) is counted.
-      headers: countHit ? { [HIT_HEADER]: hitToken(process.env.AUTH_SECRET ?? '', pathname) } : undefined,
+      headers: countHit && secret ? { [HIT_HEADER]: hitToken(secret, pathname) } : undefined,
       signal: AbortSignal.timeout(REDIRECT_TIMEOUT_MS),
     });
     if (res.status !== 200) return null;
@@ -82,7 +85,10 @@ function redirectResponse(request: NextRequest, destination: unknown, statusCode
     target.search = params.toString();
   }
   const response = NextResponse.redirect(target, statusCode as number);
-  response.headers.set('Cache-Control', REDIRECT_CACHE_CONTROL);
+  response.headers.set(
+    'Cache-Control',
+    PERMANENT_STATUSES.includes(statusCode as number) ? REDIRECT_CACHE_CONTROL : 'no-store',
+  );
   return response;
 }
 

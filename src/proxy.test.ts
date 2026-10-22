@@ -177,13 +177,32 @@ describe('proxy: caching and hit signing', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it('lets browsers cache a redirect for an hour', async () => {
+  it('lets browsers cache a 301 for an hour', async () => {
     expect((await proxy(req('/old'))).headers.get('cache-control')).toBe('public, max-age=3600');
+  });
+
+  it.each([
+    [301, 'public, max-age=3600'],
+    [308, 'public, max-age=3600'],
+    [302, 'no-store'],
+    [307, 'no-store'],
+  ])('sets cache-control for a %i redirect', async (status, expected) => {
+    fetchMock.mockImplementation(
+      async () => new Response(JSON.stringify({ kind: 'redirect', destination: '/services', statusCode: status })),
+    );
+    expect((await proxy(req('/old'))).headers.get('cache-control')).toBe(expected);
+  });
+
+  it('sends no hit header when AUTH_SECRET is missing', async () => {
+    vi.stubEnv('AUTH_SECRET', '');
+    await proxy(req('/old'));
+    expect(sentHeaders()?.['x-vantage-hit']).toBeUndefined();
+    vi.unstubAllEnvs();
   });
 
   it('signs the resolver call for a plain GET', async () => {
     await proxy(req('/old'));
-    expect(sentHeaders()?.['x-vantage-hit']).toBe(hitToken(process.env.AUTH_SECRET ?? '', '/old'));
+    expect(sentHeaders()?.['x-vantage-hit']).toBe(hitToken(process.env.AUTH_SECRET!, '/old'));
   });
 
   it.each([

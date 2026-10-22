@@ -1,7 +1,7 @@
 import 'server-only';
 
 import type { Metadata, MetadataRoute } from 'next';
-import { max } from 'drizzle-orm';
+import { eq, max } from 'drizzle-orm';
 import { cacheLife, cacheTag } from 'next/cache';
 
 import { CACHE_TAGS } from '@/lib/cache/tags';
@@ -84,8 +84,8 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
 
   const defaults = await getSetting('seo');
   if (defaults.robots === 'noindex') return [];
-  const [serviceRow] = await db.select({ at: max(services.updatedAt) }).from(services);
-  const [projectRow] = await db.select({ at: max(projects.updatedAt) }).from(projects);
+  const [serviceRow] = await db.select({ at: max(services.updatedAt) }).from(services).where(eq(services.isEnabled, true));
+  const [projectRow] = await db.select({ at: max(projects.updatedAt) }).from(projects).where(eq(projects.status, 'published'));
   const pages = await Promise.all(
     PUBLIC_PAGE_LIST.map(async (page) => {
       const [seoRow, copyRow] = await Promise.all([
