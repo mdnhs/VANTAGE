@@ -44,11 +44,15 @@ const health: SeoHealth = {
   alt: { images: 5, described: 3, decorative: 1, missing: 1 },
 };
 
+let canMedia = true;
+vi.mock('@/contexts/actor-provider', () => ({ useCan: () => canMedia }));
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 let fetchMock: ReturnType<typeof vi.fn>;
 beforeEach(() => {
+  canMedia = true;
   fetchMock = vi.fn(async () => json({ success: true, data: health }));
   vi.stubGlobal('fetch', fetchMock);
 });
@@ -97,6 +101,40 @@ describe('SeoOverviewView', () => {
     expect(screen.getByRole('link', { name: 'Fix: Image has no alt text (hero.jpg)' }).getAttribute('href')).toBe(
       '/dashboard/media?missingAlt=true&q=hero.jpg',
     );
+  });
+
+  it('hides the media links without media.read', async () => {
+    canMedia = false;
+    renderView();
+    await screen.findByText('3 of 5 images described');
+    expect(screen.queryByRole('link', { name: 'Find images without alt text' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Fix: Image has no alt text (hero.jpg)' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Fix: Title is too short (Services)' })).toBeTruthy();
+  });
+
+  it('shows a site issue with no Fix link when it has none', async () => {
+    fetchMock.mockResolvedValue(
+      json({
+        success: true,
+        data: {
+          ...health,
+          issues: [
+            {
+              kind: 'site',
+              id: 'site',
+              title: 'Whole site',
+              path: null,
+              check: 'indexable',
+              message: 'Search engines are blocked: SITE_ENV is not set to production',
+              fixHref: null,
+            },
+          ],
+        },
+      }),
+    );
+    renderView();
+    expect(await screen.findByText('Search engines are blocked: SITE_ENV is not set to production')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /^Fix:/ })).toBeNull();
   });
 
   it('shows the empty state when nothing fails', async () => {

@@ -9,6 +9,7 @@ import { Gauge } from '@/components/admin/dashboard/gauge';
 import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useCan } from '@/contexts/actor-provider';
 import type { SeoHealth, SeoIssue } from '@/lib/seo/health-types';
 
 import { useSeoOverview } from '../hooks/use-seo-overview';
@@ -46,6 +47,8 @@ export function SeoOverviewView() {
 }
 
 function Loaded({ data }: { data: SeoHealth }) {
+  // The library link is a dead end without media.read (the viewer role has seo.read only).
+  const canMedia = useCan({ media: ['read'] });
   const groups = group(data.issues);
   return (
     <>
@@ -67,12 +70,14 @@ function Loaded({ data }: { data: SeoHealth }) {
               {data.alt.described} of {data.alt.images} images described
             </p>
             <p className='text-sm text-muted-foreground'>{data.alt.decorative} decorative</p>
-            <Link
-              href='/dashboard/media?missingAlt=true'
-              className='text-sm font-semibold text-primary underline-offset-4 hover:underline'
-            >
-              Find images without alt text
-            </Link>
+            {canMedia ? (
+              <Link
+                href='/dashboard/media?missingAlt=true'
+                className='text-sm font-semibold text-primary underline-offset-4 hover:underline'
+              >
+                Find images without alt text
+              </Link>
+            ) : null}
           </div>
         </DashboardCard>
       </div>
@@ -96,13 +101,15 @@ function Loaded({ data }: { data: SeoHealth }) {
                   {items.map((issue) => (
                     <li key={issue.check} className='flex items-center justify-between gap-3 text-sm'>
                       <span>{issue.message}</span>
-                      <Link
-                        href={issue.fixHref}
-                        aria-label={`Fix: ${issue.message} (${head.title})`}
-                        className={buttonVariants({ variant: 'outline', size: 'sm' })}
-                      >
-                        Fix
-                      </Link>
+                      {issue.fixHref && (issue.kind !== 'media' || canMedia) ? (
+                        <Link
+                          href={issue.fixHref}
+                          aria-label={`Fix: ${issue.message} (${head.title})`}
+                          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                        >
+                          Fix
+                        </Link>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
