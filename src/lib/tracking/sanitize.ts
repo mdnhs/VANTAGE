@@ -1,5 +1,5 @@
-// Vendor-facing URLs and titles .
-// [prefix, collapsed path, collapsed title]. Also embedded in the inline
+// Vendor-facing URLs and titles are sanitised here.
+// Each entry is [prefix, collapsed path, collapsed title]. Also embedded in the inline
 // bootstrap (lib/tracking/bootstrap.ts), so keep it plain data.
 // VANTAGE has no sensitive path families today; the mechanism is kept so one
 // can be added here (and is then honoured by the bootstrap too).
@@ -44,8 +44,8 @@ export function pageTitle(pathname: string, title: string): string {
   return collapsed(pathname)?.[2] ?? title;
 }
 
-// the Pixel sends location.href itself, so it only runs where the
-// whole URL is neutral.
+// The Pixel sends location.href itself, so it only runs where the whole URL
+// is neutral.
 export const META_ROUTES = [
   '/',
   '/services',

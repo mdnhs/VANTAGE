@@ -51,6 +51,25 @@ describe('vantage_consent', () => {
     expect(readConsent(cookie({ ts: future }), policy, NOW)).toBeNull();
   });
 
+  it('rejects a valid cookie longer than 300 characters', () => {
+    const long = cookie({ pad: 'x'.repeat(300) });
+    expect(long.length).toBeGreaterThan(300);
+    expect(readConsent(cookie(), policy, NOW)).not.toBeNull();
+    expect(readConsent(long, policy, NOW)).toBeNull();
+    expect(decodeConsent(long)).toBeNull();
+  });
+
+  it('accepts an id of 64 characters and rejects one of 65', () => {
+    expect(readConsent(cookie({ id: 'a'.repeat(64) }), policy, NOW)).not.toBeNull();
+    expect(readConsent(cookie({ id: 'a'.repeat(65) }), policy, NOW)).toBeNull();
+  });
+
+  it('allows 4 minutes of clock skew but not 6', () => {
+    const at = (ms: number) => cookie({ ts: Math.floor((NOW + ms) / 1000) });
+    expect(readConsent(at(4 * 60_000), policy, NOW)).not.toBeNull();
+    expect(readConsent(at(6 * 60_000), policy, NOW)).toBeNull();
+  });
+
   it.each([
     '%E0%A4%A',
     encodeURIComponent('[1]'),

@@ -1,5 +1,4 @@
-// The consent cookie and its rules. Isomorphic: the
-// banner, the Hono routes and (as a copy in lib/tracking/bootstrap.ts, kept
+// The consent cookie and its rules. Isomorphic: the banner, the Hono routes and (as a copy in lib/tracking/bootstrap.ts, kept
 // honest by bootstrap.test.ts) the inline bootstrap all follow it.
 export const CONSENT_COOKIE = 'vantage_consent';
 export const DAY_MS = 86_400_000;
@@ -79,7 +78,7 @@ export function consentModeUpdate(choice: ConsentChoice) {
   } as const;
 }
 
-// taking back anything already granted is a withdrawal.
+// Taking back anything already granted is a withdrawal.
 export function actionFor(
   previous: ConsentChoice | null,
   next: ConsentChoice,

@@ -135,6 +135,18 @@ describe('bootstrap consent', () => {
     }
   });
 
+  it('applies the same length, id and clock-skew guards as readConsent', () => {
+    const long = consent(1, 1, { pad: 'x'.repeat(300) });
+    expect(long.length).toBeGreaterThan(300);
+    const stored = (cookie: string) => run(SCRIPT, { cookie }).window.__vantageConsent;
+    expect(stored(consent(1, 1))).not.toBeNull();
+    expect(stored(long)).toBeNull();
+    expect(stored(consent(1, 1, { id: 'a'.repeat(64) }))).not.toBeNull();
+    expect(stored(consent(1, 1, { id: 'a'.repeat(65) }))).toBeNull();
+    expect(stored(consent(1, 1, { ts: now() + 4 * 60 }))).not.toBeNull();
+    expect(stored(consent(1, 1, { ts: now() + 6 * 60 }))).toBeNull();
+  });
+
   it('agrees with readConsent on every fixture', () => {
     const fixtures = [
       consent(1, 1),
@@ -178,6 +190,26 @@ describe('bootstrap sanitising', () => {
       const r = run(SCRIPT, { href: 'https://site.ie/about', referrer });
       expect(r.window.dataLayer[2]).toMatchObject({ page: { referrer: '' } });
     }
+  });
+});
+
+describe('bootstrap collapse families', () => {
+  it('collapses a configured path family like sanitize.ts does', () => {
+    const collapse = [['/private/', '/private', 'Private']] as const;
+    const script = bootstrapScript({ gtmId: null, ga4Id: null, policy, collapse });
+    const r = run(script, {
+      href: 'https://site.ie/Private%2Fabc?x=1',
+      title: 'Secret',
+      referrer: 'https://site.ie/private/zzz',
+    });
+    expect(r.window.dataLayer[2]).toEqual({
+      page: {
+        location: 'https://site.ie/private',
+        path: '/private',
+        title: 'Private',
+        referrer: 'https://site.ie/private',
+      },
+    });
   });
 });
 

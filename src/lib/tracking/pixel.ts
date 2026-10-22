@@ -17,8 +17,9 @@ type Env = {
   };
 };
 
-// Meta's base code, without its automatic PageView: autoConfig
-// off before init, no history-based PageViews. track() sends events.
+// Meta's base code, without its automatic PageView: autoConfig is
+// turned off before init and history-based PageViews are disabled. track()
+// sends the events.
 export function loadPixel(id: string, env: Env = { window: window as never, document: document as never }): boolean {
   const w = env.window;
   if (!validId(PIXEL_ID, id) || w.fbq) return false;

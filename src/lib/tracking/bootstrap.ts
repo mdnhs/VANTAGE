@@ -1,10 +1,9 @@
 import { CONSENT_COOKIE, CONSENT_DEFAULTS, DAY_MS, type ConsentPolicy } from './consent';
 import { GA4_ID, GTM_ID, validId } from './ids';
 import { COLLAPSE } from './sanitize';
-
 import { scriptJson } from './script-json';
 
-// the one inline script at the top of the marketing frame. It
+// The one inline script at the top of the marketing frame. It
 // runs at parse time, before hydration and before GTM could ever load. Its
 // cookie and sanitising rules mirror lib/tracking/{consent,sanitize}.ts;
 // bootstrap.test.ts executes it against the same fixtures.
@@ -28,7 +27,13 @@ w.__vantageLoadGtm=function(){if(loaded||!C.gtm)return;loaded=true;dl.push({"gtm
 if(s){var g=function(on){return on?"granted":"denied"};gtag("consent","update",{analytics_storage:g(s.analytics),ad_storage:g(s.marketing),ad_user_data:g(s.marketing),ad_personalization:g(s.marketing)});if(s.analytics||s.marketing)w.__vantageLoadGtm()}
 `;
 
-export function bootstrapScript(input: { gtmId: string | null; ga4Id: string | null; policy: ConsentPolicy }): string {
+export function bootstrapScript(input: {
+  gtmId: string | null;
+  ga4Id: string | null;
+  policy: ConsentPolicy;
+  // Path families to collapse; defaults to the shared COLLAPSE list.
+  collapse?: typeof COLLAPSE;
+}): string {
   const config = {
     gtm: validId(GTM_ID, input.gtmId),
     ga4: validId(GA4_ID, input.ga4Id),
@@ -36,7 +41,7 @@ export function bootstrapScript(input: { gtmId: string | null; ga4Id: string | n
     maxAgeMs: input.policy.months * 30 * DAY_MS,
     cookie: CONSENT_COOKIE,
     defaults: CONSENT_DEFAULTS,
-    collapse: COLLAPSE,
+    collapse: input.collapse ?? COLLAPSE,
   };
   // JSON.stringify with < > & U+2028/2029 escaped: nothing can close the
   // script tag or break the line.

@@ -1,5 +1,5 @@
-// The typed dataLayer . Pushing is always allowed; GTM
-// gates tags by consent. Never put personal or health data in params.
+// The typed dataLayer. Pushing is always allowed; GTM gates tags by
+// consent. Never put personal or health data in params.
 export type TrackEvent =
   | {
       event: 'virtual_page_view';
