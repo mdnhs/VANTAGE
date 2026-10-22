@@ -2,18 +2,26 @@ import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import sharp from 'sharp';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET as serveUpload } from '@/app/uploads/[...key]/route';
 import { api } from '@/server/api';
 import { db } from '@/server/db';
+import { auditLogs, settings } from '@/server/db/schema';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { resetStorageForTests } from '@/server/lib/media/storage';
 import type { MediaItem } from '@/server/services/media-library-service';
 
+import { mediaLibraryService } from '@/server/services/media-library-service';
+
 import { ORIGIN, sessionCookie } from '../support/session';
+
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  revalidateTag: vi.fn(),
+}));
 
 const BASE = '/api/v1/admin/media';
 const UPLOAD_DIR = path.resolve('.test-uploads');
@@ -43,7 +51,9 @@ describe('admin media API', () => {
   });
 
   beforeEach(async () => {
-    await db.execute(sql`truncate table media`);
+    await db.execute(sql`truncate table media cascade`);
+    await db.execute(sql`truncate table audit_logs`);
+    await db.execute(sql`delete from settings`);
   });
 
   afterAll(async () => {
@@ -189,5 +199,132 @@ describe('admin media API', () => {
     expect(res.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
     expect((await get('vantage/media/../../etc/passwd')).status).toBe(404);
     expect((await get('vantage/media/2026/01/0123456789abcdef-missing.png')).status).toBe(404);
+  });
+  describe('references, ownership and audit', () => {
+    const del = (id: string, c = cookie) =>
+      api.request(`${BASE}/${id}`, { method: 'DELETE', headers: { origin: ORIGIN, cookie: c } });
+    const patch = (id: string, body: object, c = cookie) =>
+      api.request(`${BASE}/${id}`, {
+        method: 'PATCH',
+        headers: { origin: ORIGIN, cookie: c, 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    const audits = async (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action));
+
+    it('refuses to delete an item a setting still names (409 with usage)', async () => {
+      const { data } = await json(await upload(await png('#101'), 'used.png'));
+      await db.insert(settings).values({ key: 'site', value: { logo: { kind: 'media', id: data.id } } });
+      const res = await del(data.id);
+      expect(res.status).toBe(409);
+      const body = (await res.json()) as {
+        error: { message: string; details: { usage: { kind: string; label: string; href: string | null }[] } };
+      };
+      expect(body.error.message).toBe('This file is still in use');
+      expect(body.error.details.usage[0]).toMatchObject({ kind: 'setting', label: 'Identity' });
+      expect((await api.request(`${BASE}/${data.id}`, { headers: { cookie } })).status).toBe(200);
+    });
+
+    it('deletes an unreferenced item and drops it from the list', async () => {
+      const { data } = await json(await upload(await png('#202'), 'free.png'));
+      expect((await del(data.id)).status).toBe(200);
+      const list = await json(await api.request(BASE, { headers: { cookie } }));
+      expect(list.data.map((m: { id: string }) => m.id)).not.toContain(data.id);
+    });
+
+    it('GET /:id/usage returns the real usage', async () => {
+      const { data } = await json(await upload(await png('#303'), 'u.png'));
+      await db.insert(settings).values({ key: 'footer', value: { image: data.id } });
+      const res = await api.request(`${BASE}/${data.id}/usage`, { headers: { cookie } });
+      const body = (await res.json()) as { data: { kind: string }[] };
+      expect(body.data.map((u) => u.kind)).toEqual(['setting']);
+    });
+
+    it('lets an author change only their own files', async () => {
+      const authorCookie = await sessionCookie('author');
+      const owners = (await json(await upload(await png('#404'), 'owner.png'))).data;
+      const mine = (await json(await upload(await png('#505'), 'mine.png', { cookie: authorCookie }))).data;
+      const denied = await patch(owners.id, { alt: 'nope' }, authorCookie);
+      expect(denied.status).toBe(403);
+      expect(((await denied.json()) as { error: { message: string } }).error.message).toBe(
+        'You can only edit your own files',
+      );
+      expect((await patch(mine.id, { alt: 'mine' }, authorCookie)).status).toBe(200);
+      const replaceOwners = await api.request(`${BASE}/${owners.id}/replace`, {
+        method: 'POST',
+        headers: { origin: ORIGIN, cookie: authorCookie },
+        body: form(await png('#606'), 'x.png'),
+      });
+      expect(replaceOwners.status).toBe(403);
+    });
+
+    it('lists exactly the requested ids', async () => {
+      const a = (await json(await upload(await png('#701'), 'a.png'))).data;
+      const b = (await json(await upload(await png('#702'), 'b.png'))).data;
+      await upload(await png('#703'), 'c.png');
+      const res = await api.request(`${BASE}?ids=${a.id},${b.id}`, { headers: { cookie } });
+      const ids = (await json(res)).data.map((m: { id: string }) => m.id).sort();
+      expect(ids).toEqual([a.id, b.id].sort());
+      expect((await api.request(`${BASE}?ids=not-a-uuid`, { headers: { cookie } })).status).toBe(422);
+    });
+
+    it('never lists enquiry-scope media', async () => {
+      const row = await mediaLibraryService.ingest({
+        bytes: await png('#801'),
+        filename: 'lead.png',
+        actorId: null,
+        scope: 'enquiry',
+      });
+      const list = await json(await api.request(BASE, { headers: { cookie } }));
+      expect(list.data.map((m: { id: string }) => m.id)).not.toContain(row.id);
+      expect((await api.request(`${BASE}/${row.id}`, { headers: { cookie } })).status).toBe(200);
+    });
+
+    it('ingest with a legacySource is idempotent', async () => {
+      const input = {
+        bytes: await png('#901'),
+        filename: 'legacy.png',
+        actorId: null,
+        scope: 'library' as const,
+        legacySource: 'cloudinary:image:vantage/x',
+      };
+      const first = await mediaLibraryService.ingest(input);
+      const second = await mediaLibraryService.ingest({ ...input, bytes: await png('#902') });
+      expect(second.id).toBe(first.id);
+      expect(second.key).toBe(first.key);
+    });
+
+    it('hardDeleteEnquiryMedia removes unlinked enquiry rows and their files only', async () => {
+      const lead = await mediaLibraryService.ingest({
+        bytes: await png('#a01'),
+        filename: 'lead.png',
+        actorId: null,
+        scope: 'enquiry',
+      });
+      const lib = await mediaLibraryService.ingest({
+        bytes: await png('#a02'),
+        filename: 'lib.png',
+        actorId: null,
+        scope: 'library',
+      });
+      expect(await mediaLibraryService.hardDeleteEnquiryMedia([lead.id, lib.id])).toBe(1);
+      expect(existsSync(path.join(UPLOAD_DIR, lead.key))).toBe(false);
+      expect(existsSync(path.join(UPLOAD_DIR, lib.key))).toBe(true);
+    });
+
+    it('writes one audit row per upload, update, replace and delete', async () => {
+      const { data } = await json(await upload(await png('#b01'), 'audit.png'));
+      await patch(data.id, { alt: 'described' });
+      await api.request(`${BASE}/${data.id}/replace`, {
+        method: 'POST',
+        headers: { origin: ORIGIN, cookie },
+        body: form(await png('#b02'), 'again.png'),
+      });
+      await del(data.id);
+      for (const action of ['media.upload', 'media.update', 'media.replace', 'media.delete']) {
+        expect(await audits(action), action).toHaveLength(1);
+      }
+      const [update] = await audits('media.update');
+      expect(update?.diff).toMatchObject({ alt: { from: '', to: 'described' } });
+    });
   });
 });

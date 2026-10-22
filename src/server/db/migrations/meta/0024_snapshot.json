@@ -1,5 +1,5 @@
 {
-  "id": "b134ceb9-bdd1-4142-a6c4-c6cfe5b00d46",
+  "id": "183eb52c-7597-461c-9875-cb9103147933",
   "prevId": "92139be4-6938-4bef-9020-1a6f7b05539d",
   "version": "7",
   "dialect": "postgresql",
@@ -1414,9 +1414,21 @@
           "primaryKey": false,
           "notNull": false
         },
+        "icon_media_id": {
+          "name": "icon_media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "image_public_id": {
           "name": "image_public_id",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_media_id": {
+          "name": "image_media_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1500,7 +1512,34 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "services_icon_media_id_media_id_fk": {
+          "name": "services_icon_media_id_media_id_fk",
+          "tableFrom": "services",
+          "tableTo": "media",
+          "columnsFrom": [
+            "icon_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "services_image_media_id_media_id_fk": {
+          "name": "services_image_media_id_media_id_fk",
+          "tableFrom": "services",
+          "tableTo": "media",
+          "columnsFrom": [
+            "image_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "services_slug_unique": {
@@ -1554,13 +1593,25 @@
           "name": "before_image_public_id",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "before_image_media_id": {
+          "name": "before_image_media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "after_image_public_id": {
           "name": "after_image_public_id",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "after_image_media_id": {
+          "name": "after_image_media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "description": {
           "name": "description",
@@ -1669,7 +1720,34 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "projects_before_image_media_id_media_id_fk": {
+          "name": "projects_before_image_media_id_media_id_fk",
+          "tableFrom": "projects",
+          "tableTo": "media",
+          "columnsFrom": [
+            "before_image_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "projects_after_image_media_id_media_id_fk": {
+          "name": "projects_after_image_media_id_media_id_fk",
+          "tableFrom": "projects",
+          "tableTo": "media",
+          "columnsFrom": [
+            "after_image_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "projects_slug_unique": {
@@ -1705,7 +1783,13 @@
           "name": "image_public_id",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "media_id": {
+          "name": "media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "display_order": {
           "name": "display_order",
@@ -1752,6 +1836,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "project_gallery_images_media_id_media_id_fk": {
+          "name": "project_gallery_images_media_id_media_id_fk",
+          "tableFrom": "project_gallery_images",
+          "tableTo": "media",
+          "columnsFrom": [
+            "media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1792,6 +1889,12 @@
         "avatar_public_id": {
           "name": "avatar_public_id",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar_media_id": {
+          "name": "avatar_media_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1866,7 +1969,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "testimonials_avatar_media_id_media_id_fk": {
+          "name": "testimonials_avatar_media_id_media_id_fk",
+          "tableFrom": "testimonials",
+          "tableTo": "media",
+          "columnsFrom": [
+            "avatar_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1894,7 +2011,13 @@
           "name": "logo_public_id",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "logo_media_id": {
+          "name": "logo_media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "website_url": {
           "name": "website_url",
@@ -1954,7 +2077,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "partner_logos_logo_media_id_media_id_fk": {
+          "name": "partner_logos_logo_media_id_media_id_fk",
+          "tableFrom": "partner_logos",
+          "tableTo": "media",
+          "columnsFrom": [
+            "logo_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2175,6 +2312,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "icon_media_id": {
+          "name": "icon_media_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "display_order": {
           "name": "display_order",
           "type": "integer",
@@ -2221,7 +2364,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "homepage_catalogs_icon_media_id_media_id_fk": {
+          "name": "homepage_catalogs_icon_media_id_media_id_fk",
+          "tableFrom": "homepage_catalogs",
+          "tableTo": "media",
+          "columnsFrom": [
+            "icon_media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -2813,6 +2970,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'library'"
+        },
+        "legacy_source": {
+          "name": "legacy_source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "url": {
           "name": "url",
           "type": "text",
@@ -2959,6 +3129,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "media_scope_idx": {
+          "name": "media_scope_idx",
+          "columns": [
+            {
+              "expression": "scope",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2970,14 +3155,21 @@
           "columns": [
             "key"
           ]
+        },
+        "media_legacy_source_unique": {
+          "name": "media_legacy_source_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "legacy_source"
+          ]
         }
       },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ai_conversations": {
-      "name": "ai_conversations",
+    "public.enquiry_photos": {
+      "name": "enquiry_photos",
       "schema": "",
       "columns": {
         "id": {
@@ -2987,21 +3179,27 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
+        "quote_request_id": {
+          "name": "quote_request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_message_id": {
+          "name": "contact_message_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "media_id": {
+          "name": "media_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "model": {
-          "name": "model",
-          "type": "text",
+        "position": {
+          "name": "position",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -3011,29 +3209,16 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {
-        "ai_conversations_user_updated_idx": {
-          "name": "ai_conversations_user_updated_idx",
+        "enquiry_photos_quote_request_idx": {
+          "name": "enquiry_photos_quote_request_idx",
           "columns": [
             {
-              "expression": "user_id",
+              "expression": "quote_request_id",
               "isExpression": false,
               "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": false,
               "nulls": "last"
             }
           ],
@@ -3042,11 +3227,26 @@
           "method": "btree",
           "with": {}
         },
-        "ai_conversations_updated_idx": {
-          "name": "ai_conversations_updated_idx",
+        "enquiry_photos_contact_message_idx": {
+          "name": "enquiry_photos_contact_message_idx",
           "columns": [
             {
-              "expression": "updated_at",
+              "expression": "contact_message_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "enquiry_photos_media_idx": {
+          "name": "enquiry_photos_media_idx",
+          "columns": [
+            {
+              "expression": "media_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3059,117 +3259,43 @@
         }
       },
       "foreignKeys": {
-        "ai_conversations_user_id_users_id_fk": {
-          "name": "ai_conversations_user_id_users_id_fk",
-          "tableFrom": "ai_conversations",
-          "tableTo": "users",
+        "enquiry_photos_quote_request_id_quote_requests_id_fk": {
+          "name": "enquiry_photos_quote_request_id_quote_requests_id_fk",
+          "tableFrom": "enquiry_photos",
+          "tableTo": "quote_requests",
           "columnsFrom": [
-            "user_id"
+            "quote_request_id"
           ],
           "columnsTo": [
             "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.ai_messages": {
-      "name": "ai_messages",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
         },
-        "conversation_id": {
-          "name": "conversation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parts": {
-          "name": "parts",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tokens_in": {
-          "name": "tokens_in",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "tokens_out": {
-          "name": "tokens_out",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "shared_enquiry_details": {
-          "name": "shared_enquiry_details",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "ai_messages_conversation_idx": {
-          "name": "ai_messages_conversation_idx",
-          "columns": [
-            {
-              "expression": "conversation_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "ai_messages_conversation_id_ai_conversations_id_fk": {
-          "name": "ai_messages_conversation_id_ai_conversations_id_fk",
-          "tableFrom": "ai_messages",
-          "tableTo": "ai_conversations",
+        "enquiry_photos_contact_message_id_contact_messages_id_fk": {
+          "name": "enquiry_photos_contact_message_id_contact_messages_id_fk",
+          "tableFrom": "enquiry_photos",
+          "tableTo": "contact_messages",
           "columnsFrom": [
-            "conversation_id"
+            "contact_message_id"
           ],
           "columnsTo": [
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "enquiry_photos_media_id_media_id_fk": {
+          "name": "enquiry_photos_media_id_media_id_fk",
+          "tableFrom": "enquiry_photos",
+          "tableTo": "media",
+          "columnsFrom": [
+            "media_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },
@@ -3177,9 +3303,9 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "ai_messages_role_check": {
-          "name": "ai_messages_role_check",
-          "value": "\"ai_messages\".\"role\" in ('user','assistant')"
+        "enquiry_photos_one_parent": {
+          "name": "enquiry_photos_one_parent",
+          "value": "(\"enquiry_photos\".\"quote_request_id\" is not null)::int + (\"enquiry_photos\".\"contact_message_id\" is not null)::int = 1"
         }
       },
       "isRLSEnabled": false

@@ -33,6 +33,7 @@ export function buildMediaKey(prefix: string, now: Date, hash16: string, slug: s
 export type StorageDriver = {
   name: 'local' | 's3';
   put(key: string, body: Buffer, mimeType: string): Promise<void>;
+  remove(key: string): Promise<void>;
   urlFor(key: string): string;
 };
 
@@ -122,6 +123,12 @@ export function getStorage(): StorageDriver {
           }),
         );
       },
+      async remove(key) {
+        if (!pattern.test(key)) throw new Error(`Refusing media key ${key}`);
+        const sdk = await import('@aws-sdk/client-s3');
+        client ??= new sdk.S3Client(s3Config(env));
+        await client.send(new sdk.DeleteObjectCommand({ Bucket: env.S3_BUCKET, Key: key }));
+      },
       urlFor: (key) => `${base}/${key}`,
     };
   } else {
@@ -143,6 +150,11 @@ export function getStorage(): StorageDriver {
           await rm(temp, { force: true });
           throw error;
         }
+      },
+      async remove(key) {
+        const file = localFile(key, env.MEDIA_LOCAL_DIR);
+        if (!file) throw new Error(`Refusing media key ${key}`);
+        await rm(file.path, { force: true });
       },
       urlFor: (key) => `/uploads/${key}`,
     };

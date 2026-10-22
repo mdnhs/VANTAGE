@@ -78,7 +78,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                 {/* Photo with Before/After toggle */}
                 <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
                   <Image
-                    src={cldUrl(currentPublicId, { width: 800, height: 512, crop: 'fill' })}
+                    src={cldUrl(currentPublicId ?? '', { width: 800, height: 512, crop: 'fill' })}
                     alt={`${project.title} ${currentMode}`}
                     fill
                     sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'

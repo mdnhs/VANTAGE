@@ -1,5 +1,6 @@
 import type { FieldOverrides } from '@/components/admin/schema-form/to-fields';
 import type { EditableGlobalKey } from '@/lib/content/global-access';
+import { MARKETING_FIELD_UI } from '@/features/marketing/marketing-field-ui';
 
 // Admin labels and hints per global, as SchemaForm overrides keyed by dotted
 // path ("links.$.label" is a list item's field). Plain data on purpose: the
@@ -180,4 +181,5 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     eyebrow: { label: 'Eyebrow text' },
     title: { label: 'Title', description: '"{count}" is replaced with the number of enabled steps.' },
   },
+  ...MARKETING_FIELD_UI,
 };

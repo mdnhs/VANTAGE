@@ -1,14 +1,18 @@
 import 'server-only';
 
+import { and, eq, like } from 'drizzle-orm';
 import { after } from 'next/server';
 
-import type { ContactMessage, QuoteRequest } from '@/server/db/schema';
+import { db } from '@/server/db';
+import { users, type ContactMessage, type QuoteRequest } from '@/server/db/schema';
 import { headerText, singleAddress } from '@/server/lib/email/headers';
 import { renderEmail } from '@/server/lib/email/layout';
 import { sendMail, smtpConfigured, verifySmtp, type SendResult } from '@/server/lib/email/mailer';
+import { notify } from '@/server/lib/notifications/notify';
 import { readEffectiveGlobal } from '@/server/services/globals-service';
 
 type Enquiry = {
+  id: string;
   kind: 'quote' | 'contact';
   name: string;
   email: string;
@@ -34,6 +38,42 @@ const readSetting = async <K extends 'notifications' | 'contact'>(key: K) => (aw
 const fillName = (text: string, name: string) => text.replaceAll('{name}', name);
 
 const failed = (r: SendResult | 'skipped') => r !== 'skipped' && !r.delivered && r.reason === 'send_failed';
+
+type Channel = 'notification' | 'auto_reply';
+
+// MK `alertOwners`: tell every active owner that an enquiry email could not be sent. A failure here is
+// logged and swallowed: no notify, no retry (the bell item for the original failure already exists).
+async function alertOwners(enquiry: Enquiry, channel: Channel): Promise<void> {
+  try {
+    const owners = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(and(like(users.role, '%owner%'), eq(users.banned, false)));
+    if (!owners.length) return;
+    const label = channel === 'notification' ? 'the new-enquiry notification' : 'the auto-reply to the visitor';
+    const { html, text } = renderEmail({
+      heading: 'Email delivery failed',
+      paragraphs: [
+        `We could not send ${label} (at ${new Date().toISOString()}). The enquiry itself is saved. Open it in the admin to follow up.`,
+      ],
+      cta: { label: 'Open the enquiry', url: `${appUrl()}${enquiry.adminPath}` },
+    });
+    const result = await sendMail({
+      to: owners.map((o) => o.email),
+      subject: `Email delivery failed: ${label}`,
+      html,
+      text,
+    });
+    if (failed(result)) console.error('[enquiry-notify] delivery-failure alert failed');
+  } catch {
+    console.error('[enquiry-notify] delivery-failure alert failed');
+  }
+}
+
+async function onFailure(enquiry: Enquiry, channel: Channel): Promise<void> {
+  await notify('delivery_failed', { enquiry: enquiry.kind, enquiryId: enquiry.id, channel });
+  await alertOwners(enquiry, channel);
+}
 
 export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome> {
   const [notifications, contact] = await Promise.all([readSetting('notifications'), readSetting('contact')]);
@@ -79,11 +119,14 @@ export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome
 
   if (failed(outcome.notification) || failed(outcome.autoReply)) {
     console.error('[enquiry-notify] delivery failed', { kind: enquiry.kind });
+    if (failed(outcome.notification)) await onFailure(enquiry, 'notification');
+    if (failed(outcome.autoReply)) await onFailure(enquiry, 'auto_reply');
   }
   return outcome;
 }
 
 const quoteEnquiry = (row: QuoteRequest): Enquiry => ({
+  id: row.id,
   kind: 'quote',
   name: row.name,
   email: row.email,
@@ -94,17 +137,18 @@ const quoteEnquiry = (row: QuoteRequest): Enquiry => ({
     ['Registration', row.registration],
   ],
   message: row.description,
-  adminPath: '/dashboard/quotes',
+  adminPath: `/dashboard/quotes/${row.id}`,
 });
 
 const contactEnquiry = (row: ContactMessage): Enquiry => ({
+  id: row.id,
   kind: 'contact',
   name: `${row.firstName} ${row.lastName}`.trim(),
   email: row.email,
   phone: row.phone,
   details: [['Service', row.service]],
   message: row.message,
-  adminPath: '/dashboard/contacts',
+  adminPath: `/dashboard/contacts/${row.id}`,
 });
 
 // Runs after the response when Next provides a request scope, else as a detached promise.
