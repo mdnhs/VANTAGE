@@ -46,7 +46,7 @@ interface FormState {
   beforeImageMediaId: Slot;
   afterImageMediaId: Slot;
   // The library images of the gallery, in order. `galleryTouched` is false until the
-  // user changes it; an untouched gallery is not sent, so legacy images stay.
+  // user changes it; an untouched gallery is not sent.
   galleryMediaIds: string[];
   galleryTouched: boolean;
 }
@@ -85,6 +85,8 @@ interface ProjectFormProps {
   onSubmit: (input: ProjectFormSubmitInput) => Promise<unknown>;
   isSubmitting: boolean;
   submitError?: string | null;
+  // Server 422 causes: shown under the image fields they name.
+  submitCauses?: Record<string, string[]>;
   submitLabel: string;
 }
 
@@ -95,12 +97,14 @@ export function ProjectForm({
   onSubmit,
   isSubmitting,
   submitError,
+  submitCauses,
   submitLabel,
 }: ProjectFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
   const [imageError, setImageError] = useState<{ before?: string; after?: string }>({});
-  const legacyGallery = (initialData?.gallery ?? []).filter((image) => image.id === null);
+  // Gallery rows still on the old storage make the whole gallery read-only until the media migration.
+  const legacyGalleryCount = (initialData?.galleryImages ?? []).filter((row) => !row.mediaId).length;
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -142,7 +146,7 @@ export function ProjectForm({
       // Untouched images are left out so the row keeps them (even legacy ones).
       ...(form.beforeImageMediaId ? { beforeImageMediaId: form.beforeImageMediaId } : {}),
       ...(form.afterImageMediaId ? { afterImageMediaId: form.afterImageMediaId } : {}),
-      ...(form.galleryTouched ? { galleryMediaIds: form.galleryMediaIds } : {}),
+      ...(form.galleryTouched && legacyGalleryCount === 0 ? { galleryMediaIds: form.galleryMediaIds } : {}),
     });
   };
 
@@ -235,7 +239,11 @@ export function ProjectForm({
               )}
               onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
             />
-            {imageError.before ? <p className='text-sm text-destructive'>{imageError.before}</p> : null}
+            {(imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+              <p className='text-sm text-destructive'>
+                {imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]}
+              </p>
+            ) : null}
           </div>
           <div className='flex flex-col gap-1.5'>
             <Label>After</Label>
@@ -245,18 +253,20 @@ export function ProjectForm({
               value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId, initialData?.afterImagePublicId)}
               onChange={(ref) => setField('afterImageMediaId', ref?.id)}
             />
-            {imageError.after ? <p className='text-sm text-destructive'>{imageError.after}</p> : null}
+            {(imageError.after ?? submitCauses?.afterImageMediaId?.[0]) ? (
+              <p className='text-sm text-destructive'>{imageError.after ?? submitCauses?.afterImageMediaId?.[0]}</p>
+            ) : null}
           </div>
           <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Gallery (up to 10 images)</Label>
-            {legacyGallery.length > 0 && !form.galleryTouched ? (
+            {legacyGalleryCount > 0 ? (
               <div className='flex flex-col gap-2'>
                 <p className='text-sm text-muted-foreground'>
-                  {legacyGallery.length} legacy {legacyGallery.length === 1 ? 'image is' : 'images are'} still on this
-                  gallery. Choosing library images below replaces the whole gallery.
+                  This gallery still has {legacyGalleryCount} {legacyGalleryCount === 1 ? 'image' : 'images'} from the
+                  old storage. It can be edited after the media migration runs.
                 </p>
                 <ul className='flex flex-wrap gap-2'>
-                  {legacyGallery.map((image, index) => (
+                  {(initialData?.gallery ?? []).map((image, index) => (
                     <li key={image.src + index} className='size-16 overflow-hidden rounded-lg border bg-muted'>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={sizedSrc(image, 'w_96,h_96,c_fill')} alt='' className='size-full object-cover' />
@@ -264,13 +274,14 @@ export function ProjectForm({
                   ))}
                 </ul>
               </div>
-            ) : null}
-            <MediaGalleryField
-              label='Gallery image'
-              max={10}
-              value={form.galleryMediaIds}
-              onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
-            />
+            ) : (
+              <MediaGalleryField
+                label='Gallery image'
+                max={10}
+                value={form.galleryMediaIds}
+                onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { legacyImageKey } from './legacy-image-key';
+
 // Optional URL that also accepts an empty string (cleared field in a form), normalized to
 // `undefined` so it is dropped from the payload rather than stored as `''`.
 const optionalUrl = z
@@ -11,6 +13,7 @@ const optionalUrl = z
 const partnerLogoBase = z.object({
   companyName: z.string().min(1).max(120),
   logoMediaId: z.string().uuid({ message: 'Choose a logo' }),
+  logoPublicId: legacyImageKey('logoMediaId'),
   websiteUrl: optionalUrl,
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),

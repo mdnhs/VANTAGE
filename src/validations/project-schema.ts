@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { legacyImageKey } from './legacy-image-key';
+
 // lowercase-kebab: letters/digits, hyphen-separated, no leading/trailing/double hyphens.
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -12,9 +14,12 @@ const projectBase = z.object({
   serviceCategory: z.string().min(1).max(80),
   beforeImageMediaId: z.string().uuid({ message: 'Choose a before image' }),
   afterImageMediaId: z.string().uuid({ message: 'Choose an after image' }),
+  beforeImagePublicId: legacyImageKey('beforeImageMediaId'),
+  afterImagePublicId: legacyImageKey('afterImageMediaId'),
+  galleryImagePublicIds: legacyImageKey('galleryMediaIds'),
   description: z.string().min(1),
   completedAt: z.coerce.date().nullable().optional(),
-  isFeatured: z.boolean().default(false),
+  isFeatured: z.boolean().optional(),
   status: z.enum(projectStatusValues).optional(),
   displayOrder: z.number().int().optional(),
   // Ordered media ids. When given they replace the whole gallery (legacy rows included);
@@ -22,7 +27,8 @@ const projectBase = z.object({
   galleryMediaIds: z.array(z.string().uuid()).max(10).optional(),
 });
 
-export const createProjectSchema = projectBase;
+// Defaults apply on create only: a partial update must never reset a field it leaves out.
+export const createProjectSchema = projectBase.extend({ isFeatured: z.boolean().default(false) });
 
 // Leaving an image out keeps the current one (including a legacy one).
 export const updateProjectSchema = projectBase.partial();

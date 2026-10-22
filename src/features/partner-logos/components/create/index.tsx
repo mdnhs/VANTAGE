@@ -1,5 +1,7 @@
 'use client';
 
+import { MediaApiError } from '@/features/media/services/api';
+
 import { useRouter } from 'next/navigation';
 import { PartnerLogoForm } from '../partner-logo-form';
 import { useCreatePartnerLogo } from '../../hooks/api/mutation/use-create-partner-logo';
@@ -15,9 +17,12 @@ export function CreatePartnerLogoForm() {
       submitLabel='Create partner logo'
       isSubmitting={createPartnerLogo.isPending}
       submitError={createPartnerLogo.error?.message ?? null}
+      submitCauses={createPartnerLogo.error instanceof MediaApiError ? createPartnerLogo.error.causes : undefined}
       onSubmit={async (input) => {
-        // The form refuses to submit a new logo without one.
-        await createPartnerLogo.mutateAsync(input as CreatePartnerLogoInput, {
+        const { logoMediaId } = input;
+        // The form refuses to submit without a logo; this keeps the types honest.
+        if (!logoMediaId) throw new Error('Choose a logo');
+        await createPartnerLogo.mutateAsync({ ...input, logoMediaId } satisfies CreatePartnerLogoInput, {
           onSuccess: () => router.push(APP_ROUTES.content.partnerLogos.index),
         });
       }}

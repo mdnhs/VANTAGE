@@ -1,5 +1,7 @@
 'use client';
 
+import { MediaApiError } from '@/features/media/services/api';
+
 import { useRouter } from 'next/navigation';
 import { ProjectForm } from '../project-form';
 import { useUpdateProject } from '../../hooks/api/mutation/use-update-project';
@@ -20,6 +22,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
       submitLabel='Save changes'
       isSubmitting={updateProject.isPending}
       submitError={updateProject.error?.message ?? null}
+      submitCauses={updateProject.error instanceof MediaApiError ? updateProject.error.causes : undefined}
       onSubmit={async (input) => {
         await updateProject.mutateAsync(input, {
           onSuccess: () => router.push(APP_ROUTES.content.projects.index),

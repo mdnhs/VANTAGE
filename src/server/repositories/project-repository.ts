@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
@@ -113,6 +113,16 @@ export const projectRepository = {
     });
     if (!row) return undefined;
     return projectRepository.byId(id);
+  },
+
+  // Gallery rows still on the old storage (no media id). Counted from the raw rows, not
+  // from the resolved gallery, so a row whose legacy image no longer resolves still counts.
+  async legacyGalleryCount(id: string) {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(projectGalleryImages)
+      .where(and(eq(projectGalleryImages.projectId, id), isNull(projectGalleryImages.mediaId)));
+    return row?.n ?? 0;
   },
 
   async remove(id: string) {

@@ -38,6 +38,8 @@ interface PartnerLogoFormProps {
   }) => Promise<unknown>;
   isSubmitting: boolean;
   submitError?: string | null;
+  // Server 422 causes: shown under the logo field.
+  submitCauses?: Record<string, string[]>;
   submitLabel: string;
 }
 
@@ -48,6 +50,7 @@ export function PartnerLogoForm({
   onSubmit,
   isSubmitting,
   submitError,
+  submitCauses,
   submitLabel,
 }: PartnerLogoFormProps) {
   const router = useRouter();
@@ -118,7 +121,11 @@ export function PartnerLogoForm({
               value={slotRef(form.logoMediaId, initialData?.logoMediaId, initialData?.logoPublicId)}
               onChange={(ref) => setField('logoMediaId', ref?.id)}
             />
-            {logoError ? <p className='text-sm text-destructive'>{logoError}</p> : null}
+            {(logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+              <p className='text-sm text-destructive'>
+                {logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]}
+              </p>
+            ) : null}
           </div>
         </CardContent>
       </Card>
