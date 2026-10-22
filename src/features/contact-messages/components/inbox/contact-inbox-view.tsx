@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo } from 'react';
 import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -87,6 +88,7 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
         description='General enquiries and questions submitted through the Contact page.'
         actions={
           <>
+            <EnquiryActions type='contacts' />
             <Button
               type='button'
               variant='outline'
