@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 // Icon per trust-row position is fixed (exact Figma SVGs); only the title/subtitle text is
 // CMS-driven (Site settings → Homepage tab), zipped in by index with `trustItems`.
@@ -19,8 +19,8 @@ interface TrustItem {
 
 interface StitchHeroProps {
   heroVideoEnabled?: boolean;
-  heroVideoPublicId?: string | null;
-  heroFallbackImagePublicId?: string | null;
+  heroVideo?: PublicImage | null;
+  heroFallbackImage?: PublicImage | null;
   eyebrow?: string | null;
   headlineLine1?: string | null;
   headlineLine2?: string | null;
@@ -33,8 +33,8 @@ interface StitchHeroProps {
 // and hardcoded copy below are the fallback until an admin edits Site settings.
 export function StitchHero({
   heroVideoEnabled = false,
-  heroVideoPublicId = null,
-  heroFallbackImagePublicId = null,
+  heroVideo = null,
+  heroFallbackImage = null,
   eyebrow = "Ireland's Premier Collision & Respray Specialists",
   headlineLine1 = 'We Restore',
   headlineLine2 = 'Your Car',
@@ -47,18 +47,18 @@ export function StitchHero({
     title: trustItems[index]?.title ?? '',
     sub: trustItems[index]?.subtitle ?? '',
   })).filter((item) => item.title || item.sub);
-  const showVideo = heroVideoEnabled && Boolean(heroVideoPublicId);
-  const fallbackImageSrc = heroFallbackImagePublicId
-    ? cldUrl(heroFallbackImagePublicId, { width: 1920 })
+  const showVideo = heroVideoEnabled && Boolean(heroVideo);
+  const fallbackImageSrc = heroFallbackImage
+    ? sizedSrc(heroFallbackImage, 'w_1920')
     : '/assets/marketing/stitch-hero.jpg';
 
   return (
     <section className='relative w-full overflow-hidden bg-[#111113] font-[family-name:var(--font-inter)]'>
       {/* Background media */}
       <div className='absolute inset-0 z-0'>
-        {showVideo ? (
+        {showVideo && heroVideo ? (
           <video autoPlay muted loop playsInline poster={fallbackImageSrc} className='h-full w-full object-cover'>
-            <source src={cldUrl(heroVideoPublicId as string, { resourceType: 'video' })} type='video/mp4' />
+            <source src={heroVideo.src} type={heroVideo.mimeType ?? 'video/mp4'} />
           </video>
         ) : (
           <Image

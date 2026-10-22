@@ -4,12 +4,12 @@ import { LayoutDashboardIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { LottieLogo } from '@/components/ui/lottie-logo';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { cn } from '@/lib/utils';
 
 export type Brand = {
   name: string;
-  logoPublicId: string | null;
+  logo: PublicImage | null;
   logoLottieJson: string | null;
   logoUseLottie: boolean;
 };
@@ -17,9 +17,9 @@ export type Brand = {
 // The site's logo (image, Lottie or a neutral glyph) with the business name,
 // sized for admin chrome.
 export function BrandMark({ brand, className }: { brand: Brand; className?: string }) {
-  const image = brand.logoPublicId ? (
+  const image = brand.logo ? (
     <Image
-      src={cldUrl(brand.logoPublicId, { width: 64, height: 64, crop: 'fit' })}
+      src={sizedSrc(brand.logo, 'w_64,h_64,c_fit')}
       alt=''
       width={22}
       height={22}

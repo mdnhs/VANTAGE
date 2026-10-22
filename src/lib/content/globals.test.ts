@@ -231,6 +231,17 @@ describe('globals limits', () => {
   });
 });
 
+describe('parseGlobal isolation', () => {
+  it('returns a fresh copy, so mutating one result never changes the next', () => {
+    const first = parseGlobal('navigation', {});
+    first.links[0]!.label = 'Changed';
+    const firstFooter = parseGlobal('footer', {});
+    firstFooter.columns[0]!.links[0]!.label = 'Changed';
+    expect(parseGlobal('navigation', {}).links[0]!.label).not.toBe('Changed');
+    expect(parseGlobal('footer', {}).columns[0]!.links[0]!.label).not.toBe('Changed');
+  });
+});
+
 describe('parseGlobal drift', () => {
   it('falls back to defaults and logs when the stored value is malformed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

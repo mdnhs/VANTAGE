@@ -20,4 +20,5 @@ export * from './media';
 export * from './consent';
 export * from './enquiry-photos';
 export * from './relations';
+export * from './ai';
 // export * from './orders';

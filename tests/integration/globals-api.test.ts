@@ -6,7 +6,7 @@ import { hasPermission, ROLE_NAMES, type RoleName } from '@/lib/auth/permissions
 import { EDITABLE_GLOBAL_KEYS, GLOBAL_ACCESS } from '@/lib/content/global-access';
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
-import { auditLogs, revisions, settings } from '@/server/db/schema';
+import { auditLogs, media, revisions, settings } from '@/server/db/schema';
 
 import { call, createTestUser, sessionCookie, signInCookie, viewAsCookie } from '../support/session';
 
@@ -52,7 +52,7 @@ afterEach(() => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings`);
+  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings, media cascade`);
   vi.mocked(revalidateTag).mockClear();
 });
 
@@ -197,6 +197,59 @@ describe('PUT /admin/globals/:key', () => {
   });
 });
 
+let mediaN = 0;
+async function insertMedia(over: Partial<typeof media.$inferInsert> = {}) {
+  mediaN += 1;
+  const [row] = await db
+    .insert(media)
+    .values({
+      driver: 'local',
+      key: `vantage/media/2026/10/${String(mediaN).padStart(16, '0')}-g.png`,
+      url: `/uploads/g${mediaN}.png`,
+      filename: 'g.png',
+      mimeType: 'image/png',
+      sizeBytes: 1,
+      ...over,
+    })
+    .returning();
+  return row!;
+}
+
+describe('media refs in settings', () => {
+  it('saves a live media ref', async () => {
+    const logo = await insertMedia();
+    const res = await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: logo.id } } });
+    expect(res.status).toBe(200);
+  });
+
+  it('refuses a soft-deleted logo with a 422 _media', async () => {
+    const logo = await insertMedia({ deletedAt: new Date() });
+    const res = await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: logo.id } } });
+    expect(res.status).toBe(422);
+    const { error } = await json(res);
+    expect(error.causes?._media).toEqual([`Image ${logo.id} no longer exists`]);
+    expect(await db.select().from(settings)).toHaveLength(0);
+  });
+
+  it('refuses an enquiry-scoped upload and an unknown id', async () => {
+    const photo = await insertMedia({ scope: 'enquiry' });
+    const res = await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: photo.id } } });
+    expect(res.status).toBe(422);
+    expect((await json(res)).error.causes?._media).toHaveLength(1);
+    const random = '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11';
+    const res2 = await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: random } } });
+    expect(res2.status).toBe(422);
+  });
+
+  it('keeps Cloudinary refs saveable (legacy rows, old revisions)', async () => {
+    const res = await put(cookies.owner, 'site', {
+      version: 0,
+      value: { logo: { kind: 'cloudinary', publicId: 'p' } },
+    });
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('POST /admin/globals/:key/revisions/:rev/restore', () => {
   const restore = (cookie: string, key: string, rev: string, version: number) =>
     call(`/admin/globals/${key}/revisions/${rev}/restore`, cookie, { method: 'POST', body: { version } });
@@ -250,5 +303,45 @@ describe('POST /admin/globals/:key/revisions/:rev/restore', () => {
     const target = await createTestUser('admin');
     const as = await viewAsCookie(cookies.owner, target.id);
     expect((await restore(as, 'privacy', items[1]!.id, 2)).status).toBe(403);
+  });
+
+  describe('legacy Cloudinary refs', () => {
+    it('maps a ref whose legacy_source exists to a media ref and keeps unknown ones', async () => {
+      const copied = await insertMedia({ legacySource: 'cloudinary:image:p' });
+      await put(cookies.owner, 'site', {
+        version: 0,
+        value: { logo: { kind: 'cloudinary', publicId: 'p' }, favicon: { kind: 'cloudinary', publicId: 'unknown' } },
+      });
+      await put(cookies.owner, 'site', { version: 1, value: {} });
+      const { data } = await json(await call('/admin/globals/site/revisions', cookies.owner));
+      const res = await restore(cookies.owner, 'site', data.items![1]!.id, 2);
+      expect(res.status).toBe(200);
+      const saved = (await json(res)).data.value;
+      expect(saved.logo).toEqual({ kind: 'media', id: copied.id });
+      expect(saved.favicon).toEqual({ kind: 'cloudinary', publicId: 'unknown' });
+    });
+
+    it('looks a hero video up as cloudinary:video:<id>, not image', async () => {
+      const image = await insertMedia({ legacySource: 'cloudinary:image:v' });
+      const video = await insertMedia({ legacySource: 'cloudinary:video:v', mimeType: 'video/mp4' });
+      const ref = { kind: 'cloudinary', publicId: 'v' };
+      await put(cookies.owner, 'page.home', { version: 0, value: { hero: { video: ref, fallbackImage: ref } } });
+      await put(cookies.owner, 'page.home', { version: 1, value: {} });
+      const { data } = await json(await call('/admin/globals/page.home/revisions', cookies.owner));
+      const res = await restore(cookies.owner, 'page.home', data.items![1]!.id, 2);
+      expect(res.status).toBe(200);
+      const hero = (await json(res)).data.value.hero as { video: unknown; fallbackImage: unknown };
+      expect(hero.video).toEqual({ kind: 'media', id: video.id });
+      expect(hero.fallbackImage).toEqual({ kind: 'media', id: image.id });
+    });
+
+    it('does not map to a soft-deleted copy', async () => {
+      await insertMedia({ legacySource: 'cloudinary:image:p', deletedAt: new Date() });
+      await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'cloudinary', publicId: 'p' } } });
+      await put(cookies.owner, 'site', { version: 1, value: {} });
+      const { data } = await json(await call('/admin/globals/site/revisions', cookies.owner));
+      const res = await restore(cookies.owner, 'site', data.items![1]!.id, 2);
+      expect((await json(res)).data.value.logo).toEqual({ kind: 'cloudinary', publicId: 'p' });
+    });
   });
 });
