@@ -1,8 +1,15 @@
 // Next.js 16 (replaced middleware.ts). Cookie reads and redirects only — never a database call.
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { SESSION_COOKIE, verifySessionToken } from '@/server/lib/session';
+import { ADMIN_PATH_HEADER } from '@/lib/auth/admin-path';
+import { safeNext } from '@/lib/auth/safe-next';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+
+// Better Auth's session cookie: `<cookiePrefix>.session_token`, with a `__Secure-` prefix
+// on https (production). Presence only — the real, database-checked validation is
+// requireActor() on the server, so a stale cookie lands on /login via the layout.
+const SESSION_COOKIES = ['vantage.session_token', '__Secure-vantage.session_token'];
+const hasSessionCookie = (request: NextRequest) => SESSION_COOKIES.some((name) => request.cookies.has(name));
 
 const redirectTo = (path: string, request: NextRequest) => {
   const response = NextResponse.redirect(new URL(path, request.url));
@@ -11,26 +18,27 @@ const redirectTo = (path: string, request: NextRequest) => {
   return response;
 };
 
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
+export function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const signedIn = hasSessionCookie(request);
 
-  // Dashboard: presence-only check — cheap and DB-free. The real JWT verification + permission
-  // check happens in (dashboard_layout)/layout.tsx, which redirects on an expired/invalid token.
-  if (pathname.startsWith('/dashboard')) {
-    return token ? NextResponse.next() : redirectTo(APP_ROUTES.auth.login, request);
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    const adminPath = safeNext(`${pathname}${search}`);
+    if (!signedIn) {
+      return redirectTo(`${APP_ROUTES.auth.login}?next=${encodeURIComponent(adminPath)}`, request);
+    }
+    // Layouts never see the pathname; hand it over in a header. `set` overwrites anything
+    // the client sent under the same name.
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set(ADMIN_PATH_HEADER, adminPath);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // Login: an already signed-in admin has nothing to do here — send them to the dashboard.
-  // Unlike the dashboard check this verifies the token signature/expiry, otherwise a stale
-  // cookie would bounce login → dashboard → login forever.
-  if (pathname === APP_ROUTES.auth.login && token) {
-    if (await verifySessionToken(token)) return redirectTo(APP_ROUTES.dashboard.index, request);
-
-    // Expired or tampered cookie: drop it so the form starts clean.
-    const response = NextResponse.next();
-    response.cookies.delete(SESSION_COOKIE);
-    return response;
+  // Login: an already signed-in visitor has nothing to do here. A `next` param means the
+  // dashboard just bounced them back (stale cookie, or a customer session with no panel
+  // access) — redirecting again would loop, so the form is shown instead.
+  if (pathname === APP_ROUTES.auth.login && signedIn && !request.nextUrl.searchParams.has('next')) {
+    return redirectTo(APP_ROUTES.dashboard.index, request);
   }
 
   return NextResponse.next();

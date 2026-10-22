@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { notFound } from 'next/navigation';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
 import { contactMessageService } from '@/server/services/contact-message-service';
 import { ContactDetailView } from '@/features/contact-messages/components/detail/contact-detail-view';
 
@@ -17,16 +17,10 @@ interface ContactDetailPageProps {
 }
 
 export default async function ContactDetailPage({ params }: ContactDetailPageProps) {
+  await requirePermission(permissionFor('/dashboard/contacts/[id]'));
   const { id } = await params;
   const message = await contactMessageService.byId(id);
   if (!message) notFound();
 
-  return (
-    <PermissionGate
-      permissions={[PERMISSIONS.CONTACTS_MANAGE, PERMISSIONS.ADMINS_MANAGE]}
-      fallback={<p>You do not have access to this page.</p>}
-    >
-      <ContactDetailView message={message} />
-    </PermissionGate>
-  );
+  return <ContactDetailView message={message} />;
 }

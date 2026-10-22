@@ -6,9 +6,8 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import { LayoutDashboard, Globe, Settings, Users, ClipboardList, MessageSquare } from 'lucide-react';
 import { SITE_NAV_ITEMS } from '@/components/layout/site-nav-items';
-import { PERMISSIONS, type PermissionValue } from '@/lib/permission/permissions';
-import { getSession } from '@/lib/permission/server-utils';
-import { createPermissionChecker } from '@/lib/permission/utils';
+import { hasPermission, type Permissions } from '@/lib/auth/permissions';
+import { requireActor } from '@/server/lib/auth/session';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import {
   Sidebar as SidebarPrimitive,
@@ -28,7 +27,8 @@ interface NavItem {
   label: string;
   href: string;
   icon: typeof LayoutDashboard;
-  permissions: PermissionValue[];
+  // Shown when the viewer has any one of these.
+  permissions: Permissions[];
 }
 
 interface NavGroup {
@@ -41,7 +41,14 @@ interface NavGroup {
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Overview',
-    items: [{ label: 'Dashboard', href: APP_ROUTES.dashboard.index, icon: LayoutDashboard, permissions: [] }],
+    items: [
+      {
+        label: 'Dashboard',
+        href: APP_ROUTES.dashboard.index,
+        icon: LayoutDashboard,
+        permissions: [{ dashboard: ['view'] }],
+      },
+    ],
   },
   {
     label: 'Leads',
@@ -50,13 +57,13 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Quote Requests',
         href: APP_ROUTES.leads.quotes.index,
         icon: ClipboardList,
-        permissions: [PERMISSIONS.QUOTES_MANAGE],
+        permissions: [{ quote: ['read'] }],
       },
       {
         label: 'Contact Messages',
         href: APP_ROUTES.leads.contacts.index,
         icon: MessageSquare,
-        permissions: [PERMISSIONS.CONTACTS_MANAGE],
+        permissions: [{ contact: ['read'] }],
       },
     ],
   },
@@ -68,21 +75,19 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Website pages',
         href: APP_ROUTES.content.homePage.index,
         icon: Globe,
-        permissions: [...new Set(SITE_NAV_ITEMS.flatMap((item) => item.permissions))],
+        permissions: SITE_NAV_ITEMS.flatMap((item) => item.permissions),
       },
       {
         label: 'Site settings',
         href: APP_ROUTES.content.settings.index,
         icon: Settings,
-        permissions: [PERMISSIONS.SETTINGS_MANAGE],
+        permissions: [{ settings: ['read'] }],
       },
     ],
   },
   {
     label: 'System',
-    items: [
-      { label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [PERMISSIONS.ADMINS_MANAGE] },
-    ],
+    items: [{ label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [{ user: ['list'] }] }],
   },
 ];
 
@@ -92,15 +97,13 @@ const NAV_GROUPS: NavGroup[] = [
 // this is composed as a child of the client `SidebarProvider` from the dashboard layout, so
 // the permission check here still runs entirely on the server.
 export async function Sidebar() {
-  const [session, settings] = await Promise.all([getSession(), siteSettingsService.getPublic()]);
+  const [actor, settings] = await Promise.all([requireActor(), siteSettingsService.getPublic()]);
   const businessName = settings.businessName?.trim() || 'Vantage Admin';
   const logoPublicId = 'logoPublicId' in settings ? settings.logoPublicId : null;
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
-  const checker = session ? createPermissionChecker(session.permissions) : null;
 
-  const canSee = (permissions: PermissionValue[]) =>
-    permissions.length === 0 || Boolean(checker?.hasAnyPermissionByValues(permissions));
+  const canSee = (permissions: Permissions[]) => permissions.some((needed) => hasPermission(actor.roles, needed));
   const firstSitePage = SITE_NAV_ITEMS.find((item) => canSee(item.permissions));
 
   const visibleGroups = NAV_GROUPS.map((group) => ({
@@ -181,7 +184,9 @@ export async function Sidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>{session && <NavUser user={{ name: session.name, email: session.email }} />}</SidebarFooter>
+      <SidebarFooter>
+        <NavUser user={{ name: actor.name, email: actor.email }} />
+      </SidebarFooter>
       <SidebarRail />
     </SidebarPrimitive>
   );

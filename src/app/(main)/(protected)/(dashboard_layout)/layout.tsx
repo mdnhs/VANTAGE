@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { Globe } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getSession } from '@/lib/permission/server-utils';
-import { PermissionsProvider } from '@/lib/permission/permissions-provider';
+import { requireActor } from '@/server/lib/auth/session';
+import { toMePayload } from '@/lib/auth/me';
+import { ActorProvider } from '@/contexts/actor-provider';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
-import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -17,14 +16,14 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/s
 // permission-filtered nav) — inherently dynamic, so it must not be prerendered.
 export const instant = false;
 
-// Real auth/permission check for the dashboard shell — proxy.ts only checks cookie
-// presence, this verifies the JWT and redirects on an expired/invalid/missing session.
+// Real auth check for the dashboard shell — proxy.ts only checks cookie presence, this reads
+// the database-checked Better Auth session and redirects (to /login) when it is missing,
+// expired, or belongs to a site customer (role "user").
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const session = await getSession();
-  if (!session) redirect(APP_ROUTES.auth.login);
+  const actor = await requireActor();
 
   return (
-    <PermissionsProvider permissions={session.permissions}>
+    <ActorProvider actor={toMePayload(actor)}>
       <SidebarProvider className='font-sans'>
         <Sidebar />
         <SidebarInset className='h-svh overflow-y-auto md:peer-data-[variant=inset]:h-[calc(100svh-1rem)]'>
@@ -55,6 +54,6 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <div className='flex-1 p-6'>{children}</div>
         </SidebarInset>
       </SidebarProvider>
-    </PermissionsProvider>
+    </ActorProvider>
   );
 }

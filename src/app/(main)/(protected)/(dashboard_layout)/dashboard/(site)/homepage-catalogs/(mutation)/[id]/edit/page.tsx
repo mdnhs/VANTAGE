@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { notFound } from 'next/navigation';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { EditHomepageCatalogForm } from '@/features/homepage-catalogs/components/edit';
 
@@ -17,22 +17,18 @@ interface EditHomepageCatalogPageProps {
 }
 
 export default async function EditHomepageCatalogPage({ params }: EditHomepageCatalogPageProps) {
+  await requirePermission(permissionFor('/dashboard/homepage-catalogs/[id]/edit'));
   const { id } = await params;
   const catalog = await homepageCatalogService.byId(id);
   if (!catalog) notFound();
 
   return (
-    <PermissionGate
-      permissions={[PERMISSIONS.CATALOG_MANAGE, PERMISSIONS.ADMINS_MANAGE]}
-      fallback={<p>You do not have access to this page.</p>}
-    >
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>Edit homepage catalog item</h1>
-          <p className='text-sm text-muted-foreground'>{catalog.title}</p>
-        </div>
-        <EditHomepageCatalogForm catalog={catalog} />
+    <div className='flex flex-col gap-6'>
+      <div>
+        <h1 className='text-xl font-semibold'>Edit homepage catalog item</h1>
+        <p className='text-sm text-muted-foreground'>{catalog.title}</p>
       </div>
-    </PermissionGate>
+      <EditHomepageCatalogForm catalog={catalog} />
+    </div>
   );
 }

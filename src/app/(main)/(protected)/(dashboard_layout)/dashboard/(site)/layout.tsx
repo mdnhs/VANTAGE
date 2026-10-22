@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { getSession } from '@/lib/permission/server-utils';
-import { createPermissionChecker } from '@/lib/permission/utils';
+import { requireActor } from '@/server/lib/auth/session';
+import { hasPermission } from '@/lib/auth/permissions';
 import { SITE_NAV_ITEMS } from '@/components/layout/site-nav-items';
 import { SiteSectionNav } from '@/components/layout/site-section-nav';
 
@@ -8,9 +8,8 @@ import { SiteSectionNav } from '@/components/layout/site-section-nav';
 // insurance, about, process) — left-hand page menu on the left, the page's own editor on the
 // right. Route group, so URLs stay `/dashboard/<page>`.
 export default async function SiteContentLayout({ children }: { children: ReactNode }) {
-  const session = await getSession();
-  const checker = session ? createPermissionChecker(session.permissions) : null;
-  const items = SITE_NAV_ITEMS.filter((item) => checker?.hasAnyPermissionByValues(item.permissions));
+  const actor = await requireActor();
+  const items = SITE_NAV_ITEMS.filter((item) => item.permissions.some((needed) => hasPermission(actor.roles, needed)));
 
   return (
     <div className='flex flex-col gap-6 lg:flex-row lg:items-start'>

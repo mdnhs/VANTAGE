@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { notFound } from 'next/navigation';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import { QuoteDetailView } from '@/features/quote-requests/components/detail/quote-detail-view';
 
@@ -17,16 +17,10 @@ interface QuoteDetailPageProps {
 }
 
 export default async function QuoteDetailPage({ params }: QuoteDetailPageProps) {
+  await requirePermission(permissionFor('/dashboard/quotes/[id]'));
   const { id } = await params;
   const quote = await quoteRequestService.byId(id);
   if (!quote) notFound();
 
-  return (
-    <PermissionGate
-      permissions={[PERMISSIONS.QUOTES_MANAGE, PERMISSIONS.ADMINS_MANAGE]}
-      fallback={<p>You do not have access to this page.</p>}
-    >
-      <QuoteDetailView quote={quote} />
-    </PermissionGate>
-  );
+  return <QuoteDetailView quote={quote} />;
 }

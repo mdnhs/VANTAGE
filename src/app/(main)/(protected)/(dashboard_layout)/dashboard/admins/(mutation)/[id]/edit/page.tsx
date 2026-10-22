@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { notFound } from 'next/navigation';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { getSession } from '@/lib/permission/server-utils';
-import { PERMISSIONS } from '@/lib/permission/permissions';
 import { adminUserService } from '@/server/services/admin-user-service';
 import { EditAdminUserForm } from '@/features/admin-users/components/edit';
 
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via PermissionGate/getSession) per request — must not be
+// Reads the session cookie (via requirePermission) per request — must not be
 // prerendered.
 export const instant = false;
 
@@ -21,19 +20,18 @@ interface EditAdminUserPageProps {
 
 // Detail page: calls the service directly rather than fetching the API route.
 export default async function EditAdminUserPage({ params }: EditAdminUserPageProps) {
+  const actor = await requirePermission(permissionFor('/dashboard/admins/[id]/edit'));
   const { id } = await params;
-  const [adminUser, session] = await Promise.all([adminUserService.byId(id), getSession()]);
+  const adminUser = await adminUserService.byId(id);
   if (!adminUser) notFound();
 
   return (
-    <PermissionGate permissions={[PERMISSIONS.ADMINS_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>Edit admin</h1>
-          <p className='text-sm text-muted-foreground'>{adminUser.name}</p>
-        </div>
-        <EditAdminUserForm adminUser={adminUser} currentUserId={session?.id ?? ''} />
+    <div className='flex flex-col gap-6'>
+      <div>
+        <h1 className='text-xl font-semibold'>Edit admin</h1>
+        <p className='text-sm text-muted-foreground'>{adminUser.name}</p>
       </div>
-    </PermissionGate>
+      <EditAdminUserForm adminUser={adminUser} currentUserId={actor.userId} />
+    </div>
   );
 }

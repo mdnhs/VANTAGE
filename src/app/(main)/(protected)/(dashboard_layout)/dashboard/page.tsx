@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { getSession } from '@/lib/permission/server-utils';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { analyticsService } from '@/server/services/analytics-service';
 import { DashboardOverviewView } from '@/features/dashboard-overview/components/dashboard-overview-view';
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function DashboardPage() {
-  const [session, data] = await Promise.all([getSession(), analyticsService.getOverviewData()]);
+  const actor = await requirePermission(permissionFor('/dashboard'));
+  const data = await analyticsService.getOverviewData();
 
-  return <DashboardOverviewView adminName={session?.name} data={data} />;
+  return <DashboardOverviewView adminName={actor.name} data={data} />;
 }
