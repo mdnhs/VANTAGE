@@ -1,5 +1,7 @@
 // Re-export every table here as features are scaffolded.
 export * from './auth';
+export * from './audit';
+export * from './rate-limits';
 export * from './admin-users';
 export * from './site-settings';
 export * from './services';

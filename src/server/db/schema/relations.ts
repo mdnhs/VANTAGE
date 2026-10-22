@@ -3,6 +3,7 @@ import { projects } from './projects';
 import { projectGalleryImages } from './project-gallery-images';
 import { quoteRequests } from './quote-requests';
 import { adminUsers } from './admin-users';
+import { users } from './auth';
 
 // Kept in a dedicated file (rather than inline in projects.ts / project-gallery-images.ts)
 // to avoid a circular import between the two table modules — each relations() call needs
@@ -23,6 +24,10 @@ export const quoteRequestsRelations = relations(quoteRequests, ({ one }) => ({
   assignedAdmin: one(adminUsers, {
     fields: [quoteRequests.assignedAdminId],
     references: [adminUsers.id],
+  }),
+  assignedUser: one(users, {
+    fields: [quoteRequests.assignedUserId],
+    references: [users.id],
   }),
 }));
 

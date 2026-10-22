@@ -162,6 +162,13 @@
       "when": 1792651102890,
       "tag": "0022_short_johnny_blaze",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792652161421,
+      "tag": "0023_rich_joystick",
+      "breakpoints": true
     }
   ]
 }
