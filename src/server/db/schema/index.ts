@@ -18,4 +18,5 @@ export * from './settings';
 export * from './revisions';
 export * from './media';
 export * from './relations';
+export * from './ai';
 // export * from './orders';
