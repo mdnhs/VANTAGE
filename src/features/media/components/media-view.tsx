@@ -2,7 +2,7 @@
 
 import { ImageIcon } from 'lucide-react';
 import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { PageHeader } from '@/components/admin/dashboard/page-header';
@@ -43,10 +43,21 @@ export function MediaView() {
   // Keep the opened item itself: a filter change or a save must not close its sheet.
   const [openItem, setOpenItem] = useState<MediaItem | null>(null);
 
+  // The last value this view wrote to the URL, so the resync below never fights the debounce.
+  const written = useRef(q);
   useEffect(() => {
-    const timer = setTimeout(() => void setFilters({ q: search.trim() }), 250);
+    const timer = setTimeout(() => {
+      written.current = search.trim();
+      void setFilters({ q: search.trim() });
+    }, 250);
     return () => clearTimeout(timer);
   }, [search, setFilters]);
+  // A link that changes ?q while the library is open (e.g. the SEO overview's Fix links) updates the box.
+  useEffect(() => {
+    if (q === written.current) return;
+    written.current = q;
+    setSearch(q);
+  }, [q]);
 
   const list = useMediaList({ q: q || undefined, type: type ?? undefined, missingAlt: missingAlt || undefined });
   const opened: MediaItem | null = openItem ? (list.items.find((item) => item.id === openItem.id) ?? openItem) : null;

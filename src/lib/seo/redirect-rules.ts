@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-import { isReservedPath, LIVE_PATHS } from '@/lib/seo/public-pages';
+import { isReservedPath, LIVE_PATHS, RESERVED_PREFIXES } from '@/lib/seo/public-pages';
 
 export const REDIRECT_STATUSES = [301, 302, 307, 308] as const;
 export type RedirectStatus = (typeof REDIRECT_STATUSES)[number];
@@ -27,6 +27,24 @@ function canonicalDestination(v: string): string {
   return path + url.search;
 }
 
+// Destinations may be live pages, legacy pages and public files, but never the app's own areas
+// (API, admin, auth pages, /_next). Uploaded files and assets are public, so an old /brochure.pdf
+// may point at /uploads/...; only the remaining prefixes are blocked.
+const PUBLIC_FILE_PREFIXES = new Set(['/uploads', '/assets', '/fonts']);
+
+function isAppPath(v: string): boolean {
+  let path = v.split(/[?#]/, 1)[0]!;
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    // keep the raw path
+  }
+  path = path.toLowerCase();
+  return RESERVED_PREFIXES.some(
+    (prefix) => !PUBLIC_FILE_PREFIXES.has(prefix) && (path === prefix || path.startsWith(`${prefix}/`)),
+  );
+}
+
 // Site paths only, optionally with a query string.
 export const RedirectDestination = z
   .string()
@@ -34,7 +52,8 @@ export const RedirectDestination = z
   .max(500)
   .refine((v) => /^\/(?![/\\])[^\s\\#]*$/.test(v), 'Use a path on this site, e.g. /new-page')
   .transform(canonicalDestination)
-  .refine((v) => /^\/(?![/\\])/.test(v), 'Use a path on this site, e.g. /new-page');
+  .refine((v) => /^\/(?![/\\])/.test(v), 'Use a path on this site, e.g. /new-page')
+  .refine((v) => !isAppPath(v), "That address belongs to the app and can't be a destination");
 
 const Status = z.union([z.literal(301), z.literal(302), z.literal(307), z.literal(308)]);
 

@@ -19,7 +19,7 @@ const FEATURED_TAGS = ['projects-featured', 'testimonials-featured'].map((r) => 
 // SEO and copy documents, media alt text and the lists that name images), so any edit expires it.
 export async function getSeoHealth(): Promise<SeoHealth> {
   'use cache';
-  cacheTag(settingTag('seo'), settingTag('site'), MEDIA_TAG, ...ENTITY_TAGS, ...FEATURED_TAGS);
+  cacheTag(settingTag('seo'), settingTag('site'), settingTag('contact'), MEDIA_TAG, ...ENTITY_TAGS, ...FEATURED_TAGS);
   for (const p of PUBLIC_PAGE_LIST) {
     cacheTag(settingTag(seoPageKey(p.id)));
     if (p.pageKey) cacheTag(settingTag(p.pageKey));

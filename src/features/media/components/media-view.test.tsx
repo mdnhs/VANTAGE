@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 function renderView(searchParams: string, onUrlUpdate?: OnUrlUpdateFunction) {
-  render(
+  return render(
     <NuqsTestingAdapter searchParams={searchParams} onUrlUpdate={onUrlUpdate}>
       <MediaView />
     </NuqsTestingAdapter>,
@@ -43,6 +43,25 @@ describe('MediaView URL filters', () => {
     expect(screen.getByRole('switch', { name: 'Missing alt text' }).getAttribute('aria-checked')).toBe('true');
     expect((screen.getByLabelText('Search the library') as HTMLInputElement).value).toBe('hero.jpg');
     expect(useMediaList).toHaveBeenLastCalledWith({ q: 'hero.jpg', type: undefined, missingAlt: true });
+  });
+
+  it('resyncs the search box when ?q changes in place, without fighting typing', async () => {
+    const view = render(
+      <NuqsTestingAdapter searchParams='?q=hero.jpg' hasMemory>
+        <MediaView />
+      </NuqsTestingAdapter>,
+    );
+    const box = screen.getByLabelText('Search the library') as HTMLInputElement;
+    expect(box.value).toBe('hero.jpg');
+    view.rerender(
+      <NuqsTestingAdapter searchParams='?q=logo.png' hasMemory>
+        <MediaView />
+      </NuqsTestingAdapter>,
+    );
+    await waitFor(() => expect(box.value).toBe('logo.png'));
+    fireEvent.change(box, { target: { value: 'logo.pngx' } });
+    await new Promise((r) => setTimeout(r, 400));
+    expect(box.value).toBe('logo.pngx');
   });
 
   it('defaults to no filters', () => {

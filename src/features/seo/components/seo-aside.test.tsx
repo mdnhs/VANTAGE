@@ -4,14 +4,19 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { parseGlobal } from '@/lib/content/globals';
+import { HOME_DESCRIPTION } from '@/lib/seo/public-pages';
 
 import { SeoAside } from './seo-aside';
 
 let globalsDenied = false;
 let siteGlobalDenied = false;
+let seoValue: Record<string, unknown> = {};
+let publicSite: Record<string, unknown> = { businessName: 'Vantage Autobody' };
 beforeEach(() => {
   globalsDenied = false;
   siteGlobalDenied = false;
+  seoValue = {};
+  publicSite = { businessName: 'Vantage Autobody' };
   vi.stubEnv('NEXT_PUBLIC_API_PREFIX', '/api');
   vi.stubEnv('NEXT_PUBLIC_API_VERSION', '/v1');
   vi.stubGlobal('fetch', (url: string) => {
@@ -22,11 +27,11 @@ beforeEach(() => {
     }
     if (url.endsWith('/site-settings')) {
       return Promise.resolve(
-        new Response(JSON.stringify({ success: true, data: { businessName: 'Vantage Autobody' } })),
+        new Response(JSON.stringify({ success: true, data: publicSite })),
       );
     }
     const key = url.split('/admin/globals/')[1];
-    const value = parseGlobal('seo', {});
+    const value = parseGlobal('seo', seoValue);
     return Promise.resolve(new Response(JSON.stringify({ success: true, data: { key, version: 1, value } })));
   });
 });
@@ -59,6 +64,26 @@ describe('SeoAside', () => {
   it('says so when the page is hidden from search engines', async () => {
     renderAside({ noindex: true });
     expect(await screen.findByText('Hidden from search engines')).toBeTruthy();
+  });
+
+  it('says the page is hidden when the whole site is noindex', async () => {
+    seoValue = { robots: 'noindex' };
+    renderAside({ noindex: false });
+    expect(await screen.findByText('Hidden from search engines')).toBeTruthy();
+  });
+
+  it('grades the description the home page ships, not a raw default the public settings drop', async () => {
+    const derived = 'Vantage Autobody — Mon-Fri 9-5, a description of a comfortable and rather useful length here';
+    seoValue = { defaultDescription: derived };
+    publicSite = { businessName: 'Vantage Autobody', metaDescription: null };
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <SeoAside id='home' values={parseGlobal('seo.page.home', {})} />
+      </QueryClientProvider>,
+    );
+    // The registry text ships (the derived default is treated as "not set"), so its length is graded.
+    expect(await screen.findByText(new RegExp(`Description is ${HOME_DESCRIPTION.length} characters`))).toBeTruthy();
+    expect(screen.queryByText(new RegExp(`Description is ${derived.length} characters`))).toBeNull();
   });
 
   it('shows the shipped title even when the site global is not readable (site name from the public settings)', async () => {

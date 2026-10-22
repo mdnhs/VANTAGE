@@ -39,6 +39,20 @@ describe('RedirectDestination', () => {
   });
 });
 
+describe('RedirectDestination app paths', () => {
+  it.each(['/api/v1/x', '/dashboard', '/dashboard/users?x=1', '/login', '/_next/static/a', '/API/x', '/%64ashboard'])(
+    'rejects %s',
+    (v) => {
+      const r = RedirectDestination.safeParse(v);
+      expect(r.success).toBe(false);
+      expect(r.error?.issues[0]?.message).toBe("That address belongs to the app and can't be a destination");
+    },
+  );
+  it.each(['/services', '/about.html', '/apiary', '/dashboards', '/brochure.pdf', '/uploads/a.pdf', '/assets/x.png'])('allows %s', (v) => {
+    expect(RedirectDestination.safeParse(v).success).toBe(true);
+  });
+});
+
 describe('RedirectDestination canonical form', () => {
   it.each([
     ['/a/../b', '/b'],

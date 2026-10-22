@@ -91,4 +91,16 @@ describe('public page SEO', () => {
     expect(paths).not.toContain('/about');
     expect(paths).toContain('/process');
   });
+
+  it('keeps a page whose canonical is its own absolute address', async () => {
+    const origin = 'https://vantage.example.ie';
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', origin);
+    // (a trailing slash is rejected on save, so only the exact address is stored)
+    expect((await put('seo.page.about', { canonical: `${origin}/about` })).status).toBe(200);
+    expect((await put('seo.page.contact', { canonical: `${origin}/about` })).status).toBe(200);
+    const paths = (await getSitemapEntries()).map((e) => e.path);
+    expect(paths).toContain('/about');
+    expect(paths).not.toContain('/contact');
+    vi.unstubAllEnvs();
+  });
 });
