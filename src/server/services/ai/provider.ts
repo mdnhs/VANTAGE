@@ -8,6 +8,7 @@ import type { LanguageModel } from 'ai';
 import { baseUrlProblem, normaliseBaseUrl, type AiProvider } from '@/lib/ai/schema';
 import { serverEnv } from '@/lib/env';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
+import { fetchFor } from '@/server/lib/net/safe-fetch';
 
 export type ModelSettings = {
   provider: AiProvider;
@@ -49,7 +50,8 @@ export function buildModel(s: ModelSettings): LanguageModel {
         baseURL: normaliseBaseUrl(s.baseUrl),
         apiKey: s.apiKey ?? undefined,
         includeUsage: true,
-        fetch: noRedirectFetch,
+        // MK R6: also refuse hosts whose DNS answer is a private address.
+        fetch: fetchFor(localHttpAllowed()),
       })(s.model);
     }
   }

@@ -1,3 +1,5 @@
+import dns from 'node:dns';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import { ProviderHttpError } from './errors';
@@ -80,5 +82,22 @@ describe('listModels', () => {
     await expect(listModels({ provider: 'anthropic', baseUrl: '', apiKey: 'k-0123456789' }, f)).rejects.toThrow(
       /too large/,
     );
+  });
+
+  it('refuses an OpenAI-compatible host that resolves to a private address, without leaking the key', async () => {
+    const lookup = vi.spyOn(dns, 'lookup').mockImplementation(((_h: string, _o: unknown, cb: unknown) => {
+      (cb as (e: null, a: { address: string; family: number }[]) => void)(null, [
+        { address: '169.254.169.254', family: 4 },
+      ]);
+    }) as unknown as typeof dns.lookup);
+    const error = await listModels({
+      provider: 'openai-compatible',
+      baseUrl: 'https://rebind.example/v1',
+      apiKey: 'k-secret-0123456789',
+    }).catch((e: unknown) => e as Error);
+    lookup.mockRestore();
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe('That address points to a private network');
+    expect((error as Error).message).not.toContain('k-secret-0123456789');
   });
 });

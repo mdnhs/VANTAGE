@@ -1,3 +1,5 @@
+import dns from 'node:dns';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { buildModel, getModel, localHttpAllowed, mockEnabled } from './provider';
@@ -41,7 +43,6 @@ describe('redirects (MK R6)', () => {
   it.each([
     { provider: 'google', baseUrl: '' },
     { provider: 'anthropic', baseUrl: '' },
-    { provider: 'openai-compatible', baseUrl: 'https://api.groq.com/openai/v1' },
   ] as const)('$provider requests refuse redirects', async (s) => {
     const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('{}', { status: 500 }));
     const model = buildModel({ ...s, model: 'm', apiKey: key }) as unknown as {
@@ -52,6 +53,26 @@ describe('redirects (MK R6)', () => {
       .catch(() => undefined);
     expect(spy).toHaveBeenCalled();
     expect(spy.mock.calls[0]![1]!.redirect).toBe('error');
+    spy.mockRestore();
+  });
+
+  it('openai-compatible requests use the address-guarded fetch, not the global one', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch');
+    const lookup = vi.spyOn(dns, 'lookup').mockImplementation(((_h: string, _o: unknown, cb: unknown) => {
+      (cb as (e: null, a: { address: string; family: number }[]) => void)(null, [{ address: '10.0.0.5', family: 4 }]);
+    }) as unknown as typeof dns.lookup);
+    const model = buildModel({
+      provider: 'openai-compatible',
+      model: 'm',
+      baseUrl: 'https://rebind.example/v1',
+      apiKey: key,
+    }) as unknown as { doGenerate: (o: unknown) => Promise<unknown> };
+    const error = await model
+      .doGenerate({ prompt: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }] })
+      .catch((e: unknown) => e);
+    expect(String((error as Error).message)).toContain('That address points to a private network');
+    expect(spy).not.toHaveBeenCalled();
+    lookup.mockRestore();
     spy.mockRestore();
   });
 });
