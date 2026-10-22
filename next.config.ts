@@ -64,6 +64,12 @@ const nextConfig: NextConfig = {
     return [
       { source: '/:path*', headers: [...baseHeaders, ...frameSelf] },
       ...NEVER_FRAMED.map((source) => ({ source, headers: frameNone })),
+      // Last, so it wins: the upload route's own sandbox CSP is dropped when a config rule already
+      // set the header, so the sandbox is restated here (plus the same-origin framing allowance).
+      {
+        source: '/uploads/:path*',
+        headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'; sandbox; frame-ancestors 'self'" }],
+      },
     ];
   },
 };
