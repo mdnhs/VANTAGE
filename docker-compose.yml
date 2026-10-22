@@ -19,5 +19,25 @@ services:
       timeout: 5s
       retries: 10
 
+  app:
+    profiles: ['app']
+    build:
+      context: .
+      args:
+        MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://vantage:vantage@postgres:5432/vantage
+      MEDIA_LOCAL_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+    volumes:
+      - vantage-uploads:/app/uploads
 volumes:
   vantage-pgdata:
+  vantage-uploads:
