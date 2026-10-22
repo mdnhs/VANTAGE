@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { InsuranceHero } from '@/components/marketing/insurance-hero';
 import { CoordinationSection } from '@/components/marketing/coordination-section';
 import { ProcessTimeline } from '@/components/marketing/process-timeline';
@@ -10,12 +11,9 @@ import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Insurance Support',
-  description:
-    'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
-  alternates: { canonical: '/insurance' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('insurance');
+}
 
 export default async function InsurancePage() {
   const [partnerLogos, settings] = await Promise.all([
@@ -26,6 +24,7 @@ export default async function InsurancePage() {
 
   return (
     <>
+      <PageJsonLd id='insurance' />
       <main>
         <InsuranceHero
           eyebrow={content.heroEyebrow}

@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { PortfolioHero } from '@/components/marketing/portfolio-hero';
 import { ProjectGrid } from '@/components/marketing/project-grid';
 import {
@@ -11,18 +12,16 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { projectService } from '@/server/services/project-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Our Work',
-  description:
-    'Explore a curated selection of our most challenging and rewarding restoration projects. Precision engineering meets master craftsmanship.',
-  alternates: { canonical: '/our-work' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('our-work');
+}
 
 export default async function OurWorkPage() {
   const [projects, settings] = await Promise.all([projectService.listPublished(), siteSettingsService.getPublic()]);
 
   return (
     <main className='flex w-full flex-col'>
+      <PageJsonLd id='our-work' />
       <PortfolioHero
         eyebrow={settings.ourWorkHeroEyebrow ?? 'Portfolio'}
         headlineLine1={settings.ourWorkHeroHeadlineLine1 ?? 'Our Recent'}

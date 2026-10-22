@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchHero } from '@/components/marketing/stitch-hero';
 import { StitchServices } from '@/components/marketing/stitch-services';
 import { StitchEstimator } from '@/components/marketing/stitch-estimator';
@@ -13,21 +14,8 @@ import { homepageProcessStepService } from '@/server/services/homepage-process-s
 import { projectService } from '@/server/services/project-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-const DESCRIPTION =
-  'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.';
-
-// Homepage puts the business name first (absolute title, bypassing the root layout's
-// "%s | {businessName}" template) so it's still visible when a browser tab truncates
-// the title — every other page keeps the template's page-name-first order.
-export async function generateMetadata(): Promise<Metadata> {
-  const settings = await siteSettingsService.getPublic();
-  const description = settings.metaDescription || DESCRIPTION;
-
-  return {
-    title: { absolute: `${settings.businessName} — Precision Crash Repair & Restoration Dublin` },
-    description,
-    alternates: { canonical: '/' },
-  };
+export async function generateMetadata() {
+  return getPageMetadata('home');
 }
 
 export default async function Home() {
@@ -49,6 +37,7 @@ export default async function Home() {
 
   return (
     <div className='flex min-h-screen flex-col bg-[#111113] text-[#e5e2e1] antialiased selection:bg-brand selection:text-white'>
+      <PageJsonLd id='home' />
       <main className='grow'>
         <StitchHero
           heroVideoEnabled={settings.heroVideoEnabled}
