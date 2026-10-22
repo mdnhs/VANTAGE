@@ -74,6 +74,20 @@ describe('mailer with SMTP', () => {
   });
 });
 
+describe('mailer with malformed env', () => {
+  it('never throws on an invalid env', async () => {
+    configure();
+    vi.stubEnv('SMTP_PORT', 'abc');
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(smtpConfigured()).toBe(false);
+    const res = await sendMail(msg);
+    expect(res).toMatchObject({ delivered: false, reason: 'send_failed' });
+    expect(JSON.stringify(res)).not.toContain('abc');
+    expect(await verifySmtp()).toMatchObject({ ok: false });
+    spy.mockRestore();
+  });
+});
+
 describe('renderEmail', () => {
   it('escapes HTML in heading, paragraphs and cta label', () => {
     const { html, text } = renderEmail({

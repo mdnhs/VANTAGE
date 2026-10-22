@@ -20,14 +20,27 @@ export type SendResult =
 
 let transporter: Transporter | null = null;
 
+// Zod errors can echo env values, so surface a fixed message instead.
+const readEnv = () => {
+  try {
+    return serverEnv();
+  } catch {
+    throw new Error('invalid environment configuration');
+  }
+};
+
 export const smtpConfigured = (): boolean => {
-  const env = serverEnv();
-  return Boolean(env.SMTP_HOST && env.MAIL_FROM);
+  try {
+    const env = readEnv();
+    return Boolean(env.SMTP_HOST && env.MAIL_FROM);
+  } catch {
+    return false;
+  }
 };
 
 const getTransporter = (): Transporter => {
   if (transporter) return transporter;
-  const env = serverEnv();
+  const env = readEnv();
   const port = env.SMTP_PORT ?? 587;
   transporter = nodemailer.createTransport({
     host: env.SMTP_HOST,
@@ -50,12 +63,13 @@ const describeError = (error: unknown): string => {
 const messageOnly = (error: unknown): string => (error instanceof Error ? error.message : 'unknown error');
 
 export const sendMail = async (msg: MailMessage): Promise<SendResult> => {
-  if (!smtpConfigured()) {
-    return { delivered: false, reason: 'smtp_not_configured' };
-  }
   try {
+    const env = readEnv();
+    if (!env.SMTP_HOST || !env.MAIL_FROM) {
+      return { delivered: false, reason: 'smtp_not_configured' };
+    }
     const info = await getTransporter().sendMail({
-      from: serverEnv().MAIL_FROM,
+      from: env.MAIL_FROM,
       to: msg.to,
       subject: msg.subject,
       html: msg.html,
@@ -74,8 +88,11 @@ export const sendMail = async (msg: MailMessage): Promise<SendResult> => {
 };
 
 export const verifySmtp = async (): Promise<{ ok: boolean; error?: string }> => {
-  if (!smtpConfigured()) return { ok: false, error: 'smtp_not_configured' };
   try {
+    const env = readEnv();
+    if (!env.SMTP_HOST || !env.MAIL_FROM) {
+      return { ok: false, error: 'smtp_not_configured' };
+    }
     await getTransporter().verify();
     return { ok: true };
   } catch (error) {
