@@ -59,9 +59,9 @@ describe('getSiteThemeForRender', () => {
     expect(await getSiteThemeForRender()).toEqual({ site: draft.site, preview: true });
   });
 
-  it('serves the published site in draft mode when there is no draft', async () => {
+  it('serves the published site but still flags preview in draft mode when there is no draft', async () => {
     isEnabled.value = true;
     await db.insert(settings).values({ key: 'theme', value: published });
-    expect(await getSiteThemeForRender()).toEqual({ site: published.site, preview: false });
+    expect(await getSiteThemeForRender()).toEqual({ site: published.site, preview: true });
   });
 });

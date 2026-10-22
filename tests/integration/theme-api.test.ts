@@ -31,7 +31,7 @@ type Doc = {
 type Body = {
   success: boolean;
   data: Doc & { items?: { id: string; note: string | null; createdByName: string | null }[] };
-  error: { code: string; message: string; current?: { updatedBy?: string } };
+  error: { code: string; message: string; causes?: Record<string, string[]>; current?: { updatedBy?: string } };
 };
 const json = async (res: Response) => (await res.json()) as Body;
 const get = (cookie: string) => call('/admin/theme', cookie);
@@ -69,8 +69,7 @@ describe('GET /admin/theme', () => {
     expect(data.value).toEqual(DEFAULT_THEME);
   });
 
-  it.each(['editor', 'marketer', 'viewer', 'intake', 'author'] as const)('%s is forbidden', async (role) => {
-    if (!(role in cookies)) return;
+  it.each(['editor', 'marketer', 'author', 'intake', 'viewer'] as const)('%s is forbidden', async (role) => {
     expect((await get(cookies[role])).status).toBe(403);
   });
 
@@ -114,7 +113,9 @@ describe('POST /admin/theme/publish', () => {
     const res = await post(cookies.admin, 'publish', { version: 1 });
     expect(res.status).toBe(422);
     const { error } = await json(res);
+    expect(error.code).toBe('VALIDATION_ERROR');
     expect(error.message.startsWith('Some colours are too hard to read.')).toBe(true);
+    expect(error.causes?.colours?.length).toBeGreaterThan(0);
     expect(await db.select().from(revisions)).toHaveLength(0);
   });
 
@@ -135,8 +136,17 @@ describe('POST /admin/theme/publish', () => {
     expect(row!.draft).toBeNull();
   });
 
-  it('publishes with only the viewer-forbidden roles refused', async () => {
-    expect((await post(cookies.viewer, 'publish', { version: 0 })).status).toBe(403);
+  it.each(['editor', 'marketer', 'author', 'intake', 'viewer'] as const)(
+    '%s cannot save a draft or publish',
+    async (role) => {
+      expect((await put(cookies[role], 0, red)).status).toBe(403);
+      expect((await post(cookies[role], 'publish', { version: 0 })).status).toBe(403);
+    },
+  );
+
+  it('lets an admin publish', async () => {
+    await put(cookies.owner, 0, red);
+    expect((await post(cookies.admin, 'publish', { version: 1 })).status).toBe(200);
   });
 });
 

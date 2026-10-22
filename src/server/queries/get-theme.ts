@@ -24,6 +24,7 @@ export async function getSiteThemeForRender(): Promise<{ site: SiteThemeConfig; 
   cacheLife('max');
   const enabled = (await draftMode()).isEnabled;
   const row = await settingsRepository.get('theme');
-  if (enabled && row?.draft != null) return { site: parseTheme(row.draft).site, preview: true };
-  return { site: parseTheme(row?.value).site, preview: false };
+  // `preview` follows draft mode alone, so the exit bar shows even when no draft exists.
+  const source = enabled && row?.draft != null ? row.draft : row?.value;
+  return { site: parseTheme(source).site, preview: enabled };
 }
