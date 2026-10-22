@@ -12,7 +12,8 @@ import {
   getConversation,
   listConversations,
 } from '@/server/repositories/ai-conversation-repository';
-import { startChat } from '@/server/services/ai/chat';
+import { canShareEnquiries, startChat } from '@/server/services/ai/chat';
+import { readAiSettings } from '@/server/services/ai/settings';
 import { getAiAdmin, getAiStatus, listModelsFor, saveAiSettings, testConnection } from '@/server/services/ai/service';
 
 // MK R11.
@@ -63,9 +64,14 @@ export const adminAi = new Hono<AppEnv>()
     ok(c, { items: await listConversations(actorOf(c).userId) }),
   )
 
-  .get('/conversations/:id', can({ ai: ['use'] }), zValidator('param', ConversationParam), async (c) =>
-    ok(c, await getConversation(actorOf(c).userId, c.req.valid('param').id)),
-  )
+  .get('/conversations/:id', can({ ai: ['use'] }), zValidator('param', ConversationParam), async (c) => {
+    const actor = actorOf(c);
+    const { value } = await readAiSettings();
+    return ok(
+      c,
+      await getConversation(actor.userId, c.req.valid('param').id, { includeShared: canShareEnquiries(value, actor) }),
+    );
+  })
 
   .delete(
     '/conversations/:id',

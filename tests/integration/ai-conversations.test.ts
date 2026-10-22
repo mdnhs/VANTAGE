@@ -9,18 +9,21 @@ import {
   createConversation,
   deleteConversation,
   getConversation,
+  HIDDEN_SHARED_REPLY,
   historyFor,
   listConversations,
   ownConversation,
   ownUserMessage,
   purgeStaleConversations,
   replaceFrom,
+  runAiRetention,
   titleFrom,
 } from '@/server/repositories/ai-conversation-repository';
 
 import { createTestUser } from '../support/session';
 
 const DAY = 86_400_000;
+const SHARE = { includeShared: true };
 const NOW = new Date();
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * DAY);
 const text = (role: 'user' | 'assistant', t: string): AiUIMessage => ({
@@ -53,9 +56,9 @@ describe('ai conversations', () => {
     await appendMessage(mine.id, text('user', 'Mine'));
     await createConversation(b, 'Theirs', 'm');
     expect((await listConversations(a)).map((c) => c.title)).toEqual(['Mine']);
-    expect((await getConversation(a, mine.id)).messages).toHaveLength(1);
+    expect((await getConversation(a, mine.id, SHARE)).messages).toHaveLength(1);
     expect(await status(ownConversation(b, mine.id))).toBe(404);
-    expect(await status(getConversation(b, mine.id))).toBe(404);
+    expect(await status(getConversation(b, mine.id, SHARE))).toBe(404);
     expect(await status(deleteConversation({ userId: b }, mine.id))).toBe(404);
     expect(await db.select().from(aiConversations).where(eq(aiConversations.id, mine.id))).toHaveLength(1);
   });
@@ -94,7 +97,7 @@ describe('ai conversations', () => {
     const target = await ownUserMessage(c.id, rows[2]!.id);
     expect(await status(ownUserMessage(c.id, rows[1]!.id))).toBe(404);
     await replaceFrom(c.id, target, text('user', 'three edited'));
-    const left = (await getConversation(a, c.id)).messages.map((m) => m.parts[0]);
+    const left = (await getConversation(a, c.id, SHARE)).messages.map((m) => m.parts[0]);
     expect(left).toEqual([
       { type: 'text', text: 'one' },
       { type: 'text', text: 'two' },
@@ -150,6 +153,31 @@ describe('ai conversations', () => {
     expect(result).toEqual({ conversations: 2, messages: 3 });
     expect((await db.select().from(aiConversations)).map((c) => c.id)).toEqual([fresh.id]);
     expect(await db.select().from(aiMessages)).toHaveLength(2);
+  });
+
+  it('getConversation hides shared replies behind a placeholder when sharing is off', async () => {
+    const c = await createConversation(a, 'x', 'm');
+    await appendMessage(c.id, text('user', 'q'));
+    await appendMessage(c.id, text('assistant', 'SHARED-ENQUIRY-REPLY'), { sharedEnquiryDetails: true });
+    const off = await getConversation(a, c.id, { includeShared: false });
+    expect(JSON.stringify(off)).not.toContain('SHARED-ENQUIRY-REPLY');
+    expect(off.messages[1]!.parts).toEqual([{ type: 'text', text: HIDDEN_SHARED_REPLY }]);
+    expect(off.messages[0]!.parts).toEqual([{ type: 'text', text: 'q' }]);
+    const on = await getConversation(a, c.id, { includeShared: true });
+    expect(on.messages[1]!.parts).toEqual([{ type: 'text', text: 'SHARED-ENQUIRY-REPLY' }]);
+  });
+
+  it('runAiRetention audits counts only, and nothing when nothing went', async () => {
+    expect(await runAiRetention(NOW)).toEqual({ conversations: 0, messages: 0 });
+    expect(await db.select().from(auditLogs).where(eq(auditLogs.action, 'ai.retention_purge'))).toHaveLength(0);
+    const old = await createConversation(a, 'Secret title', 'm');
+    await appendMessage(old.id, text('user', 'SECRET-TEXT'));
+    await db.update(aiMessages).set({ createdAt: daysAgo(100) });
+    await db.update(aiConversations).set({ updatedAt: daysAgo(100) });
+    expect(await runAiRetention(NOW)).toEqual({ conversations: 1, messages: 1 });
+    const [log] = await db.select().from(auditLogs).where(eq(auditLogs.action, 'ai.retention_purge'));
+    expect(log!.summary).toContain('1 AI assistant messages and 1 conversations');
+    expect(JSON.stringify(log)).not.toMatch(/SECRET|Secret/);
   });
 
   it('deleteConversation writes ai.conversation_delete without the title', async () => {
