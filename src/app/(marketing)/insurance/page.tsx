@@ -6,7 +6,7 @@ import { ProcessTimeline } from '@/components/marketing/process-timeline';
 import { InsuranceCta } from '@/components/marketing/insurance-cta';
 import { PartnerLogosStrip } from '@/components/marketing/partner-logos-strip';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
+import { resolveInsuranceContent } from '@/features/insurance-page/content';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 import { PageAnimations } from '@/components/marketing/page-animations';

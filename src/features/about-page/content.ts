@@ -1,3 +1,4 @@
+import { parseGlobal } from '@/lib/content/globals';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
 import type { PublicSiteSettings } from '@/server/lib/settings/public-settings';
@@ -49,52 +50,33 @@ export const ABOUT_FALLBACK_IMAGES = {
   ],
 } as const;
 
-export const ABOUT_DEFAULTS: AboutContent = {
-  heroEyebrow: 'About Vantage Autobody',
-  heroLine1: 'Built on',
-  heroAccent1: 'Craft',
-  heroLine2: 'Driven by',
-  heroAccent2: 'Quality',
-  heroImagePublicId: null,
-  heritageTitle: 'Our Heritage',
-  heritageText:
-    "Founded in 1998, Vantage Autobody began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
-  heritageStat1Value: '1998',
-  heritageStat1Label: 'Est.',
-  heritageStat2Value: '25+',
-  heritageStat2Label: 'Years of Precision',
-  heritageImagePublicId: null,
-  heritageQuote:
-    "We don't just fix cars; we restore the engineering integrity and aesthetic perfection of every vehicle that crosses our threshold.",
-  teamTitle: 'The Precision Team',
-  teamSubtext:
-    'Our facility is only as good as the hands that operate it. We employ master technicians, ATA-accredited painters, and certified chassis alignment specialists.',
-  teamMembers: [
-    { name: "Declan O'Rourke", role: 'Master Technician', imagePublicId: null },
-    { name: 'Siobhan Gallagher', role: 'Lead Refinisher', imagePublicId: null },
-    { name: 'Liam Murphy', role: 'Diagnostics & Calibration', imagePublicId: null },
-  ],
-  standardsEyebrow: 'Facility & Tech',
-  standardsTitle: 'Uncompromising\nStandards',
-  standardsImagePublicId: null,
-  standardsItems: [
-    {
-      title: 'Laser Chassis Alignment',
-      description:
-        'Using millimeter-perfect computerized jigs to return structural integrity to factory specifications post-collision.',
-    },
-    {
-      title: 'Climate-Controlled Spray Booths',
-      description:
-        'Downdraft technology ensures a dust-free environment for flawless, baked-on finishes that match OEM standards perfectly.',
-    },
-    {
-      title: 'NCT Compliant & Insurance Approved',
-      description:
-        'We work directly with major insurers. All structural repairs guarantee full NCT compliance and roadworthiness.',
-    },
-  ],
-};
+// The design copy lives in the page.about schema (src/lib/content/globals-*.ts); this reads it.
+function aboutDefaults(): AboutContent {
+  const a = parseGlobal('page.about', undefined);
+  return {
+    heroEyebrow: a.hero.eyebrow,
+    heroLine1: a.hero.line1,
+    heroAccent1: a.hero.accent1,
+    heroLine2: a.hero.line2,
+    heroAccent2: a.hero.accent2,
+    heroImagePublicId: null,
+    heritageTitle: a.heritage.title,
+    heritageText: a.heritage.text,
+    heritageStat1Value: a.heritage.stat1.value,
+    heritageStat1Label: a.heritage.stat1.label,
+    heritageStat2Value: a.heritage.stat2.value,
+    heritageStat2Label: a.heritage.stat2.label,
+    heritageImagePublicId: null,
+    heritageQuote: a.heritage.quote,
+    teamTitle: a.team.title,
+    teamSubtext: a.team.subtext,
+    teamMembers: a.team.members.map((m) => ({ name: m.name, role: m.role, imagePublicId: null })),
+    standardsEyebrow: a.standards.eyebrow,
+    standardsTitle: a.standards.title,
+    standardsImagePublicId: null,
+    standardsItems: a.standards.items,
+  };
+}
 
 type AboutKeys =
   | 'aboutHeroEyebrow'
@@ -123,7 +105,7 @@ type AboutSource = Partial<Pick<SiteSettings, AboutKeys>>;
 
 // Blank/unset columns fall back to the design copy so the page never renders empty.
 export function resolveAboutContent(s: (AboutSource & object) | null | undefined): AboutContent {
-  const d = ABOUT_DEFAULTS;
+  const d = aboutDefaults();
   return {
     heroEyebrow: s?.aboutHeroEyebrow || d.heroEyebrow,
     heroLine1: s?.aboutHeroLine1 || d.heroLine1,
@@ -184,6 +166,6 @@ export function resolveAboutPageContent(
     standardsImage: s.aboutStandardsImage,
     teamMembers: s.aboutTeamMembers.length
       ? s.aboutTeamMembers
-      : ABOUT_DEFAULTS.teamMembers.map((m) => ({ name: m.name, role: m.role, image: null })),
+      : aboutDefaults().teamMembers.map((m) => ({ name: m.name, role: m.role, image: null })),
   };
 }

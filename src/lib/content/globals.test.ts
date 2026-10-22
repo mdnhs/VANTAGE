@@ -1,9 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ABOUT_DEFAULTS } from '@/features/about-page/defaults';
-import { INSURANCE_DEFAULTS } from '@/features/insurance-page/defaults';
-import { PROCESS_PAGE_DEFAULTS } from '@/features/process-page/defaults';
-
 import { GLOBALS, parseGlobal, type GlobalKey } from './globals';
 
 const KEYS = Object.keys(GLOBALS) as GlobalKey[];
@@ -110,60 +106,6 @@ describe('defaults equal today’s public copy', () => {
       line1: 'Our Recent',
       accent: 'Restorations.',
     });
-  });
-
-  it('page.about equals the About defaults', () => {
-    const d = ABOUT_DEFAULTS;
-    expect(parseGlobal('page.about', {})).toEqual({
-      hero: {
-        eyebrow: d.heroEyebrow,
-        line1: d.heroLine1,
-        accent1: d.heroAccent1,
-        line2: d.heroLine2,
-        accent2: d.heroAccent2,
-        image: null,
-      },
-      heritage: {
-        title: d.heritageTitle,
-        text: d.heritageText,
-        stat1: { value: d.heritageStat1Value, label: d.heritageStat1Label },
-        stat2: { value: d.heritageStat2Value, label: d.heritageStat2Label },
-        image: null,
-        quote: d.heritageQuote,
-      },
-      team: {
-        title: d.teamTitle,
-        subtext: d.teamSubtext,
-        members: d.teamMembers.map((m) => ({ name: m.name, role: m.role, image: null })),
-      },
-      standards: {
-        eyebrow: d.standardsEyebrow,
-        title: d.standardsTitle,
-        image: null,
-        items: d.standardsItems,
-      },
-    });
-  });
-
-  it('page.insurance equals the Insurance defaults', () => {
-    const d = INSURANCE_DEFAULTS;
-    expect(parseGlobal('page.insurance', {})).toEqual({
-      hero: {
-        eyebrow: d.heroEyebrow,
-        line1: d.heroLine1,
-        line2: d.heroLine2,
-        line3: d.heroLine3,
-        subtext: d.heroSubtext,
-      },
-      coordination: { title: d.coordinationTitle, subtext: d.coordinationSubtext, features: d.features },
-      steps: { eyebrow: d.stepsEyebrow, title: d.stepsTitle, items: d.steps },
-      cta: { line1: d.ctaLine1, accent: d.ctaAccent, subtext: d.ctaSubtext },
-      disclaimer: d.disclaimer,
-    });
-  });
-
-  it('page.process equals the Process defaults', () => {
-    expect(parseGlobal('page.process', {})).toEqual(PROCESS_PAGE_DEFAULTS);
   });
 
   it('seo gains verification and business without drift for a stored Phase 4 value', () => {

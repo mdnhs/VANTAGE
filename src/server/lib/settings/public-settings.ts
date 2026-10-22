@@ -1,5 +1,5 @@
 import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
-import type { GlobalValue } from '@/lib/content/globals';
+import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
@@ -23,6 +23,11 @@ export const PUBLIC_SETTINGS_KEYS = [
 export type PublicSettingsKey = (typeof PUBLIC_SETTINGS_KEYS)[number];
 
 export type PublicGlobals = { [K in PublicSettingsKey]: GlobalValue<K> };
+
+// Every public document at its schema defaults: the single source of the site's built-in copy.
+export function defaultPublicGlobals(): PublicGlobals {
+  return Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((k) => [k, parseGlobal(k, undefined)])) as PublicGlobals;
+}
 
 // The flat shape the site was built against, image columns still as Cloudinary public ids.
 // Kept for the Phase 4 migration verifier (it compares against the legacy row).
@@ -56,61 +61,6 @@ export type PublicSiteSettings = Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUM
   aboutTeamMembers: PublicTeamMember[];
 };
 
-// What the public site showed before any row existed (footer.tsx / hero-section.tsx / header.tsx).
-export const FALLBACK_SETTINGS = {
-  businessName: 'Vantage Autobody',
-  phone: '+353 1 234 5678',
-  emergencyPhone: null,
-  email: 'info@vantageautobody.ie',
-  address: 'Unit 4, Industrial Estate, Dublin Road, Ireland',
-  openingHours: 'Mon–Fri: 8:00 – 18:00',
-  googleMapsUrl: null,
-  whatsappNumber: null,
-  facebookUrl: null,
-  instagramUrl: null,
-  tiktokUrl: null,
-  linkedinUrl: null,
-  logoPublicId: null,
-  faviconPublicId: null,
-  logoLottieJson: null,
-  logoUseLottie: false,
-  heroVideoPublicId: null,
-  heroFallbackImagePublicId: null,
-  heroVideoEnabled: false,
-  metaTitle: null,
-  metaDescription: null,
-  ogImagePublicId: null,
-  twitterHandle: null,
-  heroEyebrow: "Ireland's Premier Collision & Respray Specialists",
-  heroHeadlineLine1: 'We Restore',
-  heroHeadlineLine2: 'Your Car',
-  heroHeadlineAccent: 'To Its Best.',
-  heroSubtext:
-    'Manufacturer-standard accident repair, computerized laser chassis realignment, certified spray painting, and bespoke automotive restoration in Dublin. Your vehicle, our obsession.',
-  trustBadge1Title: '4.9★ Google Rated',
-  trustBadge1Subtitle: '180+ Dublin Reviews',
-  trustBadge2Title: 'Direct Insurer Billing',
-  trustBadge2Subtitle: 'AXA, Allianz, Zurich',
-  trustBadge3Title: 'Lifetime Paint Warranty',
-  trustBadge3Subtitle: 'Standox & PPG Systems',
-  trustBadge4Title: 'Courtesy Replacement',
-  trustBadge4Subtitle: 'Cars Available On-Site',
-  catalogEyebrow: 'Specialist Autobody Divisions',
-  catalogHeadlineLine1: 'From Damage To',
-  catalogHeadlineAccent: 'Showroom Finish.',
-  catalogSubtext:
-    'Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved techniques.',
-  servicesHeroEyebrow: 'Master Craftsmanship',
-  servicesHeroHeadlineLine1: 'Professional Bodywork.',
-  servicesHeroHeadlineAccent: 'Precision Finish.',
-  servicesHeroSubtext:
-    'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
-  ourWorkHeroEyebrow: 'Portfolio',
-  ourWorkHeroHeadlineLine1: 'Our Recent',
-  ourWorkHeroHeadlineAccent: 'Restorations.',
-  ourWorkHeroSubtext:
-    'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.',
-} as const;
 
 // Only Cloudinary refs have a public id.
 const publicId = (ref: ImageRef) => (ref?.kind === 'cloudinary' ? ref.publicId : null);
@@ -283,3 +233,62 @@ export function composePublicSettings(g: PublicGlobals, images: Record<string, P
       .map((m) => ({ name: m.name, role: m.role, image: resolveRef(m.image, images) })),
   };
 }
+
+// What the public site showed before any row existed (footer.tsx / hero-section.tsx / header.tsx),
+// derived from the schema defaults rather than kept as a second copy.
+const FALLBACK_KEYS = [
+  'businessName',
+  'phone',
+  'emergencyPhone',
+  'email',
+  'address',
+  'openingHours',
+  'googleMapsUrl',
+  'whatsappNumber',
+  'facebookUrl',
+  'instagramUrl',
+  'tiktokUrl',
+  'linkedinUrl',
+  'logoPublicId',
+  'faviconPublicId',
+  'logoLottieJson',
+  'logoUseLottie',
+  'heroVideoPublicId',
+  'heroFallbackImagePublicId',
+  'heroVideoEnabled',
+  'metaTitle',
+  'metaDescription',
+  'ogImagePublicId',
+  'twitterHandle',
+  'heroEyebrow',
+  'heroHeadlineLine1',
+  'heroHeadlineLine2',
+  'heroHeadlineAccent',
+  'heroSubtext',
+  'trustBadge1Title',
+  'trustBadge1Subtitle',
+  'trustBadge2Title',
+  'trustBadge2Subtitle',
+  'trustBadge3Title',
+  'trustBadge3Subtitle',
+  'trustBadge4Title',
+  'trustBadge4Subtitle',
+  'catalogEyebrow',
+  'catalogHeadlineLine1',
+  'catalogHeadlineAccent',
+  'catalogSubtext',
+  'servicesHeroEyebrow',
+  'servicesHeroHeadlineLine1',
+  'servicesHeroHeadlineAccent',
+  'servicesHeroSubtext',
+  'ourWorkHeroEyebrow',
+  'ourWorkHeroHeadlineLine1',
+  'ourWorkHeroHeadlineAccent',
+  'ourWorkHeroSubtext',
+] as const satisfies readonly (keyof LegacySiteView)[];
+
+const defaultView = composeLegacyView(defaultPublicGlobals());
+export const FALLBACK_SETTINGS = Object.fromEntries(FALLBACK_KEYS.map((k) => [k, defaultView[k]])) as Pick<
+  LegacySiteView,
+  (typeof FALLBACK_KEYS)[number]
+>;

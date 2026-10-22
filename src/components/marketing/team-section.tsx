@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { sizedSrc } from '@/lib/media/public-image';
-import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/defaults';
+import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/content';
 import {
   SECTION_BG,
   SECTION_CONTAINER,

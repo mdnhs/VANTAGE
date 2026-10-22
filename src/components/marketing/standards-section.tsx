@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
-import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/defaults';
+import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/content';
 import {
   SECTION_BG,
   SECTION_CONTAINER,
