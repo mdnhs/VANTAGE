@@ -1,9 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import nodemailer from 'nodemailer';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { contactMessages, quoteRequests, siteSettings } from '@/server/db/schema';
+import { auditLogs, contactMessages, quoteRequests, siteSettings } from '@/server/db/schema';
 import { resetMailerForTests } from '@/server/lib/email/mailer';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 import { contactMessageService } from '@/server/services/contact-message-service';
@@ -85,6 +86,7 @@ describe('SMTP not configured', () => {
       { notify: false },
     );
     const outcome = await sendEnquiryEmails({
+      id: randomUUID(),
       kind: 'quote',
       name: row!.name,
       email: row!.email,
@@ -186,6 +188,7 @@ describe('SMTP configured (injected transport)', () => {
     const sent = transport();
     await saveSetting('notifications', { recipients: ['staff@example.com'] });
     const outcome = await sendEnquiryEmails({
+      id: randomUUID(),
       kind: 'contact',
       name: 'Eve <script>alert(1)</script>\r\nBcc: evil@example.com',
       email: 'eve@example.com',
@@ -229,6 +232,94 @@ describe('SMTP configured (injected transport)', () => {
   });
 });
 
+const failureRows = () => db.select().from(auditLogs).where(eq(auditLogs.action, 'enquiry.delivery_failed'));
+
+// Rejects the team notification (subject starts "New quote request"); everything else records.
+const flakyTransport = (rejectAll = false) => {
+  const t = nodemailer.createTransport({ jsonTransport: true });
+  const sent: { to: string[]; subject: string; text: string }[] = [];
+  vi.spyOn(t, 'sendMail').mockImplementation((async (m: Record<string, unknown>) => {
+    const subject = String(m.subject);
+    if (rejectAll || subject.startsWith('New quote request')) throw new Error('boom');
+    sent.push({ to: ([] as string[]).concat(m.to as never), subject, text: String(m.text) });
+    return { messageId: 'id-1' };
+  }) as never);
+  resetMailerForTests(t);
+  return sent;
+};
+
+describe('delivery failure', () => {
+  beforeEach(smtp);
+
+  it('delivery failure -> bell row + owner alert', async () => {
+    const owner = await createTestUser('owner');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const sent = flakyTransport();
+    await saveSetting('notifications', { recipients: ['staff@example.com'] });
+    const row = (await quoteRequestService.create(QUOTE))!;
+    await settleNotifications();
+    const rows = await failureRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      entityType: 'quote',
+      entityId: row.id,
+      actorId: null,
+    });
+    const dump = JSON.stringify(rows[0]);
+    expect(dump).not.toContain('SECRET-DAMAGE-TEXT');
+    expect(dump).not.toContain('pat@example.com');
+    const alert = sent.find((m) => m.to.includes(owner.email))!;
+    expect(alert.subject).toBe('Email delivery failed: the new-enquiry notification');
+    expect(alert.text).toContain(`/dashboard/quotes/${row.id}`);
+  });
+
+  it('alert failure never loops', async () => {
+    await createTestUser('owner');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    flakyTransport(true);
+    await saveSetting('notifications', { recipients: ['staff@example.com'] });
+    await quoteRequestService.create(QUOTE);
+    await settleNotifications();
+    expect(await failureRows()).toHaveLength(1);
+
+    await db.execute(sql`truncate table audit_logs, settings, revisions`);
+    await saveSetting('notifications', {
+      recipients: ['staff@example.com'],
+      autoReply: { enabled: true, subject: 'Thanks', body: 'Hi' },
+    });
+    await quoteRequestService.create(QUOTE);
+    await settleNotifications();
+    expect(await failureRows()).toHaveLength(2);
+  });
+
+  it('SMTP not configured -> no failure row', async () => {
+    vi.unstubAllEnvs();
+    resetMailerForTests();
+    await createTestUser('owner');
+    await saveSetting('notifications', { recipients: ['staff@example.com'] });
+    await quoteRequestService.create(QUOTE);
+    await settleNotifications();
+    expect(await failureRows()).toHaveLength(0);
+  });
+
+  it('new-enquiry CTA deep-links the record', async () => {
+    const sent = transport();
+    await saveSetting('notifications', { recipients: ['staff@example.com'] });
+    const quote = (await quoteRequestService.create(QUOTE))!;
+    const contact = (await contactMessageService.create({
+      firstName: 'Ann',
+      lastName: 'Byrne',
+      email: 'ann@example.com',
+      phone: '0871234567',
+      message: 'hi',
+      source: 'contact_page',
+    } as never))!;
+    await settleNotifications();
+    expect(sent.find((m) => m.subject.startsWith('New quote'))!.text).toContain(`/dashboard/quotes/${quote.id}`);
+    expect(sent.find((m) => m.subject.startsWith('New enquiry'))!.text).toContain(`/dashboard/contacts/${contact.id}`);
+  });
+});
+
 describe('auto-reply relay safety', () => {
   beforeEach(smtp);
   it('keeps customer text out of the subject and caps the greeting at 60 characters', async () => {
@@ -236,6 +327,7 @@ describe('auto-reply relay safety', () => {
     await saveSetting('notifications', { autoReply: { enabled: true, subject: 'Hello {name}', body: 'Hi {name}' } });
     const long = 'A'.repeat(100);
     const outcome = await sendEnquiryEmails({
+      id: randomUUID(),
       kind: 'quote',
       name: `${long}<b>`,
       email: 'v@example.com',
@@ -258,6 +350,7 @@ describe('auto-reply subject punctuation', () => {
     const sent = transport();
     await saveSetting('notifications', { autoReply: { enabled: true, subject: 'Thanks {name}!', body: 'Hi' } });
     await sendEnquiryEmails({
+      id: randomUUID(),
       kind: 'quote',
       name: 'Pat',
       email: 'v@example.com',
