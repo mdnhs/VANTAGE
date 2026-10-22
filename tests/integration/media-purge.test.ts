@@ -7,7 +7,8 @@ import sharp from 'sharp';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { auditLogs, media, mediaObjectPurges, users } from '@/server/db/schema';
+import { auditLogs, media, mediaObjectPurges, redirects, settings, users } from '@/server/db/schema';
+import * as storageModule from '@/server/lib/media/storage';
 import { resetStorageForTests } from '@/server/lib/media/storage';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 import { countDuePurges, purgeMediaObjects } from '@/server/services/media-purge-service';
@@ -39,7 +40,7 @@ afterAll(async () => {
   await rm(UPLOAD_DIR, { recursive: true, force: true });
 });
 beforeEach(async () => {
-  await db.execute(sql`truncate table media_object_purges, audit_logs, media, users cascade`);
+  await db.execute(sql`truncate table redirects, settings, media_object_purges, audit_logs, media, users cascade`);
   await db.insert(users).values({ id: 'u1', name: 'Owner', email: 'a@example.com', role: 'owner' });
 });
 
@@ -95,8 +96,65 @@ describe('media purge queue', () => {
       { key: 'other/media/2026/10/0123456789abcdef-x.png', reason: 'deleted', dueAt: new Date(Date.now() - DAY) },
     ]);
     const r = await purgeMediaObjects();
-    expect(r).toMatchObject({ purged: 0, kept: 2 });
+    expect(r).toMatchObject({ purged: 0, kept: 1, skipped: 1 });
     expect(onDisk(row!.key)).toBe(true);
     expect(await db.select().from(mediaObjectPurges)).toHaveLength(0);
+  });
+
+  const dueRow = (key: string) => ({ key, reason: 'replaced' as const, dueAt: new Date(Date.now() - DAY) });
+  const seed = async (name: string) => {
+    const item = await mediaLibraryService.upload(actor, await file('#abc', name));
+    const [row] = await db.select().from(media).where(eq(media.id, item.id));
+    return row!;
+  };
+
+  it('a re-upload of identical bytes while the key is queued gets a different key', async () => {
+    const first = await seed('same.png');
+    await mediaLibraryService.replace(actor, first.id, await file('#123', 'other.png'));
+    expect(await db.select().from(mediaObjectPurges)).toHaveLength(1);
+    const again = await mediaLibraryService.upload(actor, await file('#abc', 'same.png'));
+    const [row] = await db.select().from(media).where(eq(media.id, again.id));
+    expect(row!.key).not.toBe(first.key);
+    await purgeMediaObjects(new Date(Date.now() + 31 * DAY));
+    expect(onDisk(first.key)).toBe(false);
+    expect(onDisk(row!.key)).toBe(true);
+  });
+
+  it('keeps a key a live row uses even when another row was deleted', async () => {
+    const dead = await seed('dead.png');
+    const live = await seed('live.png');
+    await mediaLibraryService.remove(actor, dead.id);
+    await db.insert(mediaObjectPurges).values(dueRow(live.key)).onConflictDoNothing();
+    const r = await purgeMediaObjects(new Date(Date.now() + 31 * DAY));
+    expect(r).toMatchObject({ purged: 1, kept: 1 });
+    expect(onDisk(live.key)).toBe(true);
+    expect(onDisk(dead.key)).toBe(false);
+  });
+
+  it('keeps a key named in settings or an active redirect', async () => {
+    const a = await seed('set.png');
+    const b = await seed('red.png');
+    await db.update(media).set({ deletedAt: new Date() }).where(eq(media.id, a.id));
+    await db.update(media).set({ deletedAt: new Date() }).where(eq(media.id, b.id));
+    await db.insert(settings).values({ key: 'page.home', value: { hero: a.url } } as never);
+    await db.insert(redirects).values({ sourcePath: '/old', destination: b.url, isActive: true });
+    await db.insert(mediaObjectPurges).values([dueRow(a.key), dueRow(b.key)]);
+    const r = await purgeMediaObjects();
+    expect(r).toMatchObject({ purged: 0, kept: 2 });
+    expect(onDisk(a.key)).toBe(true);
+    expect(onDisk(b.key)).toBe(true);
+  });
+
+  it('keeps the key queued and counts a storage failure', async () => {
+    const a = await seed('fail.png');
+    await db.update(media).set({ deletedAt: new Date() }).where(eq(media.id, a.id));
+    await db.insert(mediaObjectPurges).values(dueRow(a.key));
+    const spy = vi.spyOn(storageModule.getStorage(), 'remove').mockRejectedValueOnce(new Error('r2 down'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const r = await purgeMediaObjects();
+    expect(r).toMatchObject({ purged: 0, failed: 1 });
+    expect(await db.select().from(mediaObjectPurges)).toHaveLength(1);
+    spy.mockRestore();
+    expect((await purgeMediaObjects()).purged).toBe(1);
   });
 });

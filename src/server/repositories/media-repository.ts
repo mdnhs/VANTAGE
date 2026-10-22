@@ -2,7 +2,7 @@ import 'server-only';
 
 import { and, count, desc, eq, ilike, inArray, isNull, like, notExists, or, sql, type SQL } from 'drizzle-orm';
 import { db, type DbLike } from '@/server/db';
-import { enquiryPhotos, media } from '@/server/db/schema';
+import { enquiryPhotos, media, mediaObjectPurges } from '@/server/db/schema';
 import type { MediaListQuery } from '@/validations/media-schema';
 
 type NewMedia = typeof media.$inferInsert;
@@ -55,7 +55,14 @@ export const mediaRepository = {
   // Includes soft-deleted rows: `key` is unique across all of them.
   async keyExists(key: string) {
     const [row] = await db.select({ id: media.id }).from(media).where(eq(media.key, key)).limit(1);
-    return Boolean(row);
+    if (row) return true;
+    // A key waiting in the purge queue is taken too: reusing it would let the purge delete the new file.
+    const [queued] = await db
+      .select({ key: mediaObjectPurges.key })
+      .from(mediaObjectPurges)
+      .where(eq(mediaObjectPurges.key, key))
+      .limit(1);
+    return Boolean(queued);
   },
 
   async insert(data: NewMedia) {
@@ -90,8 +97,8 @@ export const mediaRepository = {
     return rows.map((r) => r.key);
   },
 
-  async update(id: string, data: Partial<NewMedia>) {
-    const [row] = await db
+  async update(id: string, data: Partial<NewMedia>, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(media)
       .set({ ...data, updatedAt: new Date() })
       .where(and(eq(media.id, id), inLibrary))

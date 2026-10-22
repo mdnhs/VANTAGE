@@ -30,7 +30,7 @@ const waiting: (() => void)[] = [];
 export async function withProcessingSlot<T>(work: () => Promise<T>): Promise<T> {
   if (running >= MAX_RUNNING) {
     if (waiting.length >= MAX_WAITING) {
-      throw ApiError.serviceUnavailable('The server is busy processing uploads — try again in a moment');
+      throw ApiError.busy('The server is busy processing uploads — try again in a moment');
     }
     await new Promise<void>((resolve) => waiting.push(resolve));
   } else {

@@ -41,6 +41,20 @@ describe('withUploadAdmission', () => {
     await expect(late).resolves.toBe('late');
   });
 
+  it('drops a queued upload whose request was aborted', async () => {
+    const g = gate();
+    const held = [withUploadAdmission(() => g.promise), withUploadAdmission(() => g.promise)];
+    const ac = new AbortController();
+    const work = vi.fn(async () => 'x');
+    const queued = withUploadAdmission(work, ac.signal);
+    ac.abort();
+    await expect(queued).rejects.toMatchObject({ name: 'AbortError' });
+    g.release();
+    await Promise.all(held);
+    expect(work).not.toHaveBeenCalled();
+    await expect(withUploadAdmission(async () => 'ok')).resolves.toBe('ok');
+  });
+
   it('frees the slot when work throws', async () => {
     await expect(withUploadAdmission(async () => Promise.reject(new Error('boom')))).rejects.toThrow('boom');
     await expect(withUploadAdmission(async () => 'ok')).resolves.toBe('ok');

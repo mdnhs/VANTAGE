@@ -20,7 +20,7 @@ never customer data. Deletion is permanent: look first with a dry run.
 
 The same job also removes media files from storage: a file that was deleted or replaced in the media
 library leaves storage 30 days later (`media files due: N` in the dry run). A file still used by a live
-media row or a setting is kept. Re-running is safe.
+media row, a setting or an active redirect is kept. Re-running is safe.
 
 ```sh
 cd /srv/vantage && yarn jobs:retention --dry-run   # prints counts, changes nothing

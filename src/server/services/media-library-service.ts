@@ -222,13 +222,16 @@ export const mediaLibraryService = {
     const { storage, key } = await store(processed);
     let row: MediaRow | undefined;
     try {
-      row = await mediaRepository.update(id, columns(processed, filename, storage, key));
+      row = await db.transaction(async (tx) => {
+        const updated = await mediaRepository.update(id, columns(processed, filename, storage, key), tx);
+        if (updated && current.key !== updated.key) await enqueueMediaPurge(current.key, 'replaced', tx);
+        return updated;
+      });
     } catch (error) {
       if (isUniqueViolation(error)) throw ApiError.conflict('That file is already in the library');
       throw error;
     }
     if (!row) throw ApiError.notFound(NOT_FOUND);
-    if (current.key !== row.key) await enqueueMediaPurge(current.key, 'replaced');
     await audit(actor, {
       action: 'media.replace',
       entityType: 'media',

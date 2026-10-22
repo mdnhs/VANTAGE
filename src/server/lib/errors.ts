@@ -58,6 +58,13 @@ export class ApiError extends Error {
   static unsupportedMediaType(message: string) {
     return new ApiError(ERROR_CODES.UNSUPPORTED_MEDIA_TYPE, message, 415);
   }
+  // Set on the 'busy, try again' 503s only; the error handler turns it into Retry-After.
+  retryAfterSeconds?: number;
+  static busy(message: string, retryAfterSeconds = 5) {
+    const error = new ApiError(ERROR_CODES.SERVICE_UNAVAILABLE, message, 503);
+    error.retryAfterSeconds = retryAfterSeconds;
+    return error;
+  }
   static serviceUnavailable(message: string) {
     return new ApiError(ERROR_CODES.SERVICE_UNAVAILABLE, message, 503);
   }

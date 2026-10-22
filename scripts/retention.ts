@@ -21,7 +21,7 @@ async function main() {
     const ai = await runAiRetention(new Date());
     console.log(`ai conversations: ${ai.conversations}, messages: ${ai.messages}`);
     const m = await purgeMediaObjects();
-    console.log(`media files: ${m.purged} removed, ${m.kept} kept (still in use), ${m.failed} failed`);
+    console.log(`media files: ${m.purged} removed, ${m.kept} kept (still in use), ${m.skipped} skipped (outside prefix), ${m.failed} failed`);
   }
   process.exit(0);
 }

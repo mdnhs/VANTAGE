@@ -4,7 +4,7 @@ import { and, asc, count, eq, gt, isNull, lte, sql } from 'drizzle-orm';
 
 import { serverEnv } from '@/lib/env';
 import { db, type DbLike } from '@/server/db';
-import { media, mediaObjectPurges, settings, type MediaPurgeReason } from '@/server/db/schema';
+import { media, mediaObjectPurges, redirects, settings, type MediaPurgeReason } from '@/server/db/schema';
 import { audit } from '@/server/lib/audit';
 import { getStorage, mediaKeyPattern } from '@/server/lib/media/storage';
 
@@ -32,7 +32,9 @@ export async function countDuePurges(now: Date = new Date()): Promise<number> {
   return row?.n ?? 0;
 }
 
-// Anything that still points at this key: a live media row, or a setting whose JSON names it.
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, '\\$&');
+
+// Anything that still points at this key: a live media row, or a setting whose JSON names it, or an active redirect to it.
 // Checked again at purge time, in the same transaction that removes the file.
 async function stillReferenced(tx: DbLike, key: string): Promise<boolean> {
   const [live] = await tx
@@ -44,19 +46,26 @@ async function stillReferenced(tx: DbLike, key: string): Promise<boolean> {
   const [setting] = await tx
     .select({ key: settings.key })
     .from(settings)
-    .where(sql`${settings.value}::text like ${`%${key.replace(/[\\%_]/g, '\\$&')}%`}`)
+    .where(sql`${settings.value}::text like ${`%${escapeLike(key)}%`}`)
     .limit(1);
-  return Boolean(setting);
+  if (setting) return true;
+  // An active redirect that sends visitors to this file.
+  const [redirect] = await tx
+    .select({ id: redirects.id })
+    .from(redirects)
+    .where(and(eq(redirects.isActive, true), sql`${redirects.destination} like ${'%' + escapeLike(key)}`))
+    .limit(1);
+  return Boolean(redirect);
 }
 
-export type PurgeResult = { purged: number; kept: number; failed: number };
+export type PurgeResult = { purged: number; kept: number; skipped: number; failed: number };
 
 // Removes every queued file that is due and unreferenced. Idempotent: a removed key leaves the
 // queue, a failed one stays for the next run, and a second run finds nothing. Batched by key.
 export async function purgeMediaObjects(now: Date = new Date()): Promise<PurgeResult> {
   const pattern = mediaKeyPattern(serverEnv().MEDIA_KEY_PREFIX);
   const storage = getStorage();
-  const result: PurgeResult = { purged: 0, kept: 0, failed: 0 };
+  const result: PurgeResult = { purged: 0, kept: 0, skipped: 0, failed: 0 };
   let after = '';
   for (;;) {
     const batch = await db
@@ -77,8 +86,15 @@ export async function purgeMediaObjects(now: Date = new Date()): Promise<PurgeRe
             .where(and(eq(mediaObjectPurges.key, key), lte(mediaObjectPurges.dueAt, now)))
             .for('update', { skipLocked: true });
           if (!row) return;
-          // Outside the vantage/ prefix, or still in use: never touch the file, just stop queuing it.
-          if (!pattern.test(key) || (await stillReferenced(tx, key))) {
+          // Outside the vantage/ prefix: never touch the file, just stop queuing it.
+          if (!pattern.test(key)) {
+            await tx.delete(mediaObjectPurges).where(eq(mediaObjectPurges.key, key));
+            result.skipped++;
+            console.warn('[media] skipped a queued file outside the media key prefix');
+            return;
+          }
+          // Still in use: keep the file and stop queuing it.
+          if (await stillReferenced(tx, key)) {
             await tx.delete(mediaObjectPurges).where(eq(mediaObjectPurges.key, key));
             result.kept++;
             return;

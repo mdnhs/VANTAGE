@@ -67,7 +67,7 @@ export const adminMedia = new Hono<AppEnv>()
     rateLimit(30, 60_000),
     uploadBodyLimit,
     async (c) => {
-      const item = await withUploadAdmission(async () => mediaLibraryService.upload(actorOf(c), await fileFrom(c)));
+      const item = await withUploadAdmission(async () => mediaLibraryService.upload(actorOf(c), await fileFrom(c)), c.req.raw.signal);
       return ok(c, item, { status: 201 });
     },
   )
@@ -92,7 +92,7 @@ export const adminMedia = new Hono<AppEnv>()
     zValidator('param', mediaIdParamSchema),
     async (c) => {
       const id = c.req.valid('param').id;
-      const item = await withUploadAdmission(async () => mediaLibraryService.replace(actorOf(c), id, await fileFrom(c)));
+      const item = await withUploadAdmission(async () => mediaLibraryService.replace(actorOf(c), id, await fileFrom(c)), c.req.raw.signal);
       return ok(c, item);
     },
   )
