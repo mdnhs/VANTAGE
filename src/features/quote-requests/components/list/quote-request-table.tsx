@@ -183,9 +183,9 @@ export function QuoteRequestTable({ initialData, initialStats }: QuoteRequestTab
                         ) : (
                           <span className='text-xs text-muted-foreground italic'>No description</span>
                         )}
-                        {quote.photoUrls && quote.photoUrls.length > 0 && (
+                        {quote.photos.length > 0 && (
                           <span className='mt-1 inline-flex w-fit items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
-                            📷 {quote.photoUrls.length} {quote.photoUrls.length === 1 ? 'photo' : 'photos'}
+                            📷 {quote.photos.length} {quote.photos.length === 1 ? 'photo' : 'photos'}
                           </span>
                         )}
                       </div>

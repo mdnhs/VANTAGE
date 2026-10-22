@@ -3,7 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { db } from '@/server/db';
-import { media, partnerLogos, projectGalleryImages, services, testimonials } from '@/server/db/schema';
+import {
+  homepageCatalogs,
+  media,
+  partnerLogos,
+  projectGalleryImages,
+  services,
+  testimonials,
+} from '@/server/db/schema';
 import { ApiError } from '@/server/lib/errors';
 import { homepageCatalogRepository } from '@/server/repositories/homepage-catalog-repository';
 import { partnerLogoRepository } from '@/server/repositories/partner-logo-repository';
@@ -15,6 +22,7 @@ import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { projectService } from '@/server/services/project-service';
 import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
+import { call, sessionCookie } from '../support/session';
 import { createPartnerLogoSchema, updatePartnerLogoSchema } from '@/validations/partner-logo-schema';
 import { createProjectSchema, updateProjectSchema } from '@/validations/project-schema';
 
@@ -175,16 +183,20 @@ describe('projects', () => {
     ]);
   });
 
-  it('requires a before and an after image (media or legacy)', () => {
-    expect(createProjectSchema.safeParse(project()).success).toBe(false);
+  it('requires a before and an after media id', () => {
     const id = '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11';
-    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id, afterImagePublicId: 'x' })).success).toBe(
+    expect(createProjectSchema.safeParse(project()).success).toBe(false);
+    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id })).success).toBe(false);
+    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id, afterImageMediaId: id })).success).toBe(
       true,
     );
-    expect(createProjectSchema.safeParse(project({ beforeImageMediaId: id })).success).toBe(false);
+    // legacy ids are no longer accepted as input
+    expect(createProjectSchema.safeParse(project({ beforeImagePublicId: 'x', afterImagePublicId: 'y' })).success).toBe(
+      false,
+    );
   });
 
-  it('a legacy-only gallery save keeps media-backed gallery rows', async () => {
+  it('refuses to replace a gallery that still has legacy rows; an all-media gallery can be reordered', async () => {
     const [before, after, g1, g2] = await Promise.all([1, 2, 3, 4].map(() => insertMedia()));
     const created = await projectService.create({
       ...project(),
@@ -192,27 +204,29 @@ describe('projects', () => {
       afterImageMediaId: after!.id,
       galleryMediaIds: [g1!.id, g2!.id],
     });
-    // all-media gallery: an old-form save with no change and one with ids both keep the rows
-    await projectService.update(created!.id, { title: 'Renamed' });
-    await projectService.update(created!.id, { galleryImagePublicIds: [] });
-    let found = await projectRepository.byId(created!.id);
-    expect(found?.gallery.map((g) => g.id)).toEqual([g1!.id, g2!.id]);
-    // mixed gallery: legacy rows are replaced, media rows stay, and order stays unique
+    // all-media gallery: reorder and shrink are fine
+    await projectService.update(created!.id, { galleryMediaIds: [g2!.id, g1!.id] });
+    expect((await projectRepository.byId(created!.id))?.gallery.map((g) => g.id)).toEqual([g2!.id, g1!.id]);
+    // a legacy row makes the whole gallery read-only
     await db
       .insert(projectGalleryImages)
       .values({ projectId: created!.id, imagePublicId: 'vantage/old', displayOrder: 2 });
-    await projectService.update(created!.id, { galleryImagePublicIds: ['vantage/new'] });
-    found = await projectRepository.byId(created!.id);
-    expect(found?.galleryImages.map((g) => g.imagePublicId)).toEqual([null, null, 'vantage/new']);
-    expect(found?.galleryImages.map((g) => g.mediaId)).toEqual([g1!.id, g2!.id, null]);
-    expect(found?.galleryImages.map((g) => g.displayOrder)).toEqual([0, 1, 2]);
+    await projectService.update(created!.id, { title: 'Renamed' });
+    await expect(projectService.update(created!.id, { galleryMediaIds: [g1!.id] })).rejects.toMatchObject({
+      status: 409,
+      message: 'Migrate this gallery first',
+    });
+    const found = await projectRepository.byId(created!.id);
+    expect(found?.galleryImages.map((g) => g.mediaId)).toEqual([g2!.id, g1!.id, null]);
+    expect(found?.galleryImages[2]?.imagePublicId).toBe('vantage/old');
   });
 
-  it('cannot clear an image id on update', () => {
-    expect(updateProjectSchema.safeParse({ beforeImagePublicId: null }).success).toBe(false);
-    expect(updateProjectSchema.safeParse({ afterImagePublicId: null }).success).toBe(false);
+  it('cannot clear a required image on update, and an update may leave it out', () => {
     expect(updateProjectSchema.safeParse({ beforeImageMediaId: null }).success).toBe(false);
-    expect(updatePartnerLogoSchema.safeParse({ logoPublicId: null }).success).toBe(false);
+    expect(updateProjectSchema.safeParse({ afterImageMediaId: null }).success).toBe(false);
+    expect(updatePartnerLogoSchema.safeParse({ logoMediaId: null }).success).toBe(false);
+    expect(updateProjectSchema.safeParse({ title: 'x' }).success).toBe(true);
+    expect(updatePartnerLogoSchema.safeParse({ companyName: 'x' }).success).toBe(true);
   });
 
   it('refuses a deleted gallery id', async () => {
@@ -230,11 +244,17 @@ describe('projects', () => {
 });
 
 describe('partner logos', () => {
-  it('needs a media id or a legacy id, reported on logoPublicId', () => {
+  it('needs a logo media id (422 on the API path)', async () => {
     const result = createPartnerLogoSchema.safeParse({ companyName: 'A' });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['logoPublicId']);
-    expect(createPartnerLogoSchema.safeParse({ companyName: 'A', logoPublicId: 'x' }).success).toBe(true);
+    expect(result.error?.issues[0]?.path).toEqual(['logoMediaId']);
+    expect(createPartnerLogoSchema.safeParse({ companyName: 'A', logoPublicId: 'x' }).success).toBe(false);
+    const cookie = await sessionCookie('owner');
+    const res = await call('/partner-logos', cookie, { method: 'POST', body: { companyName: 'A' } });
+    expect(res.status).toBe(422);
+    expect(
+      ((await res.json()) as { error: { causes: Record<string, string[]> } }).error.causes.logoMediaId,
+    ).toBeTruthy();
   });
 
   it('resolves the logo from a media row; a row with neither id reads null', async () => {
@@ -272,5 +292,56 @@ describe('catalogs and testimonials', () => {
     expect(updated?.avatar?.src).toBe(avatar.url);
     const [stored] = await db.select().from(testimonials).where(eq(testimonials.id, row!.id));
     expect(stored?.avatarPublicId).toBeNull();
+  });
+});
+
+describe('API contract', () => {
+  it.each([
+    ['/services', { name: 'S', slug: 's', description: 'd', iconPublicId: 'x' }, 'iconPublicId'],
+    ['/services', { name: 'S', slug: 's2', description: 'd', imagePublicId: 'x' }, 'imagePublicId'],
+    ['/homepage-catalogs', { title: 'T', description: 'd', iconPublicId: 'x' }, 'iconPublicId'],
+    ['/testimonials', { customerName: 'N', rating: 5, reviewText: 'r', avatarPublicId: 'x' }, 'avatarPublicId'],
+    [
+      '/partner-logos',
+      { companyName: 'A', logoMediaId: '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11', logoPublicId: 'x' },
+      'logoPublicId',
+    ],
+    ['/projects', { ...project(), beforeImagePublicId: 'x' }, 'beforeImagePublicId'],
+    ['/projects', { ...project(), galleryImagePublicIds: ['x'] }, 'galleryImagePublicIds'],
+  ])('%s refuses the legacy key %s with a 422 and a clear message', async (path, body, key) => {
+    const cookie = await sessionCookie('owner');
+    const res = await call(path, cookie, { method: 'POST', body });
+    expect(res.status).toBe(422);
+    const { error } = (await res.json()) as { error: { causes: Record<string, string[]> } };
+    expect(error.causes[key]?.[0]).toMatch(/no longer accepted/);
+  });
+
+  it('a PATCH that leaves isFeatured out keeps it (projects and testimonials)', async () => {
+    const cookie = await sessionCookie('owner');
+    const [before, after] = await Promise.all([1, 2].map(() => insertMedia()));
+    const p = await projectService.create({
+      ...project(),
+      isFeatured: true,
+      beforeImageMediaId: before!.id,
+      afterImageMediaId: after!.id,
+    });
+    const res = await call(`/projects/${p!.id}`, cookie, { method: 'PATCH', body: { title: 'Only the title' } });
+    expect(res.status).toBe(200);
+    expect((await projectRepository.byId(p!.id))?.isFeatured).toBe(true);
+    const [t] = await db
+      .insert(testimonials)
+      .values({ customerName: 'N', rating: 5, reviewText: 'r', isFeatured: true })
+      .returning();
+    const res2 = await call(`/testimonials/${t!.id}`, cookie, { method: 'PATCH', body: { reviewText: 'new' } });
+    expect(res2.status).toBe(200);
+    expect((await testimonialRepository.byId(t!.id))?.isFeatured).toBe(true);
+    const [c] = await db
+      .insert(homepageCatalogs)
+      .values({ title: 'T', description: 'd', icon: 'wrench', footnote: 'Custom note' })
+      .returning();
+    const res3 = await call(`/homepage-catalogs/${c!.id}`, cookie, { method: 'PATCH', body: { title: 'T2' } });
+    expect(res3.status).toBe(200);
+    const after3 = await homepageCatalogRepository.byId(c!.id);
+    expect([after3?.icon, after3?.footnote]).toEqual(['wrench', 'Custom note']);
   });
 });

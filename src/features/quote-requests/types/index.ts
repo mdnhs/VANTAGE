@@ -1,3 +1,4 @@
+import type { EnquiryPhoto } from '@/lib/media/enquiry-photo';
 import type { QuoteRequest as DbQuoteRequest, NewQuoteRequest, User } from '@/server/db/schema';
 import {
   QUOTE_STATUSES,
@@ -19,7 +20,8 @@ import {
 
 export { QUOTE_STATUSES, PIPELINE_STATUSES, ALL_QUOTE_STATUSES, QUOTE_SOURCES, PAYMENT_STATUSES, PAYMENT_METHODS };
 
-export type QuoteRequest = DbQuoteRequest & {
+export type QuoteRequest = Omit<DbQuoteRequest, 'photoUrls'> & {
+  photos: EnquiryPhoto[];
   assignedUser?: Pick<User, 'id' | 'name' | 'email'> | null;
 };
 

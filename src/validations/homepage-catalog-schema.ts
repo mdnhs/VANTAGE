@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { legacyImageKey } from './legacy-image-key';
+
 export const HOMEPAGE_CATALOG_ICONS = [
   'car-front',
   'bandage',
@@ -17,19 +19,25 @@ export const HOMEPAGE_CATALOG_ICONS = [
 
 export type HomepageCatalogIcon = (typeof HOMEPAGE_CATALOG_ICONS)[number];
 
-export const createHomepageCatalogSchema = z.object({
+const homepageCatalogBase = z.object({
   title: z.string().min(1, 'Title is required').max(120),
   description: z.string().min(1, 'Description is required').max(2000),
   badge: z.string().max(80).nullable().optional(),
-  footnote: z.string().max(80).optional().default('Free Estimate'),
-  icon: z.enum(HOMEPAGE_CATALOG_ICONS).default('car-front'),
-  iconPublicId: z.string().max(255).nullable().optional(),
+  footnote: z.string().max(80).optional(),
+  icon: z.enum(HOMEPAGE_CATALOG_ICONS).optional(),
   iconMediaId: z.string().uuid().nullable().optional(),
+  iconPublicId: legacyImageKey('iconMediaId'),
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),
 });
 
-export const updateHomepageCatalogSchema = createHomepageCatalogSchema.partial();
+// Defaults apply on create only: a partial update must never reset a field it leaves out.
+export const createHomepageCatalogSchema = homepageCatalogBase.extend({
+  footnote: z.string().max(80).optional().default('Free Estimate'),
+  icon: z.enum(HOMEPAGE_CATALOG_ICONS).default('car-front'),
+});
+
+export const updateHomepageCatalogSchema = homepageCatalogBase.partial();
 
 export const homepageCatalogListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

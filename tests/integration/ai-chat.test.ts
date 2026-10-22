@@ -202,6 +202,53 @@ describe('POST /admin/ai/chat', () => {
     expect((await chatAudits()).some((a) => a.summary.includes('· edited'))).toBe(true);
   });
 
+  it('regenerate keeps the old reply when the provider gives no answer', async () => {
+    const conversation = await createConversation(users.editor.id, 'x', 'm');
+    await appendMessage(conversation.id, {
+      id: crypto.randomUUID(),
+      role: 'user',
+      parts: [{ type: 'text', text: 'length-test' }],
+    });
+    const old = {
+      id: crypto.randomUUID(),
+      role: 'assistant' as const,
+      parts: [{ type: 'text' as const, text: 'OLD REPLY' }],
+    };
+    await appendMessage(conversation.id, old);
+    const chunks = await readChunks(
+      await chat(users.editor.cookie, { conversationId: conversation.id, regenerate: true }),
+    );
+    expect(chunks.find((c) => c.type === 'error')?.errorText).toBe(LENGTH_EXHAUSTED_MESSAGE);
+    await settled(async () => ((await chatAudits()).length === 1 ? true : null));
+    const rows = await messages(conversation.id);
+    expect(rows.map((r) => r.id)).toContain(old.id);
+    expect(rows).toHaveLength(2);
+  });
+
+  it('GET conversation hides shared replies once sharing is off', async () => {
+    const conversation = await createConversation(users.owner.id, 'Shared', 'm');
+    await appendMessage(conversation.id, {
+      id: crypto.randomUUID(),
+      role: 'user',
+      parts: [{ type: 'text', text: 'q1' }],
+    });
+    await appendMessage(
+      conversation.id,
+      { id: crypto.randomUUID(), role: 'assistant', parts: [{ type: 'text', text: 'SHARED-ENQUIRY-REPLY' }] },
+      { sharedEnquiryDetails: true },
+    );
+    const read = async () =>
+      JSON.stringify(
+        (await (await call(`/admin/ai/conversations/${conversation.id}`, users.owner.cookie)).json()).data,
+      );
+    expect(await read()).not.toContain('SHARED-ENQUIRY-REPLY');
+    expect(await read()).toContain('Hidden: this reply used enquiry details, and sharing is now off.');
+    await saveSettings({
+      shareEnquiryDetails: { enabled: true, acknowledgedAt: new Date().toISOString(), acknowledgedBy: 'o@x.ie' },
+    });
+    expect(await read()).toContain('SHARED-ENQUIRY-REPLY');
+  });
+
   it('drops shared replies from history once sharing is off', async () => {
     const conversation = await createConversation(users.owner.id, 'Shared', 'm');
     await appendMessage(conversation.id, {

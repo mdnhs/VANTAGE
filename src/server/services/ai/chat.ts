@@ -13,8 +13,8 @@ import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import {
   appendMessage,
   createConversation,
-  dropLastReply,
   historyFor,
+  lastReplyId,
   ownConversation,
   ownUserMessage,
   replaceFrom,
@@ -37,6 +37,11 @@ function assertCanChat(s: AiStored, actor: Actor) {
   if (!s.enabled) throw ApiError.forbidden('The AI assistant is turned off');
   if (!roleAllowed(s, actor.roles)) throw ApiError.forbidden("The AI assistant isn't available for your role");
 }
+
+// Enquiry details need the opt-in and a read permission.
+export const canShareEnquiries = (s: AiStored, actor: Actor) =>
+  s.shareEnquiryDetails.enabled &&
+  (hasPermission(actor.roles, { quote: ['read'] }) || hasPermission(actor.roles, { contact: ['read'] }));
 
 // Provider, model, counts and tool names; never text or titles.
 const summary = (s: AiStored, t: Turn, stopped: boolean, mode: 'regenerated' | 'edited' | null) =>
@@ -64,28 +69,28 @@ async function saving<T>(write: () => Promise<T>): Promise<T> {
 }
 
 // Which conversation, and what was written before streaming. A plain message is
-// appended. Regenerate drops the last reply, if any, and runs the turn again from
+// appended. Regenerate runs the turn again from
 // the person's last message. Edit replaces one of their own messages and everything
 // after it. Ownership of the conversation, and of the message within it, is part of
 // every lookup, so another person's ids are simply not found.
 async function prepareTurn(actor: Actor, input: ChatInput, model: string) {
   if (input.regenerate) {
     const conversation = await ownConversation(actor.userId, input.conversationId!);
-    await saving(() => dropLastReply(conversation.id));
-    return { conversation, mode: 'regenerated' as const };
+    const replaces = await saving(() => lastReplyId(conversation.id));
+    return { conversation, mode: 'regenerated' as const, replaces };
   }
   const userMessage: AiUIMessage = { id: randomUUID(), role: 'user', parts: [{ type: 'text', text: input.text! }] };
   if (input.editMessageId) {
     const conversation = await ownConversation(actor.userId, input.conversationId!);
     const from = await ownUserMessage(conversation.id, input.editMessageId);
     await saving(() => replaceFrom(conversation.id, from, userMessage));
-    return { conversation, mode: 'edited' as const };
+    return { conversation, mode: 'edited' as const, replaces: null };
   }
   const conversation = input.conversationId
     ? await ownConversation(actor.userId, input.conversationId)
     : await saving(() => createConversation(actor.userId, titleFrom(input.text!), model));
   await saving(() => appendMessage(conversation.id, userMessage));
-  return { conversation, mode: null };
+  return { conversation, mode: null, replaces: null };
 }
 
 const today = () =>
@@ -103,15 +108,13 @@ export async function startChat(actor: Actor, input: ChatInput, signal?: AbortSi
   const { value: settings } = await readAiSettings();
   assertCanChat(settings, actor);
   const model = await getModel({ ...settings, apiKey: decryptApiKey(settings) });
-  const { conversation, mode } = await prepareTurn(actor, input, settings.model);
+  const { conversation, mode, replaces } = await prepareTurn(actor, input, settings.model);
 
   // Every turn comes from our rows, the new one saved first. Enquiry details need
   // the opt-in and a read permission. Replies written under it are flagged, and
   // stay out of the history once it's off.
-  const sharing =
-    settings.shareEnquiryDetails.enabled &&
-    (hasPermission(actor.roles, { quote: ['read'] }) || hasPermission(actor.roles, { contact: ['read'] }));
-  const history = await historyFor(conversation.id, HISTORY_LIMIT, { includeShared: sharing });
+  const sharing = canShareEnquiries(settings, actor);
+  const history = await historyFor(conversation.id, HISTORY_LIMIT, { includeShared: sharing, excludeId: replaces });
   const userMessage = history.at(-1);
   if (userMessage?.role !== 'user') throw ApiError.conflict("There's no message to answer yet");
 
@@ -167,7 +170,12 @@ export async function startChat(actor: Actor, input: ChatInput, signal?: AbortSi
           await appendMessage(
             conversation.id,
             { ...responseMessage, parts },
-            { tokensIn: turn.tokensIn, tokensOut: turn.tokensOut, sharedEnquiryDetails: sharing },
+            {
+              tokensIn: turn.tokensIn,
+              tokensOut: turn.tokensOut,
+              sharedEnquiryDetails: sharing,
+              replaces: replaces ?? undefined,
+            },
           );
         }
         await audit(actor, {

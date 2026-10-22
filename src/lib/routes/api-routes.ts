@@ -5,9 +5,6 @@ export const API_ROUTES = {
     me: '/auth/me',
   },
   health: '/health',
-  media: {
-    sign: '/media/sign',
-  },
   services: {
     public: '/services',
     adminList: '/services/admin/list',

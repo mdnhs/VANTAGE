@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
   settings: {} as Record<string, unknown>,
   tracking: { gtmId: null, ga4Id: null, pixelId: null } as Record<string, string | null>,
   disabled: false,
+  preview: false,
 }));
 
 vi.mock('@/lib/env', () => ({ serverEnv: () => ({ DISABLE_CUSTOM_SCRIPTS: state.disabled }) }));
@@ -13,6 +14,7 @@ vi.mock('@/server/queries/get-setting', () => ({
   getSetting: async (key: 'consent' | 'scripts') => parseGlobal(key, state.settings[key]),
 }));
 vi.mock('@/server/queries/get-public-tracking', () => ({ getPublicTracking: async () => state.tracking }));
+vi.mock('@/server/queries/get-tracking-preview', () => ({ getTrackingPreview: async () => state.preview }));
 
 import { loadTrackingFrame } from './load-frame';
 
@@ -22,6 +24,7 @@ beforeEach(() => {
   state.settings = {};
   state.tracking = { gtmId: null, ga4Id: null, pixelId: null };
   state.disabled = false;
+  state.preview = false;
 });
 
 describe('loadTrackingFrame', () => {
@@ -43,5 +46,12 @@ describe('loadTrackingFrame', () => {
     expect((await loadTrackingFrame()).frame.scripts).toHaveLength(1);
     state.disabled = true;
     expect((await loadTrackingFrame()).frame.scripts).toEqual([]);
+  });
+
+  it('renders no tracking in a draft-mode preview', async () => {
+    state.settings = { consent: { enabled: true }, scripts: { snippets: [snippet] } };
+    state.tracking = { gtmId: 'GTM-TEST123', ga4Id: null, pixelId: null };
+    state.preview = true;
+    expect((await loadTrackingFrame()).frame).toMatchObject({ active: false, gtmId: null, scripts: [] });
   });
 });

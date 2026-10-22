@@ -66,7 +66,7 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
     transition,
   };
 
-  const hasPhotos = Boolean(quote.photoUrls && quote.photoUrls.length > 0);
+  const hasPhotos = quote.photos.length > 0;
   const vehicleText = [quote.year, quote.make, quote.model].filter(Boolean).join(' ');
 
   // Determine next logical pipeline stage for quick advance
@@ -187,11 +187,11 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
 
           {hasPhotos && (
             <span
-              title={`${quote.photoUrls?.length} damage photos`}
+              title={`${quote.photos.length} damage photos`}
               className='ml-1 flex items-center gap-1 text-[10px] text-muted-foreground'
             >
               <ImageIcon className='size-3' />
-              {quote.photoUrls?.length}
+              {quote.photos.length}
             </span>
           )}
         </div>

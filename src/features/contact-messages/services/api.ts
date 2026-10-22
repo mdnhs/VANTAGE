@@ -27,13 +27,13 @@ async function parseWithPagination<T>(res: Response): Promise<{ data: T; paginat
 }
 
 // Public submission
-export async function submitContactMessage(input: PublicContactMessageInput): Promise<ContactMessage> {
+export async function submitContactMessage(input: PublicContactMessageInput): Promise<Omit<ContactMessage, 'photos'>> {
   const res = await fetch(`${BASE_URL}${API_ROUTES.contacts.submit}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-  return parseOrThrow<ContactMessage>(res);
+  return parseOrThrow<Omit<ContactMessage, 'photos'>>(res);
 }
 
 // Admin list with pagination & filters

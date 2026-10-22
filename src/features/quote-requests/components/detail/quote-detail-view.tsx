@@ -436,13 +436,13 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
           </div>
 
           {/* Photos */}
-          {initialQuote.photoUrls && initialQuote.photoUrls.length > 0 && (
+          {initialQuote.photos.length > 0 && (
             <div>
               <span className='text-xs font-semibold text-muted-foreground uppercase'>
-                Customer Photos ({initialQuote.photoUrls.length})
+                Customer Photos ({initialQuote.photos.length})
               </span>
               <div className='mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4'>
-                {initialQuote.photoUrls.map((url, index) => (
+                {initialQuote.photos.map(({ url }, index) => (
                   <button
                     key={index}
                     type='button'

@@ -198,13 +198,13 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
               </div>
 
               {/* Photos / Attachments */}
-              {initialMessage.photoUrls && initialMessage.photoUrls.length > 0 && (
+              {initialMessage.photos.length > 0 && (
                 <div className='mt-2 flex flex-col gap-3'>
                   <span className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
-                    Attached Files / Photos ({initialMessage.photoUrls.length})
+                    Attached Files / Photos ({initialMessage.photos.length})
                   </span>
                   <div className='grid grid-cols-2 gap-3 sm:grid-cols-3'>
-                    {initialMessage.photoUrls.map((url, idx) => (
+                    {initialMessage.photos.map(({ url }, idx) => (
                       <div
                         key={url}
                         onClick={() => setSelectedPhoto(url)}

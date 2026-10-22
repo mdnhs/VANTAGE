@@ -1,6 +1,7 @@
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { quoteRequests } from '@/server/db/schema';
+import { attachPhotos, linkEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import type {
   CreateQuoteRequestOutput,
   QuoteRequestListQuery,
@@ -62,7 +63,7 @@ export const quoteRequestRepository = {
         .where(whereClause),
     ]);
 
-    return { rows, total: count };
+    return { rows: await attachPhotos('quoteRequestId', rows), total: count };
   },
 
   async stats(): Promise<QuoteRequestStats> {
@@ -101,7 +102,7 @@ export const quoteRequestRepository = {
   },
 
   async byId(id: string) {
-    return db.query.quoteRequests.findFirst({
+    const row = await db.query.quoteRequests.findFirst({
       where: eq(quoteRequests.id, id),
       with: {
         assignedUser: {
@@ -113,39 +114,45 @@ export const quoteRequestRepository = {
         },
       },
     });
+    if (!row) return undefined;
+    const [withPhotos] = await attachPhotos('quoteRequestId', [row]);
+    return withPhotos;
   },
 
-  async create(data: CreateQuoteRequestOutput) {
-    const [row] = await db
-      .insert(quoteRequests)
-      .values({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address || null,
-        city: data.city || null,
-        eircode: data.eircode || null,
-        registration: data.registration || null,
-        make: data.make || null,
-        model: data.model || null,
-        year: typeof data.year === 'number' ? data.year : null,
-        serviceType: data.serviceType || null,
-        description: data.description || null,
-        photoUrls: data.photoUrls || [],
-        source: data.source || 'website',
-        status: data.status || 'new',
-        assignedUserId: data.assignedUserId || null,
-        inspectionDate: data.inspectionDate ?? null,
-        estimatedCost:
-          data.estimatedCost !== undefined && data.estimatedCost !== null ? String(data.estimatedCost) : null,
-        paymentStatus: data.paymentStatus || 'unpaid',
-        paidAmount: data.paidAmount !== undefined && data.paidAmount !== null ? String(data.paidAmount) : '0.00',
-        paymentMethod: data.paymentMethod || null,
-        invoiceNumber: data.invoiceNumber || null,
-        completedAt: data.completedAt ?? null,
-        adminNotes: data.adminNotes || null,
-      })
-      .returning();
+  async create(data: CreateQuoteRequestOutput, photoMediaIds: string[] = []) {
+    const row = await db.transaction(async (tx) => {
+      const [inserted] = await tx
+        .insert(quoteRequests)
+        .values({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          address: data.address || null,
+          city: data.city || null,
+          eircode: data.eircode || null,
+          registration: data.registration || null,
+          make: data.make || null,
+          model: data.model || null,
+          year: typeof data.year === 'number' ? data.year : null,
+          serviceType: data.serviceType || null,
+          description: data.description || null,
+          source: data.source || 'website',
+          status: data.status || 'new',
+          assignedUserId: data.assignedUserId || null,
+          inspectionDate: data.inspectionDate ?? null,
+          estimatedCost:
+            data.estimatedCost !== undefined && data.estimatedCost !== null ? String(data.estimatedCost) : null,
+          paymentStatus: data.paymentStatus || 'unpaid',
+          paidAmount: data.paidAmount !== undefined && data.paidAmount !== null ? String(data.paidAmount) : '0.00',
+          paymentMethod: data.paymentMethod || null,
+          invoiceNumber: data.invoiceNumber || null,
+          completedAt: data.completedAt ?? null,
+          adminNotes: data.adminNotes || null,
+        })
+        .returning();
+      await linkEnquiryPhotos(tx, { quoteRequestId: inserted!.id }, photoMediaIds);
+      return inserted!;
+    });
     return this.byId(row.id);
   },
 

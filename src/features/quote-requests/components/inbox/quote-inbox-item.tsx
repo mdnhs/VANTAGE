@@ -16,7 +16,7 @@ interface QuoteInboxItemProps {
 export function QuoteInboxItem({ quote, isSelected, onSelect }: QuoteInboxItemProps) {
   const isNew = quote.status === 'new';
   const vehicleName = [quote.year, quote.make, quote.model].filter(Boolean).join(' ');
-  const photoCount = quote.photoUrls?.length ?? 0;
+  const photoCount = quote.photos.length;
 
   return (
     <button

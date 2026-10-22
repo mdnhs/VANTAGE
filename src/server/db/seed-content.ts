@@ -1,30 +1,27 @@
+// Loads .env.local and stubs `server-only`, so it must come first.
+import '../../../scripts/lib/cli-env';
+
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { v2 as cloudinary } from 'cloudinary';
 import { eq } from 'drizzle-orm';
 import { db } from './index';
 import { projects } from './schema/projects';
 import { services } from './schema/services';
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
-
 const ASSET_DIR = path.join(process.cwd(), 'public/assets/marketing');
-const FOLDER = 'vantage/seed';
 
-// Fixed public_id + overwrite:false makes re-runs reuse the same asset instead of duplicating.
+// Each image goes through the media pipeline (MEDIA_DRIVER=local needs no R2 credentials).
+// `legacySource: seed:<file>` makes a re-run reuse the same row instead of duplicating it.
 async function upload(file: string): Promise<string> {
-  const publicId = file.replace(/\.[^.]+$/, '');
-  const res = await cloudinary.uploader.upload(path.join(ASSET_DIR, file), {
-    folder: FOLDER,
-    public_id: publicId,
-    overwrite: false,
-    resource_type: 'image',
+  const { mediaLibraryService } = await import('@/server/services/media-library-service');
+  const row = await mediaLibraryService.ingest({
+    bytes: await readFile(path.join(ASSET_DIR, file)),
+    filename: file,
+    actorId: null,
+    scope: 'library',
+    legacySource: `seed:${file}`,
   });
-  return res.public_id;
+  return row.id;
 }
 
 const SERVICE_CONTENT: Record<string, { image: string; checklist: string[] }> = {
@@ -110,7 +107,7 @@ const PROJECTS = [
 ];
 
 async function seed() {
-  console.log('Uploading seed images to Cloudinary...');
+  console.log('Adding seed images to the media library...');
   const files = new Set<string>();
   Object.values(SERVICE_CONTENT).forEach((c) => files.add(c.image));
   PROJECTS.forEach((p) => {
@@ -123,7 +120,7 @@ async function seed() {
   for (const [slug, content] of Object.entries(SERVICE_CONTENT)) {
     await db
       .update(services)
-      .set({ imagePublicId: ids.get(content.image), checklist: content.checklist })
+      .set({ imageMediaId: ids.get(content.image), checklist: content.checklist })
       .where(eq(services.slug, slug));
   }
   console.log(`Updated ${Object.keys(SERVICE_CONTENT).length} services with image + checklist.`);
@@ -139,8 +136,8 @@ async function seed() {
       title: p.title,
       vehicleModel: p.vehicleModel,
       serviceCategory: p.serviceCategory,
-      beforeImagePublicId: ids.get(p.before)!,
-      afterImagePublicId: ids.get(p.after)!,
+      beforeImageMediaId: ids.get(p.before)!,
+      afterImageMediaId: ids.get(p.after)!,
       description: p.description,
       completedAt: new Date(p.completedAt),
       isFeatured: p.isFeatured,

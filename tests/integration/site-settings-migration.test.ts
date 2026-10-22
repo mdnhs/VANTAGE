@@ -7,7 +7,8 @@ import { PROCESS_PAGE_DEFAULTS, resolveProcessPageContent } from '@/features/pro
 import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
-import { auditLogs, revisions, siteSettings } from '@/server/db/schema';
+import { auditLogs, media, revisions, siteSettings } from '@/server/db/schema';
+import { migrateCloudinaryMedia } from '@/server/lib/media/cloudinary-migration';
 import {
   composeLegacyView,
   composePublicSettings,
@@ -25,7 +26,8 @@ import {
 } from '@/server/lib/settings/site-settings-migration';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 
-const wipe = () => db.execute(sql`truncate table settings, revisions, audit_logs, site_settings`);
+const wipe = () => db.execute(sql`truncate table settings, revisions, audit_logs, site_settings, media cascade`);
+const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(64)]);
 
 // Every column filled in, already trimmed, free-text hours: what an edited site looks like.
 const FULL = {
@@ -192,6 +194,46 @@ describe('site_settings -> versioned keys', () => {
     const { id: _id, updatedAt: _updatedAt, ...expected } = legacy;
     expect(await composeFromKeys()).toEqual(expected);
     expect(await verifySiteSettingsMigration()).toEqual({ ok: true, checked: expect.any(Number), problems: [] });
+  });
+
+  it('settings:migrate --verify still passes after media:migrate; a newly picked media row is a real mismatch', async () => {
+    await seed();
+    await migrateSiteSettings();
+    expect((await verifySiteSettingsMigration()).ok).toBe(true);
+    const sharp = (await import('sharp')).default;
+    const jpeg = await sharp({ create: { width: 32, height: 24, channels: 3, background: '#369' } })
+      .jpeg()
+      .toBuffer();
+    const report = await migrateCloudinaryMedia({
+      dryRun: false,
+      cloudName: 'demo',
+      fetchAsset: async (url) => (url.includes('/video/') ? MP4 : jpeg),
+    });
+    expect(report.failed).toEqual([]);
+    expect(report.rewritten.settings.length).toBeGreaterThan(0);
+    expect(await verifySiteSettingsMigration()).toEqual({ ok: true, checked: expect.any(Number), problems: [] });
+
+    // A logo picked afterwards has no Cloudinary source: the legacy view really differs.
+    const [picked] = await db
+      .insert(media)
+      .values({
+        driver: 'local',
+        key: 'vantage/media/2026/10/00000000000000aa-new.png',
+        url: '/uploads/new.png',
+        filename: 'new.png',
+        mimeType: 'image/png',
+        sizeBytes: 1,
+      })
+      .returning();
+    const site = (await settingsRepository.get('site'))!;
+    await settingsRepository.save(
+      'site',
+      { version: site.version, value: { ...(site.value as object), logo: { kind: 'media', id: picked!.id } } },
+      null,
+    );
+    const result = await verifySiteSettingsMigration();
+    expect(result.ok).toBe(false);
+    expect(result.problems.join()).toContain('logoPublicId');
   });
 
   it('resolved page props (about, insurance, process) match the legacy row', async () => {

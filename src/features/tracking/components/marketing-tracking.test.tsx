@@ -19,6 +19,7 @@ vi.mock('@/server/queries/get-setting', () => ({
   getSetting: async (key: 'consent' | 'scripts') => parseGlobal(key, state.settings[key]),
 }));
 vi.mock('@/server/queries/get-public-tracking', () => ({ getPublicTracking: async () => state.tracking }));
+vi.mock('@/server/queries/get-tracking-preview', () => ({ getTrackingPreview: async () => false }));
 
 import { CookieSettingsSlot } from './cookie-settings-slot';
 import { MarketingTracking } from './marketing-tracking';

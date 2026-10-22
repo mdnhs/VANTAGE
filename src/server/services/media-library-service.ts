@@ -109,13 +109,25 @@ const columns = (
   dominantColor: processed.dominantColor,
 });
 
+// A migration key whose row was deleted in the library is never handed back: the caller
+// must decide (the Cloudinary migration reports it) rather than relink to a deleted file.
+export class DeletedLegacySourceError extends Error {
+  constructor(readonly mediaId: string) {
+    super(`That legacy source belongs to deleted media row ${mediaId}`);
+  }
+}
+const liveSource = (row: MediaRow) => {
+  if (row.deletedAt) throw new DeletedLegacySourceError(row.id);
+  return row;
+};
+
 export const mediaLibraryService = {
   // Process + store + insert. With a `legacySource` that already has a row, that
   // row comes back untouched, so the Cloudinary migration can be re-run safely.
   async ingest(input: IngestInput): Promise<MediaRow> {
     if (input.legacySource) {
       const existing = await mediaRepository.byLegacySource(input.legacySource);
-      if (existing) return existing;
+      if (existing) return liveSource(existing);
     }
     const { filename, processed } = await processBytes(input.bytes, input.filename);
     // A concurrent identical upload can take the key between the check and the
@@ -134,7 +146,7 @@ export const mediaLibraryService = {
         if (!isUniqueViolation(error)) throw error;
         if (input.legacySource) {
           const raced = await mediaRepository.byLegacySource(input.legacySource);
-          if (raced) return raced;
+          if (raced) return liveSource(raced);
         }
         if (attempt > 0) throw error;
       }

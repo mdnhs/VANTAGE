@@ -18,7 +18,7 @@ export function publicTrackingFrom(t: TrackingValue): PublicTracking {
 }
 
 // The public half of the `tracking` settings row, cached until a save expires
-// its tag. Callers must `await io()` first.
+// its tag.
 export async function getPublicTracking(): Promise<PublicTracking> {
   'use cache';
   cacheTag(settingTag('tracking'));

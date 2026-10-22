@@ -24,8 +24,20 @@ export function trackingFrame(input: {
   scripts: GlobalValue<'scripts'>;
   tracking: PublicTracking;
   scriptsDisabled: boolean;
+  // Appearance preview (draft mode): nothing tracks, not even necessary snippets.
+  preview?: boolean;
 }): TrackingFrame {
   const { consent, tracking } = input;
+  if (input.preview) {
+    return {
+      active: false,
+      policy: { version: consent.version, months: consent.reconsentMonths },
+      gtmId: null,
+      ga4Id: null,
+      pixelId: null,
+      scripts: [],
+    };
+  }
   const runnable = input.scriptsDisabled ? [] : input.scripts.snippets.filter((s) => s.enabled);
   const gated = runnable.some((s) => s.category !== 'necessary');
   const active = consent.enabled && Boolean(tracking.gtmId || tracking.pixelId || gated);

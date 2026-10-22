@@ -7,13 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { PartnerLogo } from '../types';
 
 interface FormState {
   companyName: string;
-  logoPublicId: string;
+  logoMediaId: Slot;
   websiteUrl: string;
   isEnabled: boolean;
 }
@@ -21,7 +22,7 @@ interface FormState {
 function toFormState(data: PartnerLogo | null): FormState {
   return {
     companyName: data?.companyName ?? '',
-    logoPublicId: data?.logoPublicId ?? '',
+    logoMediaId: undefined,
     websiteUrl: data?.websiteUrl ?? '',
     isEnabled: data?.isEnabled ?? true,
   };
@@ -31,12 +32,14 @@ interface PartnerLogoFormProps {
   initialData?: PartnerLogo | null;
   onSubmit: (input: {
     companyName: string;
-    logoPublicId?: string;
+    logoMediaId?: string;
     websiteUrl: string;
     isEnabled: boolean;
   }) => Promise<unknown>;
   isSubmitting: boolean;
   submitError?: string | null;
+  // Server 422 causes: shown under the logo field.
+  submitCauses?: Record<string, string[]>;
   submitLabel: string;
 }
 
@@ -47,6 +50,7 @@ export function PartnerLogoForm({
   onSubmit,
   isSubmitting,
   submitError,
+  submitCauses,
   submitLabel,
 }: PartnerLogoFormProps) {
   const router = useRouter();
@@ -56,12 +60,20 @@ export function PartnerLogoForm({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const [logoError, setLogoError] = useState<string | null>(null);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    // A logo is required: a chosen one, or the row's current (media or legacy) one.
+    if (!form.logoMediaId && !initialData?.logoMediaId && !initialData?.logoPublicId) {
+      setLogoError('Choose a logo');
+      return;
+    }
+    setLogoError(null);
     await onSubmit({
       companyName: form.companyName,
-      // Left out when empty so a media-backed logo stays as it is.
-      logoPublicId: form.logoPublicId || undefined,
+      // Left out when untouched so the current logo (even a legacy one) stays.
+      ...(form.logoMediaId ? { logoMediaId: form.logoMediaId } : {}),
       websiteUrl: form.websiteUrl,
       isEnabled: form.isEnabled,
     });
@@ -103,12 +115,17 @@ export function PartnerLogoForm({
           </div>
           <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Logo</Label>
-            <CloudinaryUpload
-              mode='single-image'
-              folder='vantage/partner-logos'
-              value={form.logoPublicId || null}
-              onChange={(v) => setField('logoPublicId', (v as string) ?? '')}
+            <MediaField
+              kind='image'
+              label='Logo'
+              value={slotRef(form.logoMediaId, initialData?.logoMediaId, initialData?.logoPublicId)}
+              onChange={(ref) => setField('logoMediaId', ref?.id)}
             />
+            {(logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+              <p className='text-sm text-destructive'>
+                {logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]}
+              </p>
+            ) : null}
           </div>
         </CardContent>
       </Card>

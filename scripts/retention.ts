@@ -10,13 +10,13 @@ async function main() {
   console.log(
     `${dryRun ? 'DRY RUN: would delete' : 'deleted'} ` +
       `quotes: ${r.quotes.expired} past ${r.windows.enquiryRetentionMonths} months + ${r.quotes.spam} spam past ${r.windows.spamRetentionDays} days; ` +
-      `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos}`,
+      `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos} (+ ${r.legacyPhotos} legacy left for cleanup); orphan photos: ${r.orphanPhotos}`,
   );
   if (dryRun) {
     console.log('ai conversations: (not counted in dry run)');
   } else {
-    const { purgeStaleConversations } = await import('@/server/repositories/ai-conversation-repository');
-    const ai = await purgeStaleConversations(new Date());
+    const { runAiRetention } = await import('@/server/repositories/ai-conversation-repository');
+    const ai = await runAiRetention(new Date());
     console.log(`ai conversations: ${ai.conversations}, messages: ${ai.messages}`);
   }
   process.exit(0);

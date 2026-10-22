@@ -5,8 +5,10 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
+import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 import { track } from '@/lib/tracking/track';
+import { newEventId } from '@/lib/tracking/event-id';
 
 // Figma-exported glyphs shared with the homepage quote form (stitch-estimator.tsx, node 131:204).
 const ICONS = {
@@ -93,15 +95,6 @@ interface ContactFormProps {
   copy: GlobalValue<'contactForm'>;
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 export function ContactForm({ services, copy }: ContactFormProps) {
   const { labels, placeholders } = copy;
   const [firstName, setFirstName] = useState('');
@@ -147,14 +140,14 @@ export function ContactForm({ services, copy }: ContactFormProps) {
     try {
       // Convert attached files to base64 strings if any
       const photoUrls: string[] = [];
-      for (const file of files) {
+      for (const file of files.slice(0, 4)) {
         if (file.type.startsWith('image/')) {
-          const dataUrl = await readFileAsDataUrl(file);
-          photoUrls.push(dataUrl);
+          const dataUrl = await imageFileToDataUrl(file);
+          if (dataUrl) photoUrls.push(dataUrl);
         }
       }
 
-      const eventId = crypto.randomUUID();
+      const eventId = newEventId();
       await submitContactMessage({
         firstName: firstName.trim(),
         lastName: lastName.trim(),

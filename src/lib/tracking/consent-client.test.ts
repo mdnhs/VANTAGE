@@ -188,4 +188,13 @@ describe('clearTrackingCookies', () => {
     clearTrackingCookies(doc, 'localhost');
     expect(doc.writes).toEqual([]);
   });
+
+  it('still saves and loads GTM when the beacon throws', () => {
+    const t = env();
+    t.env.beacon = () => {
+      throw new Error('blocked');
+    };
+    expect(() => saveConsent({ analytics: true, marketing: false }, 'accept', policy, t.env)).not.toThrow();
+    expect(t.window.__vantageLoadGtm).toHaveBeenCalled();
+  });
 });

@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
+import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { assertMediaExists } from '@/server/lib/media/assert-media';
@@ -78,6 +79,10 @@ export const projectService = {
   async update(id: string, data: UpdateProjectInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
     await assertMediaExists(input.galleryMediaIds ?? []);
+    // A gallery that still has old-storage images is replaced only by the media migration.
+    if (input.galleryMediaIds !== undefined && (await projectRepository.legacyGalleryCount(id)) > 0) {
+      throw new ApiError(ERROR_CODES.CONFLICT, 'Migrate this gallery first', 409);
+    }
     const row = await projectRepository.update(id, input);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');

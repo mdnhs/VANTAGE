@@ -4,8 +4,8 @@ const serverSchema = z.object({
   DATABASE_URL: z.string().url(),
   DATABASE_URL_UNPOOLED: z.string().url().optional(),
   AUTH_SECRET: z.string().min(32),
-  CLOUDINARY_API_KEY: z.string().optional(),
-  CLOUDINARY_API_SECRET: z.string().optional(),
+  // Legacy fallback until Phase 11: builds URLs for images not yet moved to the media library.
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional(),
 
   MEDIA_DRIVER: z.enum(['local', 's3']).default('local'),
   MEDIA_LOCAL_DIR: z.string().min(1).default('.uploads'),
@@ -68,13 +68,11 @@ const serverEnvSchema = serverSchema.superRefine((env, ctx) => {
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().optional(),
 });
 
 // Client vars must be referenced literally — Next.js inlines them at build time.
 export const clientEnv = clientSchema.parse({
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
 });
 
 /** Pure parser (no process.env access) so tests can pass their own env. Empty strings count as unset. */

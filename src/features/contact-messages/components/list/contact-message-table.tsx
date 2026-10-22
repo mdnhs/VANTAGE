@@ -166,9 +166,9 @@ export function ContactMessageTable({ initialData, initialStats }: ContactMessag
                     <td className='px-4 py-3'>
                       <div className='flex max-w-sm flex-col gap-1'>
                         <span className='line-clamp-2 text-xs text-muted-foreground'>{msg.message}</span>
-                        {msg.photoUrls && msg.photoUrls.length > 0 && (
+                        {msg.photos.length > 0 && (
                           <span className='inline-flex w-fit items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
-                            📷 {msg.photoUrls.length} {msg.photoUrls.length === 1 ? 'attachment' : 'attachments'}
+                            📷 {msg.photos.length} {msg.photos.length === 1 ? 'attachment' : 'attachments'}
                           </span>
                         )}
                       </div>

@@ -1,10 +1,24 @@
-import { sql } from 'drizzle-orm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { existsSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
+
+import { eq, sql } from 'drizzle-orm';
+import sharp from 'sharp';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { auditLogs, contactMessages, quoteRequests } from '@/server/db/schema';
+import { auditLogs, contactMessages, enquiryPhotos, media, quoteRequests } from '@/server/db/schema';
+import { resetStorageForTests } from '@/server/lib/media/storage';
 import { settingsRepository } from '@/server/repositories/settings-repository';
-import { cloudinaryPublicId, runRetention } from '@/server/services/retention-service';
+import { mediaLibraryService } from '@/server/services/media-library-service';
+import { runRetention } from '@/server/services/retention-service';
+
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  revalidateTag: vi.fn(),
+}));
+
+const UPLOAD_DIR = path.resolve('.test-uploads');
 
 const NOW = new Date('2026-10-22T12:00:00Z');
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000);
@@ -38,7 +52,7 @@ const names = async () => ({
 
 beforeEach(async () => {
   await db.execute(
-    sql`truncate table settings, revisions, audit_logs, enquiry_photos, quote_requests, contact_messages`,
+    sql`truncate table settings, revisions, audit_logs, enquiry_photos, quote_requests, contact_messages, media cascade`,
   );
   // 12 months / 10 days so the windows are easy to read; defaults would be 24 / 30.
   await settingsRepository.save(
@@ -80,16 +94,69 @@ beforeEach(async () => {
     ]);
 });
 
+const png = (color: string) =>
+  sharp({ create: { width: 16, height: 16, channels: 3, background: color } })
+    .png()
+    .toBuffer();
+
+// Real files in local storage. Returns the media row.
+const enquiryMedia = async (color: string, createdAt?: Date) => {
+  const row = await mediaLibraryService.ingest({
+    bytes: await png(color),
+    filename: 'enquiry-photo.png',
+    actorId: null,
+    scope: 'enquiry',
+  });
+  if (createdAt) await db.update(media).set({ createdAt }).where(eq(media.id, row.id));
+  return row;
+};
+const linkTo = async (parent: { quoteRequestId: string } | { contactMessageId: string }, mediaId: string) =>
+  db.insert(enquiryPhotos).values({ ...parent, mediaId, position: 0 });
+const fileExists = (key: string) => existsSync(path.join(UPLOAD_DIR, key));
+
+let seeded: {
+  purgedQuote: Awaited<ReturnType<typeof enquiryMedia>>;
+  purgedContact: Awaited<ReturnType<typeof enquiryMedia>>;
+  keptQuote: Awaited<ReturnType<typeof enquiryMedia>>;
+  oldOrphan: Awaited<ReturnType<typeof enquiryMedia>>;
+  youngOrphan: Awaited<ReturnType<typeof enquiryMedia>>;
+};
+
+beforeAll(() => resetStorageForTests());
+afterAll(() => rm(UPLOAD_DIR, { recursive: true, force: true }));
+
+beforeEach(async () => {
+  const idOf = async (n: string) => (await db.select().from(quoteRequests).where(eq(quoteRequests.name, n)))[0]!.id;
+  const contactId = async (n: string) =>
+    (await db.select().from(contactMessages).where(eq(contactMessages.firstName, n)))[0]!.id;
+  seeded = {
+    purgedQuote: await enquiryMedia('#a00'),
+    purgedContact: await enquiryMedia('#0a0'),
+    keptQuote: await enquiryMedia('#00a'),
+    oldOrphan: await enquiryMedia('#aa0', new Date(NOW.getTime() - 25 * 3_600_000)),
+    youngOrphan: await enquiryMedia('#0aa', new Date(NOW.getTime() - 23 * 3_600_000)),
+  };
+  await linkTo({ quoteRequestId: await idOf('qdone') }, seeded.purgedQuote.id);
+  await linkTo({ contactMessageId: await contactId('creplied') }, seeded.purgedContact.id);
+  await linkTo({ quoteRequestId: await idOf('qnew') }, seeded.keptQuote.id);
+});
+
 describe('runRetention', () => {
-  it('dry run counts (including photos) but deletes and audits nothing', async () => {
+  it('dry run counts photos, legacy urls and orphans but deletes and audits nothing', async () => {
     const r = await runRetention({ dryRun: true, now: NOW });
     expect(r).toMatchObject({
       dryRun: true,
       windows: { enquiryRetentionMonths: 12, spamRetentionDays: 10 },
       quotes: { expired: 3, spam: 1 },
       contacts: { expired: 2, spam: 1 },
-      photos: 3,
+      photos: 2,
+      legacyPhotos: 3,
+      orphanPhotos: 1,
     });
+    expect(await db.select().from(media)).toHaveLength(5);
+    expect(fileExists(seeded.purgedQuote.key)).toBe(true);
+    expect(fileExists(seeded.oldOrphan.key)).toBe(true);
+    expect(await db.select().from(enquiryPhotos)).toHaveLength(3);
     expect((await names()).q).toHaveLength(15);
     expect((await names()).c).toHaveLength(6);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
@@ -97,9 +164,14 @@ describe('runRetention', () => {
 
   it('real run deletes exactly what the dry run counted, keeps open and billed rows', async () => {
     const dry = await runRetention({ dryRun: true, now: NOW });
-    const deletePhotos = vi.fn(async (_urls: string[]) => {});
-    const r = await runRetention({ now: NOW, deletePhotos });
-    expect(r).toMatchObject({ quotes: dry.quotes, contacts: dry.contacts, photos: dry.photos });
+    const r = await runRetention({ now: NOW });
+    expect(r).toMatchObject({
+      quotes: dry.quotes,
+      contacts: dry.contacts,
+      photos: dry.photos,
+      legacyPhotos: dry.legacyPhotos,
+      orphanPhotos: dry.orphanPhotos,
+    });
     expect(await names()).toEqual({
       q: [
         'qedge',
@@ -116,29 +188,54 @@ describe('runRetention', () => {
       ].sort(),
       c: ['cfresh', 'cnew', 'cread'],
     });
-    expect(deletePhotos).toHaveBeenCalledWith(expect.arrayContaining([photo('a'), photo('b'), photo('c')]));
-    expect(deletePhotos.mock.calls[0]![0]).toHaveLength(3);
 
     const audit = await db.select().from(auditLogs);
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ action: 'privacy.retention', actorId: null });
-    expect(JSON.stringify(audit[0])).not.toMatch(/PRIVATE|example\.com|cloudinary|qdone|cspam/);
+    expect(JSON.stringify(audit[0])).not.toMatch(/PRIVATE|example\.com|cloudinary|qdone|cspam|enquiry-photo/);
   });
 
-  it('a photo deletion failure never fails the purge', async () => {
+  it('hard-deletes purged enquiries media and old orphans, keeps linked and young media', async () => {
+    await runRetention({ now: NOW });
+    const left = (await db.select({ id: media.id }).from(media)).map((r) => r.id).sort();
+    expect(left).toEqual([seeded.keptQuote.id, seeded.youngOrphan.id].sort());
+    for (const gone of [seeded.purgedQuote, seeded.purgedContact, seeded.oldOrphan]) {
+      expect(fileExists(gone.key)).toBe(false);
+    }
+    for (const kept of [seeded.keptQuote, seeded.youngOrphan]) expect(fileExists(kept.key)).toBe(true);
+    expect(await db.select().from(enquiryPhotos)).toHaveLength(1);
+  });
+
+  it('never touches library media', async () => {
+    const lib = await mediaLibraryService.ingest({
+      bytes: await png('#555'),
+      filename: 'lib.png',
+      actorId: null,
+      scope: 'library',
+    });
+    await db
+      .update(media)
+      .set({ createdAt: daysAgo(30) })
+      .where(eq(media.id, lib.id));
+    await runRetention({ now: NOW });
+    expect(fileExists(lib.key)).toBe(true);
+    expect(await db.select().from(media).where(eq(media.id, lib.id))).toHaveLength(1);
+  });
+
+  it('a media deletion failure never fails the purge', async () => {
     const r = await runRetention({
       now: NOW,
-      deletePhotos: async () => {
-        throw new Error('cloud down');
+      deleteMedia: async (): Promise<number> => {
+        throw new Error('storage down');
       },
     });
     expect(r.quotes.expired).toBe(3);
   });
 
   it('a second run finds nothing and writes no audit row', async () => {
-    await runRetention({ now: NOW, deletePhotos: async () => {} });
+    await runRetention({ now: NOW });
     await db.execute(sql`truncate table audit_logs`);
-    const r = await runRetention({ now: NOW, deletePhotos: async () => {} });
+    const r = await runRetention({ now: NOW });
     expect(r.quotes).toEqual({ expired: 0, spam: 0 });
     expect(r.contacts).toEqual({ expired: 0, spam: 0 });
     expect(await db.select().from(auditLogs)).toHaveLength(0);
@@ -155,18 +252,5 @@ describe('runRetention', () => {
   it('archived is no longer treated as spam: a young archived row survives', async () => {
     const r = await runRetention({ dryRun: true, now: NOW });
     expect(r.contacts.spam).toBe(1); // only the status 'spam' row
-  });
-});
-
-describe('cloudinaryPublicId', () => {
-  it('extracts the public id and ignores foreign urls', () => {
-    expect(cloudinaryPublicId(photo('a'))).toBe('vantage/quotes/a');
-    expect(cloudinaryPublicId('https://evil.example/image/upload/v1/x.jpg')).toBeNull();
-    expect(cloudinaryPublicId('not a url')).toBeNull();
-    const t = 'https://res.cloudinary.com/demo/image/upload/c_fill,w_100/e_blur:5/v12/vantage/quotes/a.jpg';
-    expect(cloudinaryPublicId(t)).toBe('vantage/quotes/a');
-    expect(cloudinaryPublicId('https://res.cloudinary.com/demo/image/upload/vantage/quotes/a.png')).toBe(
-      'vantage/quotes/a',
-    );
   });
 });

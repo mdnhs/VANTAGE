@@ -32,9 +32,9 @@ export const quoteRequestService = {
   },
 
   // `notify: false` for staff-entered enquiries (phone / walk-in): no one to alert, no auto-reply.
-  async create(data: CreateQuoteRequestOutput, options: { notify?: boolean } = {}) {
+  async create(data: CreateQuoteRequestOutput, options: { notify?: boolean; photoMediaIds?: string[] } = {}) {
     await assertAssignable(data.assignedUserId);
-    const row = await quoteRequestRepository.create(data);
+    const row = await quoteRequestRepository.create(data, options.photoMediaIds);
     // After the row is committed; fire-and-forget, so mail never fails the request.
     if (options.notify !== false && row) notifyNewQuote(row);
     return row;

@@ -1,6 +1,7 @@
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { contactMessages } from '@/server/db/schema';
+import { attachPhotos, linkEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
 import type {
   CreateContactMessageInput,
   ContactMessageListQuery,
@@ -46,7 +47,7 @@ export const contactMessageRepository = {
         .where(whereClause),
     ]);
 
-    return { rows, total: count };
+    return { rows: await attachPhotos('contactMessageId', rows), total: count };
   },
 
   async stats(): Promise<ContactMessageStats> {
@@ -77,25 +78,30 @@ export const contactMessageRepository = {
   },
 
   async byId(id: string) {
-    return db.query.contactMessages.findFirst({ where: eq(contactMessages.id, id) });
+    const row = await db.query.contactMessages.findFirst({ where: eq(contactMessages.id, id) });
+    if (!row) return undefined;
+    const [withPhotos] = await attachPhotos('contactMessageId', [row]);
+    return withPhotos;
   },
 
-  async create(data: CreateContactMessageInput) {
-    const [row] = await db
-      .insert(contactMessages)
-      .values({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        service: data.service || null,
-        message: data.message,
-        photoUrls: data.photoUrls || [],
-        source: data.source || 'contact_page',
-        status: 'new',
-      })
-      .returning();
-    return row;
+  async create(data: CreateContactMessageInput, photoMediaIds: string[] = []) {
+    return db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(contactMessages)
+        .values({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          service: data.service || null,
+          message: data.message,
+          source: data.source || 'contact_page',
+          status: 'new',
+        })
+        .returning();
+      await linkEnquiryPhotos(tx, { contactMessageId: row!.id }, photoMediaIds);
+      return (await attachPhotos('contactMessageId', [row!]))[0]!;
+    });
   },
 
   async update(id: string, data: UpdateContactMessageInput) {
@@ -104,7 +110,7 @@ export const contactMessageRepository = {
     if (data.adminNotes !== undefined) patch.adminNotes = data.adminNotes;
 
     const [row] = await db.update(contactMessages).set(patch).where(eq(contactMessages.id, id)).returning();
-    return row;
+    return row ? (await attachPhotos('contactMessageId', [row]))[0] : undefined;
   },
 
   async remove(id: string) {
