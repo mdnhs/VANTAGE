@@ -78,47 +78,61 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
 
   if (canQuote || canContact) {
     const allowed = [...(canQuote ? ['quote'] : []), ...(canContact ? ['contact'] : [])];
-    const rows = await db
-      .select({
-        id: auditLogs.id,
-        entityType: auditLogs.entityType,
-        entityId: auditLogs.entityId,
-        summary: auditLogs.summary,
-        createdAt: auditLogs.createdAt,
-      })
-      .from(auditLogs)
-      .where(
-        and(
-          eq(auditLogs.action, NOTIFY_ACTIONS.delivery_failed),
-          inArray(auditLogs.entityType, allowed),
-          gt(auditLogs.createdAt, since),
-        ),
-      )
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(NOTIFICATION_LIMIT);
-    // Drop rows whose enquiry has since been deleted: one lookup per entity type.
-    const ids = (type: string) => rows.filter((r) => r.entityType === type && r.entityId).map((r) => r.entityId!);
-    const quoteIds = ids('quote');
-    const contactIds = ids('contact');
-    const [liveQuotes, liveContacts] = await Promise.all([
-      quoteIds.length
-        ? db.select({ id: quoteRequests.id }).from(quoteRequests).where(inArray(quoteRequests.id, quoteIds))
-        : [],
-      contactIds.length
-        ? db.select({ id: contactMessages.id }).from(contactMessages).where(inArray(contactMessages.id, contactIds))
-        : [],
-    ]);
-    const live = new Set([...liveQuotes, ...liveContacts].map((r) => r.id));
-    for (const r of rows) {
-      if (!r.entityId || !live.has(r.entityId)) continue;
-      items.push({
-        id: `audit:${r.id}`,
-        kind: 'delivery_failed',
-        title: "An enquiry email didn't send",
-        description: r.summary,
-        href: `/dashboard/${r.entityType === 'quote' ? 'quotes' : 'contacts'}/${r.entityId}`,
-        at: r.createdAt.toISOString(),
-      });
+    // Rows whose enquiry has since been deleted are dropped, so page through the log until the
+    // feed is full of live rows (or the log runs out) rather than shrinking below the limit.
+    const BATCH = 50;
+    let live = 0;
+    for (let offset = 0; live < NOTIFICATION_LIMIT; offset += BATCH) {
+      const rows = await db
+        .select({
+          id: auditLogs.id,
+          entityType: auditLogs.entityType,
+          entityId: auditLogs.entityId,
+          summary: auditLogs.summary,
+          createdAt: auditLogs.createdAt,
+        })
+        .from(auditLogs)
+        .where(
+          and(
+            eq(auditLogs.action, NOTIFY_ACTIONS.delivery_failed),
+            inArray(auditLogs.entityType, allowed),
+            gt(auditLogs.createdAt, since),
+          ),
+        )
+        .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
+        .limit(BATCH)
+        .offset(offset);
+      if (!rows.length) break;
+      // One lookup per entity type; a live id is only live for its own type.
+      const idsOf = (type: string) => rows.filter((r) => r.entityType === type && r.entityId).map((r) => r.entityId!);
+      const quoteIds = idsOf('quote');
+      const contactIds = idsOf('contact');
+      const [liveQuotes, liveContacts] = await Promise.all([
+        quoteIds.length
+          ? db.select({ id: quoteRequests.id }).from(quoteRequests).where(inArray(quoteRequests.id, quoteIds))
+          : [],
+        contactIds.length
+          ? db.select({ id: contactMessages.id }).from(contactMessages).where(inArray(contactMessages.id, contactIds))
+          : [],
+      ]);
+      const liveKeys = new Set([
+        ...liveQuotes.map((r) => `quote:${r.id}`),
+        ...liveContacts.map((r) => `contact:${r.id}`),
+      ]);
+      for (const r of rows) {
+        if (live >= NOTIFICATION_LIMIT) break;
+        if (!r.entityId || !liveKeys.has(`${r.entityType}:${r.entityId}`)) continue;
+        live += 1;
+        items.push({
+          id: `audit:${r.id}`,
+          kind: 'delivery_failed',
+          title: "An enquiry email didn't send",
+          description: r.summary,
+          href: `/dashboard/${r.entityType === 'quote' ? 'quotes' : 'contacts'}/${r.entityId}`,
+          at: r.createdAt.toISOString(),
+        });
+      }
+      if (rows.length < BATCH) break;
     }
   }
 

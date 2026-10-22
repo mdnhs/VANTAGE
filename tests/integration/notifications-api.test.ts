@@ -136,6 +136,32 @@ describe('GET /admin/notifications', () => {
   });
 });
 
+describe('feed edge cases', () => {
+  it('rejects the customer role', async () => {
+    const u = await userWith('user');
+    expect((await get(u.cookie)).res.status).toBe(403);
+  });
+
+  it('keeps the feed full when newer failures point at deleted enquiries', async () => {
+    const live = await addQuote();
+    await notify('delivery_failed', { enquiry: 'quote', enquiryId: live.id, channel: 'notification' });
+    for (let i = 0; i < 25; i += 1) {
+      await notify('delivery_failed', { enquiry: 'quote', enquiryId: randomUUID(), channel: 'notification' });
+    }
+    const u = await userWith('owner');
+    const items = (await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed');
+    expect(items).toHaveLength(1);
+    expect(items[0]!.href).toBe(`/dashboard/quotes/${live.id}`);
+  });
+
+  it('does not treat a quote id as a live contact', async () => {
+    const quote = await addQuote();
+    await notify('delivery_failed', { enquiry: 'contact', enquiryId: quote.id, channel: 'notification' });
+    const u = await userWith('owner');
+    expect((await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed')).toHaveLength(0);
+  });
+});
+
 describe('POST /admin/notifications/seen', () => {
   it('marks everything seen; later enquiries are unread again', async () => {
     await addQuote();
