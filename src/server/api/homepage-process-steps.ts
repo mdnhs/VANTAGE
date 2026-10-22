@@ -4,7 +4,9 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import {
   createHomepageProcessStepSchema,
@@ -41,21 +43,50 @@ export const homepageProcessSteps = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createHomepageProcessStepSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await homepageProcessStepService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.create',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step created',
+    }),
+    zValidator('json', createHomepageProcessStepSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await homepageProcessStepService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderHomepageProcessStepsSchema), async (c) => {
-    const input = c.req.valid('json');
-    await homepageProcessStepService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.reorder',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process steps reordered',
+    }),
+    zValidator('json', reorderHomepageProcessStepsSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await homepageProcessStepService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.update',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step updated',
+      load: homepageProcessStepService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateHomepageProcessStepSchema),
     async (c) => {
@@ -67,8 +98,19 @@ export const homepageProcessSteps = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await homepageProcessStepService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.delete',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step deleted',
+    }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await homepageProcessStepService.remove(id);
+      return ok(c, { success: true });
+    },
+  );

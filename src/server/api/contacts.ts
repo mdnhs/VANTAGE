@@ -5,7 +5,9 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import {
@@ -52,6 +54,15 @@ export const contacts = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ contact: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'contact.update',
+      entityType: 'contact',
+      summary: 'Contact message updated',
+      load: contactMessageService.byId,
+      fields: ['status', 'adminNotes'],
+      redact: ['adminNotes'],
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateContactMessageSchema),
     async (c) => {
@@ -64,8 +75,15 @@ export const contacts = new Hono<AppEnv>()
   )
 
   // Delete contact message
-  .delete('/:id', can({ contact: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await contactMessageService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ contact: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'contact.delete', entityType: 'contact', summary: 'Contact message deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await contactMessageService.remove(id);
+      return ok(c, { success: true });
+    },
+  );
