@@ -19,7 +19,6 @@ import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
 import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
-import { media } from './media';
 import { partnerLogos } from './partner-logos';
 import { preview } from './preview';
 import { projects } from './projects';
@@ -58,7 +57,6 @@ export const api = app
     return c.json({ success: true, data: { status: 'ok' } });
   })
   .route('/auth', auth)
-  .route('/media', media)
   .route('/admin/media', adminMedia)
   .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)

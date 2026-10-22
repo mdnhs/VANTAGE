@@ -49,12 +49,16 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
-  // Vercel Image Optimization stays off — Cloudinary is the optimiser now, so Next.js only
-  // lays out the element. This should keep the Vercel image-optimization meter at 0.
+  // Media is served as stored (R2 or /uploads); Next optimises it. res.cloudinary.com is the legacy
+  // fallback for images not yet migrated (Phase 11 removes it). No localPatterns: this site serves
+  // many /public paths.
   images: {
-    loader: 'custom',
-    loaderFile: './src/lib/cloudinary/loader.ts',
-    remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com' }, ...mediaRemotePatterns()],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    qualities: [75, 90],
+    minimumCacheTTL: 31536000,
+    remotePatterns: [...mediaRemotePatterns(), { protocol: 'https', hostname: 'res.cloudinary.com' }],
   },
   async headers() {
     return [
