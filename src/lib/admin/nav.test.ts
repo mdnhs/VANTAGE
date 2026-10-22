@@ -35,6 +35,7 @@ const ALL_SETTINGS = [
   'settings-forms',
   'settings-notifications',
   'settings-privacy',
+  'settings-ai-assistant',
 ];
 // globals.read only (editor, marketer, viewer): no identity, notifications, privacy.
 const GLOBALS_SETTINGS = ['settings-contact', 'settings-navigation', 'settings-footer', 'settings-forms'];
@@ -137,6 +138,12 @@ describe('canOpen', () => {
 });
 
 describe('reachableLinks', () => {
+  it('lists the AI assistant settings only for roles that can manage it', () => {
+    expect(reachableLinks(['admin']).map((l) => l.href)).toContain('/dashboard/settings/ai-assistant');
+    expect(reachableLinks(['owner']).map((l) => l.href)).toContain('/dashboard/settings/ai-assistant');
+    expect(reachableLinks(['editor']).map((l) => l.href)).not.toContain('/dashboard/settings/ai-assistant');
+  });
+
   it.each(Object.keys(EXPECTED))('%s never lists a link its permission denies', (name) => {
     const roles = rolesOf(name);
     const all = [...NAV.flatMap((i) => [i, ...(i.children ?? [])]), HELP_LINK, ...EXTRA_LINKS];
