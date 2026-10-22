@@ -103,6 +103,12 @@ describe('PUT /admin/theme/draft', () => {
     expect((await json(res)).error.current).toMatchObject({ updatedBy: adminName });
   });
 
+  it('rejects an oversized draft with 413 before validating it', async () => {
+    const res = await put(cookies.admin, 0, { site: { brand: '#c42424' }, junk: 'x'.repeat(40 * 1024) });
+    expect(res.status).toBe(413);
+    expect(await db.select().from(settings)).toHaveLength(0);
+  });
+
   it('rejects an invalid colour with 422', async () => {
     expect((await put(cookies.admin, 0, { site: { brand: 'red' } })).status).toBe(422);
   });
@@ -118,6 +124,16 @@ describe('POST /admin/theme/publish', () => {
     expect(error.message.startsWith('Some colours are too hard to read.')).toBe(true);
     expect(error.causes?.colours?.length).toBeGreaterThan(0);
     expect(await db.select().from(revisions)).toHaveLength(0);
+  });
+
+  it('refuses to publish when there is no draft', async () => {
+    expect((await post(cookies.admin, 'publish', { version: 0 })).status).toBe(422);
+    await put(cookies.admin, 0, red);
+    await post(cookies.admin, 'publish', { version: 1 });
+    const res = await post(cookies.admin, 'publish', { version: 2 });
+    expect(res.status).toBe(422);
+    expect((await json(res)).error.message).toBe('There is no draft to publish');
+    expect(await db.select().from(revisions)).toHaveLength(1);
   });
 
   it('publishes the draft, writes one revision and one audit row, expires the tag', async () => {
@@ -230,6 +246,18 @@ describe('/preview', () => {
     expect(res.headers.get('location')).toBe('/services');
     // vitest has no Next request store, so the bypass cookie itself is Next's job.
     expect(draftState.enable).toHaveBeenCalledOnce();
+  });
+
+  it.each(['cross-site', 'same-site-ish'])('refuses a %s enter request', async (site) => {
+    const value = site === 'cross-site' ? 'cross-site' : 'bogus';
+    const res = await call('/preview?path=/', cookies.owner, { headers: { 'sec-fetch-site': value } });
+    expect(res.status).toBe(403);
+    expect(draftState.enable).not.toHaveBeenCalled();
+  });
+
+  it.each(['same-origin', 'same-site', 'none'])('allows Sec-Fetch-Site %s', async (value) => {
+    const res = await call('/preview?path=/', cookies.owner, { headers: { 'sec-fetch-site': value } });
+    expect(res.status).toBe(307);
   });
 
   it('refuses roles without appearance.read', async () => {

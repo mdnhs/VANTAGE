@@ -101,7 +101,10 @@ export async function saveThemeDraft(actor: Actor, input: { version: number; dra
 export async function publishTheme(actor: Actor, input: { version: number }) {
   const row = await db.transaction(async (tx) => {
     const before = await lockAt(tx, input.version);
-    const next = parseTheme(before?.draft ?? before?.value);
+    if (before?.draft == null) {
+      throw new ApiError(ERROR_CODES.VALIDATION_ERROR, 'There is no draft to publish', 422);
+    }
+    const next = parseTheme(before.draft);
     const issues = checkTheme(next);
     if (issues.length) {
       throw new ApiError(
