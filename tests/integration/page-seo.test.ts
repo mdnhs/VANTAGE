@@ -1,9 +1,11 @@
-import { sql } from 'drizzle-orm';
-import { revalidateTag } from 'next/cache';
+import { eq, sql } from 'drizzle-orm';
+import { cacheTag, revalidateTag } from 'next/cache';
+
+import { parseGlobal } from '@/lib/content/globals';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { media } from '@/server/db/schema';
+import { media, services } from '@/server/db/schema';
 import { getPageMetadata, getSitemapEntries } from '@/server/queries/get-page-seo';
 
 import { call, createTestUser, signInCookie } from '../support/session';
@@ -26,7 +28,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings, media cascade`);
+  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings, media, services, projects cascade`);
   vi.mocked(revalidateTag).mockClear();
 });
 
@@ -77,6 +79,35 @@ describe('public page SEO', () => {
     const paths = (await getSitemapEntries()).map((e) => e.path);
     expect(paths).not.toContain('/services');
     expect(paths).toHaveLength(7);
+  });
+
+  it('dates a page by the newest of its copy and SEO rows; an untouched page is undated', async () => {
+    expect((await put('seo.page.about', { title: 'About us' })).status).toBe(200);
+    expect((await put('page.about', parseGlobal('page.about', {}))).status).toBe(200);
+    await db.execute(sql`update settings set updated_at = '2025-01-01T00:00:00Z' where key = 'seo.page.about'`);
+    await db.execute(sql`update settings set updated_at = '2025-06-01T00:00:00Z' where key = 'page.about'`);
+    const entries = await getSitemapEntries();
+    expect(entries.find((e) => e.path === '/about')!.lastModified?.toISOString()).toBe('2025-06-01T00:00:00.000Z');
+    expect(entries.find((e) => e.path === '/process')!.lastModified).toBeUndefined();
+    const tags = vi.mocked(cacheTag).mock.calls.flat();
+    expect(tags).toEqual(expect.arrayContaining(['services', 'projects', 'settings:page.about', 'settings:seo.page.about']));
+  });
+
+  it('ignores disabled services for the date', async () => {
+    await db.insert(services).values({ name: 'Off', slug: 'off', description: 'd', isEnabled: false });
+    expect((await getSitemapEntries()).find((e) => e.path === '/services')!.lastModified).toBeUndefined();
+  });
+
+  it('moves /services when a service changes', async () => {
+    const [row] = await db
+      .insert(services)
+      .values({ name: 'Paint', slug: 'paint', description: 'd', updatedAt: new Date('2025-01-01T00:00:00Z') })
+      .returning();
+    const first = (await getSitemapEntries()).find((e) => e.path === '/services')!.lastModified!;
+    expect(first.toISOString()).toBe('2025-01-01T00:00:00.000Z');
+    await db.update(services).set({ updatedAt: new Date('2026-02-02T00:00:00Z') }).where(eq(services.id, row!.id));
+    const next = (await getSitemapEntries()).find((e) => e.path === '/services')!.lastModified!;
+    expect(next.toISOString()).toBe('2026-02-02T00:00:00.000Z');
   });
 
   it('lists nothing when the whole site is noindex', async () => {
