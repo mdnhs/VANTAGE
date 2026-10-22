@@ -6,7 +6,6 @@ import { account } from './account';
 import { adminMedia } from './admin-media';
 import { adminUsers } from './admin-users';
 import { adminUsersLookup } from './admin-users-lookup';
-import { admins } from './admins';
 import { auth } from './auth';
 import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
@@ -19,7 +18,6 @@ import { quoteRequests } from './quote-requests';
 import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
-import { users } from './users';
 
 const app = new Hono().basePath('/api/v1');
 
@@ -51,9 +49,7 @@ export const api = app
   .route('/homepage-catalogs', homepageCatalogs)
   .route('/homepage-process-steps', homepageProcessSteps)
   .route('/quotes', quoteRequests)
-  .route('/contacts', contacts)
-  .route('/admins', admins)
-  .route('/users', users);
+  .route('/contacts', contacts);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 

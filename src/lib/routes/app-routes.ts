@@ -63,10 +63,8 @@ export const APP_ROUTES = {
       create: '/dashboard/homepage-process-steps/create',
       edit: (id: string) => `/dashboard/homepage-process-steps/${id}/edit`,
     },
-    admins: {
-      index: '/dashboard/admins',
-      create: '/dashboard/admins/create',
-      edit: (id: string) => `/dashboard/admins/${id}/edit`,
+    users: {
+      index: '/dashboard/users',
     },
   },
   leads: {

@@ -30,7 +30,7 @@ const dashboardRoutes = pageFiles(APP_DIR)
 
 describe('permissionFor', () => {
   it('finds the dashboard pages (guards the glob itself)', () => {
-    expect(dashboardRoutes.length).toBeGreaterThanOrEqual(28);
+    expect(dashboardRoutes.length).toBeGreaterThanOrEqual(26);
   });
 
   it.each(dashboardRoutes)('maps %s to a permission', (route) => {
@@ -46,9 +46,8 @@ describe('permissionFor', () => {
     expect(permissionFor('/dashboard/services')).toEqual({ content: ['read'] });
     expect(permissionFor('/dashboard/services/create')).toEqual({ content: ['create'] });
     expect(permissionFor('/dashboard/services/s1/edit')).toEqual({ content: ['update'] });
-    expect(permissionFor('/dashboard/admins')).toEqual({ user: ['list'] });
-    expect(permissionFor('/dashboard/admins/create')).toEqual({ user: ['create'] });
-    expect(permissionFor('/dashboard/admins/u1/edit')).toEqual({ user: ['update'] });
+    expect(permissionFor('/dashboard/users')).toEqual({ user: ['list'] });
+    expect(() => permissionFor('/dashboard/admins')).toThrow(/No permission mapped/);
   });
 
   it('ignores a query string and trailing slash', () => {

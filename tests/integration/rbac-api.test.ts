@@ -58,7 +58,7 @@ const ENDPOINTS: Endpoint[] = [
   { key: 'contact.delete', method: 'DELETE', path: `/contacts/${ID}` },
   { key: 'media.read', method: 'GET', path: '/admin/media' },
   { key: 'media.delete', method: 'DELETE', path: `/admin/media/${ID}` },
-  { key: 'user.list', method: 'GET', path: '/users' },
+  { key: 'user.list', method: 'GET', path: '/admin/users' },
 ];
 
 const ALL = [...new Set(ENDPOINTS.map((e) => e.key))];

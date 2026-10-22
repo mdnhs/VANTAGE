@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { requireActor } from '@/server/lib/auth/session';
 import { toMePayload } from '@/lib/auth/me';
 import { ActorProvider } from '@/contexts/actor-provider';
+import { ViewAsBanner } from '@/features/users/components/view-as-banner';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -52,6 +53,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             </Link>
           </header>
           <div className='flex-1 p-6'>{children}</div>
+          <ViewAsBanner />
         </SidebarInset>
       </SidebarProvider>
     </ActorProvider>

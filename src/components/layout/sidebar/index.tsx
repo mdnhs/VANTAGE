@@ -87,7 +87,9 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: 'System',
-    items: [{ label: 'Admins', href: APP_ROUTES.content.admins.index, icon: Users, permissions: [{ user: ['list'] }] }],
+    items: [
+      { label: 'Users & roles', href: APP_ROUTES.content.users.index, icon: Users, permissions: [{ user: ['list'] }] },
+    ],
   },
 ];
 

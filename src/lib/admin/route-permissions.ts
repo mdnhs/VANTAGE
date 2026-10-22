@@ -36,9 +36,6 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
   ]),
 
   ['/dashboard/users', { user: ['list'] }],
-  ['/dashboard/admins', { user: ['list'] }],
-  ['/dashboard/admins/create', { user: ['create'] }],
-  ['/dashboard/admins/[id]/edit', { user: ['update'] }],
 ];
 
 const segmentsOf = (path: string) => path.split('/').filter(Boolean);

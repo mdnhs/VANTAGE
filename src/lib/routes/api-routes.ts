@@ -93,17 +93,6 @@ export const API_ROUTES = {
     remove: (id: string) => `/homepage-process-steps/${id}`,
     reorder: '/homepage-process-steps/reorder',
   },
-  admins: {
-    list: '/admins',
-    detail: (id: string) => `/admins/${id}`,
-    create: '/admins',
-    update: (id: string) => `/admins/${id}`,
-    resetPassword: (id: string) => `/admins/${id}/password`,
-  },
-  users: {
-    list: '/users',
-    create: '/users',
-  },
   quotes: {
     submit: '/quotes',
     adminCreate: '/quotes/admin',
