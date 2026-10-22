@@ -141,16 +141,18 @@ export function StitchHeader({
             <span>{phone}</span>
           </a>
 
-          <Link
-            href={cta.href}
-            className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
-          >
-            <span>
-              <span className='hidden sm:inline'>{cta.label}</span>
-              <span className='sm:hidden'>{cta.shortLabel}</span>
-            </span>
-            <ArrowIcon />
-          </Link>
+          {cta.href && (
+            <Link
+              href={cta.href}
+              className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
+            >
+              <span>
+                <span className='hidden sm:inline'>{cta.label}</span>
+                <span className='sm:hidden'>{cta.shortLabel}</span>
+              </span>
+              <ArrowIcon />
+            </Link>
+          )}
 
           {/* Mobile Hamburger */}
           <button
@@ -187,14 +189,16 @@ export function StitchHeader({
               );
             })}
             <div className='mt-5 flex flex-col gap-3'>
-              <Link
-                href={cta.mobileHref}
-                onClick={() => setMobileMenuOpen(false)}
-                className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-[#b91c1c]'
-              >
-                <span>{cta.mobileLabel}</span>
-                <ArrowIcon />
-              </Link>
+              {cta.mobileHref && (
+                <Link
+                  href={cta.mobileHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-[#b91c1c]'
+                >
+                  <span>{cta.mobileLabel}</span>
+                  <ArrowIcon />
+                </Link>
+              )}
               <a
                 href={phoneHref}
                 className='flex w-full items-center justify-center gap-[10px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'

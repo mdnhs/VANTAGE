@@ -16,7 +16,9 @@ Moves the legacy `site_settings` row (90 columns) into versioned `settings` keys
    any `LOSSY` lines (values that would be truncated or dropped).
 4. Migrate: `yarn settings:migrate`. It writes the missing keys at version 1 (note
    "Migrated from site_settings", no user). It refuses, writing nothing, if anything is
-   `LOSSY`: fix the value in the admin first, or accept it with `--allow-lossy`.
+   `LOSSY`. To keep the original value, shorten or fix it in the legacy `site_settings` row
+   directly; to accept the repaired value, pass `--allow-lossy`. (Saving that key in the admin
+   editor also stores the repaired value, and the migration then skips the key.)
 5. Verify: `yarn settings:migrate --verify`. Exits 1 and prints `MISMATCH` lines if the keys
    would render anything different from the legacy row.
 
@@ -29,8 +31,8 @@ Deploying before migrating, migrating before deploying, or stopping half way all
 same site. Once a key is saved (by the migration or an admin), the stored document wins.
 
 The migration CLI runs outside Next and cannot expire the page cache. A key the site already
-cached as "missing" keeps being served from the legacy row (same content, one extra database
-read per request) until that key is saved in the admin or the app is redeployed. To switch over
+cached as "missing" keeps being served from the cached legacy row (same content) until that
+key is saved in the admin or the app is redeployed. To switch over
 at once, run the migration before the deploy, or restart the app after migrating.
 
 ## Known intentional differences
