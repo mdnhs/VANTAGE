@@ -30,6 +30,8 @@ describe('globals schemas', () => {
         'page.insurance',
         'page.about',
         'page.process',
+        'consent',
+        'scripts',
       ].sort(),
     );
   });

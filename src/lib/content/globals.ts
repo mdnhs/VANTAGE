@@ -1,6 +1,7 @@
 import * as z from 'zod';
 
 import { imageRefSchema, videoRefSchema } from './image-ref';
+import { MARKETING_GLOBALS, MARKETING_PUBLIC_KEYS } from './globals-marketing';
 
 // One zod schema per versioned global (a row of the `settings` table). Every
 // field defaults to today's public copy, so `parseGlobal(key, {})` renders the
@@ -607,6 +608,7 @@ export const GLOBALS = {
   'page.insurance': InsurancePageGlobal,
   'page.about': AboutPageGlobal,
   'page.process': ProcessPageGlobal,
+  ...MARKETING_GLOBALS,
 } as const;
 
 export type GlobalKey = keyof typeof GLOBALS;
@@ -629,6 +631,7 @@ export const PUBLIC_GLOBAL_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  ...MARKETING_PUBLIC_KEYS,
 ] as const satisfies readonly GlobalKey[];
 export type PublicGlobalKey = (typeof PUBLIC_GLOBAL_KEYS)[number];
 
