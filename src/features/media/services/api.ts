@@ -48,8 +48,8 @@ const send = (path: string, method: string, body?: unknown) =>
     ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   });
 
-export async function fetchMediaPage(params: MediaListParams, page: number): Promise<MediaPage> {
-  const query = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
+export async function fetchMediaPage(params: MediaListParams, page: number, limit = PAGE_SIZE): Promise<MediaPage> {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (params.q) query.set('q', params.q);
   if (params.type) query.set('type', params.type);
   if (params.missingAlt) query.set('missingAlt', 'true');

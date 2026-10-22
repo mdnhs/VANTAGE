@@ -59,7 +59,10 @@ export function UploadDropzone({
         const message = error instanceof MediaApiError ? error.message : 'Upload failed';
         toast.error(`${file.name}: ${message}`);
         // A busy server or a dropped connection is worth another go; the rest need a different file.
-        if (error instanceof MediaApiError && (error.code === 'SERVICE_UNAVAILABLE' || error.code === 'NETWORK')) {
+        if (
+          error instanceof MediaApiError &&
+          (error.code === 'SERVICE_UNAVAILABLE' || error.code === 'NETWORK' || error.code === 'RATE_LIMITED')
+        ) {
           setFailed((all) => [...all, { id, file, message }]);
         }
       } finally {

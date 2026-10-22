@@ -80,6 +80,7 @@ function DetailsBody({ item, onClose }: { item: MediaItem; onClose(): void }) {
   const [focal, setFocal] = useState({ x: item.focalX, y: item.focalY });
   const [error, setError] = useState<string | null>(null);
   const [blocking, setBlocking] = useState<MediaUse[]>([]);
+  const [replacing, setReplacing] = useState<number | null>(null);
   const usage = useMediaUsage(item.id);
   const update = useUpdateMedia(item.id);
   const remove = useDeleteMedia();
@@ -103,8 +104,9 @@ function DetailsBody({ item, onClose }: { item: MediaItem; onClose(): void }) {
 
   async function replace(file: File) {
     setError(null);
+    setReplacing(0);
     try {
-      await uploadMedia(file, () => {}, {
+      await uploadMedia(file, setReplacing, {
         url: `${MEDIA_URL}/${item.id}/replace`,
         kind: isImage ? 'image' : item.mimeType.startsWith('video/') ? 'video' : 'any',
       });
@@ -113,6 +115,8 @@ function DetailsBody({ item, onClose }: { item: MediaItem; onClose(): void }) {
       onClose();
     } catch (e) {
       setError(message(e, "Couldn't replace the file"));
+    } finally {
+      setReplacing(null);
     }
   }
 
@@ -155,7 +159,7 @@ function DetailsBody({ item, onClose }: { item: MediaItem; onClose(): void }) {
               <p className='text-xs text-muted-foreground'>{alt.length}/300</p>
             </div>
             <div className='flex items-center gap-3'>
-              <Switch id='media-decorative' checked={decorative} onCheckedChange={setDecorative} />
+              <Switch id='media-decorative' checked={decorative} disabled={!canEdit} onCheckedChange={setDecorative} />
               <Label htmlFor='media-decorative'>Decorative (screen readers skip it)</Label>
             </div>
           </>
@@ -191,9 +195,15 @@ function DetailsBody({ item, onClose }: { item: MediaItem; onClose(): void }) {
       {canEdit ? (
         <div className='flex flex-col gap-2'>
           <Label htmlFor='media-replace'>Replace file (keeps every reference)</Label>
+          {replacing !== null ? (
+            <p role='status' className='text-sm'>
+              Replacing: {replacing}%
+            </p>
+          ) : null}
           <Input
             id='media-replace'
             type='file'
+            disabled={replacing !== null}
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) void replace(file);

@@ -33,7 +33,11 @@ export const ACCEPT: Record<MediaKind | 'any', string> = {
 // A message when the server would refuse the file anyway, else null. The server
 // sniffs the real bytes; this only saves a pointless upload.
 export function checkFile(file: File, kind: MediaKind | 'any'): string | null {
-  const type = file.type || EXTENSION_TYPES[file.name.split('.').pop()?.toLowerCase() ?? ''] || '';
+  const known = [...IMAGE_TYPES, ...VIDEO_TYPES, 'application/pdf'];
+  // A missing or generic browser type (application/octet-stream) falls back to the extension.
+  const type = known.includes(file.type)
+    ? file.type
+    : EXTENSION_TYPES[file.name.split('.').pop()?.toLowerCase() ?? ''] || file.type;
   const isImage = IMAGE_TYPES.includes(type);
   const isVideo = VIDEO_TYPES.includes(type);
   const isPdf = type === 'application/pdf';

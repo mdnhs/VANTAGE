@@ -101,7 +101,8 @@ export function MediaGalleryField({
           multiple
           selectedIds={value}
           onPick={(item) => {
-            if (value.length >= max || value.includes(item.id)) return;
+            if (value.includes(item.id)) return onChange(value.filter((id) => id !== item.id));
+            if (value.length >= max) return;
             onChange([...value, item.id]);
           }}
         />

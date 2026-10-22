@@ -29,7 +29,7 @@ export function useMediaByIds(ids: string[]) {
   const sorted = [...new Set(ids)].sort();
   return useQuery({
     queryKey: mediaKeys.byIds(sorted),
-    queryFn: async () => (await fetchMediaPage({ ids: sorted }, 1)).items,
+    queryFn: async () => (await fetchMediaPage({ ids: sorted }, 1, Math.min(sorted.length, 100))).items,
     enabled: sorted.length > 0,
   });
 }

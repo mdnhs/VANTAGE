@@ -32,7 +32,8 @@ export function MediaView() {
   const [q, setQ] = useState('');
   const [type, setType] = useState<MediaTypeFilter | null>(null);
   const [missingAlt, setMissingAlt] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  // Keep the opened item itself: a filter change or a save must not close its sheet.
+  const [openItem, setOpenItem] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setQ(search.trim()), 250);
@@ -40,7 +41,7 @@ export function MediaView() {
   }, [search]);
 
   const list = useMediaList({ q: q || undefined, type: type ?? undefined, missingAlt: missingAlt || undefined });
-  const opened: MediaItem | null = list.items.find((item) => item.id === openId) ?? null;
+  const opened: MediaItem | null = openItem ? (list.items.find((item) => item.id === openItem.id) ?? openItem) : null;
 
   return (
     <div className='flex flex-col gap-6'>
@@ -91,7 +92,7 @@ export function MediaView() {
           description='Uploaded images, videos and PDFs appear here.'
         />
       ) : (
-        <MediaGrid items={list.items} onOpen={(item) => setOpenId(item.id)} />
+        <MediaGrid items={list.items} onOpen={setOpenItem} />
       )}
       {list.hasNextPage ? (
         <div>
@@ -105,7 +106,7 @@ export function MediaView() {
           </Button>
         </div>
       ) : null}
-      <MediaDetailsSheet item={opened} onClose={() => setOpenId(null)} />
+      <MediaDetailsSheet item={opened} onClose={() => setOpenItem(null)} />
     </div>
   );
 }
