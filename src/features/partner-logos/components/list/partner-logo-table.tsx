@@ -11,6 +11,7 @@ import { usePartnerLogoList } from '../../hooks/api/query/use-partner-logo-list'
 import { useUpdatePartnerLogo } from '../../hooks/api/mutation/use-update-partner-logo';
 import { useDeletePartnerLogo } from '../../hooks/api/mutation/use-delete-partner-logo';
 import { useReorderPartnerLogos } from '../../hooks/api/mutation/use-reorder-partner-logos';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { PartnerLogoPublic } from '../../types';
 
 interface PartnerLogoTableProps {
@@ -102,7 +103,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                 {partnerLogo.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={partnerLogo.logo.src}
+                    src={sizedSrc(partnerLogo.logo, 'w_96,h_96,c_fit')}
                     alt={partnerLogo.companyName}
                     className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
                   />

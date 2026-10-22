@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as z from 'zod';
 import { describe, expect, it, vi } from 'vitest';
@@ -35,7 +36,7 @@ const defaults = {
   tags: ['one', 'two'],
   address: { city: 'Dublin' },
   cta: { label: 'Book', href: '/contact' },
-  photo: { kind: 'cloudinary' as const, publicId: 'vantage/site/x' },
+  photo: { kind: 'media' as const, id: '5c1b0f1e-3b49-4f5e-8a53-1a0c2b9d7e11' },
   weekly: [
     { day: 'Monday', open: '09:00', close: '17:00', closed: false },
     { day: 'Sunday', open: '09:00', close: '17:00', closed: true },
@@ -47,15 +48,22 @@ const overrides = {
   photo: { label: 'Hero' },
 };
 
+// The media widgets read the library through react-query.
+const withClient = (ui: React.ReactElement) => (
+  <QueryClientProvider client={new QueryClient()}>{ui}</QueryClientProvider>
+);
+
 const render = (extra: Record<string, unknown> = {}) =>
   renderToStaticMarkup(
-    <SchemaForm
-      schema={Schema}
-      defaultValues={{ ...defaults, ...extra }}
-      submitLabel='Save settings'
-      onSubmit={vi.fn()}
-      overrides={overrides}
-    />,
+    withClient(
+      <SchemaForm
+        schema={Schema}
+        defaultValues={{ ...defaults, ...extra }}
+        submitLabel='Save settings'
+        onSubmit={vi.fn()}
+        overrides={overrides}
+      />,
+    ),
   );
 
 // The element carrying `id` and its text content.
@@ -101,20 +109,23 @@ describe('SchemaForm', () => {
     const html = render();
     const ids = [...html.matchAll(/role="group"[^>]*aria-labelledby="([^"]+)"/g)].map((m) => m[1]!);
     expect(ids.map((id) => labelFor(html, id))).toContain('Hero');
-    expect(html).toContain('aria-label="Upload Hero image"');
+    expect(html).toContain('aria-label="Change Hero image"');
+    expect(html).toContain('>Change image</button>');
     expect(html).toContain('aria-label="Remove Hero image"');
     expect(html).not.toContain('Photo');
   });
 
   it('describes the image group by its description', () => {
     const html = renderToStaticMarkup(
-      <SchemaForm
-        schema={Schema}
-        defaultValues={defaults}
-        submitLabel='Save'
-        onSubmit={vi.fn()}
-        overrides={{ photo: { label: 'Hero', description: 'Shown at the top' } }}
-      />,
+      withClient(
+        <SchemaForm
+          schema={Schema}
+          defaultValues={defaults}
+          submitLabel='Save'
+          onSubmit={vi.fn()}
+          overrides={{ photo: { label: 'Hero', description: 'Shown at the top' } }}
+        />,
+      ),
     );
     const describedby = /aria-labelledby="([^"]+)" aria-describedby="([^"]+)"/.exec(html);
     expect(describedby).not.toBeNull();

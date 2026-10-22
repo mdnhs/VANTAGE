@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { actorOf, can } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 import { mediaIdParamSchema, mediaListQuerySchema, mediaPatchSchema } from '@/validations/media-schema';
@@ -45,14 +46,22 @@ export const adminMedia = new Hono<AppEnv>()
     return ok(c, await mediaLibraryService.usageOf(c.req.valid('param').id));
   })
 
-  .post('/', can({ media: ['upload'] }), rateLimit(30, 60_000), uploadBodyLimit, async (c) => {
-    const item = await mediaLibraryService.upload(actorOf(c), await fileFrom(c));
-    return ok(c, item, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ media: ['upload'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    rateLimit(30, 60_000),
+    uploadBodyLimit,
+    async (c) => {
+      const item = await mediaLibraryService.upload(actorOf(c), await fileFrom(c));
+      return ok(c, item, { status: 201 });
+    },
+  )
 
   .patch(
     '/:id',
     can({ media: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
     zValidator('param', mediaIdParamSchema),
     zValidator('json', mediaPatchSchema),
     async (c) => {
@@ -63,6 +72,7 @@ export const adminMedia = new Hono<AppEnv>()
   .post(
     '/:id/replace',
     can({ media: ['upload'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
     rateLimit(30, 60_000),
     uploadBodyLimit,
     zValidator('param', mediaIdParamSchema),
@@ -72,7 +82,13 @@ export const adminMedia = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ media: ['delete'] }), zValidator('param', mediaIdParamSchema), async (c) => {
-    await mediaLibraryService.remove(actorOf(c), c.req.valid('param').id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ media: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    zValidator('param', mediaIdParamSchema),
+    async (c) => {
+      await mediaLibraryService.remove(actorOf(c), c.req.valid('param').id);
+      return ok(c, { success: true });
+    },
+  );

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -72,14 +73,19 @@ describe('settings pages', () => {
   });
 
   it.each(Object.values(SETTINGS_PAGES).flat())('%s renders a form from its defaults with a Save button', (key) => {
+    // The image widgets read the media library through react-query, as in the app.
     const html = renderToStaticMarkup(
-      createElement(SchemaForm, {
-        schema: GLOBALS[key],
-        overrides: GLOBAL_FIELD_UI[key],
-        defaultValues: parseGlobal(key, {}) as never,
-        submitLabel: `Save ${key}`,
-        onSubmit: () => {},
-      }),
+      createElement(
+        QueryClientProvider,
+        { client: new QueryClient() },
+        createElement(SchemaForm, {
+          schema: GLOBALS[key],
+          overrides: GLOBAL_FIELD_UI[key],
+          defaultValues: parseGlobal(key, {}) as never,
+          submitLabel: `Save ${key}`,
+          onSubmit: () => {},
+        }),
+      ),
     );
     expect(html).toContain(`Save ${key}`);
   });

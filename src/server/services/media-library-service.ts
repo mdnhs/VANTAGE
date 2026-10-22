@@ -33,6 +33,7 @@ const toItem = (row: MediaRow) => ({
   focalY: row.focalY,
   isDecorative: row.isDecorative,
   needsAlt: row.needsAlt,
+  createdBy: row.createdBy,
   createdAt: row.createdAt,
 });
 
