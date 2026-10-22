@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -16,10 +17,7 @@ export default async function CreateProjectPage() {
   await requirePermission(permissionFor('/dashboard/projects/create'));
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Add project</h1>
-        <p className='text-sm text-muted-foreground'>Create a new before/after project for the public site.</p>
-      </div>
+      <PageHeader title='Add project' description='Create a new before/after project for the public site.' />
       <CreateProjectForm />
     </div>
   );

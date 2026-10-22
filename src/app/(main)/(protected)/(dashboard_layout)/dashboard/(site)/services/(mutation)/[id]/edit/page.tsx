@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -27,10 +28,7 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Edit service</h1>
-        <p className='text-sm text-muted-foreground'>{service.name}</p>
-      </div>
+      <PageHeader title='Edit service' description={service.name} />
       <EditServiceForm service={service} />
     </div>
   );

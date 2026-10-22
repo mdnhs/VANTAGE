@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -27,10 +28,7 @@ export default async function EditPartnerLogoPage({ params }: EditPartnerLogoPag
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Edit partner logo</h1>
-        <p className='text-sm text-muted-foreground'>{partnerLogo.companyName}</p>
-      </div>
+      <PageHeader title='Edit partner logo' description={partnerLogo.companyName} />
       <EditPartnerLogoForm partnerLogo={partnerLogo} />
     </div>
   );

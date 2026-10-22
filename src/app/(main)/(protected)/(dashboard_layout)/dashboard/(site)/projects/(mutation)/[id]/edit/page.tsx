@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -27,10 +28,7 @@ export default async function EditProjectPage({ params }: EditProjectPageProps) 
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Edit project</h1>
-        <p className='text-sm text-muted-foreground'>{project.title}</p>
-      </div>
+      <PageHeader title='Edit project' description={project.title} />
       <EditProjectForm project={project} />
     </div>
   );

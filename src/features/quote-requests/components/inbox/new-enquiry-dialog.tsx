@@ -1,5 +1,6 @@
 'use client';
 
+import { PRIMARY_ACTION } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import {
   Dialog,
@@ -163,7 +164,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
           trigger ? (
             (trigger as React.ReactElement)
           ) : (
-            <Button size='sm' className='gap-1.5 bg-red-600 text-white shadow-sm hover:bg-red-700'>
+            <Button className={PRIMARY_ACTION}>
               <Plus className='size-4' />
               <span>New Enquiry</span>
             </Button>

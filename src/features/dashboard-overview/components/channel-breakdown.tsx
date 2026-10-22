@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
 import { SOURCE_CONFIG } from '@/features/quote-requests/components/quote-source-badge';
 import type { ChannelBreakdownItem } from '../types';
 import { Globe } from 'lucide-react';
@@ -11,13 +11,9 @@ interface ChannelBreakdownProps {
 
 export function ChannelBreakdown({ channels }: ChannelBreakdownProps) {
   return (
-    <Card className='flex flex-col'>
-      <CardHeader className='pb-3'>
-        <CardTitle className='text-sm font-bold tracking-wider text-foreground uppercase'>Intake Channels</CardTitle>
-        <CardDescription className='text-xs'>Distribution across lead intake channels</CardDescription>
-      </CardHeader>
-
-      <CardContent className='flex flex-1 flex-col gap-3.5'>
+    <DashboardCard title='Intake Channels' className='h-full'>
+      <p className='-mt-3 text-xs text-muted-foreground'>Distribution across lead intake channels</p>
+      <div className='flex flex-1 flex-col gap-3.5'>
         {channels.length === 0 ? (
           <div className='flex flex-1 items-center justify-center p-6 text-center text-xs text-muted-foreground'>
             No channel data available yet.
@@ -55,7 +51,7 @@ export function ChannelBreakdown({ channels }: ChannelBreakdownProps) {
             );
           })
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </DashboardCard>
   );
 }

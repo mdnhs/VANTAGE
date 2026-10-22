@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
@@ -30,13 +31,10 @@ export default async function HomePageContentPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div>
-        <h1 className='text-xl font-semibold'>Home page</h1>
-        <p className='text-sm text-muted-foreground'>
-          Hero copy & media, feature pillars, catalog items, process steps, testimonials and partner logos shown on the
-          homepage.
-        </p>
-      </div>
+      <PageHeader
+        title='Home page'
+        description='Hero copy & media, feature pillars, catalog items, process steps, testimonials and partner logos shown on the homepage.'
+      />
       <HomePageTabs
         settings={settings ?? null}
         pillars={{ data: pillars.rows, total: pillars.total }}

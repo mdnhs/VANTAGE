@@ -2,7 +2,9 @@
 
 import { PlusIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
+import { PageHeader, PRIMARY_ACTION } from '@/components/admin/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -50,7 +52,8 @@ export function UsersView() {
   const [page, setPage] = useState(1);
   const [inviting, setInviting] = useState(false);
   const [open, setOpen] = useState<Open>(null);
-  const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+  // Failures stay inline (role=alert); successes are sonner toasts.
+  const [notice, setNotice] = useState<{ tone: 'error'; text: string } | null>(null);
   const [manualLink, setManualLink] = useState<ManualLink | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -81,7 +84,10 @@ export function UsersView() {
   const viewAs = useViewAs();
   const confirmPending = revoke.isPending || remove.isPending;
 
-  const done = (text: string) => setNotice({ tone: 'success', text });
+  const done = (text: string) => {
+    setNotice(null);
+    toast.success(text);
+  };
   const fail = (error: Error) => setNotice({ tone: 'error', text: error.message });
 
   function onAction(action: UserAction, user: UserDto) {
@@ -136,26 +142,23 @@ export function UsersView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-wrap items-start justify-between gap-3'>
-        <div>
-          <h1 className='text-2xl font-semibold tracking-tight'>Users &amp; roles</h1>
-          <p className='text-sm text-muted-foreground'>Who can sign in, and what each role is allowed to do.</p>
-        </div>
-        {canInvite ? (
-          <Button onClick={() => setInviting(true)}>
-            <PlusIcon aria-hidden />
-            Invite someone
-          </Button>
-        ) : null}
-      </div>
+      <PageHeader
+        title='Users &amp; roles'
+        description='Who can sign in, and what each role is allowed to do.'
+        actions={
+          canInvite ? (
+            <Button className={PRIMARY_ACTION} onClick={() => setInviting(true)}>
+              <PlusIcon aria-hidden />
+              Invite someone
+            </Button>
+          ) : null
+        }
+      />
 
       {notice ? (
         <p
-          role={notice.tone === 'error' ? 'alert' : 'status'}
-          className={cn(
-            'rounded-lg border px-4 py-2 text-sm',
-            notice.tone === 'error' ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'bg-card',
-          )}
+          role='alert'
+          className='rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive'
         >
           {notice.text}
         </p>
