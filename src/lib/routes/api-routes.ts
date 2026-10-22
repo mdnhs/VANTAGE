@@ -111,4 +111,9 @@ export const API_ROUTES = {
     update: (id: string) => `/contacts/${id}`,
     remove: (id: string) => `/contacts/${id}`,
   },
+  globals: {
+    detail: (key: string) => `/admin/globals/${key}`,
+    revisions: (key: string) => `/admin/globals/${key}/revisions`,
+    restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
+  },
 } as const;

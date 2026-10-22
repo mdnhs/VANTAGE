@@ -1,8 +1,11 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { SETTINGS_PAGES } from '@/lib/content/global-access';
+
+import { NAV } from './nav';
 import { permissionFor } from './route-permissions';
 
 const APP_DIR = path.join(import.meta.dirname, '../../app');
@@ -29,6 +32,8 @@ function routeOf(file: string): string {
 const SELF_GATED = [
   path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', 'no-access', 'page.tsx'),
   path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', '[section]', '[[...rest]]', 'page.tsx'),
+  // Settings: each slug is gated by its registry link (settings.read or globals.read).
+  path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', 'settings', '[slug]', 'page.tsx'),
 ];
 
 const dashboardRoutes = pageFiles(APP_DIR)
@@ -49,7 +54,10 @@ describe('permissionFor', () => {
     expect(permissionFor('/dashboard')).toEqual({ dashboard: ['view'] });
     expect(permissionFor('/dashboard/quotes/q1')).toEqual({ quote: ['read'] });
     expect(permissionFor('/dashboard/contacts')).toEqual({ contact: ['read'] });
-    expect(permissionFor('/dashboard/settings')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings')).toEqual({ globals: ['read'] });
+    expect(permissionFor('/dashboard/settings/identity')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings/privacy')).toEqual({ settings: ['read'] });
+    expect(permissionFor('/dashboard/settings/footer')).toEqual({ globals: ['read'] });
     expect(permissionFor('/dashboard/home-page')).toEqual({ page: ['read'] });
     expect(permissionFor('/dashboard/services')).toEqual({ content: ['read'] });
     expect(permissionFor('/dashboard/services/create')).toEqual({ content: ['create'] });
@@ -76,5 +84,24 @@ describe('permissionFor', () => {
   it('throws for an unknown route', () => {
     expect(() => permissionFor('/dashboard/nope')).toThrow(/No permission mapped/);
     expect(() => permissionFor('/other')).toThrow();
+  });
+});
+
+describe('settings pages', () => {
+  const settingsItem = NAV.find((item) => item.id === 'settings')!;
+
+  it.each(Object.keys(SETTINGS_PAGES))('settings/%s is gated by its nav child permission', (slug) => {
+    const child = settingsItem.children!.find((c) => c.href === `/dashboard/settings/${slug}`);
+    expect(child, slug).toBeDefined();
+    expect(permissionFor(`/dashboard/settings/${slug}`)).toEqual(child!.permission);
+  });
+
+  it('settings/[slug]/page.tsx calls requirePermission', () => {
+    const source = readFileSync(
+      path.join(APP_DIR, '(main)/(protected)/(dashboard_layout)/dashboard/settings/[slug]/page.tsx'),
+      'utf8',
+    );
+    expect(source).toMatch(/await\s+requirePermission\(/);
+    expect(source).toMatch(/await\s+requireActor\(/);
   });
 });

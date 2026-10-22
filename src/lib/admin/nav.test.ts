@@ -27,6 +27,18 @@ const ALL_WEBSITE = [
   'website-process',
 ];
 
+const ALL_SETTINGS = [
+  'settings-identity',
+  'settings-contact',
+  'settings-navigation',
+  'settings-footer',
+  'settings-forms',
+  'settings-notifications',
+  'settings-privacy',
+];
+// globals.read only (editor, marketer, viewer): no identity, notifications, privacy.
+const GLOBALS_SETTINGS = ['settings-contact', 'settings-navigation', 'settings-footer', 'settings-forms'];
+
 // Expected sidebar tree per role, written out from the role table.
 const EXPECTED: Record<string, Record<string, string[]>> = {
   owner: {
@@ -37,7 +49,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
     marketing: ['marketing-tracking', 'marketing-consent', 'marketing-events', 'marketing-code'],
     appearance: [],
-    settings: [],
+    settings: ALL_SETTINGS,
     users: [],
     activity: [],
   },
@@ -49,7 +61,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
     marketing: ['marketing-tracking', 'marketing-consent', 'marketing-events'],
     appearance: [],
-    settings: [],
+    settings: ALL_SETTINGS,
     users: [],
     activity: [],
   },
@@ -58,6 +70,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     website: ALL_WEBSITE,
     media: [],
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
+    settings: GLOBALS_SETTINGS,
   },
   author: { dashboard: [], website: ALL_WEBSITE, media: [] },
   marketer: {
@@ -66,9 +79,15 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     media: [],
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
     marketing: ['marketing-tracking', 'marketing-consent', 'marketing-events'],
+    settings: GLOBALS_SETTINGS,
   },
   intake: { dashboard: [], enquiries: ['enquiries-quotes', 'enquiries-contacts'] },
-  viewer: { dashboard: [], website: ALL_WEBSITE, seo: ['seo-overview', 'seo-defaults'] },
+  viewer: {
+    dashboard: [],
+    website: ALL_WEBSITE,
+    seo: ['seo-overview', 'seo-defaults'],
+    settings: GLOBALS_SETTINGS,
+  },
   user: {},
 };
 
@@ -249,5 +268,21 @@ describe('firstReachableHref', () => {
     expect(firstReachableHref(item('website'), ['intake'])).toBeNull();
     expect(firstReachableHref(item('media'), ['intake'])).toBeNull();
     expect(firstReachableHref(item('media'), ['owner'])).toBe('/dashboard/media');
+  });
+});
+
+describe('settings index gate', () => {
+  // /dashboard/settings is gated by globals.read; that is only the exact "may
+  // open any settings page" gate while settings.read implies globals.read.
+  it.each(ROLE_NAMES)('%s: settings.read implies globals.read', (role) => {
+    if (hasPermission([role], { settings: ['read'] })) {
+      expect(hasPermission([role], { globals: ['read'] })).toBe(true);
+    }
+  });
+
+  it.each(ROLE_NAMES)('%s: opens the settings index exactly when a child is openable', (role) => {
+    const children = NAV.find((i) => i.id === 'settings')!.children!;
+    const anyChild = children.some((c) => canOpen([role], c.permission));
+    expect(hasPermission([role], permissionFor('/dashboard/settings'))).toBe(anyChild);
   });
 });

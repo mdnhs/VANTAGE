@@ -1,4 +1,5 @@
 import { hasPermission, type Permissions, type RoleName } from '@/lib/auth/permissions';
+import { SETTINGS_PAGE_LABELS, type SettingsPage } from '@/lib/content/global-access';
 
 // One isomorphic registry (no React) feeds the sidebar, the command palette and
 // the page guard (`permissionFor`), so a link is listed exactly when its page
@@ -33,6 +34,18 @@ export const NAV_GROUPS: readonly { id: NavGroupId; label: string }[] = [
   { id: 'growth', label: 'Growth' },
   { id: 'general', label: 'General' },
 ];
+
+// A /dashboard/settings/<slug> page; the label comes from the globals layer so
+// the sidebar, the page title and the editor never drift.
+function settingsLink(slug: SettingsPage, permission: Permissions, keywords: readonly string[]): NavLink {
+  return {
+    id: `settings-${slug}`,
+    label: SETTINGS_PAGE_LABELS[slug],
+    href: `/dashboard/settings/${slug}`,
+    permission,
+    keywords,
+  };
+}
 
 export const NAV: readonly NavItem[] = [
   {
@@ -205,8 +218,19 @@ export const NAV: readonly NavItem[] = [
     group: 'general',
     label: 'Site settings',
     href: '/dashboard/settings',
-    permission: { settings: ['read'] },
+    // Opens for either grant: each child carries its own (identity, notifications
+    // and privacy need settings.read; the rest globals.read).
+    permission: [{ settings: ['read'] }, { globals: ['read'] }],
     keywords: ['identity', 'contact', 'footer', 'navigation', 'privacy'],
+    children: [
+      settingsLink('identity', { settings: ['read'] }, ['logo', 'favicon', 'name', 'social']),
+      settingsLink('contact', { globals: ['read'] }, ['phone', 'email', 'address', 'hours', 'map']),
+      settingsLink('navigation', { globals: ['read'] }, ['menu', 'header', 'links']),
+      settingsLink('footer', { globals: ['read'] }, ['links', 'legal', 'copyright']),
+      settingsLink('forms', { globals: ['read'] }, ['quote form', 'contact form', 'microcopy', 'labels']),
+      settingsLink('notifications', { settings: ['read'] }, ['email', 'auto-reply', 'recipients']),
+      settingsLink('privacy', { settings: ['read'] }, ['retention', 'gdpr', 'spam']),
+    ],
   },
   {
     id: 'users',
