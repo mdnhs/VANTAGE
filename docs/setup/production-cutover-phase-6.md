@@ -56,7 +56,7 @@ SEO overview now reports it ("Search engines are blocked: SITE_ENV is not set to
   once, but a visitor who already followed it keeps going to the old target. Use 302 while testing.
 - Redirect sources must be paths the app does not own: live pages, admin, auth pages, API and file paths are
   refused. Destinations may not point into the app (`/api`, `/dashboard`, the sign-in pages, `/_next`).
-  Uploaded files may be destinations, so an old `/brochure.pdf` can point at `/uploads/...`.
+  Uploaded files may be destinations, so an old page such as `/brochure` can point at `/uploads/...`.
 
 ## Rollback
 

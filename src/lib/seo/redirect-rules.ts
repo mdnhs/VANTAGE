@@ -14,7 +14,10 @@ export const RedirectSource = z
   .transform((v) => (v.length > 1 ? v.replace(/\/+$/, '') : v))
   .refine((v) => /^\/[A-Za-z0-9\-._~%/]*$/.test(v) && !v.startsWith('//'), 'Use a path on this site, e.g. /old-page')
   // Dot segments would never match what the proxy sees (the URL parser collapses them).
-  .refine((v) => !/(?:^|\/)(?:\.|\.\.|%2e|%2e\.|\.%2e|%2e%2e)(?:\/|$)/i.test(v), 'Use a path on this site, e.g. /old-page')
+  .refine(
+    (v) => !/(?:^|\/)(?:\.|\.\.|%2e|%2e\.|\.%2e|%2e%2e)(?:\/|$)/i.test(v),
+    'Use a path on this site, e.g. /old-page',
+  )
   .refine((v) => v !== '/', "The home page can't redirect")
   .refine((v) => !LIVE_PATHS.has(v), 'That address is a live page')
   .refine((v) => !isReservedPath(v), 'That address is reserved');
@@ -28,7 +31,7 @@ function canonicalDestination(v: string): string {
 }
 
 // Destinations may be live pages, legacy pages and public files, but never the app's own areas
-// (API, admin, auth pages, /_next). Uploaded files and assets are public, so an old /brochure.pdf
+// (API, admin, auth pages, /_next). Uploaded files and assets are public, so an old /brochure page
 // may point at /uploads/...; only the remaining prefixes are blocked.
 const PUBLIC_FILE_PREFIXES = new Set(['/uploads', '/assets', '/fonts']);
 

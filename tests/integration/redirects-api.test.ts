@@ -79,12 +79,13 @@ describe('redirects rules', () => {
   });
 
   it('rejects a destination inside the app, with causes.destination', async () => {
-    for (const to of ['/api/v1/resolve', '/dashboard/users', '/login', '/uploads/a.pdf']) {
+    for (const to of ['/api/v1/resolve', '/dashboard/users', '/login']) {
       const res = await create(cookies.owner, '/promo', to);
       expect(res.status, to).toBe(422);
       expect((await json(res)).error.causes?.destination, to).toBeDefined();
     }
     expect((await create(cookies.owner, '/promo', '/old-about.html')).status).toBe(201);
+    expect((await create(cookies.owner, '/brochure', '/uploads/a.pdf')).status).toBe(201);
   });
 
   it('rejects a loop and flattens chains', async () => {
@@ -100,7 +101,10 @@ describe('redirects rules', () => {
     const a = await json(await create(cookies.owner, '/a', '/b'));
     await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: false } });
     expect((await create(cookies.owner, '/b', '/a')).status).toBe(201);
-    const res = await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: true } });
+    const res = await call(`/admin/redirects/${a.data.id}`, cookies.owner, {
+      method: 'PATCH',
+      body: { isActive: true },
+    });
     expect(res.status).toBe(422);
   });
 
@@ -170,7 +174,10 @@ describe('redirects canonical paths and flattening', () => {
   it('a PATCH destination change repoints rows that point at this row', async () => {
     const b = await json(await create(cookies.owner, '/b', '/c'));
     await db.insert(redirects).values({ sourcePath: '/a', destination: '/b' });
-    const res = await call(`/admin/redirects/${b.data.id}`, cookies.owner, { method: 'PATCH', body: { destination: '/d' } });
+    const res = await call(`/admin/redirects/${b.data.id}`, cookies.owner, {
+      method: 'PATCH',
+      body: { destination: '/d' },
+    });
     expect(res.status).toBe(200);
     expect(await dest('/b')).toBe('/d');
     expect(await dest('/a')).toBe('/d');
@@ -180,7 +187,10 @@ describe('redirects canonical paths and flattening', () => {
     const a = await json(await create(cookies.owner, '/a', '/b'));
     await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: false } });
     await create(cookies.owner, '/b', '/c');
-    const res = await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: true } });
+    const res = await call(`/admin/redirects/${a.data.id}`, cookies.owner, {
+      method: 'PATCH',
+      body: { isActive: true },
+    });
     expect(res.status).toBe(200);
     expect(await dest('/a')).toBe('/c');
   });
