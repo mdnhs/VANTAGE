@@ -6,9 +6,9 @@ import { db } from '@/server/db';
 import { media } from '@/server/db/schema/media';
 
 import { formatOpeningHoursSummary, parseOpeningHours, type DaySchedule } from '@/lib/content/opening-hours';
-import { resolveAboutContent } from '@/features/about-page/defaults';
-import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
-import { resolveProcessPageContent } from '@/features/process-page/defaults';
+import { resolveAboutContent } from '@/features/about-page/content';
+import { resolveInsuranceContent } from '@/features/insurance-page/content';
+import { resolveProcessPageContent } from '@/features/process-page/content';
 import { GLOBALS, parseGlobal, type GlobalKey } from '@/lib/content/globals';
 import { cloudinaryImage, collectMediaIds, mapRefs } from '@/lib/content/image-ref';
 import type { SiteSettings } from '@/server/db/schema';

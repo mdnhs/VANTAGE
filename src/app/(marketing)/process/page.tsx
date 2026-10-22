@@ -3,7 +3,7 @@ import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchProcess } from '@/components/marketing/stitch-process';
 import { ButtonLink, PageHero } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { resolveProcessPageContent } from '@/features/process-page/defaults';
+import { resolveProcessPageContent } from '@/features/process-page/content';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 

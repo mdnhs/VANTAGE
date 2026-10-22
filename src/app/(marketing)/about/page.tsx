@@ -4,7 +4,7 @@ import { AboutHero } from '@/components/marketing/about-hero';
 import { HeritageSection } from '@/components/marketing/heritage-section';
 import { TeamSection } from '@/components/marketing/team-section';
 import { StandardsSection } from '@/components/marketing/standards-section';
-import { resolveAboutPageContent } from '@/features/about-page/defaults';
+import { resolveAboutPageContent } from '@/features/about-page/content';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 

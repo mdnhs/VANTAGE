@@ -1,5 +1,5 @@
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
-import { ABOUT_FALLBACK_IMAGES } from '@/features/about-page/defaults';
+import { ABOUT_FALLBACK_IMAGES } from '@/features/about-page/content';
 import { PageHero } from '@/components/marketing/ui/landing-primitives';
 
 interface AboutHeroProps {
