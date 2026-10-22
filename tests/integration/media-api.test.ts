@@ -13,7 +13,7 @@ import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
 import { resetStorageForTests } from '@/server/lib/media/storage';
 import type { MediaItem } from '@/server/services/media-library-service';
 
-import { sessionCookie } from '../support/session';
+import { ORIGIN, sessionCookie } from '../support/session';
 
 const BASE = '/api/v1/admin/media';
 const UPLOAD_DIR = path.resolve('.test-uploads');
@@ -32,7 +32,7 @@ const form = (bytes: Uint8Array, name: string, type = 'application/octet-stream'
 };
 
 const upload = (bytes: Uint8Array, name: string, headers: Record<string, string> = { cookie }) =>
-  api.request(BASE, { method: 'POST', headers, body: form(bytes, name) });
+  api.request(BASE, { method: 'POST', headers: { origin: ORIGIN, ...headers }, body: form(bytes, name) });
 
 const json = async (res: Response) => (await res.json()) as { data: MediaItem & MediaItem[] };
 
@@ -106,7 +106,7 @@ describe('admin media API', () => {
     const patch = (alt: string) =>
       api.request(`${BASE}/${data.id}`, {
         method: 'PATCH',
-        headers: { cookie, 'content-type': 'application/json' },
+        headers: { origin: ORIGIN, cookie, 'content-type': 'application/json' },
         body: JSON.stringify({ alt }),
       });
     expect((await patch('x'.repeat(301))).status).toBe(422);
@@ -124,7 +124,7 @@ describe('admin media API', () => {
     const patch = (id: string, body: object) =>
       api.request(`${BASE}/${id}`, {
         method: 'PATCH',
-        headers: { cookie, 'content-type': 'application/json' },
+        headers: { origin: ORIGIN, cookie, 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
     await patch(withAlt.id, { alt: 'described' });
@@ -133,7 +133,7 @@ describe('admin media API', () => {
     const list = await json(await api.request(`${BASE}?missingAlt=true`, { headers: { cookie } }));
     expect(list.data.map((m: { id: string }) => m.id)).toEqual([noAlt.id]);
 
-    const del = await api.request(`${BASE}/${noAlt.id}`, { method: 'DELETE', headers: { cookie } });
+    const del = await api.request(`${BASE}/${noAlt.id}`, { method: 'DELETE', headers: { origin: ORIGIN, cookie } });
     expect(del.status).toBe(200);
     const after = await json(await api.request(BASE, { headers: { cookie } }));
     expect(after.data.map((m: { id: string }) => m.id)).not.toContain(noAlt.id);
@@ -144,7 +144,7 @@ describe('admin media API', () => {
     const { data } = await json(await upload(await png('#111'), 'a.png'));
     const res = await api.request(`${BASE}/${data.id}/replace`, {
       method: 'POST',
-      headers: { cookie },
+      headers: { origin: ORIGIN, cookie },
       body: form(await png('#999'), 'b.png'),
     });
     expect(res.status).toBe(200);
@@ -158,7 +158,7 @@ describe('admin media API', () => {
     const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(64)]);
     const res = await api.request(`${BASE}/${data.id}/replace`, {
       method: 'POST',
-      headers: { cookie },
+      headers: { origin: ORIGIN, cookie },
       body: form(mp4, 'clip.mp4'),
     });
     expect(res.status).toBe(422);
@@ -168,7 +168,11 @@ describe('admin media API', () => {
   it('rejects a body over the request cap with 413 before parsing', async () => {
     const big = new Uint8Array(MAX_VIDEO_BYTES + 2 * 1024 * 1024);
     for (const url of [BASE, `${BASE}/00000000-0000-4000-8000-000000000000/replace`]) {
-      const res = await api.request(url, { method: 'POST', headers: { cookie }, body: form(big, 'huge.mp4') });
+      const res = await api.request(url, {
+        method: 'POST',
+        headers: { origin: ORIGIN, cookie },
+        body: form(big, 'huge.mp4'),
+      });
       expect(res.status).toBe(413);
     }
   }, 60_000);

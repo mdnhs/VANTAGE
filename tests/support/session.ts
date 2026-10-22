@@ -62,6 +62,7 @@ export function call(path: string, cookie?: string, init: { method?: string; bod
   return api.request(`/api/v1${path}`, {
     method: init.method ?? 'GET',
     headers: {
+      origin: ORIGIN,
       ...(cookie ? { cookie } : {}),
       ...(init.body === undefined ? {} : { 'content-type': 'application/json' }),
     },

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { csrf } from 'hono/csrf';
 import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
@@ -19,9 +20,22 @@ import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
 
+const originOf = (url: string | undefined) => {
+  try {
+    return url ? new URL(url).origin : null;
+  } catch {
+    return null;
+  }
+};
+const allowedOrigins = () =>
+  [originOf(process.env.NEXT_PUBLIC_APP_URL), originOf(process.env.BETTER_AUTH_URL)].filter((o): o is string => !!o);
+
 const app = new Hono().basePath('/api/v1');
 
 app.use('*', secureHeaders());
+// Writes must come from the app's own origin (the public quote and contact
+// forms are same-origin posts too). GET/HEAD/OPTIONS are never checked.
+app.use('*', csrf({ origin: (origin) => allowedOrigins().includes(origin) }));
 app.use('*', requestLogger);
 
 app.onError(onError);

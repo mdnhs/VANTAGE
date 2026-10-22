@@ -92,6 +92,7 @@ const call = (e: Endpoint, cookie?: string) =>
   api.request(`/api/v1${e.path}`, {
     method: e.method,
     headers: {
+      origin: 'http://localhost:3000',
       ...(cookie ? { cookie } : {}),
       ...(e.body === undefined ? {} : { 'content-type': 'application/json' }),
     },

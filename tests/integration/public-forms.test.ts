@@ -10,7 +10,7 @@ import { sessionCookie } from '../support/session';
 const post = (path: string, body: unknown, cookie?: string) =>
   api.request(`/api/v1${path}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
+    headers: { origin: 'http://localhost:3000', 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
     body: JSON.stringify(body),
   });
 
