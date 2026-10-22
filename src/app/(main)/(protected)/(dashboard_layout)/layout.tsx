@@ -1,3 +1,4 @@
+import './admin.css';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Globe } from 'lucide-react';
