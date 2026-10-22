@@ -43,7 +43,7 @@ export function businessNode(i: {
   logoUrl?: string | null;
 }): LocalBusiness {
   const { address, phone, hours } = i.contact;
-  const sameAs = [...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)];
+  const sameAs = [...new Set([...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)])];
   return {
     '@type': i.seo.business.type,
     '@id': `${i.origin}/#organization`,

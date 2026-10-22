@@ -1,11 +1,6 @@
-import type { Thing, WithContext } from 'schema-dts';
+import { scriptJson } from '@/lib/seo/json-ld';
 
-export function JsonLd<T extends Thing>({ schema }: { schema: WithContext<T> }) {
-  return (
-    <script
-      type='application/ld+json'
-      // JSON.stringify escapes quotes; replacing "<" blocks tag-breaking payloads.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
-    />
-  );
+// Every JSON-LD script goes through scriptJson, so admin-entered text can never end the element.
+export function JsonLd({ schema }: { schema: object }) {
+  return <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: scriptJson(schema) }} />;
 }
