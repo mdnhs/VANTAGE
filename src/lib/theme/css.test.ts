@@ -106,6 +106,13 @@ describe('schema safety', () => {
     expect(fallback).not.toBe(DEFAULT_THEME);
     expect(warn).toHaveBeenCalledOnce();
     warn.mockRestore();
+  });
+
+  it('parseTheme returns the default quietly when nothing is stored', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(parseTheme(undefined)).toEqual(DEFAULT_THEME);
+    expect(parseTheme(null)).not.toBe(DEFAULT_THEME);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
