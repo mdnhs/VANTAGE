@@ -16,6 +16,7 @@
     "db:seed-demo-users": "tsx scripts/seed-demo-users.ts",
     "auth:migrate-admins": "tsx scripts/migrate-admins.ts",
     "settings:migrate": "tsx scripts/migrate-site-settings.ts",
+    "jobs:retention": "tsx scripts/retention.ts",
     "admin:create": "tsx scripts/admin-create.ts",
     "media:smoke": "tsx scripts/r2-smoke.ts",
     "test": "vitest run",

@@ -113,6 +113,7 @@ export const API_ROUTES = {
   },
   globals: {
     detail: (key: string) => `/admin/globals/${key}`,
+    notificationsTest: '/admin/globals/notifications/test',
     revisions: (key: string) => `/admin/globals/${key}/revisions`,
     restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
   },

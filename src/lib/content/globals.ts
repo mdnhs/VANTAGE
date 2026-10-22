@@ -162,7 +162,8 @@ export const FooterGlobal = z.object({
       { label: 'Terms of Service', href: '#terms' },
       { label: 'Login', href: '/login' },
     ]),
-  copyrightName: s(80, 'Vantage Autobody'),
+  // Blank prints the site name, exactly as the footer did before this was editable.
+  copyrightName: s(80),
   // Printed after the copyright name.
   legalNote: s(120, 'Registered in Ireland.'),
 });

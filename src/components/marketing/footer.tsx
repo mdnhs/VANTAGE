@@ -3,26 +3,7 @@ import Link from 'next/link';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
-
-const SERVICES_LINKS = [
-  { label: 'Collision repair', href: '/services' },
-  { label: 'Precision respraying', href: '/services' },
-  { label: 'Classic restoration', href: '/services' },
-  { label: 'Dent removal', href: '/services' },
-];
-
-const COMPANY_LINKS = [
-  { label: 'Our process', href: '/process' },
-  { label: 'Insurance partners', href: '/insurance' },
-  { label: 'Showcase', href: '/our-work' },
-  { label: 'About us', href: '/about' },
-];
-
-const LEGAL_LINKS = [
-  { label: 'Privacy Policy', href: '#privacy' },
-  { label: 'Terms of Service', href: '#terms' },
-  { label: 'Login', href: '/login' },
-];
+import { getSetting } from '@/server/queries/get-setting';
 
 // Figma 131:674 assets
 const FALLBACK_LOGO = '/assets/landing/27e96966dcba4218e85dc86d5723b210f88c7f2d.png';
@@ -64,7 +45,7 @@ function ContactIcon({
 // on every marketing page, so this is a repeated call to a `'use cache'`-wrapped function:
 // Next.js dedupes identical cache-key reads within the same render, so it costs nothing extra.
 export async function MarketingFooter() {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, footer] = await Promise.all([siteSettingsService.getPublic(), getSetting('footer')]);
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
 
@@ -97,35 +78,22 @@ export async function MarketingFooter() {
                 logoImage
               )}
             </Link>
-            <p className='max-w-[320px] text-[14px] leading-[23px] text-[#a1a1a1]'>
-              Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our
-              obsession.
-            </p>
+            <p className='max-w-[320px] text-[14px] leading-[23px] text-[#a1a1a1]'>{footer.blurb}</p>
           </div>
 
-          {/* Services */}
-          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
-            <h4 className={headingClass}>Services</h4>
-            <nav className='flex flex-col items-start gap-[14px]'>
-              {SERVICES_LINKS.map((link) => (
-                <Link key={link.label} href={link.href} className={linkClass}>
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          {/* Company */}
-          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
-            <h4 className={headingClass}>Company</h4>
-            <nav className='flex flex-col items-start gap-[14px]'>
-              {COMPANY_LINKS.map((link) => (
-                <Link key={link.label} href={link.href} className={linkClass}>
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          {/* Link columns (Settings > Footer) */}
+          {footer.columns.map((column) => (
+            <div key={column.title} className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+              <h4 className={headingClass}>{column.title}</h4>
+              <nav className='flex flex-col items-start gap-[14px]'>
+                {column.links.map((link) => (
+                  <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          ))}
 
           {/* Contact */}
           <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
@@ -171,6 +139,9 @@ export async function MarketingFooter() {
                   {settings.email}
                 </Link>
               </div>
+              {footer.contactNote && (
+                <p className='max-w-[260px] text-[13px] leading-[20px] text-[#737373]'>{footer.contactNote}</p>
+              )}
             </div>
           </div>
         </div>
@@ -178,11 +149,11 @@ export async function MarketingFooter() {
         {/* Legal bar */}
         <div className='flex flex-col items-start justify-between gap-4 border-t border-[#232328] pt-[28px] sm:flex-row sm:items-center'>
           <span className='text-[11px] leading-[normal] tracking-[0.22px] text-[#737373]'>
-            © 2026 {settings.businessName}. Registered in Ireland.
+            © 2026 {footer.copyrightName || settings.businessName}. {footer.legalNote}
           </span>
           <div className='flex flex-wrap gap-x-[28px] gap-y-2'>
-            {LEGAL_LINKS.map((link) => (
-              <Link key={link.label} href={link.href} className={linkClass}>
+            {footer.legalLinks.map((link) => (
+              <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
                 {link.label}
               </Link>
             ))}

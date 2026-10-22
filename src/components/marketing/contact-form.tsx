@@ -3,6 +3,8 @@
 import { useState, type CSSProperties, type DragEvent } from 'react';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import type { ServicePublic } from '@/features/services/types';
+import type { GlobalValue } from '@/lib/content/globals';
+import { fillCopy } from '@/components/marketing/ui/copy-template';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 
 // Figma-exported glyphs shared with the homepage quote form (stitch-estimator.tsx, node 131:204).
@@ -86,6 +88,8 @@ function FormField({
 
 interface ContactFormProps {
   services: ServicePublic[];
+  // Editable in Settings > Forms & microcopy; the defaults are the original copy.
+  copy: GlobalValue<'contactForm'>;
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -97,7 +101,8 @@ function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-export function ContactForm({ services }: ContactFormProps) {
+export function ContactForm({ services, copy }: ContactFormProps) {
+  const { labels, placeholders } = copy;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -131,7 +136,7 @@ export function ContactForm({ services }: ContactFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !message.trim()) {
-      setErrorMessage('Please fill in all required fields.');
+      setErrorMessage(copy.errors.required);
       return;
     }
 
@@ -161,7 +166,7 @@ export function ContactForm({ services }: ContactFormProps) {
 
       setSubmitted(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to submit enquiry. Please try again.';
+      const msg = err instanceof Error ? err.message : copy.errors.generic;
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -180,18 +185,17 @@ export function ContactForm({ services }: ContactFormProps) {
             <FigmaIcon src={ICONS.check} size={28} inset='27.08% 20.83%' bleed='-10.23% -8.04%' />
           </span>
           <h3 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
-            Enquiry received
+            {copy.success.title}
           </h3>
           <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
-            Thank you, <span className='font-semibold text-white'>{firstName}</span>! We have received your message. Our
-            Dublin specialists will review your enquiry and get back to you within 24 hours.
+            {fillCopy(copy.success.body, { name: firstName })}
           </p>
           <button
             type='button'
             onClick={handleReset}
             className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626]'
           >
-            ← Send another message
+            {copy.sendAnother}
           </button>
         </div>
       </div>
@@ -202,11 +206,9 @@ export function ContactForm({ services }: ContactFormProps) {
     <form onSubmit={handleSubmit} className={panel}>
       <div className='flex flex-col gap-2'>
         <h3 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
-          Send an enquiry
+          {copy.title}
         </h3>
-        <p className='text-[14px] leading-[22px] text-[#a1a1a1]'>
-          Provide details about your vehicle and repair needs for an accurate assessment.
-        </p>
+        <p className='text-[14px] leading-[22px] text-[#a1a1a1]'>{copy.intro}</p>
       </div>
 
       {errorMessage && (
@@ -220,38 +222,57 @@ export function ContactForm({ services }: ContactFormProps) {
       )}
 
       <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
-        <FormField label='First Name' value={firstName} onChange={setFirstName} placeholder='John' required />
-        <FormField label='Last Name' value={lastName} onChange={setLastName} placeholder='Doe' required />
         <FormField
-          label='Email Address'
+          label={labels.firstName}
+          value={firstName}
+          onChange={setFirstName}
+          placeholder={placeholders.firstName}
+          required
+        />
+        <FormField
+          label={labels.lastName}
+          value={lastName}
+          onChange={setLastName}
+          placeholder={placeholders.lastName}
+          required
+        />
+        <FormField
+          label={labels.email}
           value={email}
           onChange={setEmail}
-          placeholder='john@example.com'
+          placeholder={placeholders.email}
           type='email'
           required
         />
-        <FormField label='Phone Number' value={phone} onChange={setPhone} placeholder='+353 ...' type='tel' required />
+        <FormField
+          label={labels.phone}
+          value={phone}
+          onChange={setPhone}
+          placeholder={placeholders.phone}
+          type='tel'
+          required
+        />
       </div>
 
       <label className='flex flex-col gap-[10px]'>
-        <span className={FIELD_LABEL}>Service Required</span>
+        <span className={FIELD_LABEL}>{labels.service}</span>
         <select value={service} onChange={(e) => setService(e.target.value)} className={FIELD_INPUT}>
-          <option value=''>Select a service...</option>
+          <option value=''>{placeholders.service}</option>
           {services.map((option) => (
             <option key={option.id} value={option.name}>
               {option.name}
             </option>
           ))}
-          <option value='Other'>Other</option>
+          <option value='Other'>{placeholders.other}</option>
         </select>
       </label>
 
       <label className='flex flex-col gap-[10px]'>
-        <span className={FIELD_LABEL}>Message Details *</span>
+        <span className={FIELD_LABEL}>{labels.message} *</span>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder='Describe the damage or required work...'
+          placeholder={placeholders.message}
           rows={4}
           required
           className={`${FIELD_INPUT} resize-none`}
@@ -259,7 +280,7 @@ export function ContactForm({ services }: ContactFormProps) {
       </label>
 
       <div className='flex w-full flex-col gap-[10px]'>
-        <span className={FIELD_LABEL}>Upload Images (Optional)</span>
+        <span className={FIELD_LABEL}>{labels.photos}</span>
         <label
           onDragOver={(e) => {
             e.preventDefault();
@@ -281,11 +302,9 @@ export function ContactForm({ services }: ContactFormProps) {
           <span className='flex items-center justify-center rounded-[12px] bg-[#242424] p-[12px] transition-colors group-hover:bg-[#2e2e2e]'>
             <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
           </span>
-          <span className='text-[14px] leading-normal font-medium text-white'>
-            Tap to upload photos or drag &amp; drop here
-          </span>
+          <span className='text-[14px] leading-normal font-medium text-white'>{copy.dropzone.prompt}</span>
           <span className='text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
-            JPG or PNG · Max 5MB per file
+            {copy.dropzone.hint}
           </span>
         </label>
         {files.length > 0 && (
@@ -323,7 +342,7 @@ export function ContactForm({ services }: ContactFormProps) {
             <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
           )}
           <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
-            {isSubmitting ? 'Submitting…' : 'Submit enquiry'}
+            {isSubmitting ? copy.submitting : copy.button}
           </span>
           <FigmaIcon
             src={ICONS.arrow}
@@ -335,7 +354,7 @@ export function ContactForm({ services }: ContactFormProps) {
         </button>
         <p className='flex items-center justify-center gap-[6px] text-center text-[12px] leading-normal text-[#a1a1a1]'>
           <FigmaIcon src={ICONS.zap} size={14} inset='12.5% 22.92%' bleed='-7.14% -9.89%' />
-          We aim to respond to all enquiries within 24 hours.
+          {copy.responseNote}
         </p>
       </div>
     </form>

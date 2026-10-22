@@ -7,27 +7,15 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { cldUrl } from '@/lib/cloudinary/url';
 import { LottieLogo } from '@/components/ui/lottie-logo';
-
-// Figma 131:4 — primary nav shown on desktop
-const NAV_LINKS = [
-  { label: 'Home', href: '/' },
-  { label: 'Services', href: '/services' },
-  { label: 'Our Work', href: '/our-work' },
-  { label: 'Insurance', href: '/insurance' },
-  { label: 'Contact', href: '/contact' },
-];
-
-// Secondary pages — kept reachable from the mobile menu
-const MOBILE_EXTRA_LINKS = [
-  { label: 'About', href: '/about' },
-  { label: 'Process', href: '/process' },
-];
+import type { GlobalValue } from '@/lib/content/globals';
 
 const ICON_PHONE = '/assets/landing/0943df176868fa54f9c4d56f120f2cb266e6fd3b.svg';
 const ICON_ARROW = '/assets/landing/2065fb2a6a3ee56f9cd715ecf7f319a2a65ffe90.svg';
 const FALLBACK_LOGO = '/assets/landing/27e96966dcba4218e85dc86d5723b210f88c7f2d.png';
 
 interface StitchHeaderProps {
+  // Editable in Settings > Navigation; the defaults are the original links and button copy.
+  navigation: GlobalValue<'navigation'>;
   phone: string;
   businessName: string;
   logoPublicId: string | null;
@@ -74,12 +62,16 @@ function ArrowIcon() {
 }
 
 export function StitchHeader({
+  navigation,
   phone,
   businessName,
   logoPublicId,
   logoLottieJson,
   logoUseLottie = false,
 }: StitchHeaderProps) {
+  // Figma 131:4: the desktop bar skips `mobileOnly` links, the mobile menu lists all of them.
+  const desktopLinks = navigation.links.filter((link) => !link.mobileOnly);
+  const { cta } = navigation;
   const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
   const logoSrc = logoPublicId ? cldUrl(logoPublicId, { height: 240 }) : FALLBACK_LOGO;
 
@@ -121,11 +113,11 @@ export function StitchHeader({
 
         {/* Desktop Nav Links */}
         <nav className='hidden items-center gap-[36px] lg:flex'>
-          {NAV_LINKS.map((link) => {
+          {desktopLinks.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
-                key={link.label}
+                key={`${link.label}-${link.href}`}
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
                 className={`text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors focus-visible:text-white focus-visible:outline-none ${
@@ -149,12 +141,12 @@ export function StitchHeader({
           </a>
 
           <Link
-            href='/#estimator'
+            href={cta.href}
             className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
           >
             <span>
-              <span className='hidden sm:inline'>Get a Free </span>
-              <span className='sm:hidden'>Free </span>Quote
+              <span className='hidden sm:inline'>{cta.label}</span>
+              <span className='sm:hidden'>{cta.shortLabel}</span>
             </span>
             <ArrowIcon />
           </Link>
@@ -176,11 +168,11 @@ export function StitchHeader({
       {mobileMenuOpen && (
         <div className='border-t border-[#232328] bg-[#111113] px-4 pt-3 pb-5 sm:px-6 lg:hidden'>
           <nav className='flex flex-col'>
-            {[...NAV_LINKS, ...MOBILE_EXTRA_LINKS].map((link) => {
+            {navigation.links.map((link) => {
               const active = pathname === link.href;
               return (
                 <Link
-                  key={link.label}
+                  key={`${link.label}-${link.href}`}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   aria-current={active ? 'page' : undefined}
@@ -195,11 +187,11 @@ export function StitchHeader({
             })}
             <div className='mt-5 flex flex-col gap-3'>
               <Link
-                href='/get-a-quote'
+                href={cta.mobileHref}
                 onClick={() => setMobileMenuOpen(false)}
                 className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-[#dc2626] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-[#b91c1c]'
               >
-                <span>Request Free Quote Online</span>
+                <span>{cta.mobileLabel}</span>
                 <ArrowIcon />
               </Link>
               <a

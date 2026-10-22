@@ -6,6 +6,7 @@ import {
   SECTION_PADDING,
   SectionHeader,
 } from '@/components/marketing/ui/landing-primitives';
+import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { formatOpeningHoursSummary } from '@/features/site-settings/lib/opening-hours';
 
@@ -18,17 +19,12 @@ const DETAIL_ROW =
   'flex items-start gap-2.5 font-[family-name:var(--font-inter)] text-[14px] leading-[22px] text-[#b5b5b5]';
 
 export async function VisitUsSection() {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, microcopy] = await Promise.all([siteSettingsService.getPublic(), getSetting('microcopy')]);
 
   return (
     <section className={SECTION_BG.raised}>
       <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} gap-12 lg:gap-16`}>
-        <SectionHeader
-          eyebrow='Find the workshop'
-          title='Visit'
-          accent='us.'
-          intro='Opening hours and directions to our Dublin workshop.'
-        />
+        <SectionHeader eyebrow='Find the workshop' title='Visit' accent='us.' intro={microcopy.visitUs.intro} />
 
         <div className='relative h-[420px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] lg:h-[520px]'>
           <Map center={GARAGE_LOCATION} zoom={14} className='h-full w-full' theme='dark'>

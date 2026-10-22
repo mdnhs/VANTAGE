@@ -7,6 +7,8 @@ import { cldUrl } from '@/lib/cloudinary/url';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 import type { ServicePublic } from '@/features/services/types';
+import type { GlobalValue } from '@/lib/content/globals';
+import { fillCopy } from '@/components/marketing/ui/copy-template';
 
 const DEFAULT_SERVICE_ICON = '/assets/marketing/icon-crash-repair.svg';
 
@@ -22,19 +24,9 @@ const ICONS = {
   arrow: '/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg',
 };
 
-const STEPS = [
-  { step: 1, label: 'Vehicle & Service', short: 'Vehicle' },
-  { step: 2, label: 'Damage & Photos', short: 'Damage' },
-  { step: 3, label: 'Contact', short: 'Contact' },
-];
-
-const BENEFITS = [
-  { title: 'No-obligation & 100% free', body: 'Clear breakdown of parts, labour and paint costs.' },
-  { title: 'Direct insurance support', body: 'We work directly with your insurer so you are not out of pocket.' },
-  { title: 'Replacement car provision', body: 'Keep moving while your vehicle is in our Dublin workshop.' },
-];
-
 const MAX_PHOTOS = 4;
+
+type QuoteCopy = GlobalValue<'quoteForm'>;
 
 // Field classes copied from the homepage estimator so both forms read identically.
 const FIELD_LABEL = 'block text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
@@ -90,7 +82,11 @@ function SubmitRow({
   onClick,
   disabled,
   busy,
+  responseTime,
+  noCard,
 }: {
+  responseTime: string;
+  noCard: string;
   label: string;
   type: 'button' | 'submit';
   onClick?: () => void;
@@ -124,9 +120,9 @@ function SubmitRow({
       <div className='flex w-full flex-col items-center gap-2 text-[12px] leading-normal sm:flex-row sm:justify-between'>
         <span className='flex items-center gap-[6px] text-[#a1a1a1]'>
           <ZapIcon />
-          Average response time: 48 minutes
+          {responseTime}
         </span>
-        <span className='text-[#737373]'>No card required</span>
+        <span className='text-[#737373]'>{noCard}</span>
       </div>
     </div>
   );
@@ -187,9 +183,12 @@ function FieldGroup({ label, htmlFor, children }: { label: string; htmlFor?: str
 
 interface QuoteFormProps {
   services: ServicePublic[];
+  // Editable in Settings > Forms & microcopy; the defaults are the original copy.
+  copy: QuoteCopy;
 }
 
-export function QuoteForm({ services }: QuoteFormProps) {
+export function QuoteForm({ services, copy }: QuoteFormProps) {
+  const { labels, placeholders, hints, buttons } = copy;
   const [currentStep, setCurrentStep] = useState(1);
 
   // Step 1: Vehicle & Service
@@ -217,7 +216,7 @@ export function QuoteForm({ services }: QuoteFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !email.trim()) {
-      setErrorMessage('Please fill in your name, phone number, and email.');
+      setErrorMessage(copy.errors.required);
       return;
     }
 
@@ -243,7 +242,7 @@ export function QuoteForm({ services }: QuoteFormProps) {
       });
       setSubmitted(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to submit quote request. Please try again.';
+      const msg = err instanceof Error ? err.message : copy.errors.generic;
       setErrorMessage(msg);
     } finally {
       setIsSubmitting(false);
@@ -272,7 +271,8 @@ export function QuoteForm({ services }: QuoteFormProps) {
       <div className='flex w-full min-w-0 flex-col gap-[28px] rounded-[20px] border border-[#232328] bg-[#161616] p-5 sm:p-[36px] lg:flex-1'>
         {/* Stepper */}
         <ol className='flex w-full items-center gap-2 sm:gap-[14px]'>
-          {STEPS.map((s, idx) => {
+          {copy.steps.map((label, idx) => {
+            const s = { step: idx + 1, label: label.label, short: label.short };
             const isActive = activeStep === s.step;
             const isReached = activeStep >= s.step;
             const canGoBack = !submitted && s.step < currentStep;
@@ -320,29 +320,27 @@ export function QuoteForm({ services }: QuoteFormProps) {
               <CheckIcon size={28} />
             </span>
             <h2 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
-              Quote request received
+              {copy.success.title}
             </h2>
             <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
-              Thank you, <strong className='font-semibold text-white'>{name}</strong>! Our Dublin master technicians
-              have received your details for{' '}
-              <strong className='font-semibold text-white'>
-                {[make, model].filter(Boolean).join(' ') || 'your vehicle'}
-              </strong>
-              . We will contact you at <strong className='font-semibold text-white'>{phone}</strong> within 48 minutes
-              with your estimate.
+              {fillCopy(copy.success.body, {
+                name,
+                vehicle: [make, model].filter(Boolean).join(' ') || copy.success.vehicleFallback,
+                phone,
+              })}
             </p>
             <button
               type='button'
               onClick={handleReset}
               className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626]'
             >
-              ← Submit another request
+              {buttons.another}
             </button>
           </div>
         ) : currentStep === 1 ? (
           <>
             {/* Registration plate */}
-            <FieldGroup label='Irish Registration Number' htmlFor='quote-reg'>
+            <FieldGroup label={labels.registration} htmlFor='quote-reg'>
               <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#323232] bg-[#111113] transition-colors focus-within:border-[#dc2626]'>
                 <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch bg-[#2a2a2a] px-[14px] py-[12px] select-none'>
                   <span className='flex items-start gap-[2px]'>
@@ -356,13 +354,13 @@ export function QuoteForm({ services }: QuoteFormProps) {
                   type='text'
                   value={registration}
                   onChange={(e) => setRegistration(e.target.value.toUpperCase())}
-                  placeholder='e.g. 231-D-48912'
+                  placeholder={placeholders.registration}
                   className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-[family-name:var(--font-manrope)] text-[18px] leading-normal font-bold tracking-[0.66px] text-white uppercase placeholder:text-[#737373] focus:outline-none sm:px-[18px] sm:text-[22px]'
                 />
               </div>
               <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#737373]'>
                 <ZapIcon />
-                Helps us match OEM parts &amp; paint code
+                {hints.registration}
               </p>
             </FieldGroup>
 
@@ -370,30 +368,30 @@ export function QuoteForm({ services }: QuoteFormProps) {
             <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-3'>
               <FormField
                 id='quote-make'
-                label='Vehicle Make'
+                label={labels.make}
                 value={make}
                 onChange={setMake}
-                placeholder='e.g. BMW / Audi'
+                placeholder={placeholders.make}
               />
               <FormField
                 id='quote-model'
-                label='Vehicle Model'
+                label={labels.model}
                 value={model}
                 onChange={setModel}
-                placeholder='e.g. 3 Series / M4'
+                placeholder={placeholders.model}
               />
               <FormField
                 id='quote-year'
-                label='Year'
+                label={labels.year}
                 value={year}
                 onChange={setYear}
-                placeholder='YYYY'
+                placeholder={placeholders.year}
                 type='number'
               />
             </div>
 
             {/* Service chips */}
-            <FieldGroup label='Primary Service Required'>
+            <FieldGroup label={labels.service}>
               <div className='grid w-full grid-cols-2 gap-[10px] sm:grid-cols-4' role='radiogroup'>
                 {services.map((service) => {
                   const isSelected = service.name === selectedService;
@@ -429,23 +427,29 @@ export function QuoteForm({ services }: QuoteFormProps) {
               </div>
             </FieldGroup>
 
-            <SubmitRow label='Continue to damage details' type='button' onClick={() => setCurrentStep(2)} />
+            <SubmitRow
+              label={buttons.continueToDamage}
+              type='button'
+              onClick={() => setCurrentStep(2)}
+              responseTime={copy.responseTime}
+              noCard={copy.noCard}
+            />
           </>
         ) : currentStep === 2 ? (
           <>
-            <FieldGroup label='Describe the Vehicle Damage & Location' htmlFor='quote-damage'>
+            <FieldGroup label={labels.damage} htmlFor='quote-damage'>
               <textarea
                 id='quote-damage'
                 rows={5}
                 value={damageDescription}
                 onChange={(e) => setDamageDescription(e.target.value)}
-                placeholder='e.g. Scrape along passenger side front bumper and wing from parking incident. Original paint is creased...'
+                placeholder={placeholders.damage}
                 className={`${FIELD_INPUT} resize-y leading-[22px]`}
               />
             </FieldGroup>
 
             {/* Photo dropzone */}
-            <FieldGroup label={`Upload Damage Photos (Up to ${MAX_PHOTOS} Angles)`}>
+            <FieldGroup label={labels.photos}>
               <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed border-[#454545] px-[20px] py-[28px] text-center transition-colors focus-within:border-[#dc2626] hover:border-[#dc2626]/70 hover:bg-[#1a1a1d]'>
                 <input
                   type='file'
@@ -462,54 +466,58 @@ export function QuoteForm({ services }: QuoteFormProps) {
                     ✓ {photoCount} photo{photoCount > 1 ? 's' : ''} attached
                   </span>
                 ) : (
-                  <span className='text-[14px] leading-normal font-medium text-white'>
-                    Tap to upload photos or drag &amp; drop here
-                  </span>
+                  <span className='text-[14px] leading-normal font-medium text-white'>{hints.photoPrompt}</span>
                 )}
                 <span className='text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
-                  JPEG, PNG or HEIC · Max 25MB
+                  {hints.photoTypes}
                 </span>
               </label>
             </FieldGroup>
 
             <button type='button' onClick={() => setCurrentStep(1)} className={BACK_LINK}>
-              ← Back to vehicle details
+              {buttons.backToVehicle}
             </button>
-            <SubmitRow label='Continue to contact' type='button' onClick={() => setCurrentStep(3)} />
+            <SubmitRow
+              label={buttons.continueToContact}
+              type='button'
+              onClick={() => setCurrentStep(3)}
+              responseTime={copy.responseTime}
+              noCard={copy.noCard}
+            />
           </>
         ) : (
           <form onSubmit={handleSubmit} className='flex w-full flex-col gap-[28px]'>
             <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
               <FormField
                 id='quote-name'
-                label='Your Full Name'
+                label={labels.name}
                 value={name}
                 onChange={setName}
-                placeholder='e.g. Liam Murphy'
+                placeholder={placeholders.name}
                 required
               />
               <FormField
                 id='quote-phone'
-                label='Phone Number'
+                label={labels.phone}
                 value={phone}
                 onChange={setPhone}
-                placeholder='+353 87 123 4567'
+                placeholder={placeholders.phone}
                 type='tel'
                 required
               />
               <FormField
                 id='quote-email'
-                label='Email Address'
+                label={labels.email}
                 value={email}
                 onChange={setEmail}
-                placeholder='name@example.ie'
+                placeholder={placeholders.email}
                 type='email'
                 required
                 className='sm:col-span-2'
               />
             </div>
             <button type='button' onClick={() => setCurrentStep(2)} className={BACK_LINK}>
-              ← Back to damage details
+              {buttons.backToDamage}
             </button>
             {errorMessage && (
               <p role='alert' className='text-[12px] text-[#dc2626]'>
@@ -517,8 +525,10 @@ export function QuoteForm({ services }: QuoteFormProps) {
               </p>
             )}
             <SubmitRow
-              label={isSubmitting ? 'Submitting request…' : 'Send my free quote request'}
+              label={isSubmitting ? buttons.submitting : buttons.submit}
               type='submit'
+              responseTime={copy.responseTime}
+              noCard={copy.noCard}
               disabled={isSubmitting}
               busy={isSubmitting}
             />
@@ -529,7 +539,7 @@ export function QuoteForm({ services }: QuoteFormProps) {
       {/* Reassurance column — same check list + privacy note as the homepage estimator */}
       <aside className='flex w-full flex-col gap-[28px] lg:w-[360px] lg:shrink-0 lg:pt-[36px]'>
         <ul className='flex w-full flex-col gap-[20px]'>
-          {BENEFITS.map((b) => (
+          {copy.benefits.map((b) => (
             <li key={b.title} className='flex w-full items-start gap-[16px]'>
               <span className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-[6px]'>
                 <CheckIcon size={16} />
@@ -543,9 +553,7 @@ export function QuoteForm({ services }: QuoteFormProps) {
         </ul>
         <div className='flex w-full items-center gap-[12px] rounded-[12px] border border-[#232328] px-[16px] py-[14px]'>
           <FigmaIcon src={ICONS.shield} size={20} inset='8.33% 12.5%' bleed='-4.5% -5%' />
-          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a1a1a1]'>
-            Privacy guarantee: your registration and contact details are used only for your quote.
-          </p>
+          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a1a1a1]'>{copy.privacyNote}</p>
         </div>
       </aside>
     </div>

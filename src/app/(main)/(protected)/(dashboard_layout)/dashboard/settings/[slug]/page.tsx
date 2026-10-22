@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { GlobalEditor } from '@/features/globals/components/global-editor';
+import { NotificationsTestEmail } from '@/features/globals/components/notifications-test-email';
 import { linkForPath } from '@/lib/admin/nav';
 import { SETTINGS_PAGES, SETTINGS_PAGE_LABELS, type SettingsPage } from '@/lib/content/global-access';
 import { requireActor, requirePermission } from '@/server/lib/auth/session';
@@ -30,5 +31,10 @@ export default async function SettingsSlugPage({ params }: { params: Promise<Par
   const link = linkForPath(path);
   if (!link || !isSettingsPage(slug)) notFound();
   await requirePermission(link.permission, path);
-  return <GlobalEditor title={link.label} keys={SETTINGS_PAGES[slug]} />;
+  return (
+    <>
+      <GlobalEditor title={link.label} keys={SETTINGS_PAGES[slug]} />
+      {slug === 'notifications' ? <NotificationsTestEmail /> : null}
+    </>
+  );
 }

@@ -68,7 +68,8 @@ describe('defaults equal today’s public copy', () => {
     const footer = parseGlobal('footer', {});
     expect(footer.columns.map((c) => c.title)).toEqual(['Services', 'Company']);
     expect(footer.legalLinks.map((l) => l.label)).toEqual(['Privacy Policy', 'Terms of Service', 'Login']);
-    expect(footer.copyrightName).toBe('Vantage Autobody');
+    // Blank: the footer then prints the site name (settings.businessName), as before.
+    expect(footer.copyrightName).toBe('');
   });
 
   it('page.home takes the hero, trust badges and catalog copy of the site settings fallback', () => {

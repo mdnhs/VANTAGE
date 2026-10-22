@@ -1,4 +1,5 @@
 import { contactMessageRepository } from '@/server/repositories/contact-message-repository';
+import { notifyNewContact } from '@/server/services/enquiry-notify';
 import type {
   CreateContactMessageInput,
   ContactMessageListQuery,
@@ -19,7 +20,10 @@ export const contactMessageService = {
   },
 
   async create(data: CreateContactMessageInput) {
-    return contactMessageRepository.create(data);
+    const row = await contactMessageRepository.create(data);
+    // After the row is committed; fire-and-forget, so mail never fails the request.
+    if (row) notifyNewContact(row);
+    return row;
   },
 
   async update(id: string, data: UpdateContactMessageInput) {

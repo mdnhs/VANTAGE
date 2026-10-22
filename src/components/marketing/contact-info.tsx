@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BODY_TEXT, CARD, SectionHeader } from '@/components/marketing/ui/landing-primitives';
+import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 const LABEL =
@@ -30,18 +31,19 @@ function InfoCard({ icon: Icon, label, children }: { icon: LucideIcon; label: st
 // footer.tsx, so headquarters address / phone / email / WhatsApp stay in sync with the
 // admin-managed site settings instead of being hardcoded per-page.
 export async function ContactInfo() {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, microcopy] = await Promise.all([siteSettingsService.getPublic(), getSetting('microcopy')]);
+  const copy = microcopy.contactInfo;
 
   return (
     <div className='flex flex-col gap-10'>
-      <SectionHeader eyebrow='Contact details' title='Talk to' accent='the team.' />
+      <SectionHeader eyebrow={copy.eyebrow} title={copy.title} accent={copy.accent} />
 
       <div className='flex w-full flex-col gap-4'>
-        <InfoCard icon={MapPin} label='Headquarters'>
+        <InfoCard icon={MapPin} label={copy.headquarters}>
           <span className={BODY_TEXT}>{settings.address}</span>
         </InfoCard>
 
-        <InfoCard icon={Phone} label='Direct line'>
+        <InfoCard icon={Phone} label={copy.directLine}>
           <Link
             href={`tel:${settings.phone.replace(/\s+/g, '')}`}
             className='w-fit max-w-full truncate rounded-sm font-[family-name:var(--font-manrope)] text-[22px] leading-[30px] font-extrabold tracking-[-0.44px] text-white transition-colors hover:text-[#dc2626] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none'
@@ -58,14 +60,14 @@ export async function ContactInfo() {
               >
                 <Image src='/assets/marketing/icon-whatsapp.svg' alt='' width={16} height={16} className='size-4' />
                 <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.66px] text-[#d4d4d4] uppercase'>
-                  WhatsApp us
+                  {copy.whatsapp}
                 </span>
               </Link>
             </div>
           )}
         </InfoCard>
 
-        <InfoCard icon={Mail} label='Email'>
+        <InfoCard icon={Mail} label={copy.email}>
           <Link
             href={`mailto:${settings.email}`}
             className={`${BODY_TEXT} w-fit max-w-full rounded-sm break-all transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none`}

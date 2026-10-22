@@ -58,3 +58,10 @@ export async function fetchGlobalRevisions(key: EditableGlobalKey): Promise<Glob
 export async function restoreGlobal(key: EditableGlobalKey, revisionId: string, input: { version: number }) {
   return parseOrThrow<SavedGlobal>(await send(API_ROUTES.globals.restore(key, revisionId), 'POST', input));
 }
+
+export type TestEmailResult =
+  { status: 'not_configured' } | { status: 'sent'; to: string } | { status: 'failed'; error: string };
+
+export async function sendNotificationsTestEmail() {
+  return parseOrThrow<TestEmailResult>(await send(API_ROUTES.globals.notificationsTest, 'POST'));
+}

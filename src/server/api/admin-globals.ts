@@ -8,7 +8,9 @@ import { ApiError } from '@/server/lib/errors';
 import { ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { actorOf, can } from '@/server/middleware/auth';
+import { rateLimit } from '@/server/middleware/rate-limit';
 import { notViewingAs } from '@/server/middleware/view-as';
+import { sendTestEmail } from '@/server/services/enquiry-notify';
 import { getGlobal, globalRevisions, restoreGlobal, saveGlobal } from '@/server/services/globals-service';
 
 const KeyParam = z.object({ key: z.enum(EDITABLE_GLOBAL_KEYS) });
@@ -28,6 +30,15 @@ const canGlobal = (mode: 'read' | 'update') =>
   });
 
 export const adminGlobals = new Hono<AppEnv>()
+  // Sends a test mail to the signed-in person so SMTP can be checked from the Notifications page.
+  .post(
+    '/notifications/test',
+    can(GLOBAL_ACCESS.notifications.update),
+    notViewingAs(READ_ONLY_VIEW_AS),
+    rateLimit(5, 60_000),
+    async (c) => ok(c, await sendTestEmail(actorOf(c).email)),
+  )
+
   .get('/:key', canGlobal('read'), zValidator('param', KeyParam), async (c) =>
     ok(c, await getGlobal(c.req.valid('param').key)),
   )

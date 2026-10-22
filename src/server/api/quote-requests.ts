@@ -29,7 +29,7 @@ export const quoteRequests = new Hono<AppEnv>()
 
   // Staff-entered enquiry (phone / walk-in): full admin schema.
   .post('/admin', can({ quote: ['update'] }), zValidator('json', createQuoteRequestSchema), async (c) => {
-    const row = await quoteRequestService.create(c.req.valid('json'));
+    const row = await quoteRequestService.create(c.req.valid('json'), { notify: false });
     return ok(c, row, { status: 201 });
   })
 

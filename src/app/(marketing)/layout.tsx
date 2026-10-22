@@ -3,11 +3,12 @@ import { StitchHeader } from '@/components/marketing/stitch-header';
 import { StitchCta } from '@/components/marketing/stitch-cta';
 import { MarketingFooter } from '@/components/marketing/footer';
 import { SmoothScroll } from '@/components/providers/smooth-scroll';
+import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // One navbar + closing CTA + footer for every public page; contact details come from CMS site settings.
 export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, navigation] = await Promise.all([siteSettingsService.getPublic(), getSetting('navigation')]);
 
   return (
     <div
@@ -15,6 +16,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
     >
       <SmoothScroll />
       <StitchHeader
+        navigation={navigation}
         phone={settings.phone}
         businessName={settings.businessName}
         logoPublicId={settings.logoPublicId}

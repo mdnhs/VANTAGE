@@ -3,6 +3,7 @@ import { ContactInfo } from '@/components/marketing/contact-info';
 import { ContactForm } from '@/components/marketing/contact-form';
 import { VisitUsSection } from '@/components/marketing/visit-us-section';
 import { PageHero, SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
+import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const services = await serviceService.listPublished();
+  const [services, copy] = await Promise.all([serviceService.listPublished(), getSetting('contactForm')]);
 
   return (
     <main className='grow'>
@@ -29,7 +30,7 @@ export default async function ContactPage() {
         <div className={`${SECTION_CONTAINER} pb-16 sm:pb-24 xl:pb-[120px]`}>
           <div className='grid grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-[80px]'>
             <ContactInfo />
-            <ContactForm services={services} />
+            <ContactForm services={services} copy={copy} />
           </div>
         </div>
       </section>
