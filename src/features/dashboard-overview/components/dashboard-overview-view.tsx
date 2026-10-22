@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Kanban, Globe } from 'lucide-react';
+import { useCan } from '@/contexts/actor-provider';
 import { LINK_SECONDARY, PageHeader } from '@/components/admin/dashboard/page-header';
 import { NewEnquiryDialog } from '@/features/quote-requests/components/inbox/new-enquiry-dialog';
 import { KpiMetricCards } from './kpi-metric-cards';
@@ -17,6 +18,7 @@ interface DashboardOverviewViewProps {
 }
 
 export function DashboardOverviewView({ adminName, data }: DashboardOverviewViewProps) {
+  const canReadQuotes = useCan({ quote: ['read'] });
   return (
     <div className='flex flex-col gap-6 pb-8'>
       <PageHeader
@@ -24,11 +26,15 @@ export function DashboardOverviewView({ adminName, data }: DashboardOverviewView
         description='Overview of your collision center’s live customer pipeline, active workshop jobs, and revenue metrics.'
         actions={
           <>
-            <NewEnquiryDialog />
-            <Link href={APP_ROUTES.leads.quotes.index} className={LINK_SECONDARY}>
-              <Kanban className='size-4' />
-              <span>Pipeline Board</span>
-            </Link>
+            {canReadQuotes ? (
+              <>
+                <NewEnquiryDialog />
+                <Link href={APP_ROUTES.leads.quotes.index} className={LINK_SECONDARY}>
+                  <Kanban className='size-4' />
+                  <span>Pipeline Board</span>
+                </Link>
+              </>
+            ) : null}
             <Link href={APP_ROUTES.content.homePage.index} className={LINK_SECONDARY}>
               <Globe className='size-4' />
               <span className='hidden sm:inline'>Website Pages</span>

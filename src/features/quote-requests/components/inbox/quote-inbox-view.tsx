@@ -138,7 +138,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
   );
 
   return (
-    <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
+    <div className='flex h-[calc(var(--content-h)-var(--main-pad)-var(--rail-h,0px))] w-full flex-col gap-3.5'>
       <PageHeader
         title={viewMode === 'kanban' ? 'Quote & Job Pipeline' : 'Quote Requests Inbox'}
         description={

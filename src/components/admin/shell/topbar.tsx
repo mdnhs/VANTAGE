@@ -27,7 +27,17 @@ export function Topbar() {
       </div>
       {/* Disabled controls take no hover, so the tooltip hangs on a wrapper. */}
       <Tooltip>
-        <TooltipTrigger render={<span tabIndex={0} className='inline-flex rounded-full' />}>
+        <TooltipTrigger
+          render={
+            <span
+              tabIndex={0}
+              role='button'
+              aria-disabled='true'
+              aria-label='AI assistant (coming soon)'
+              className='inline-flex rounded-full'
+            />
+          }
+        >
           <Button variant='outline' size='icon-lg' className={ICON_BUTTON} aria-label='AI assistant' disabled>
             <SparklesIcon />
           </Button>

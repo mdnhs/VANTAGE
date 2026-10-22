@@ -143,7 +143,7 @@ export function TabbedPageSkeleton({ tabs = 6 }: { tabs?: number }) {
 export function InboxPageSkeleton() {
   return (
     <div
-      className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'
+      className='flex h-[calc(var(--content-h)-var(--main-pad)-var(--rail-h,0px))] w-full flex-col gap-3.5'
       aria-busy='true'
       aria-label='Loading'
     >
@@ -229,7 +229,7 @@ export function InboxPageSkeleton() {
 export function KanbanPageSkeleton() {
   return (
     <div
-      className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'
+      className='flex h-[calc(var(--content-h)-var(--main-pad)-var(--rail-h,0px))] w-full flex-col gap-3.5'
       aria-busy='true'
       aria-label='Loading'
     >

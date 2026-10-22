@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ArrowUpRightIcon, SparklesIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   Command,
@@ -15,6 +15,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { useActor } from '@/contexts/actor-provider';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useSignOut } from '@/features/auth/hooks/use-sign-out';
 
 import { buildActions, matchesQuery } from './actions';
@@ -34,12 +36,13 @@ async function fetchSearch(q: string): Promise<SearchHit[]> {
 export function CommandPalette({ siteUrl }: { siteUrl: string }) {
   const { open, setOpen } = useCommandPalette();
   const [q, setQ] = useState('');
-  const term = useDeferredValue(q);
+  const term = useDebouncedValue(q, 150);
+  const { user } = useActor();
   const router = useRouter();
   const { setTheme } = useTheme();
   const { signOut } = useSignOut();
   const { data, isError } = useQuery({
-    queryKey: ['admin-search', term],
+    queryKey: ['admin-search', user.id, term],
     queryFn: () => fetchSearch(term),
     enabled: open,
     staleTime: 60_000,

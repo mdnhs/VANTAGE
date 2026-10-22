@@ -143,7 +143,7 @@ export function UsersView() {
   return (
     <div className='flex flex-col gap-6'>
       <PageHeader
-        title='Users &amp; roles'
+        title='Users & roles'
         description='Who can sign in, and what each role is allowed to do.'
         actions={
           canInvite ? (

@@ -6,9 +6,7 @@ import { SIDEBAR_COOKIE } from '@/components/admin/shell/constants';
 import { Toaster } from '@/components/ui/sonner';
 import { ActorProvider } from '@/contexts/actor-provider';
 import { ViewAsBanner } from '@/features/users/components/view-as-banner';
-import { jakarta } from '@/lib/font';
 import { toMePayload } from '@/lib/auth/me';
-import { cn } from '@/lib/utils';
 import { requireActor } from '@/server/lib/auth/session';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
@@ -36,7 +34,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
   return (
-    <div data-admin-root className={cn(jakarta.variable, 'font-sans')}>
+    <div data-admin-root className='font-sans'>
       <ActorProvider actor={toMePayload(actor)}>
         <AdminShell defaultOpen={sidebarOpen} siteUrl={siteUrl} brand={brand}>
           {children}

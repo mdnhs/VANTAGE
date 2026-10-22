@@ -81,7 +81,7 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
   };
 
   return (
-    <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
+    <div className='flex h-[calc(var(--content-h)-var(--main-pad)-var(--rail-h,0px))] w-full flex-col gap-3.5'>
       <PageHeader
         title='Contact Messages Inbox'
         description='General enquiries and questions submitted through the Contact page.'

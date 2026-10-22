@@ -1,10 +1,10 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
 import { REAL_ROUTES, comingSoonLink, comingSoonParams, guardComingSoon } from './coming-soon';
-import { canOpen } from './nav';
+import { EXTRA_LINKS, HELP_LINK, NAV, canOpen } from './nav';
 
 const APP_DIR = path.join(import.meta.dirname, '../../app');
 function pageFiles(dir: string): string[] {
@@ -60,6 +60,35 @@ describe('comingSoonParams', () => {
       const hit = pageFiles(APP_DIR).some((f) => f.includes(`${path.sep}${name}${path.sep}`));
       expect(hit, href).toBe(true);
     }
+  });
+
+  it('lists every real route folder a nav href points at in REAL_ROUTES (reverse direction)', () => {
+    const dashboardDir = path.join(APP_DIR, '(main)/(protected)/(dashboard_layout)/dashboard');
+    const navHrefs = new Set([
+      HELP_LINK.href,
+      ...EXTRA_LINKS.map((l) => l.href),
+      ...NAV.flatMap((item) => [item.href, ...(item.children ?? []).map((c) => c.href)]),
+    ]);
+    const realPaths = pageFiles(dashboardDir)
+      .map((f) =>
+        path
+          .relative(dashboardDir, path.dirname(f))
+          .split(path.sep)
+          .filter((seg) => seg && !/^\(.*\)$/.test(seg)),
+      )
+      .filter((segs) => segs[0] !== '[section]' && !segs.some((seg) => seg.startsWith('[')))
+      .map((segs) => ['/dashboard', ...segs].join('/'));
+    const missing = realPaths.filter((href) => href !== '/dashboard' && navHrefs.has(href) && !REAL_ROUTES.has(href));
+    expect(missing).toEqual([]);
+  });
+
+  it('keeps the catch-all page calling guardComingSoon', () => {
+    const source = readFileSync(
+      path.join(APP_DIR, '(main)/(protected)/(dashboard_layout)/dashboard/[section]/[[...rest]]/page.tsx'),
+      'utf8',
+    );
+    expect(source).toMatch(/import\s*\{[^}]*\bguardComingSoon\b[^}]*\}\s*from\s*'@\/lib\/admin\/coming-soon'/);
+    expect(source).toMatch(/await\s+guardComingSoon\(/);
   });
 });
 
