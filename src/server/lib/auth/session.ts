@@ -4,9 +4,9 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
+import { noAccessHref } from '@/lib/admin/no-access';
 import { ADMIN_PATH_HEADER } from '@/lib/auth/admin-path';
 import { hasPermission, parseRoles, type Permissions } from '@/lib/auth/permissions';
-import { noAccessHref } from '@/lib/admin/no-access';
 import { safeNext } from '@/lib/auth/safe-next';
 
 import { toActor, type Actor } from './actor';

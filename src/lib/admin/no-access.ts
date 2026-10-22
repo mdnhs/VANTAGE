@@ -5,7 +5,9 @@ import { linkForPath } from './nav';
 export const NO_ACCESS_PATH = '/dashboard/no-access';
 
 // Where a signed-in role lands when it may not open `from` (an admin path).
+// Without a known origin path the page shows generic copy.
 export function noAccessHref(from: string | null | undefined): string {
+  if (!from) return NO_ACCESS_PATH;
   return `${NO_ACCESS_PATH}?from=${encodeURIComponent(safeNext(from))}`;
 }
 

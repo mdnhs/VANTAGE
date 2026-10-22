@@ -26,10 +26,13 @@ function routeOf(file: string): string {
 
 // These carry their own gate: no-access is open to any signed-in role, and the
 // coming-soon catch-all enforces the permission of the registry link it resolves.
-const SELF_GATED = [`${path.sep}no-access${path.sep}`, `${path.sep}[section]${path.sep}`];
+const SELF_GATED = [
+  path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', 'no-access', 'page.tsx'),
+  path.join('(main)', '(protected)', '(dashboard_layout)', 'dashboard', '[section]', '[[...rest]]', 'page.tsx'),
+];
 
 const dashboardRoutes = pageFiles(APP_DIR)
-  .filter((file) => !SELF_GATED.some((marker) => file.includes(marker)))
+  .filter((file) => !SELF_GATED.includes(path.relative(APP_DIR, file)))
   .map(routeOf)
   .filter((r) => r === '/dashboard' || r.startsWith('/dashboard/'));
 

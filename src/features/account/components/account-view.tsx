@@ -3,6 +3,8 @@
 import { EyeIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
+import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useActor } from '@/contexts/actor-provider';
 
@@ -15,17 +17,6 @@ import { TwoFactorCard } from './two-factor-card';
 const TABS = ['profile', 'security', 'sessions'] as const;
 type Tab = (typeof TABS)[number];
 
-const CARD = 'flex flex-col gap-4 rounded-card bg-card p-5 text-card-foreground ring-1 ring-foreground/10';
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className={CARD}>
-      <h2 className='text-card-title'>{title}</h2>
-      {children}
-    </section>
-  );
-}
-
 export function AccountView() {
   const { user, impersonatedBy } = useActor();
   const router = useRouter();
@@ -34,12 +25,7 @@ export function AccountView() {
   const requested = params.get('tab');
   const tab: Tab = TABS.find((t) => t === requested) ?? 'profile';
 
-  const header = (
-    <header className='flex flex-col gap-1'>
-      <h1 className='text-title'>Account</h1>
-      <p className='text-sm text-muted-foreground'>{user.email}</p>
-    </header>
-  );
+  const header = <PageHeader title='Account' description={user.email} />;
 
   // The server refuses account changes during View-as too (403); this spares the
   // admin forms that cannot work.
@@ -72,26 +58,26 @@ export function AccountView() {
           <TabsTrigger value='sessions'>Devices</TabsTrigger>
         </TabsList>
         <TabsContent value='profile' className='mt-4 grid gap-4 xl:grid-cols-2'>
-          <Card title='Profile'>
+          <DashboardCard title='Profile'>
             <ProfileForm />
-          </Card>
-          <Card title='Appearance'>
+          </DashboardCard>
+          <DashboardCard title='Appearance'>
             <ThemePreference />
-          </Card>
+          </DashboardCard>
         </TabsContent>
         <TabsContent value='security' className='mt-4 grid gap-4 xl:grid-cols-2'>
-          <Card title='Password'>
+          <DashboardCard title='Password'>
             <p className='text-sm text-muted-foreground'>You stay signed in here. Every other device is signed out.</p>
             <PasswordForm />
-          </Card>
-          <Card title='Two-factor authentication'>
+          </DashboardCard>
+          <DashboardCard title='Two-factor authentication'>
             <TwoFactorCard />
-          </Card>
+          </DashboardCard>
         </TabsContent>
         <TabsContent value='sessions' className='mt-4'>
-          <Card title='Signed-in devices'>
+          <DashboardCard title='Signed-in devices'>
             <SessionsList />
-          </Card>
+          </DashboardCard>
         </TabsContent>
       </Tabs>
     </div>

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { comingSoonLink } from '@/lib/admin/coming-soon';
+import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { comingSoonParams, guardComingSoon } from '@/lib/admin/coming-soon';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { requireActor, requirePermission } from '@/server/lib/auth/session';
 
@@ -15,19 +16,20 @@ export const instant = false;
 
 type Params = { section: string; rest?: string[] };
 
+// One prerendered route per registered placeholder path (see comingSoonParams).
+// The page still authenticates per request through the layout and the guards.
+export function generateStaticParams() {
+  return comingSoonParams();
+}
+
 // Every sidebar destination a later phase has not built yet lands here. A real
 // route folder takes precedence over this dynamic one as soon as it exists.
 export default async function SectionPage({ params }: { params: Promise<Params> }) {
   const { section, rest = [] } = await params;
-  const path = ['/dashboard', section, ...rest].join('/');
-  // Signed in first, so a 404 never tells a stranger which paths exist.
-  await requireActor(path);
-  const link = comingSoonLink(section, rest);
-  if (!link) notFound();
-  await requirePermission(link.permission, path);
+  const link = await guardComingSoon(section, rest, { requireActor, requirePermission, notFound });
   return (
     <section className='flex flex-col items-start gap-4'>
-      <h1 className='text-title'>{link.label}</h1>
+      <PageHeader title={link.label} />
       <p className='max-w-prose text-sm text-muted-foreground'>
         This part of the admin arrives in a later release. Everything you can see in the menu is already set up for your
         role.

@@ -19,6 +19,7 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { useActor } from '@/contexts/actor-provider';
+import { authRequest } from '@/features/auth/lib/auth-errors';
 import { authClient } from '@/lib/auth-client';
 import { isAdminRole } from '@/lib/auth/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
@@ -47,17 +48,24 @@ export function TwoFactorCard() {
     event.preventDefault();
     setBusy(true);
     setError(null);
-    const result =
-      mode === 'codes'
-        ? await authClient.twoFactor.generateBackupCodes({ password })
-        : await authClient.twoFactor.disable({ password });
-    setBusy(false);
-    if (result.error) {
-      setError(result.error.message ?? "That password didn't work");
+    let outcome: Awaited<ReturnType<typeof authRequest<unknown>>>;
+    try {
+      outcome = await authRequest<unknown>(() =>
+        mode === 'codes'
+          ? authClient.twoFactor.generateBackupCodes({ password })
+          : authClient.twoFactor.disable({ password }),
+      );
+    } finally {
+      setBusy(false);
+    }
+    const { data, failure } = outcome;
+    if (failure) {
+      // A rejection here is the password check; outages and limits get their own copy.
+      setError(failure.kind === 'rejected' ? "That password didn't work" : failure.message);
       return;
     }
     if (mode === 'codes') {
-      setCodes((result.data as unknown as { backupCodes: string[] }).backupCodes);
+      setCodes((data as unknown as { backupCodes: string[] }).backupCodes);
       setPassword('');
       return;
     }

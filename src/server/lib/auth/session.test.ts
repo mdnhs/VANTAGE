@@ -70,6 +70,11 @@ describe('requirePermission', () => {
     requestHeaders.delete('x-vantage-admin-path');
   });
 
+  it('omits from when neither next nor the header is known', async () => {
+    current = signedInAs('viewer');
+    await expect(requirePermission({ quote: ['read'] })).rejects.toThrow(/^REDIRECT \/dashboard\/no-access$/);
+  });
+
   it('prefers an explicit next over the request header', async () => {
     current = signedInAs('viewer');
     await expect(requirePermission({ quote: ['read'] }, '/dashboard/media')).rejects.toThrow(

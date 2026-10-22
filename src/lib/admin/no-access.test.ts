@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { noAccessHref, noAccessLabel } from './no-access';
 
 describe('noAccessHref', () => {
+  it('has no from when the origin path is unknown', () => {
+    expect(noAccessHref(null)).toBe('/dashboard/no-access');
+    expect(noAccessHref(undefined)).toBe('/dashboard/no-access');
+  });
   it('points at the in-panel page with the encoded origin path', () => {
     expect(noAccessHref('/dashboard/seo/redirects')).toBe('/dashboard/no-access?from=%2Fdashboard%2Fseo%2Fredirects');
   });

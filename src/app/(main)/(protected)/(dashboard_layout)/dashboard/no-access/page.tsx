@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { noAccessLabel } from '@/lib/admin/no-access';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { requireActor } from '@/server/lib/auth/session';
@@ -21,7 +22,7 @@ export default async function NoAccessPage({ searchParams }: { searchParams: Sea
   const label = noAccessLabel(typeof from === 'string' ? from : null);
   return (
     <section className='mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center'>
-      <h1 className='text-card-title'>You don&apos;t have access to {label ?? 'this page'}</h1>
+      <PageHeader title={<>You don&apos;t have access to {label ?? 'that page'}</>} />
       <p className='text-sm text-muted-foreground'>
         Your role doesn&apos;t include it. Ask an owner or admin if you need it.
       </p>
