@@ -1,3 +1,4 @@
+import type { PublicImage } from '@/lib/media/public-image';
 import type { Project, ProjectGalleryImage } from '@/server/db/schema';
 import type {
   CreateProjectInput,
@@ -18,7 +19,12 @@ export type {
 };
 
 // Rows returned by repo/service reads always include the gallery relation.
-export type ProjectWithGallery = Project & { galleryImages: ProjectGalleryImage[] };
+export type ProjectWithGallery = Project & {
+  galleryImages: ProjectGalleryImage[];
+  beforeImage: PublicImage | null;
+  afterImage: PublicImage | null;
+  gallery: PublicImage[];
+};
 
 // Shape returned by the public `/projects` and `/projects/featured` routes.
 export type ProjectPublic = ProjectWithGallery;

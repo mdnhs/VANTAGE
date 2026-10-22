@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { ServicePublic } from '@/features/services/types';
 
 // Fallback icon for services created without an uploaded icon — matches the first icon the
@@ -50,7 +50,7 @@ export function ServicesSection({ services }: ServicesSectionProps) {
           >
             <div className='flex size-12 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop'>
               <Image
-                src={service.iconPublicId ? cldUrl(service.iconPublicId, { width: 36, height: 36 }) : DEFAULT_ICON}
+                src={service.icon ? sizedSrc(service.icon, 'w_36,h_36') : DEFAULT_ICON}
                 alt=''
                 width={18}
                 height={18}

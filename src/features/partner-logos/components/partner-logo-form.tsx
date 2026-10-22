@@ -31,7 +31,7 @@ interface PartnerLogoFormProps {
   initialData?: PartnerLogo | null;
   onSubmit: (input: {
     companyName: string;
-    logoPublicId: string;
+    logoPublicId?: string;
     websiteUrl: string;
     isEnabled: boolean;
   }) => Promise<unknown>;
@@ -60,7 +60,8 @@ export function PartnerLogoForm({
     e.preventDefault();
     await onSubmit({
       companyName: form.companyName,
-      logoPublicId: form.logoPublicId,
+      // Left out when empty so a media-backed logo stays as it is.
+      logoPublicId: form.logoPublicId || undefined,
       websiteUrl: form.websiteUrl,
       isEnabled: form.isEnabled,
     });

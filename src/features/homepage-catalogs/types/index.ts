@@ -1,4 +1,5 @@
-import type { HomepageCatalog, NewHomepageCatalog } from '@/server/db/schema';
+import type { PublicImage } from '@/lib/media/public-image';
+import type { HomepageCatalog as HomepageCatalogRow, NewHomepageCatalog } from '@/server/db/schema';
 import type {
   CreateHomepageCatalogInput,
   HomepageCatalogIcon,
@@ -7,8 +8,10 @@ import type {
   UpdateHomepageCatalogInput,
 } from '@/validations/homepage-catalog-schema';
 
+// `icon` is the lucide icon name; `iconImage` is the optional uploaded icon.
+export type HomepageCatalog = HomepageCatalogRow & { iconImage: PublicImage | null };
+
 export type {
-  HomepageCatalog,
   NewHomepageCatalog,
   CreateHomepageCatalogInput,
   UpdateHomepageCatalogInput,

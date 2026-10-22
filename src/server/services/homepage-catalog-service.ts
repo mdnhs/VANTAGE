@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { prepareMediaWrite } from '@/server/lib/media/content-images';
 import { homepageCatalogRepository } from '@/server/repositories/homepage-catalog-repository';
 import type {
   CreateHomepageCatalogInput,
@@ -7,6 +9,8 @@ import type {
   ReorderHomepageCatalogsInput,
   UpdateHomepageCatalogInput,
 } from '@/validations/homepage-catalog-schema';
+
+const MEDIA_PAIRS = [['iconMediaId', 'iconPublicId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('homepage-catalogs');
 const detailTag = (id: string) => CACHE_TAGS.detail('homepage-catalogs', id);
@@ -17,6 +21,7 @@ async function listEnabledUncached() {
 
 async function listEnabledCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
   cacheLife('hours');
   return listEnabledUncached();
@@ -34,13 +39,15 @@ export const homepageCatalogService = {
   },
 
   async create(data: CreateHomepageCatalogInput) {
-    const row = await homepageCatalogRepository.create(data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await homepageCatalogRepository.create(input);
     revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdateHomepageCatalogInput) {
-    const row = await homepageCatalogRepository.update(id, data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await homepageCatalogRepository.update(id, input);
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');
     return row;

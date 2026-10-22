@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { prepareMediaWrite } from '@/server/lib/media/content-images';
 import { serviceRepository } from '@/server/repositories/service-repository';
 import type {
   CreateServiceInput,
@@ -7,6 +9,11 @@ import type {
   ServiceListQuery,
   UpdateServiceInput,
 } from '@/validations/service-schema';
+
+const MEDIA_PAIRS = [
+  ['iconMediaId', 'iconPublicId'],
+  ['imageMediaId', 'imagePublicId'],
+] as const;
 
 const LIST_TAG = CACHE_TAGS.all('services');
 const detailTag = (id: string) => CACHE_TAGS.detail('services', id);
@@ -19,6 +26,7 @@ async function listPublishedUncached() {
 // explicit revalidations on mutation.
 async function listPublishedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
   cacheLife('hours');
   return listPublishedUncached();
@@ -37,14 +45,16 @@ export const serviceService = {
   },
 
   async create(data: CreateServiceInput) {
-    const row = await serviceRepository.create(data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await serviceRepository.create(input);
     // Second arg must match the `cacheLife` profile used in listPublishedCached above.
     revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdateServiceInput) {
-    const row = await serviceRepository.update(id, data);
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const row = await serviceRepository.update(id, input);
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');
     return row;

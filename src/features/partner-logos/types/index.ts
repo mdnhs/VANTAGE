@@ -1,4 +1,5 @@
-import type { NewPartnerLogo, PartnerLogo } from '@/server/db/schema';
+import type { PublicImage } from '@/lib/media/public-image';
+import type { NewPartnerLogo, PartnerLogo as PartnerLogoRow } from '@/server/db/schema';
 import type {
   CreatePartnerLogoInput,
   PartnerLogoListQuery,
@@ -6,8 +7,9 @@ import type {
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
 
+export type PartnerLogo = PartnerLogoRow & { logo: PublicImage | null };
+
 export type {
-  PartnerLogo,
   NewPartnerLogo,
   CreatePartnerLogoInput,
   UpdatePartnerLogoInput,

@@ -3,7 +3,7 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc } from '@/lib/media/public-image';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 import type { ServicePublic } from '@/features/services/types';
@@ -409,11 +409,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
                       }`}
                     >
                       <Image
-                        src={
-                          service.iconPublicId
-                            ? cldUrl(service.iconPublicId, { width: 48, height: 48 })
-                            : DEFAULT_SERVICE_ICON
-                        }
+                        src={service.icon ? sizedSrc(service.icon, 'w_48,h_48') : DEFAULT_SERVICE_ICON}
                         alt=''
                         width={24}
                         height={24}

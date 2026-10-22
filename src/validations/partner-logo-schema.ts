@@ -8,15 +8,25 @@ const optionalUrl = z
   .optional()
   .transform((value) => (value ? value : null));
 
-export const createPartnerLogoSchema = z.object({
+const partnerLogoBase = z.object({
   companyName: z.string().min(1).max(120),
-  logoPublicId: z.string().min(1).max(255),
+  logoPublicId: z.string().min(1).max(255).nullable().optional(),
+  logoMediaId: z.string().uuid().nullable().optional(),
   websiteUrl: optionalUrl,
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),
 });
 
-export const updatePartnerLogoSchema = createPartnerLogoSchema.partial();
+// Until Phase 11 drops the legacy column a logo needs a media id or a legacy id.
+export const createPartnerLogoSchema = partnerLogoBase.refine((v) => v.logoMediaId || v.logoPublicId, {
+  message: 'Choose a logo',
+  path: ['logoPublicId'],
+});
+
+export const updatePartnerLogoSchema = partnerLogoBase.partial().extend({
+  logoMediaId: z.string().uuid().optional(),
+  logoPublicId: z.string().min(1).max(255).optional(),
+});
 
 export const partnerLogoListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
