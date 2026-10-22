@@ -167,13 +167,17 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         eventId,
         sourcePath: window.location.pathname,
       });
-      track({
-        event: 'generate_lead',
-        params: { lead_source: 'contact_form', form_id: 'contact' },
-        eventId,
-      });
 
       setSubmitted(true);
+      try {
+        track({
+          event: 'generate_lead',
+          params: { lead_source: 'contact_form', form_id: 'contact' },
+          eventId,
+        });
+      } catch {
+        // Tracking must never turn a saved lead into an error.
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : copy.errors.generic;
       setErrorMessage(msg);

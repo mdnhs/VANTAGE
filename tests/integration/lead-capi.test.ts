@@ -69,7 +69,8 @@ beforeEach(async () => {
   vi.stubGlobal('fetch', fetchMock);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await settleNotifications();
   vi.unstubAllGlobals();
 });
 
@@ -154,9 +155,13 @@ describe('quote request lead conversion', () => {
   }, 20_000);
 
   it('does not wait for Meta before answering', async () => {
-    fetchMock.mockImplementation(() => new Promise(() => undefined));
+    let release!: (r: Response) => void;
+    fetchMock.mockImplementation(() => new Promise<Response>((resolve) => (release = resolve)));
     const res = await post('/quotes', { ...quote, eventId: randomUUID(), sourcePath: '/get-a-quote' }, consentCookie());
     expect(res.status).toBe(201);
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    release(new Response('{}', { status: 200 }));
+    await settleNotifications();
   });
 
   it('never sends for staff-entered quotes', async () => {

@@ -244,12 +244,16 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
         eventId,
         sourcePath: window.location.pathname,
       });
-      track({
-        event: 'generate_lead',
-        params: { lead_source: 'quote_form', form_id: 'quote' },
-        eventId,
-      });
       setSubmitted(true);
+      try {
+        track({
+          event: 'generate_lead',
+          params: { lead_source: 'quote_form', form_id: 'quote' },
+          eventId,
+        });
+      } catch {
+        // Tracking must never turn a saved lead into an error.
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : copy.errors.generic;
       setErrorMessage(msg);
