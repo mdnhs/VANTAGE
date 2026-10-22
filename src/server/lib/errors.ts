@@ -15,12 +15,16 @@ export const ERROR_CODES = {
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
+// Who holds the newest version of a conflicted document (sent with a 409).
+export type ConflictCurrent = { version: number; updatedAt: string | null; updatedBy: string | null };
+
 export class ApiError extends Error {
   constructor(
     readonly code: ErrorCode,
     message: string,
     readonly status: number = 400,
     readonly causes?: Record<string, string[]>,
+    readonly current?: ConflictCurrent,
   ) {
     super(message);
     this.name = 'ApiError';
