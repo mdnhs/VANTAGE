@@ -110,7 +110,7 @@ export function cleanFilename(name: string) {
   const base = name.split(/[\\/]/).pop() ?? '';
   return (
     base
-       
+
       .replace(/[\u0000-\u001f\u007f]/g, '')
       .trim()
       .slice(0, 200) || 'file'

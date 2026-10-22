@@ -66,7 +66,7 @@ describe('processUpload', () => {
 
   it('skips sharp for video and keeps the bytes', async () => {
     const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(64)]);
-    const out = await processUpload(mp4, 'clip.mov', NOW);
+    const out = await processUpload(mp4, 'clip.mp4', NOW);
     expect(out.body).toBe(mp4);
     expect(out).toMatchObject({
       mimeType: 'video/mp4',
@@ -76,7 +76,11 @@ describe('processUpload', () => {
       dominantColor: null,
     });
     expect(out.key).toMatch(/\.mp4$/);
-    const webm = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.alloc(16)]);
+    const webm = Buffer.concat([
+      Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x82, 0x84]),
+      Buffer.from('webm'),
+      Buffer.alloc(16),
+    ]);
     expect((await processUpload(webm, 'a.webm', NOW)).key).toMatch(/\.webm$/);
   });
 
@@ -98,5 +102,35 @@ describe('processUpload', () => {
     await expect(
       processUpload(Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(10)]), 'a.jpg', NOW),
     ).rejects.toMatchObject({ status: 422 });
+  });
+
+  const mp4Of = (bytes: number) =>
+    Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypisom'), Buffer.alloc(bytes - 12)]);
+
+  it('accepts 30 MB mp4 but rejects 101 MB mp4', async () => {
+    const ok = mp4Of(30 * 1024 * 1024);
+    expect((await processUpload(ok, 'ok.mp4', NOW)).body).toBe(ok);
+    await expect(processUpload(mp4Of(MAX_VIDEO_BYTES + 1), 'big.mp4', NOW)).rejects.toMatchObject({ status: 413 });
+  });
+
+  it('rejects image over 20 MB with 413 before decoding', async () => {
+    const png = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.alloc(MAX_UPLOAD_BYTES + 1),
+    ]);
+    // Undecodable bytes: reaching sharp would give 422, not 413.
+    await expect(processUpload(png, 'big.png', NOW)).rejects.toMatchObject({ status: 413 });
+  });
+
+  it('rejects disguised non-image', async () => {
+    await expect(processUpload(Buffer.from('<html>'), 'x.jpg')).rejects.toMatchObject({ status: 415 });
+  });
+
+  it('rejects QuickTime, HEIC and Matroska containers with 415', async () => {
+    const qt = Buffer.concat([Buffer.from([0, 0, 0, 0x14]), Buffer.from('ftypqt  '), Buffer.alloc(8)]);
+    const heic = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from('ftypheic'), Buffer.alloc(8)]);
+    const mkv = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x82, 0x88]), Buffer.from('matroska')]);
+    for (const b of [qt, heic, mkv])
+      await expect(processUpload(b, 'x.mov', NOW)).rejects.toMatchObject({ status: 415 });
   });
 });
