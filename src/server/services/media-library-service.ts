@@ -13,6 +13,7 @@ import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { MEDIA_REFERRER_TABLES, mediaUsage } from '@/server/lib/media/usage';
 import { cleanFilename, MAX_VIDEO_BYTES, processUpload, type ProcessedUpload } from '@/server/lib/media/process';
 import { getStorage, variantKey } from '@/server/lib/media/storage';
+import { enqueueMediaPurge } from '@/server/services/media-purge-service';
 import { mediaRepository } from '@/server/repositories/media-repository';
 import type { MediaRow } from '@/server/db/schema/media';
 import type { MediaListQuery, MediaPatch } from '@/validations/media-schema';
@@ -227,6 +228,7 @@ export const mediaLibraryService = {
       throw error;
     }
     if (!row) throw ApiError.notFound(NOT_FOUND);
+    if (current.key !== row.key) await enqueueMediaPurge(current.key, 'replaced');
     await audit(actor, {
       action: 'media.replace',
       entityType: 'media',
@@ -252,6 +254,7 @@ export const mediaLibraryService = {
         throw new ApiError(ERROR_CODES.CONFLICT, 'This file is still in use', 409, undefined, undefined, { usage });
       }
       await mediaRepository.softDelete(id, tx);
+      await enqueueMediaPurge(row.key, 'deleted', tx);
       await audit(
         actor,
         { action: 'media.delete', entityType: 'media', entityId: id, summary: `Deleted ${row.filename}` },

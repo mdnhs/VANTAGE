@@ -8,6 +8,7 @@ import { actorOf, can, canAny } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { MAX_VIDEO_BYTES } from '@/server/lib/media/process';
+import { withUploadAdmission } from '@/server/lib/media/upload-admission';
 import { mediaLibraryService } from '@/server/services/media-library-service';
 import { mediaIdParamSchema, mediaListQuerySchema, mediaPatchSchema } from '@/validations/media-schema';
 
@@ -66,7 +67,7 @@ export const adminMedia = new Hono<AppEnv>()
     rateLimit(30, 60_000),
     uploadBodyLimit,
     async (c) => {
-      const item = await mediaLibraryService.upload(actorOf(c), await fileFrom(c));
+      const item = await withUploadAdmission(async () => mediaLibraryService.upload(actorOf(c), await fileFrom(c)));
       return ok(c, item, { status: 201 });
     },
   )
@@ -90,7 +91,8 @@ export const adminMedia = new Hono<AppEnv>()
     uploadBodyLimit,
     zValidator('param', mediaIdParamSchema),
     async (c) => {
-      const item = await mediaLibraryService.replace(actorOf(c), c.req.valid('param').id, await fileFrom(c));
+      const id = c.req.valid('param').id;
+      const item = await withUploadAdmission(async () => mediaLibraryService.replace(actorOf(c), id, await fileFrom(c)));
       return ok(c, item);
     },
   )
