@@ -2,9 +2,8 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { cldUrl } from '@/lib/cloudinary/url';
 import { parseGlobal } from '@/lib/content/globals';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
@@ -96,7 +95,7 @@ describe('StitchHeader from navigation defaults', () => {
   it('sizes a legacy Cloudinary logo exactly as the old cldUrl did', () => {
     const logo: PublicImage = {
       id: null,
-      src: cldUrl('vantage/logo'),
+      src: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/vantage/logo`,
       mimeType: null,
       width: null,
       height: null,
@@ -108,7 +107,7 @@ describe('StitchHeader from navigation defaults', () => {
       <StitchHeader navigation={parseGlobal('navigation', {})} phone='+353 1 234' businessName='Shop' logo={logo} />,
     );
     const img = screen.getAllByAltText('Shop')[0]!;
-    expect(decodeURIComponent(img.getAttribute('src') ?? '')).toContain(cldUrl('vantage/logo', { height: 240 }));
+    expect(decodeURIComponent(img.getAttribute('src') ?? '')).toContain(sizedSrc(logo, 'h_240'));
   });
 
   it('follows edited navigation', () => {
