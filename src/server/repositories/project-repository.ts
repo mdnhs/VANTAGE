@@ -90,7 +90,7 @@ export const projectRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateProjectInput) {
+  async create(data: CreateProjectInput & { createdBy?: string }) {
     const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
       const [inserted] = await tx.insert(projects).values(rest).returning();

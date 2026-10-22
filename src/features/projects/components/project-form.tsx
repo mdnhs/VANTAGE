@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -74,7 +75,7 @@ export interface ProjectFormSubmitInput {
   serviceCategory: string;
   description: string;
   completedAt: string | null;
-  isFeatured: boolean;
+  isFeatured?: boolean;
   beforeImageMediaId?: string;
   afterImageMediaId?: string;
   galleryMediaIds?: string[];
@@ -101,6 +102,8 @@ export function ProjectForm({
   submitLabel,
 }: ProjectFormProps) {
   const router = useRouter();
+  // Authors cannot feature or publish; the server refuses it too.
+  const authorOnly = useAuthorOnly();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
   const [imageError, setImageError] = useState<{ before?: string; after?: string }>({});
   // Gallery rows still on the old storage make the whole gallery read-only until the media migration.
@@ -142,7 +145,7 @@ export function ProjectForm({
       serviceCategory: form.serviceCategory,
       description: form.description,
       completedAt: form.completedAt || null,
-      isFeatured: form.isFeatured,
+      ...(authorOnly ? {} : { isFeatured: form.isFeatured }),
       // Untouched images are left out so the row keeps them (even legacy ones).
       ...(form.beforeImageMediaId ? { beforeImageMediaId: form.beforeImageMediaId } : {}),
       ...(form.afterImageMediaId ? { afterImageMediaId: form.afterImageMediaId } : {}),
@@ -218,14 +221,16 @@ export function ProjectForm({
               onChange={(e) => setField('completedAt', e.target.value)}
             />
           </div>
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isFeatured'
-              checked={form.isFeatured}
-              onCheckedChange={(checked) => setField('isFeatured', checked)}
-            />
-            <Label htmlFor='isFeatured'>Feature on homepage</Label>
-          </div>
+          {!authorOnly && (
+            <div className='flex items-center gap-3 pt-6'>
+              <Switch
+                id='isFeatured'
+                checked={form.isFeatured}
+                onCheckedChange={(checked) => setField('isFeatured', checked)}
+              />
+              <Label htmlFor='isFeatured'>Feature on homepage</Label>
+            </div>
+          )}
 
           <div className='flex flex-col gap-1.5'>
             <Label>Before</Label>

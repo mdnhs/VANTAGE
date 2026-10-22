@@ -5,7 +5,7 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { projectService } from '@/server/services/project-service';
 import {
@@ -53,7 +53,7 @@ export const projects = new Hono<AppEnv>()
     zValidator('json', createProjectSchema),
     async (c) => {
       const input = c.req.valid('json');
-      const row = await projectService.create(input);
+      const row = await projectService.create(input, actorOf(c));
       return ok(c, row, { status: 201 });
     },
   )
@@ -66,7 +66,7 @@ export const projects = new Hono<AppEnv>()
     zValidator('json', reorderProjectsSchema),
     async (c) => {
       const input = c.req.valid('json');
-      await projectService.reorder(input);
+      await projectService.reorder(input, actorOf(c));
       return ok(c, { success: true });
     },
   )
@@ -87,7 +87,7 @@ export const projects = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
-      const row = await projectService.updateStatus(id, input);
+      const row = await projectService.updateStatus(id, input, actorOf(c));
       if (!row) throw ApiError.notFound('Project not found');
       return ok(c, row);
     },
@@ -108,7 +108,7 @@ export const projects = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
-      const row = await projectService.update(id, input);
+      const row = await projectService.update(id, input, actorOf(c));
       if (!row) throw ApiError.notFound('Project not found');
       return ok(c, row);
     },

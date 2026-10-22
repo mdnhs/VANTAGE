@@ -40,5 +40,8 @@ export type ProjectStatus = (typeof PROJECT_STATUS_VALUES)[number];
 // The wire payload sent from the browser: JSON has no Date type, so `completedAt` travels
 // as a plain 'YYYY-MM-DD' string (or null) — the Hono route's `z.coerce.date()` on
 // createProjectSchema/updateProjectSchema turns it back into a Date server-side.
-export type ProjectCreatePayload = Omit<CreateProjectInput, 'completedAt'> & { completedAt?: string | null };
+export type ProjectCreatePayload = Omit<CreateProjectInput, 'completedAt' | 'isFeatured'> & {
+  isFeatured?: boolean;
+  completedAt?: string | null;
+};
 export type ProjectUpdatePayload = Omit<UpdateProjectInput, 'completedAt'> & { completedAt?: string | null };

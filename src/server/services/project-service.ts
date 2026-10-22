@@ -4,6 +4,9 @@ import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { assertMediaExists } from '@/server/lib/media/assert-media';
 import { prepareMediaWrite } from '@/server/lib/media/content-images';
+import { isAuthorOnly } from '@/lib/auth/content-access';
+import type { Actor } from '@/server/lib/auth/actor';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { projectRepository } from '@/server/repositories/project-repository';
 import type {
   CreateProjectInput,
@@ -49,6 +52,21 @@ async function listFeaturedCached() {
   return listFeaturedUncached();
 }
 
+// Authors write only their own drafts. Internal callers omit the actor and skip the check.
+// Returns false when the row does not exist (the route answers 404).
+async function guardExisting(
+  actor: Actor | undefined,
+  id: string,
+  action: 'update' | 'gallery',
+  patch?: Record<string, unknown>,
+) {
+  if (!actor || !isAuthorOnly(actor.roles)) return true;
+  const row = await projectRepository.byId(id);
+  if (!row) return false;
+  assertContentWrite(actor, { type: 'project', action, row, patch });
+  return true;
+}
+
 export const projectService = {
   listPublished: listPublishedCached,
   listFeatured: listFeaturedCached,
@@ -66,8 +84,17 @@ export const projectService = {
     return projectRepository.bySlug(slug);
   },
 
-  async create(data: CreateProjectInput) {
-    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+  async create(data: CreateProjectInput, actor?: Actor) {
+    if (actor) assertContentWrite(actor, { type: 'project', action: 'create' });
+    const authorOnly = actor ? isAuthorOnly(actor.roles) : false;
+    const input = await prepareMediaWrite(
+      {
+        ...data,
+        ...(authorOnly ? { status: 'draft' as const, isFeatured: false, displayOrder: undefined } : {}),
+        ...(actor ? { createdBy: actor.userId } : {}),
+      },
+      MEDIA_PAIRS,
+    );
     await assertMediaExists(input.galleryMediaIds ?? []);
     const row = await projectRepository.create(input);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
@@ -76,7 +103,10 @@ export const projectService = {
     return row;
   },
 
-  async update(id: string, data: UpdateProjectInput) {
+  async update(id: string, data: UpdateProjectInput, actor?: Actor) {
+    if (!(await guardExisting(actor, id, data.galleryMediaIds !== undefined ? 'gallery' : 'update', data))) {
+      return undefined;
+    }
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
     await assertMediaExists(input.galleryMediaIds ?? []);
     // A gallery that still has old-storage images is replaced only by the media migration.
@@ -97,7 +127,8 @@ export const projectService = {
     revalidateTag(detailTag(id), 'minutes');
   },
 
-  async updateStatus(id: string, data: ProjectStatusInput) {
+  async updateStatus(id: string, data: ProjectStatusInput, actor?: Actor) {
+    if (!(await guardExisting(actor, id, 'update', data))) return undefined;
     const row = await projectRepository.updateStatus(id, data.status);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -105,7 +136,10 @@ export const projectService = {
     return row;
   },
 
-  async reorder(data: ReorderProjectsInput) {
+  async reorder(data: ReorderProjectsInput, actor?: Actor) {
+    if (actor && isAuthorOnly(actor.roles)) {
+      throw ApiError.forbidden('Only an editor can publish, feature or reorder projects.');
+    }
     await projectRepository.reorder(data.ids);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');

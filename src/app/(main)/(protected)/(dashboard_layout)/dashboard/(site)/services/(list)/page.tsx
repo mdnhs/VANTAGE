@@ -1,3 +1,4 @@
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import { LINK_PRIMARY, PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
@@ -28,9 +29,11 @@ export default async function ServicesListPage() {
         title='Services page'
         description='Hero copy (changes go live as soon as you save) and the service blocks shown on the public services page.'
         actions={
-          <Link href={APP_ROUTES.content.services.create} className={LINK_PRIMARY}>
+          <HideForAuthorOnly>
+            <Link href={APP_ROUTES.content.services.create} className={LINK_PRIMARY}>
             Add service
           </Link>
+          </HideForAuthorOnly>
         }
       />
       <PageTabs

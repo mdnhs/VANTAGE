@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
@@ -21,11 +22,12 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function EnabledToggle({ service }: { service: Service }) {
+  const authorOnly = useAuthorOnly();
   const updateService = useUpdateService(service.id);
   return (
     <Switch
       checked={service.isEnabled}
-      disabled={updateService.isPending}
+      disabled={authorOnly || updateService.isPending}
       onCheckedChange={(checked) => updateService.mutate({ isEnabled: checked })}
       aria-label={`${service.isEnabled ? 'Disable' : 'Enable'} ${service.name}`}
     />
@@ -33,6 +35,7 @@ function EnabledToggle({ service }: { service: Service }) {
 }
 
 export function ServiceTable({ initialData }: ServiceTableProps) {
+  const authorOnly = useAuthorOnly();
   const { data } = useServiceList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteService = useDeleteService();
@@ -79,7 +82,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderServices.isPending}
+                    disabled={authorOnly || index === 0 || reorderServices.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -90,7 +93,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderServices.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderServices.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -106,19 +109,21 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
+                  {!authorOnly && (
+                    <Link
                     href={APP_ROUTES.content.services.edit(service.id)}
                     aria-label={`Edit ${service.name}`}
                     className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
                   >
                     <Pencil className='size-4' />
                   </Link>
+                  )}
                   <Button
                     type='button'
                     variant='ghost'
                     size='icon'
                     className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === service.id}
+                    disabled={authorOnly || pendingDeleteId === service.id}
                     onClick={() => {
                       if (window.confirm(`Delete "${service.name}"? This cannot be undone.`)) {
                         handleDelete(service.id);

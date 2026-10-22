@@ -5,7 +5,8 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
-import { can } from '@/server/middleware/auth';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 import {
@@ -46,6 +47,7 @@ export const partnerLogos = new Hono<AppEnv>()
     zValidator('json', createPartnerLogoSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'partner-logo', action: 'create' });
       const row = await partnerLogoService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -59,6 +61,7 @@ export const partnerLogos = new Hono<AppEnv>()
     zValidator('json', reorderPartnerLogosSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'partner-logo', action: 'reorder' });
       await partnerLogoService.reorder(input);
       return ok(c, { success: true });
     },
@@ -79,6 +82,7 @@ export const partnerLogos = new Hono<AppEnv>()
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'partner-logo', action: 'update' });
       const row = await partnerLogoService.update(id, input);
       if (!row) throw ApiError.notFound('Partner logo not found');
       return ok(c, row);

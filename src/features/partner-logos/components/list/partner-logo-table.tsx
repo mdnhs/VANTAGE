@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, ExternalLink, Pencil, Trash2 } from 'lucide-react';
@@ -22,11 +23,12 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
+  const authorOnly = useAuthorOnly();
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
   return (
     <Switch
       checked={partnerLogo.isEnabled}
-      disabled={updatePartnerLogo.isPending}
+      disabled={authorOnly || updatePartnerLogo.isPending}
       onCheckedChange={(checked) => updatePartnerLogo.mutate({ isEnabled: checked })}
       aria-label={`${partnerLogo.isEnabled ? 'Disable' : 'Enable'} ${partnerLogo.companyName}`}
     />
@@ -34,6 +36,7 @@ function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
 }
 
 export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
+  const authorOnly = useAuthorOnly();
   const { data } = usePartnerLogoList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deletePartnerLogo = useDeletePartnerLogo();
@@ -80,7 +83,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderPartnerLogos.isPending}
+                    disabled={authorOnly || index === 0 || reorderPartnerLogos.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -91,7 +94,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderPartnerLogos.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderPartnerLogos.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -132,19 +135,21 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
+                  {!authorOnly && (
+                    <Link
                     href={APP_ROUTES.content.partnerLogos.edit(partnerLogo.id)}
                     aria-label={`Edit ${partnerLogo.companyName}`}
                     className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
                   >
                     <Pencil className='size-4' />
                   </Link>
+                  )}
                   <Button
                     type='button'
                     variant='ghost'
                     size='icon'
                     className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === partnerLogo.id}
+                    disabled={authorOnly || pendingDeleteId === partnerLogo.id}
                     onClick={() => {
                       if (window.confirm(`Delete "${partnerLogo.companyName}"? This cannot be undone.`)) {
                         handleDelete(partnerLogo.id);
