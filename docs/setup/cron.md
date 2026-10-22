@@ -5,9 +5,9 @@
 `yarn jobs:retention` permanently deletes old enquiries according to Settings > Privacy. Only
 finished records are touched, aged from their last update (`updated_at`):
 
-- quotes with status `completed`, `cancelled` or `archived`, no invoice number and payment status
-  `unpaid`, older than `enquiryRetentionMonths` (default 24). A quote with any invoice or payment
-  data is never deleted;
+- quotes with status `completed`, `cancelled` or `archived`, no invoice number, payment status
+  `unpaid`, nothing paid (amount empty or 0) and no payment method, older than `enquiryRetentionMonths` (default 24). A quote with any invoice or payment
+  data (invoice number, payment status, amount paid, payment method) is never deleted;
 - contact messages with status `replied` or `archived`, older than `enquiryRetentionMonths`;
 - enquiries with status exactly `spam`, older than `spamRetentionDays` (default 30). Spam marking
   does not exist yet, so this matches nothing today.

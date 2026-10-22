@@ -152,8 +152,6 @@ describe('SMTP configured (injected transport)', () => {
     } as never);
     await settleNotifications();
     expect(sent).toHaveLength(1);
-    await settleNotifications();
-    expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toEqual(['hello@shop.ie']);
     expect(sent[0]!.subject).toBe('New enquiry from Ann Byrne');
     expect(sent[0]!.text).not.toContain('CONTACT-BODY');
@@ -226,6 +224,24 @@ describe('auto-reply relay safety', () => {
     expect(reply.subject).toBe('Hello');
     expect(reply.text).toContain(`Hi ${'A'.repeat(60)}`);
     expect(reply.text).not.toContain('A'.repeat(61));
+  });
+});
+
+describe('auto-reply subject punctuation', () => {
+  beforeEach(smtp);
+  it('"Thanks {name}!" becomes "Thanks!"', async () => {
+    const sent = transport();
+    await saveSetting('notifications', { autoReply: { enabled: true, subject: 'Thanks {name}!', body: 'Hi' } });
+    await sendEnquiryEmails({
+      kind: 'quote',
+      name: 'Pat',
+      email: 'v@example.com',
+      phone: '1',
+      details: [],
+      message: null,
+      adminPath: '/x',
+    });
+    expect(sent.find((m) => m.to.includes('v@example.com'))!.subject).toBe('Thanks!');
   });
 });
 

@@ -55,6 +55,8 @@ beforeEach(async () => {
     // survive: finished but carries invoice / payment data
     quote('qinvoiced', { status: 'completed', invoiceNumber: 'INV-1', ...old }),
     quote('qpaid', { status: 'completed', paymentStatus: 'paid_in_full', paidAmount: '500.00', ...old }),
+    quote('qamount', { status: 'completed', paidAmount: '50.00', ...old }),
+    quote('qmethod', { status: 'completed', paymentMethod: 'cash', ...old }),
     quote('qpartial', { status: 'archived', paymentStatus: 'partially_paid', ...old }),
     // deleted: finished, unbilled, old
     quote('qdone', { status: 'completed', photoUrls: [photo('a'), photo('b')], ...old }),
@@ -86,7 +88,7 @@ describe('runRetention', () => {
       contacts: { expired: 2, spam: 1 },
       photos: 3,
     });
-    expect((await names()).q).toHaveLength(13);
+    expect((await names()).q).toHaveLength(15);
     expect((await names()).c).toHaveLength(6);
     expect(await db.select().from(auditLogs)).toHaveLength(0);
   });
@@ -97,7 +99,19 @@ describe('runRetention', () => {
     const r = await runRetention({ now: NOW, deletePhotos });
     expect(r).toMatchObject({ quotes: dry.quotes, contacts: dry.contacts, photos: dry.photos });
     expect(await names()).toEqual({
-      q: ['qedge', 'qfresh', 'qinvoiced', 'qnew', 'qpaid', 'qpartial', 'qprogress', 'qsent', 'qspamnew'].sort(),
+      q: [
+        'qedge',
+        'qfresh',
+        'qamount',
+        'qinvoiced',
+        'qmethod',
+        'qnew',
+        'qpaid',
+        'qpartial',
+        'qprogress',
+        'qsent',
+        'qspamnew',
+      ].sort(),
       c: ['cfresh', 'cnew', 'cread'],
     });
     expect(deletePhotos).toHaveBeenCalledWith(expect.arrayContaining([photo('a'), photo('b'), photo('c')]));
@@ -147,5 +161,10 @@ describe('cloudinaryPublicId', () => {
     expect(cloudinaryPublicId(photo('a'))).toBe('vantage/quotes/a');
     expect(cloudinaryPublicId('https://evil.example/image/upload/v1/x.jpg')).toBeNull();
     expect(cloudinaryPublicId('not a url')).toBeNull();
+    const t = 'https://res.cloudinary.com/demo/image/upload/c_fill,w_100/e_blur:5/v12/vantage/quotes/a.jpg';
+    expect(cloudinaryPublicId(t)).toBe('vantage/quotes/a');
+    expect(cloudinaryPublicId('https://res.cloudinary.com/demo/image/upload/vantage/quotes/a.png')).toBe(
+      'vantage/quotes/a',
+    );
   });
 });

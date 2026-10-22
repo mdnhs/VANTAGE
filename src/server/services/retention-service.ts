@@ -11,7 +11,7 @@ import { settingsRepository } from '@/server/repositories/settings-repository';
 const DAY = 86_400_000;
 
 // Only rows the team has finished with, and that carry no money, are ever purged.
-// Quotes: finished status, no invoice number, still 'unpaid'. Contacts: replied or archived.
+// Quotes: finished status, no invoice number, 'unpaid', nothing paid, no payment method. Contacts: replied or archived.
 export const TERMINAL_QUOTE_STATUSES = ['completed', 'cancelled', 'archived'] as const;
 export const TERMINAL_CONTACT_STATUSES = ['replied', 'archived'] as const;
 // No spam marking exists yet, so nothing matches today; the window applies once rows can carry it.
@@ -37,7 +37,7 @@ export const cloudinaryPublicId = (url: string): string | null => {
   try {
     const u = new URL(url);
     if (u.hostname !== 'res.cloudinary.com') return null;
-    const m = /\/upload\/(?:v\d+\/)?(.+)$/.exec(u.pathname);
+    const m = /\/upload\/(?:[^/]+\/)*?(?:v\d+\/)(.+)$/.exec(u.pathname) ?? /\/upload\/(.+)$/.exec(u.pathname);
     if (!m) return null;
     return decodeURIComponent(m[1]!).replace(/\.[A-Za-z0-9]+$/, '');
   } catch {
@@ -54,7 +54,9 @@ export async function deleteCloudinaryPhotos(urls: string[]): Promise<void> {
   try {
     const { destroyAsset } = await import('@/lib/cloudinary/server');
     const results = await Promise.allSettled(ids.map((id) => destroyAsset(id)));
-    const failed = results.filter((r) => r.status === 'rejected').length;
+    const failed = results.filter(
+      (r) => r.status === 'rejected' || !['ok', 'not found'].includes(String(r.value?.result)),
+    ).length;
     if (failed > 0) console.error(`[retention] ${failed} of ${ids.length} photos could not be deleted`);
   } catch {
     console.error('[retention] photo deletion skipped: Cloudinary unavailable');
@@ -81,8 +83,11 @@ export async function runRetention({
   const quoteSpam: SQL = and(eq(quoteRequests.status, SPAM_STATUS), lt(quoteRequests.updatedAt, spamBefore))!;
   const quoteExpired: SQL = and(
     inArray(quoteRequests.status, [...TERMINAL_QUOTE_STATUSES]),
+    // Every billing column must be empty: invoice, payment status, amount paid, payment method.
     isNull(quoteRequests.invoiceNumber),
     eq(quoteRequests.paymentStatus, 'unpaid'),
+    or(isNull(quoteRequests.paidAmount), eq(quoteRequests.paidAmount, '0'))!,
+    isNull(quoteRequests.paymentMethod),
     lt(quoteRequests.updatedAt, enquiryBefore),
   )!;
   const contactSpam: SQL = and(eq(contactMessages.status, SPAM_STATUS), lt(contactMessages.updatedAt, spamBefore))!;

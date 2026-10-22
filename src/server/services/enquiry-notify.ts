@@ -68,7 +68,7 @@ export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome
     // Never the enquiry text: the customer's own message is not echoed back.
     // Customer text never reaches the subject (the form lets anyone type any address), and the
     // greeting name is trimmed and capped; renderEmail escapes it.
-    const subject = headerText(reply.subject.replaceAll('{name}', '').replace(/\s+/g, ' '));
+    const subject = headerText(reply.subject.replaceAll('{name}', '').replace(/\s+([!?.,:;])/g, '$1'));
     const greeting = headerText(enquiry.name).slice(0, 60);
     const paragraphs = fillName(reply.body, greeting)
       .split(/\n{2,}/)

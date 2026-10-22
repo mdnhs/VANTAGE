@@ -77,7 +77,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     enquiryRetentionMonths: {
       label: 'Keep enquiries for (months)',
       description:
-        'Only finished enquiries are deleted, counted from their last update: completed, cancelled or archived quotes with no invoice or payment, and replied or archived contact messages. New and in-progress enquiries are never deleted.',
+        'Only finished enquiries are deleted, counted from their last update: completed, cancelled or archived quotes with no billing data (no invoice number, status unpaid, nothing paid, no payment method), and replied or archived contact messages. New and in-progress enquiries are never deleted.',
     },
     spamRetentionDays: {
       label: 'Keep spam for (days)',
