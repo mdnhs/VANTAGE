@@ -52,18 +52,16 @@ export function StandardsSection({ eyebrow, title, image, items }: StandardsSect
               return (
                 <article
                   key={`${item.title}-${index}`}
-                  className='group flex gap-5 rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-6 transition-colors duration-300 hover:border-[#dc2626]/60'
+                  className='group flex gap-5 rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-6 transition-colors duration-300 hover:border-brand/60'
                 >
                   <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-white transition-transform duration-300 group-hover:scale-105'>
                     <Icon aria-hidden className='size-6 text-[#111113]' />
                   </div>
                   <div className='flex flex-col gap-2'>
-                    <h3 className='font-[family-name:var(--font-manrope)] text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                    <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
                       {item.title}
                     </h3>
-                    <p className='font-[family-name:var(--font-inter)] text-sm leading-[22px] text-[#b5b5b5]'>
-                      {item.description}
-                    </p>
+                    <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{item.description}</p>
                   </div>
                 </article>
               );

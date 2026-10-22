@@ -40,11 +40,11 @@ export function HeritageSection({ title, text, stat1, stat2, image, quote }: Her
           <dl className='grid grid-cols-2 gap-4'>
             {[stat1, stat2].map((stat, index) => (
               <div key={index} className={`${CARD} flex flex-col-reverse justify-end gap-2 p-5 sm:p-6`}>
-                <dt className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.88px] text-[#a1a1a1] uppercase'>
+                <dt className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-[#a1a1a1] uppercase'>
                   {stat.label}
                 </dt>
                 <dd
-                  className={`font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] sm:text-[40px] sm:leading-[46px] ${index === 0 ? 'text-[#dc2626]' : 'text-white'}`}
+                  className={`font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] sm:text-[40px] sm:leading-[46px] ${index === 0 ? 'text-brand' : 'text-white'}`}
                 >
                   {stat.value}
                 </dd>
@@ -66,9 +66,9 @@ export function HeritageSection({ title, text, stat1, stat2, image, quote }: Her
 
           <figure className='relative mx-3 -mt-10 flex flex-col gap-4 rounded-2xl border border-[#2a2a30] bg-[#1b1b20]/90 p-6 backdrop-blur-md sm:mx-8 sm:-mt-16 sm:p-7'>
             <span className='flex size-11 items-center justify-center rounded-xl bg-white'>
-              <Quote aria-hidden className='size-5 fill-[#dc2626] text-[#dc2626]' />
+              <Quote aria-hidden className='size-5 fill-brand text-brand' />
             </span>
-            <blockquote className='font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#c6c6c6] italic'>
+            <blockquote className='font-site-body text-base leading-[26px] text-[#c6c6c6] italic'>
               &ldquo;{quote}&rdquo;
             </blockquote>
           </figure>

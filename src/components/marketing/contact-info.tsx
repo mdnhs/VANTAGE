@@ -6,15 +6,14 @@ import { BODY_TEXT, CARD, SectionHeader } from '@/components/marketing/ui/landin
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
-const LABEL =
-  'font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
+const LABEL = 'font-site-body text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
 
 // Card with the homepage services icon tile (white chip, dark glyph) — no Figma glyph exists
 // for these, so lucide icons sit in the same treatment.
 function InfoCard({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
   return (
     <article
-      className={`${CARD} group flex items-start gap-5 p-6 transition-colors duration-300 hover:border-[#dc2626]/60`}
+      className={`${CARD} group flex items-start gap-5 p-6 transition-colors duration-300 hover:border-brand/60`}
     >
       <span className='flex shrink-0 items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
         <Icon aria-hidden className='size-6 text-[#111113]' strokeWidth={1.75} />
@@ -46,7 +45,7 @@ export async function ContactInfo() {
         <InfoCard icon={Phone} label={copy.directLine}>
           <Link
             href={`tel:${settings.phone.replace(/\s+/g, '')}`}
-            className='w-fit max-w-full truncate rounded-sm font-[family-name:var(--font-manrope)] text-[22px] leading-[30px] font-extrabold tracking-[-0.44px] text-white transition-colors hover:text-[#dc2626] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none'
+            className='w-fit max-w-full truncate rounded-sm font-site-heading text-[22px] leading-[30px] font-extrabold tracking-[-0.44px] text-white transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
           >
             {settings.phone}
           </Link>
@@ -59,7 +58,7 @@ export async function ContactInfo() {
                 className='inline-flex w-fit items-center gap-2 rounded-full border border-[#2a2a30] bg-[#16161a] px-4 py-2 transition-colors hover:border-[#25d366]/60 hover:bg-[#25d366]/10 focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:outline-none'
               >
                 <Image src='/assets/marketing/icon-whatsapp.svg' alt='' width={16} height={16} className='size-4' />
-                <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.66px] text-[#d4d4d4] uppercase'>
+                <span className='font-site-body text-[11px] leading-normal tracking-[0.66px] text-[#d4d4d4] uppercase'>
                   {copy.whatsapp}
                 </span>
               </Link>
@@ -70,7 +69,7 @@ export async function ContactInfo() {
         <InfoCard icon={Mail} label={copy.email}>
           <Link
             href={`mailto:${settings.email}`}
-            className={`${BODY_TEXT} w-fit max-w-full rounded-sm break-all transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none`}
+            className={`${BODY_TEXT} w-fit max-w-full rounded-sm break-all transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none`}
           >
             {settings.email}
           </Link>

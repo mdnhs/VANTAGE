@@ -40,23 +40,21 @@ export function CoordinationSection({ title, subtext, features }: CoordinationSe
             return (
               <article
                 key={`${feature.title}-${index}`}
-                className={`group flex flex-col justify-between gap-10 p-7 transition-colors duration-300 hover:border-[#dc2626]/60 sm:p-8 ${CARD}`}
+                className={`group flex flex-col justify-between gap-10 p-7 transition-colors duration-300 hover:border-brand/60 sm:p-8 ${CARD}`}
               >
                 <div className='flex items-center justify-between'>
                   <div className='flex items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
                     <Icon className='size-6 text-[#111113]' aria-hidden />
                   </div>
-                  <span className='font-[family-name:var(--font-inter)] text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
+                  <span className='font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
                     {pad(index + 1)}
                   </span>
                 </div>
                 <div className='flex flex-col gap-3'>
-                  <h3 className='font-[family-name:var(--font-manrope)] text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                  <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
                     {feature.title}
                   </h3>
-                  <p className='font-[family-name:var(--font-inter)] text-sm leading-[22px] text-[#b5b5b5]'>
-                    {feature.description}
-                  </p>
+                  <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{feature.description}</p>
                 </div>
               </article>
             );

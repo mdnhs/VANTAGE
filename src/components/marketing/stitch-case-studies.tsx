@@ -43,15 +43,15 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
             <span className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#232323] py-[7px] pr-4 pl-3.5'>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={DOT_ICON} alt='' width={6} height={6} className='block size-1.5' />
-              <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
+              <span className='font-site-body text-[11px] leading-normal tracking-[0.44px] text-[#c6c6c6] uppercase'>
                 Verified Results
               </span>
             </span>
-            <h2 className='max-w-[560px] font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
-              BEFORE &amp; AFTER <span className='text-[#dc2626]'>RESTORATION PROOF.</span>
+            <h2 className='max-w-[560px] font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+              BEFORE &amp; AFTER <span className='text-brand'>RESTORATION PROOF.</span>
             </h2>
           </div>
-          <p className='max-w-[440px] font-[family-name:var(--font-inter)] text-base leading-[26px] text-[#b5b5b5]'>
+          <p className='max-w-[440px] font-site-body text-base leading-[26px] text-[#b5b5b5]'>
             Zero flaws, undetectable colour transitions and exact factory panel gaps, inspected under 2,000-lumen
             lighting.
           </p>
@@ -66,7 +66,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
             return (
               <article
                 key={project.id}
-                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-[#dc2626]/50'
+                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'
               >
                 {/* Photo with Before/After toggle */}
                 <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
@@ -85,7 +85,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                     type='button'
                     onClick={() => toggleView(project.id)}
                     aria-label={currentMode === 'after' ? 'Show before photo' : 'Show after photo'}
-                    className='absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-[7px] font-[family-name:var(--font-inter)] text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-[#dc2626] focus-visible:border-[#dc2626] focus-visible:outline-none'
+                    className='absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-[7px] font-site-body text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none'
                   >
                     <span
                       className={`tracking-[0.6px] ${currentMode === 'before' ? 'font-medium text-white' : 'text-[#737373]'}`}
@@ -101,7 +101,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                   </button>
 
                   <div
-                    className={`absolute right-3.5 bottom-4 flex items-center rounded-md border px-2.5 py-1.5 font-[family-name:var(--font-inter)] text-[10px] leading-normal tracking-[0.6px] whitespace-nowrap ${
+                    className={`absolute right-3.5 bottom-4 flex items-center rounded-md border px-2.5 py-1.5 font-site-body text-[10px] leading-normal tracking-[0.6px] whitespace-nowrap ${
                       currentMode === 'after'
                         ? 'border-[rgba(0,212,146,0.4)] bg-[rgba(0,212,146,0.16)] text-[#00d492]'
                         : 'border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.16)] text-[#f59e0b]'
@@ -114,18 +114,16 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                 {/* Body */}
                 <div className='flex flex-1 flex-col justify-between gap-5 p-6'>
                   <div className='flex flex-col items-start gap-2.5'>
-                    <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal tracking-[0.88px] text-[#b5b5b5] uppercase'>
+                    <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-[#b5b5b5] uppercase'>
                       {project.serviceCategory}
                     </span>
-                    <h3 className='font-[family-name:var(--font-manrope)] text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
+                    <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
                       {project.title}
                     </h3>
-                    <p className='font-[family-name:var(--font-inter)] text-sm leading-[22px] text-[#b5b5b5]'>
-                      {project.description}
-                    </p>
+                    <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{project.description}</p>
                   </div>
 
-                  <dl className='flex flex-col gap-2 border-t border-[#2a2a30] pt-4 font-[family-name:var(--font-inter)] leading-normal'>
+                  <dl className='flex flex-col gap-2 border-t border-[#2a2a30] pt-4 font-site-body leading-normal'>
                     <div className='flex items-center justify-between gap-4'>
                       <dt className='text-[10px] tracking-[0.6px] text-[#999]'>VEHICLE</dt>
                       <dd className='text-right text-[13px] font-medium text-white'>{project.vehicleModel}</dd>
@@ -147,7 +145,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
         <div className='flex justify-center'>
           <Link
             href='/our-work'
-            className='flex items-center gap-2.5 rounded-lg bg-[#dc2626] py-4 pr-[22px] pl-6 font-[family-name:var(--font-inter)] text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgba(220,38,38,0.35)] transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+            className='flex items-center gap-2.5 rounded-lg bg-brand py-4 pr-[22px] pl-6 font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
           >
             View all case studies
             <span className='relative size-6 shrink-0 overflow-hidden'>

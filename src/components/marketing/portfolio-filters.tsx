@@ -26,10 +26,10 @@ export function PortfolioFilters({ filters = DEFAULT_FILTERS, active = ALL_FILTE
             type='button'
             aria-pressed={isActive}
             onClick={() => onChange?.(filter)}
-            className={`shrink-0 rounded-full border px-4 py-2.5 font-[family-name:var(--font-inter)] text-[11px] leading-normal font-semibold tracking-[0.88px] whitespace-nowrap uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16161a] focus-visible:outline-none ${
+            className={`shrink-0 rounded-full border px-4 py-2.5 font-site-body text-[11px] leading-normal font-semibold tracking-[0.88px] whitespace-nowrap uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16161a] focus-visible:outline-none ${
               isActive
-                ? 'border-[#dc2626] bg-[#dc2626] text-white shadow-[0_8px_14px_rgba(220,38,38,0.25)]'
-                : 'border-[#2a2a30] bg-[#1b1b20] text-[#b5b5b5] hover:border-[#dc2626]/60 hover:text-white'
+                ? 'border-brand bg-brand text-white shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.25)]'
+                : 'border-[#2a2a30] bg-[#1b1b20] text-[#b5b5b5] hover:border-brand/60 hover:text-white'
             }`}
           >
             {filter}

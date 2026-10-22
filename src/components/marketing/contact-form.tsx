@@ -22,7 +22,7 @@ const ICONS = {
 // Field classes copied from the homepage quote form so both forms read identically.
 const FIELD_LABEL = 'block text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-[#dc2626] focus:outline-none';
+  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-brand focus:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -190,7 +190,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
             <FigmaIcon src={ICONS.check} size={28} inset='27.08% 20.83%' bleed='-10.23% -8.04%' />
           </span>
-          <h3 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+          <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
             {copy.success.title}
           </h3>
           <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
@@ -199,7 +199,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           <button
             type='button'
             onClick={handleReset}
-            className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dc2626]'
+            className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
           >
             {copy.sendAnother}
           </button>
@@ -211,7 +211,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className={panel}>
       <div className='flex flex-col gap-2'>
-        <h3 className='font-[family-name:var(--font-manrope)] text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+        <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
           {copy.title}
         </h3>
         <p className='text-[14px] leading-[22px] text-[#a1a1a1]'>{copy.intro}</p>
@@ -220,9 +220,9 @@ export function ContactForm({ services, copy }: ContactFormProps) {
       {errorMessage && (
         <div
           role='alert'
-          className='flex items-center gap-2 rounded-[12px] border border-[#dc2626]/40 bg-[#dc2626]/10 px-4 py-3 text-[13px] text-[#fca5a5]'
+          className='flex items-center gap-2 rounded-[12px] border border-brand/40 bg-brand/10 px-4 py-3 text-[13px] text-brand-soft'
         >
-          <AlertCircle aria-hidden className='size-4 shrink-0 text-[#dc2626]' />
+          <AlertCircle aria-hidden className='size-4 shrink-0 text-brand' />
           <span>{errorMessage}</span>
         </div>
       )}
@@ -294,8 +294,8 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed px-[20px] py-[28px] text-center transition-colors focus-within:border-[#dc2626] hover:border-[#dc2626]/70 hover:bg-[#1a1a1d] ${
-            isDragging ? 'border-[#dc2626] bg-[#1a1a1d]' : 'border-[#454545]'
+          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed px-[20px] py-[28px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#1a1a1d] ${
+            isDragging ? 'border-brand bg-[#1a1a1d]' : 'border-[#454545]'
           }`}
         >
           <input
@@ -325,7 +325,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
                   type='button'
                   aria-label={`Remove ${file.name}`}
                   onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
-                  className='flex size-5 items-center justify-center rounded-full text-[#a1a1a1] transition-colors hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-[#dc2626]'
+                  className='flex size-5 items-center justify-center rounded-full text-[#a1a1a1] transition-colors hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-brand'
                 >
                   <X aria-hidden className='size-3' />
                 </button>
@@ -340,7 +340,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         <button
           type='submit'
           disabled={isSubmitting}
-          className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-[#dc2626] py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgba(220,38,38,0.35)] transition-colors hover:bg-[#b91c1c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+          className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
         >
           {isSubmitting ? (
             <Loader2 aria-hidden className='size-[18px] animate-spin text-white' />

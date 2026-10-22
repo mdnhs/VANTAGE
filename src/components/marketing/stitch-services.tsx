@@ -270,15 +270,15 @@ export function StitchServices({
           <div className='flex flex-col items-start gap-5'>
             <span className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#1b1b20] py-[7px] pr-4 pl-3.5'>
               <img src={DOT_SRC} alt='' width={6} height={6} className='size-1.5 shrink-0' />
-              <span className='font-[family-name:var(--font-inter)] text-[11px] leading-normal font-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
+              <span className='font-site-body text-[11px] leading-normal font-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
                 {displayEyebrow}
               </span>
             </span>
-            <h2 className='max-w-[474px] font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
-              {displayLine1} <span className='text-[#dc2626]'>{displayAccent}</span>
+            <h2 className='max-w-[474px] font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+              {displayLine1} <span className='text-brand'>{displayAccent}</span>
             </h2>
           </div>
-          <p className='max-w-[440px] font-[family-name:var(--font-inter)] text-base leading-[26px] font-normal text-[#b5b5b5]'>
+          <p className='max-w-[440px] font-site-body text-base leading-[26px] font-normal text-[#b5b5b5]'>
             {displaySubtext}
           </p>
         </div>
@@ -296,7 +296,7 @@ export function StitchServices({
             {cards.map((card) => (
               <article
                 key={card.key}
-                className='group flex min-h-[351px] w-[85%] shrink-0 snap-start flex-col justify-between rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-7 transition-colors duration-300 hover:border-[#dc2626]/60 sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-60px)/4)]'
+                className='group flex min-h-[351px] w-[85%] shrink-0 snap-start flex-col justify-between rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-7 transition-colors duration-300 hover:border-brand/60 sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-60px)/4)]'
               >
                 <div className='flex flex-col items-start gap-5 pb-6'>
                   <div className='flex w-full items-center justify-between'>
@@ -320,26 +320,24 @@ export function StitchServices({
                       )}
                     </div>
                     {card.badge && (
-                      <span className='rounded-full border border-[#2a2a30] px-2.5 py-1 font-[family-name:var(--font-inter)] text-[10px] leading-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
+                      <span className='rounded-full border border-[#2a2a30] px-2.5 py-1 font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
                         {card.badge}
                       </span>
                     )}
                   </div>
-                  <h3 className='font-[family-name:var(--font-manrope)] text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                  <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
                     {card.name}
                   </h3>
-                  <p className='font-[family-name:var(--font-inter)] text-sm leading-[22px] font-normal text-[#b5b5b5]'>
-                    {card.description}
-                  </p>
+                  <p className='font-site-body text-sm leading-[22px] font-normal text-[#b5b5b5]'>{card.description}</p>
                 </div>
 
                 <div className='flex items-center justify-between gap-3 border-t border-[#2a2a30] pt-4'>
-                  <span className='font-[family-name:var(--font-inter)] text-[10px] leading-normal font-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
+                  <span className='font-site-body text-[10px] leading-normal font-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
                     {card.footnote}
                   </span>
                   <a
                     href='#estimator'
-                    className='flex shrink-0 items-center gap-0.5 rounded font-[family-name:var(--font-inter)] text-xs leading-normal font-semibold text-[#dc2626] transition-colors hover:text-[#f0605f] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none'
+                    className='flex shrink-0 items-center gap-0.5 rounded font-site-body text-xs leading-normal font-semibold text-brand transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
                   >
                     Quote
                     <span className='relative block size-6 shrink-0 overflow-hidden transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5'>
@@ -358,13 +356,13 @@ export function StitchServices({
             <div className='flex items-center gap-5'>
               <p
                 aria-live='polite'
-                className='font-[family-name:var(--font-inter)] text-xs leading-normal font-medium tracking-[0.96px] whitespace-nowrap text-[#b5b5b5]'
+                className='font-site-body text-xs leading-normal font-medium tracking-[0.96px] whitespace-nowrap text-[#b5b5b5]'
               >
                 {pad(page)} / {pad(pageCount)}
               </p>
               <div className='relative h-0.5 w-[120px] overflow-hidden bg-[#2a2a30] sm:w-40'>
                 <div
-                  className='absolute top-0 left-0 h-0.5 bg-linear-to-r from-[#dc2626] via-[#f0605f] via-60% to-[#ffd9d9] transition-[width] duration-300'
+                  className='absolute top-0 left-0 h-0.5 bg-linear-to-r from-brand via-brand-mid via-60% to-brand-pale transition-[width] duration-300'
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -375,7 +373,7 @@ export function StitchServices({
                 onClick={() => scrollByPage(-1)}
                 disabled={atStart}
                 aria-label='Previous services'
-                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-[#dc2626] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
                 <span className='relative block size-6 rotate-180 overflow-hidden'>
                   <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>
@@ -388,7 +386,7 @@ export function StitchServices({
                 onClick={() => scrollByPage(1)}
                 disabled={atEnd}
                 aria-label='Next services'
-                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-[#dc2626] focus-visible:ring-2 focus-visible:ring-[#dc2626] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
                 <span className='relative block size-6 overflow-hidden'>
                   <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>

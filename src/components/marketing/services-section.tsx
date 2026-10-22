@@ -23,13 +23,13 @@ export function ServicesSection({ services }: ServicesSectionProps) {
       <div className='intersect-once flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end sm:gap-8 intersect:motion-preset-slide-up-sm'>
         <div className='flex max-w-[672px] flex-col gap-4'>
           <div className='flex items-center gap-4'>
-            <span className='h-px w-8 bg-red-500/50' />
-            <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>Core Capabilities</span>
+            <span className='h-px w-8 bg-brand/50' />
+            <span className='text-xs font-semibold tracking-[1.2px] text-brand uppercase'>Core Capabilities</span>
           </div>
-          <h2 className='xs:text-3xl font-[family-name:var(--font-manrope)] text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+          <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
             Engineered To
             <br />
-            <span className='text-[#dc2626]'>Perfection.</span>
+            <span className='text-brand'>Perfection.</span>
           </h2>
         </div>
 
@@ -46,7 +46,7 @@ export function ServicesSection({ services }: ServicesSectionProps) {
         {services.map((service, index) => (
           <div
             key={service.id}
-            className={`group intersect-once relative flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-red-500/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
+            className={`group intersect-once relative flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-brand/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
           >
             <div className='flex size-12 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop'>
               <Image
@@ -59,15 +59,13 @@ export function ServicesSection({ services }: ServicesSectionProps) {
             </div>
 
             <div className='flex flex-1 flex-col justify-end gap-2 pt-3'>
-              <h3 className='font-[family-name:var(--font-manrope)] text-2xl leading-8 font-semibold text-[#e5e2e1]'>
-                {service.name}
-              </h3>
+              <h3 className='font-site-heading text-2xl leading-8 font-semibold text-[#e5e2e1]'>{service.name}</h3>
               <p className='text-base leading-6 text-neutral-400'>{service.description}</p>
             </div>
 
             <Link
               href='#services'
-              className='flex items-center gap-2 pt-2 text-xs font-semibold tracking-[1.2px] text-red-500 uppercase opacity-0 group-hover:motion-preset-slide-up-sm group-hover:opacity-100'
+              className='flex items-center gap-2 pt-2 text-xs font-semibold tracking-[1.2px] text-brand uppercase opacity-0 group-hover:motion-preset-slide-up-sm group-hover:opacity-100'
             >
               Learn More
               <Image

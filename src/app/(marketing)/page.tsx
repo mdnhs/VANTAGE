@@ -48,7 +48,7 @@ export default async function Home() {
   ];
 
   return (
-    <div className='flex min-h-screen flex-col bg-[#111113] text-[#e5e2e1] antialiased selection:bg-[#dc2626] selection:text-white'>
+    <div className='flex min-h-screen flex-col bg-[#111113] text-[#e5e2e1] antialiased selection:bg-brand selection:text-white'>
       <main className='grow'>
         <StitchHero
           heroVideoEnabled={settings.heroVideoEnabled}

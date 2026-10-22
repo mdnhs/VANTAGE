@@ -26,9 +26,9 @@ export function InsuranceCta({ line1, accent, subtext }: InsuranceCtaProps) {
         <div className='flex flex-col gap-10 rounded-[20px] border border-[#2a2a30] bg-[#1b1b20] p-7 sm:p-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16 lg:p-14'>
           <div className='flex max-w-[640px] flex-col items-start gap-5'>
             <Eyebrow>Claims Specialists</Eyebrow>
-            <h2 className='font-[family-name:var(--font-manrope)] text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <h2 className='font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               <span className='block'>{line1}</span>
-              <span className='block text-[#dc2626]'>{accent}</span>
+              <span className='block text-brand'>{accent}</span>
             </h2>
             <p className={`max-w-[520px] ${BODY_TEXT}`}>{subtext}</p>
           </div>

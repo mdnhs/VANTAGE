@@ -66,8 +66,8 @@ export function StitchCta({ phone }: { phone: string }) {
           </div>
 
           {/* Heading */}
-          <h2 className='relative w-full max-w-[820px] text-center font-[family-name:var(--font-manrope)] text-[30px] leading-[36px] font-extrabold tracking-[-0.75px] text-white sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
-            READY TO RESTORE YOUR VEHICLE TO <span className='text-[#dc2626]'>FLAWLESS STANDARD?</span>
+          <h2 className='relative w-full max-w-[820px] text-center font-site-heading text-[30px] leading-[36px] font-extrabold tracking-[-0.75px] text-white sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
+            READY TO RESTORE YOUR VEHICLE TO <span className='text-brand'>FLAWLESS STANDARD?</span>
           </h2>
 
           {/* Body */}
@@ -80,7 +80,7 @@ export function StitchCta({ phone }: { phone: string }) {
           <div className='relative flex w-full flex-col items-stretch gap-[12px] sm:w-auto sm:flex-row sm:items-center'>
             <Link
               href='/#estimator'
-              className='flex items-center justify-center gap-[10px] rounded-[8px] bg-[#dc2626] py-[16px] pr-[22px] pl-[24px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgba(219,38,38,0.35)] transition-colors hover:bg-[#b91c1c] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+              className='flex items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
             >
               <span>Get free quote online</span>
               <span className='relative block size-[24px] shrink-0 overflow-clip'>
