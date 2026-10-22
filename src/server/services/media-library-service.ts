@@ -135,7 +135,7 @@ export const mediaLibraryService = {
 
   // Phase 5 fills this with real references.
   async usageOf(id: string): Promise<never[]> {
-    await this.get(id);
+    await mediaLibraryService.get(id);
     return [];
   },
 };

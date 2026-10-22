@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { and, count, desc, eq, ilike, isNull, like, or, type SQL } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { media } from '@/server/db/schema';

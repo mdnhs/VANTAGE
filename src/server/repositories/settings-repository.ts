@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { settings } from '@/server/db/schema';
@@ -56,8 +58,8 @@ export const settingsRepository = {
     if (!revision || revision.entityType !== 'setting' || revision.entityId !== key) {
       throw ApiError.notFound("That version doesn't exist");
     }
-    const current = await this.get(key);
-    return this.save(
+    const current = await settingsRepository.get(key);
+    return settingsRepository.save(
       key,
       { version: current?.version ?? 0, value: revision.snapshot },
       actorId,

@@ -65,6 +65,17 @@ describe('mailer with SMTP', () => {
     spy.mockRestore();
   });
 
+  it('caps the returned error at 300 chars, matching the log', async () => {
+    configure();
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    resetMailerForTests({ sendMail: () => Promise.reject(new Error('x'.repeat(1000))) } as never);
+    const res = await sendMail(msg);
+    expect(res.delivered === false && res.error).toHaveLength(300);
+    spy.mockRestore();
+    resetMailerForTests({ verify: () => Promise.reject(new Error('y'.repeat(1000))) } as never);
+    expect((await verifySmtp()).error).toHaveLength(300);
+  });
+
   it('verifySmtp reports transport errors', async () => {
     configure();
     resetMailerForTests({

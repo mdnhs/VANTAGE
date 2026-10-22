@@ -1,3 +1,5 @@
+import 'server-only';
+
 import nodemailer, { type Transporter } from 'nodemailer';
 
 import { serverEnv } from '@/lib/env';
@@ -60,8 +62,6 @@ const describeError = (error: unknown): string => {
   return 'unknown error';
 };
 
-const messageOnly = (error: unknown): string => (error instanceof Error ? error.message : 'unknown error');
-
 export const sendMail = async (msg: MailMessage): Promise<SendResult> => {
   try {
     const env = readEnv();
@@ -78,12 +78,9 @@ export const sendMail = async (msg: MailMessage): Promise<SendResult> => {
     });
     return { delivered: true, messageId: String(info.messageId) };
   } catch (error) {
-    console.error('[mailer] send failed:', describeError(error));
-    return {
-      delivered: false,
-      reason: 'send_failed',
-      error: messageOnly(error),
-    };
+    const message = describeError(error);
+    console.error('[mailer] send failed:', message);
+    return { delivered: false, reason: 'send_failed', error: message };
   }
 };
 
@@ -96,7 +93,7 @@ export const verifySmtp = async (): Promise<{ ok: boolean; error?: string }> => 
     await getTransporter().verify();
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: messageOnly(error) };
+    return { ok: false, error: describeError(error) };
   }
 };
 
