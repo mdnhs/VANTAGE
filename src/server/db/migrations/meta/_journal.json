@@ -183,6 +183,13 @@
       "when": 1792667596529,
       "tag": "0025_ai_conversations",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792669251755,
+      "tag": "0026_consent_events",
+      "breakpoints": true
     }
   ]
 }
