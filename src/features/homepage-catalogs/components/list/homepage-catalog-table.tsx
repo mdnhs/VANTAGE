@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -37,6 +38,7 @@ function EnabledToggle({ item }: { item: HomepageCatalog }) {
 
 export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useHomepageCatalogList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageCatalog = useDeleteHomepageCatalog();
@@ -141,28 +143,30 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
-                    aria-label={`Edit ${item.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
+                      aria-label={`Edit ${item.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === item.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
-                        handleDelete(item.id);
-                      }
-                    }}
-                    aria-label={`Delete ${item.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === item.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
+                          handleDelete(item.id);
+                        }
+                      }}
+                      aria-label={`Delete ${item.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -15,8 +15,8 @@ export function ProcessPanel({ initialData }: { initialData: { data: HomepagePro
         </p>
         <HideForAuthorOnly>
           <Link href={APP_ROUTES.content.homepageProcessSteps.create} className={cn(buttonVariants())}>
-          Add step
-        </Link>
+            Add step
+          </Link>
         </HideForAuthorOnly>
       </div>
       <HomepageProcessStepTable initialData={initialData} />

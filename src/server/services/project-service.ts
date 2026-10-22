@@ -52,19 +52,25 @@ async function listFeaturedCached() {
   return listFeaturedUncached();
 }
 
-// Authors write only their own drafts. Internal callers omit the actor and skip the check.
-// Returns false when the row does not exist (the route answers 404).
+// Internal callers (seeds, scripts, tests) pass this marker instead of a user: no ownership rules apply.
+export const SYSTEM_ACTOR = 'system' as const;
+type WriteActor = Actor | typeof SYSTEM_ACTOR;
+
+const authorOnlyActor = (actor: WriteActor): actor is Actor => actor !== SYSTEM_ACTOR && isAuthorOnly(actor.roles);
+
+// Authors write only their own drafts. Returns 'missing' when the row does not exist (the route
+// answers 404), or the repository guard that pins the write itself to the author's own draft.
 async function guardExisting(
-  actor: Actor | undefined,
+  actor: WriteActor,
   id: string,
   action: 'update' | 'gallery',
   patch?: Record<string, unknown>,
-) {
-  if (!actor || !isAuthorOnly(actor.roles)) return true;
+): Promise<'missing' | { ownerId: string } | undefined> {
+  if (!authorOnlyActor(actor)) return undefined;
   const row = await projectRepository.byId(id);
-  if (!row) return false;
+  if (!row) return 'missing';
   assertContentWrite(actor, { type: 'project', action, row, patch });
-  return true;
+  return { ownerId: actor.userId };
 }
 
 export const projectService = {
@@ -84,14 +90,14 @@ export const projectService = {
     return projectRepository.bySlug(slug);
   },
 
-  async create(data: CreateProjectInput, actor?: Actor) {
-    if (actor) assertContentWrite(actor, { type: 'project', action: 'create' });
-    const authorOnly = actor ? isAuthorOnly(actor.roles) : false;
+  async create(data: CreateProjectInput, actor: WriteActor) {
+    if (actor !== SYSTEM_ACTOR) assertContentWrite(actor, { type: 'project', action: 'create' });
+    const authorOnly = authorOnlyActor(actor);
     const input = await prepareMediaWrite(
       {
         ...data,
         ...(authorOnly ? { status: 'draft' as const, isFeatured: false, displayOrder: undefined } : {}),
-        ...(actor ? { createdBy: actor.userId } : {}),
+        ...(actor !== SYSTEM_ACTOR ? { createdBy: actor.userId } : {}),
       },
       MEDIA_PAIRS,
     );
@@ -103,17 +109,16 @@ export const projectService = {
     return row;
   },
 
-  async update(id: string, data: UpdateProjectInput, actor?: Actor) {
-    if (!(await guardExisting(actor, id, data.galleryMediaIds !== undefined ? 'gallery' : 'update', data))) {
-      return undefined;
-    }
+  async update(id: string, data: UpdateProjectInput, actor: WriteActor) {
+    const guard = await guardExisting(actor, id, data.galleryMediaIds !== undefined ? 'gallery' : 'update', data);
+    if (guard === 'missing') return undefined;
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
     await assertMediaExists(input.galleryMediaIds ?? []);
     // A gallery that still has old-storage images is replaced only by the media migration.
     if (input.galleryMediaIds !== undefined && (await projectRepository.legacyGalleryCount(id)) > 0) {
       throw new ApiError(ERROR_CODES.CONFLICT, 'Migrate this gallery first', 409);
     }
-    const row = await projectRepository.update(id, input);
+    const row = await projectRepository.update(id, input, guard);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
     revalidateTag(detailTag(id), 'minutes');
@@ -127,8 +132,8 @@ export const projectService = {
     revalidateTag(detailTag(id), 'minutes');
   },
 
-  async updateStatus(id: string, data: ProjectStatusInput, actor?: Actor) {
-    if (!(await guardExisting(actor, id, 'update', data))) return undefined;
+  async updateStatus(id: string, data: ProjectStatusInput, actor: WriteActor) {
+    if ((await guardExisting(actor, id, 'update', data)) === 'missing') return undefined;
     const row = await projectRepository.updateStatus(id, data.status);
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -136,8 +141,8 @@ export const projectService = {
     return row;
   },
 
-  async reorder(data: ReorderProjectsInput, actor?: Actor) {
-    if (actor && isAuthorOnly(actor.roles)) {
+  async reorder(data: ReorderProjectsInput, actor: WriteActor) {
+    if (authorOnlyActor(actor)) {
       throw ApiError.forbidden('Only an editor can publish, feature or reorder projects.');
     }
     await projectRepository.reorder(data.ids);

@@ -27,8 +27,8 @@ export function CatalogPanel({ catalogItems }: CatalogPanelProps) {
         </div>
         <HideForAuthorOnly>
           <Link href={APP_ROUTES.content.homepageCatalogs.create} className={cn(buttonVariants())}>
-          Add catalog item
-        </Link>
+            Add catalog item
+          </Link>
         </HideForAuthorOnly>
       </div>
 

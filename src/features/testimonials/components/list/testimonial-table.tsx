@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -75,6 +76,7 @@ function FeaturedToggle({ testimonial }: { testimonial: Testimonial }) {
 
 export function TestimonialTable({ initialData }: TestimonialTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useTestimonialList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteTestimonial = useDeleteTestimonial();
@@ -156,28 +158,30 @@ export function TestimonialTable({ initialData }: TestimonialTableProps) {
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.testimonials.edit(testimonial.id)}
-                    aria-label={`Edit ${testimonial.customerName}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.testimonials.edit(testimonial.id)}
+                      aria-label={`Edit ${testimonial.customerName}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === testimonial.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${testimonial.customerName}"? This cannot be undone.`)) {
-                        handleDelete(testimonial.id);
-                      }
-                    }}
-                    aria-label={`Delete ${testimonial.customerName}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === testimonial.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${testimonial.customerName}"? This cannot be undone.`)) {
+                          handleDelete(testimonial.id);
+                        }
+                      }}
+                      aria-label={`Delete ${testimonial.customerName}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

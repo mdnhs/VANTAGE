@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ function EnabledToggle({ service }: { service: Service }) {
 
 export function ServiceTable({ initialData }: ServiceTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useServiceList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteService = useDeleteService();
@@ -111,28 +113,30 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.services.edit(service.id)}
-                    aria-label={`Edit ${service.name}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.services.edit(service.id)}
+                      aria-label={`Edit ${service.name}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === service.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${service.name}"? This cannot be undone.`)) {
-                        handleDelete(service.id);
-                      }
-                    }}
-                    aria-label={`Delete ${service.name}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === service.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${service.name}"? This cannot be undone.`)) {
+                          handleDelete(service.id);
+                        }
+                      }}
+                      aria-label={`Delete ${service.name}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

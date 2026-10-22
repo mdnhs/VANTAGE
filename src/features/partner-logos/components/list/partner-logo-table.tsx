@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -37,6 +38,7 @@ function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
 
 export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = usePartnerLogoList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deletePartnerLogo = useDeletePartnerLogo();
@@ -137,28 +139,30 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.partnerLogos.edit(partnerLogo.id)}
-                    aria-label={`Edit ${partnerLogo.companyName}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.partnerLogos.edit(partnerLogo.id)}
+                      aria-label={`Edit ${partnerLogo.companyName}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === partnerLogo.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${partnerLogo.companyName}"? This cannot be undone.`)) {
-                        handleDelete(partnerLogo.id);
-                      }
-                    }}
-                    aria-label={`Delete ${partnerLogo.companyName}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === partnerLogo.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${partnerLogo.companyName}"? This cannot be undone.`)) {
+                          handleDelete(partnerLogo.id);
+                        }
+                      }}
+                      aria-label={`Delete ${partnerLogo.companyName}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

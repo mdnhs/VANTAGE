@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ function EnabledToggle({ pillar }: { pillar: HomepagePillar }) {
 
 export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useHomepagePillarList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepagePillar = useDeleteHomepagePillar();
@@ -115,28 +117,30 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.homepagePillars.edit(pillar.id)}
-                    aria-label={`Edit ${pillar.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.homepagePillars.edit(pillar.id)}
+                      aria-label={`Edit ${pillar.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === pillar.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${pillar.title}"? This cannot be undone.`)) {
-                        handleDelete(pillar.id);
-                      }
-                    }}
-                    aria-label={`Delete ${pillar.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === pillar.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${pillar.title}"? This cannot be undone.`)) {
+                          handleDelete(pillar.id);
+                        }
+                      }}
+                      aria-label={`Delete ${pillar.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

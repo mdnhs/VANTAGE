@@ -160,4 +160,26 @@ describe('authors own their draft projects', () => {
     expect(res.status).toBe(403);
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe('IMPERSONATION_READ_ONLY');
   });
+
+  it('refuses when the project is published between the read and the write', async () => {
+    const { projectRepository } = await import('@/server/repositories/project-repository');
+    const { projectService } = await import('@/server/services/project-service');
+    const { toActor } = await import('@/server/lib/auth/actor');
+    const { data } = await create(authorCookie);
+    const actor = toActor({
+      user: { id: authorId, email: 'a@b.c', name: 'A', role: 'author' },
+      session: { id: 's' },
+    });
+    // Flip the status right after the service's ownership read.
+    const original = projectRepository.byId;
+    const spy = vi.spyOn(projectRepository, 'byId').mockImplementation(async (id) => {
+      const row = await original(id);
+      await db.update(projects).set({ status: 'published' }).where(eq(projects.id, id));
+      return row;
+    });
+    await expect(projectService.update(data!.id, { title: 'Late' }, actor)).rejects.toMatchObject({ status: 403 });
+    spy.mockRestore();
+    const [row] = await db.select().from(projects).where(eq(projects.id, data!.id));
+    expect(row?.title).toBe('Civic');
+  });
 });

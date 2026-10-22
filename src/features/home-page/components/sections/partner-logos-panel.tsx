@@ -15,8 +15,8 @@ export function PartnerLogosPanel({ initialData }: { initialData: { data: Partne
         </p>
         <HideForAuthorOnly>
           <Link href={APP_ROUTES.content.partnerLogos.create} className={cn(buttonVariants())}>
-          Add logo
-        </Link>
+            Add logo
+          </Link>
         </HideForAuthorOnly>
       </div>
       <PartnerLogoTable initialData={initialData} />

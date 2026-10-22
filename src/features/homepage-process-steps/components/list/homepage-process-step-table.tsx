@@ -1,5 +1,6 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ function EnabledToggle({ step }: { step: HomepageProcessStep }) {
 
 export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTableProps) {
   const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
   const { data } = useHomepageProcessStepList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageProcessStep = useDeleteHomepageProcessStep();
@@ -116,28 +118,30 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
                 <div className='flex items-center justify-end gap-1'>
                   {!authorOnly && (
                     <Link
-                    href={APP_ROUTES.content.homepageProcessSteps.edit(step.id)}
-                    aria-label={`Edit ${step.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
+                      href={APP_ROUTES.content.homepageProcessSteps.edit(step.id)}
+                      aria-label={`Edit ${step.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
                   )}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={authorOnly || pendingDeleteId === step.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${step.title}"? This cannot be undone.`)) {
-                        handleDelete(step.id);
-                      }
-                    }}
-                    aria-label={`Delete ${step.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === step.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${step.title}"? This cannot be undone.`)) {
+                          handleDelete(step.id);
+                        }
+                      }}
+                      aria-label={`Delete ${step.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

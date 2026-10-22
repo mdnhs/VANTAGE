@@ -15,8 +15,8 @@ export function PillarsPanel({ initialData }: { initialData: { data: HomepagePil
         </p>
         <HideForAuthorOnly>
           <Link href={APP_ROUTES.content.homepagePillars.create} className={cn(buttonVariants())}>
-          Add pillar
-        </Link>
+            Add pillar
+          </Link>
         </HideForAuthorOnly>
       </div>
       <HomepagePillarTable initialData={initialData} />

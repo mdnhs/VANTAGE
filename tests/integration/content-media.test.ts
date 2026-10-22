@@ -19,7 +19,7 @@ import { serviceRepository } from '@/server/repositories/service-repository';
 import { testimonialRepository } from '@/server/repositories/testimonial-repository';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
-import { projectService } from '@/server/services/project-service';
+import { projectService, SYSTEM_ACTOR } from '@/server/services/project-service';
 import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
 import { call, sessionCookie } from '../support/session';
@@ -151,12 +151,15 @@ describe('services', () => {
 describe('projects', () => {
   it('keeps the order of three gallery ids and resolves before/after', async () => {
     const [before, after, g1, g2, g3] = await Promise.all([1, 2, 3, 4, 5].map(() => insertMedia()));
-    const created = await projectService.create({
-      ...project(),
-      beforeImageMediaId: before!.id,
-      afterImageMediaId: after!.id,
-      galleryMediaIds: [g3!.id, g1!.id, g2!.id],
-    });
+    const created = await projectService.create(
+      {
+        ...project(),
+        beforeImageMediaId: before!.id,
+        afterImageMediaId: after!.id,
+        galleryMediaIds: [g3!.id, g1!.id, g2!.id],
+      },
+      SYSTEM_ACTOR,
+    );
     expect(created?.beforeImage?.src).toBe(before!.url);
     expect(created?.afterImage?.src).toBe(after!.url);
     expect(created?.gallery.map((g) => g.id)).toEqual([g3!.id, g1!.id, g2!.id]);
@@ -166,11 +169,14 @@ describe('projects', () => {
 
   it('mixes legacy and media gallery rows on read and drops empty ones', async () => {
     const [before, after, g1] = await Promise.all([1, 2, 3].map(() => insertMedia()));
-    const created = await projectService.create({
-      ...project(),
-      beforeImageMediaId: before!.id,
-      afterImageMediaId: after!.id,
-    });
+    const created = await projectService.create(
+      {
+        ...project(),
+        beforeImageMediaId: before!.id,
+        afterImageMediaId: after!.id,
+      },
+      SYSTEM_ACTOR,
+    );
     await db.insert(projectGalleryImages).values([
       { projectId: created!.id, imagePublicId: 'vantage/old', displayOrder: 0 },
       { projectId: created!.id, mediaId: g1!.id, displayOrder: 1 },
@@ -198,24 +204,29 @@ describe('projects', () => {
 
   it('refuses to replace a gallery that still has legacy rows; an all-media gallery can be reordered', async () => {
     const [before, after, g1, g2] = await Promise.all([1, 2, 3, 4].map(() => insertMedia()));
-    const created = await projectService.create({
-      ...project(),
-      beforeImageMediaId: before!.id,
-      afterImageMediaId: after!.id,
-      galleryMediaIds: [g1!.id, g2!.id],
-    });
+    const created = await projectService.create(
+      {
+        ...project(),
+        beforeImageMediaId: before!.id,
+        afterImageMediaId: after!.id,
+        galleryMediaIds: [g1!.id, g2!.id],
+      },
+      SYSTEM_ACTOR,
+    );
     // all-media gallery: reorder and shrink are fine
-    await projectService.update(created!.id, { galleryMediaIds: [g2!.id, g1!.id] });
+    await projectService.update(created!.id, { galleryMediaIds: [g2!.id, g1!.id] }, SYSTEM_ACTOR);
     expect((await projectRepository.byId(created!.id))?.gallery.map((g) => g.id)).toEqual([g2!.id, g1!.id]);
     // a legacy row makes the whole gallery read-only
     await db
       .insert(projectGalleryImages)
       .values({ projectId: created!.id, imagePublicId: 'vantage/old', displayOrder: 2 });
-    await projectService.update(created!.id, { title: 'Renamed' });
-    await expect(projectService.update(created!.id, { galleryMediaIds: [g1!.id] })).rejects.toMatchObject({
-      status: 409,
-      message: 'Migrate this gallery first',
-    });
+    await projectService.update(created!.id, { title: 'Renamed' }, SYSTEM_ACTOR);
+    await expect(projectService.update(created!.id, { galleryMediaIds: [g1!.id] }, SYSTEM_ACTOR)).rejects.toMatchObject(
+      {
+        status: 409,
+        message: 'Migrate this gallery first',
+      },
+    );
     const found = await projectRepository.byId(created!.id);
     expect(found?.galleryImages.map((g) => g.mediaId)).toEqual([g2!.id, g1!.id, null]);
     expect(found?.galleryImages[2]?.imagePublicId).toBe('vantage/old');
@@ -233,12 +244,15 @@ describe('projects', () => {
     const [before, after] = await Promise.all([1, 2].map(() => insertMedia()));
     const gone = await insertMedia({ deletedAt: new Date() });
     await expect(
-      projectService.create({
-        ...project(),
-        beforeImageMediaId: before!.id,
-        afterImageMediaId: after!.id,
-        galleryMediaIds: [gone.id],
-      }),
+      projectService.create(
+        {
+          ...project(),
+          beforeImageMediaId: before!.id,
+          afterImageMediaId: after!.id,
+          galleryMediaIds: [gone.id],
+        },
+        SYSTEM_ACTOR,
+      ),
     ).rejects.toMatchObject({ status: 422 });
   });
 });
@@ -319,12 +333,15 @@ describe('API contract', () => {
   it('a PATCH that leaves isFeatured out keeps it (projects and testimonials)', async () => {
     const cookie = await sessionCookie('owner');
     const [before, after] = await Promise.all([1, 2].map(() => insertMedia()));
-    const p = await projectService.create({
-      ...project(),
-      isFeatured: true,
-      beforeImageMediaId: before!.id,
-      afterImageMediaId: after!.id,
-    });
+    const p = await projectService.create(
+      {
+        ...project(),
+        isFeatured: true,
+        beforeImageMediaId: before!.id,
+        afterImageMediaId: after!.id,
+      },
+      SYSTEM_ACTOR,
+    );
     const res = await call(`/projects/${p!.id}`, cookie, { method: 'PATCH', body: { title: 'Only the title' } });
     expect(res.status).toBe(200);
     expect((await projectRepository.byId(p!.id))?.isFeatured).toBe(true);

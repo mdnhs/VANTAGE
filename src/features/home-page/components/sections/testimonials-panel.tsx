@@ -13,8 +13,8 @@ export function TestimonialsPanel({ initialData }: { initialData: { data: Testim
         <p className='text-sm text-muted-foreground'>Customer reviews shown on the homepage, in display order.</p>
         <HideForAuthorOnly>
           <Link href={APP_ROUTES.content.testimonials.create} className={cn(buttonVariants())}>
-          Add testimonial
-        </Link>
+            Add testimonial
+          </Link>
         </HideForAuthorOnly>
       </div>
       <TestimonialTable initialData={initialData} />
