@@ -10,7 +10,7 @@ type RequestShape = {
   messages: AiUIMessage[];
 };
 
-// Ruling R8: only the new text, the conversation id and the screen's ids
+// History stays on the server: only the new text, the conversation id and the screen's ids
 // leave the browser, never the history. Regenerate sends no text; an edit
 // names the saved message it replaces (useChat passes its id as messageId).
 export function chatRequestBody(
@@ -40,6 +40,16 @@ export function assistantTransport(
       body: chatRequestBody(request, getConversationId(), getContext()),
     }),
   });
+}
+
+// The server refused the send (assistant turned off, or the role switched off).
+export function isForbiddenError(error: Error | undefined): boolean {
+  if (!error) return false;
+  try {
+    return (JSON.parse(error.message) as { error?: { code?: unknown } }).error?.code === 'FORBIDDEN';
+  } catch {
+    return false;
+  }
 }
 
 // Non-2xx answers arrive as an error whose message is our JSON envelope;

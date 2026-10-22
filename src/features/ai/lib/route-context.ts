@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 
-import type { ChatContext, PageKey } from '@/lib/ai/schema';
+import { CHAT_PATH, type ChatContext, type PageKey } from '@/lib/ai/schema';
 import { GLOBAL_LABELS } from '@/lib/content/global-access';
 
 export type AssistantScreen = 'page' | 'enquiries' | 'default';
@@ -25,6 +25,8 @@ const PAGE_ROUTES: Record<string, PageKey> = {
 export function contextFromRoute(pathname: string): RouteContext | null {
   if (!/^\/dashboard(\/|$)/.test(pathname)) return null;
   const path = pathname.slice(0, 200);
+  // Anything the server would refuse as context is simply not sent.
+  if (!CHAT_PATH.test(path)) return null;
   const clean = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
   const key = PAGE_ROUTES[clean];
   if (key) return { screen: 'page', context: { path, entity: { type: 'page', key } } };

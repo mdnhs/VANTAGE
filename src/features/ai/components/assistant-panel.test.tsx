@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, cleanup } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
 import { Sheet } from '@/components/ui/sheet';
@@ -57,7 +57,7 @@ vi.mock('@/contexts/actor-provider', () => ({ useActor: () => actorRef.value }))
 afterEach(cleanup);
 
 describe('AssistantPanel', () => {
-  it('offers four starter prompts that fill the composer (Ruling R17)', async () => {
+  it('offers four starter prompts that fill the composer', async () => {
     setup();
     const starters = screen.getAllByRole('button', {
       name: /meta description|friendlier|SEO work|quote requests/,
@@ -114,7 +114,7 @@ describe('AssistantPanel', () => {
     expect(screen.queryByLabelText('Message the AI assistant')).toBeNull();
   });
 
-  it('is read-only while viewing as someone (Ruling R12)', () => {
+  it('is read-only while viewing as someone ', () => {
     setup({}, me({ impersonatedBy: 'o1' }));
     expect((screen.getByLabelText('Message the AI assistant') as HTMLTextAreaElement).disabled).toBe(true);
     expect(screen.getByText(/while viewing as someone/)).toBeTruthy();
@@ -138,7 +138,7 @@ describe('AssistantPanel', () => {
     expect(screen.getByText('Counts by status and service')).toBeTruthy();
   });
 
-  it('offers page starters in the page editor and article ones in the article editor', async () => {
+  it('offers page starters in a page editor', async () => {
     setup({ screen: 'page' });
     expect(screen.getByText(/the page you're editing/)).toBeTruthy();
     for (const name of [
@@ -265,6 +265,35 @@ describe('AssistantPanel', () => {
     expect(expand.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(expand);
     expect(onToggleExpanded).toHaveBeenCalled();
+  });
+});
+
+describe('History delete', () => {
+  it('asks before deleting a saved conversation', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: { method?: string }) => {
+        calls.push(`${init?.method ?? 'GET'} ${url}`);
+        const data =
+          init?.method === 'DELETE'
+            ? { ok: true }
+            : { items: [{ id: 'c1', title: 'Old chat', model: 'm', updatedAt: 'x' }] };
+        return Promise.resolve(new Response(JSON.stringify({ success: true, data }), { status: 200 }));
+      }),
+    );
+    const confirm = vi.fn(() => false);
+    window.confirm = confirm;
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'History' }));
+    const remove = await screen.findByRole('button', { name: 'Delete “Old chat”' });
+    fireEvent.click(remove);
+    expect(confirm).toHaveBeenCalled();
+    expect(calls.some((c) => c.startsWith('DELETE'))).toBe(false);
+    confirm.mockImplementation(() => true);
+    fireEvent.click(remove);
+    await waitFor(() => expect(calls.some((c) => c.startsWith('DELETE'))).toBe(true));
+    vi.unstubAllGlobals();
   });
 });
 

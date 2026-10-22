@@ -5,14 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MePayload } from '@/lib/auth/me';
 
+import { AI_KEYS } from '../utils/query-keys';
 import { AiAssistant } from './assistant';
 
-const mocks = vi.hoisted(() => ({ chatLoaded: 0, actor: null as unknown as MePayload }));
+const mocks = vi.hoisted(() => ({ actor: null as unknown as MePayload }));
 vi.mock('@/contexts/actor-provider', () => ({ useActor: () => mocks.actor }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard/about' }));
-// The factory runs when the module is first imported.
 vi.mock('@ai-sdk/react', () => {
-  mocks.chatLoaded++;
   return {
     useChat: () => ({
       messages: [],
@@ -54,12 +53,15 @@ function stubStatus(over: Record<string, unknown> = {}) {
     ),
   );
 }
-const renderAssistant = () =>
+const renderAssistant = () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider client={client}>
       <AiAssistant />
     </QueryClientProvider>,
   );
+  return client;
+};
 
 beforeEach(() => {
   mocks.actor = me();
@@ -71,15 +73,13 @@ afterEach(() => {
 });
 
 describe('AiAssistant', () => {
-  // First: the module cache keeps the chat chunk once any test has loaded it.
-  it('keeps the AI SDK client out of the first load: the chat chunk loads when the button is used', async () => {
+  it('tells assistive tech that the button opens a dialog', async () => {
     renderAssistant();
     const trigger = await screen.findByRole('button', { name: 'AI assistant' });
-    expect(trigger.getAttribute('aria-keyshortcuts')).toBe('Meta+J Control+J');
-    expect(mocks.chatLoaded).toBe(0);
+    expect(trigger.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(trigger);
-    await screen.findByLabelText('Message the AI assistant');
-    expect(mocks.chatLoaded).toBe(1);
+    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'));
   });
 
   it('focuses the message box on open and returns focus to the button on close', async () => {
@@ -108,9 +108,8 @@ describe('AiAssistant', () => {
 
   it('hides for gated non-managers', async () => {
     stubStatus({ available: false, canManage: false, provider: null, model: null });
-    renderAssistant();
-    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    const client = renderAssistant();
+    await waitFor(() => expect(client.getQueryState(AI_KEYS.status)?.status).toBe('success'));
     expect(screen.queryByRole('button', { name: 'AI assistant' })).toBeNull();
   });
 

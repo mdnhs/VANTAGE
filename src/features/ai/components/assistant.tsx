@@ -42,6 +42,8 @@ export function AiAssistant() {
         className={ICON_BUTTON}
         aria-label='AI assistant'
         aria-keyshortcuts='Meta+J Control+J'
+        aria-haspopup='dialog'
+        aria-expanded={open}
         // Start the download on intent, before the click.
         onPointerEnter={() => void loadSheet()}
         onFocus={() => void loadSheet()}

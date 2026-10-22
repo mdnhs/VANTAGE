@@ -50,6 +50,11 @@ describe('contextFromRoute (V9-R10)', () => {
     expect(contextFromRoute(long)!.context.path).toHaveLength(200);
   });
 
+  it('sends no context for a path the server would refuse', () => {
+    expect(contextFromRoute('/dashboard/a b')).toBeNull();
+    expect(contextFromRoute('/dashboard/quote?x=1')).toBeNull();
+  });
+
   it('has four starters for every screen', () => {
     for (const screen of ['default', 'page', 'enquiries'] as const) expect(STARTERS[screen]).toHaveLength(4);
   });

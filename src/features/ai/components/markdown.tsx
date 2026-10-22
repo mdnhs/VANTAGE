@@ -158,14 +158,18 @@ export function safeHref(raw: string): string | null {
   if (/[\u0000-\u001f\u007f]/.test(raw)) return null;
   if (raw.startsWith('/')) {
     if (/^\/[/\\]/.test(raw)) return null;
-    // Resolve dot segments and decode before looking at the path.
+    // Resolve dot segments first, then judge (and return) the resolved target:
+    // "/..//evil.example" would otherwise become a protocol-relative link.
+    let url: URL;
     let path: string;
     try {
-      path = decodeURIComponent(new URL(raw, 'https://admin.invalid').pathname);
+      url = new URL(raw, 'https://admin.invalid');
+      path = decodeURIComponent(url.pathname);
     } catch {
       return null;
     }
-    return /^\/api(\/|$)/i.test(path) ? null : raw;
+    if (url.origin !== 'https://admin.invalid' || /^\/[/\\]/.test(url.pathname) || /^\/[/\\]/.test(path)) return null;
+    return /^\/api(\/|$)/i.test(path) ? null : url.pathname + url.search + url.hash;
   }
   try {
     const url = new URL(raw);
@@ -207,7 +211,7 @@ function inline(text: string): ReactNode[] {
           `${label} (${href})`
         ) : safe.startsWith('/') ? (
           // Same-site: client navigation, so the open sheet survives it.
-          <Link key={key++} href={safe} className={LINK}>
+          <Link key={key++} href={safe} prefetch={false} className={LINK}>
             {label}
           </Link>
         ) : (

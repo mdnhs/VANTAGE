@@ -133,13 +133,13 @@ export const PAGE_KEYS = [
 ] as const;
 export type PageKey = (typeof PAGE_KEYS)[number];
 
+// The admin paths the assistant accepts as context (also checked in the browser).
+export const CHAT_PATH = /^\/dashboard(\/[A-Za-z0-9._~%/-]*)?$/;
+
 // Where in the admin the person is. Ids only: the server looks the title up
 // with the person's own permissions, and nothing else from the screen is sent.
 export const ChatContext = z.object({
-  path: z
-    .string()
-    .max(200)
-    .regex(/^\/dashboard(\/[A-Za-z0-9._~%/-]*)?$/, 'Use a dashboard path'),
+  path: z.string().max(200).regex(CHAT_PATH, 'Use a dashboard path'),
   entity: z.object({ type: z.literal('page'), key: z.enum(PAGE_KEYS) }).optional(),
 });
 export type ChatContext = z.infer<typeof ChatContext>;

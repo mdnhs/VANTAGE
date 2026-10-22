@@ -51,6 +51,13 @@ describe('Markdown (no raw HTML, ever)', () => {
     expect(safeHref('/%61pi/v1/admin/leads/export')).toBeNull();
     expect(safeHref('/uploads/photo.jpg')).toBe('/uploads/photo.jpg');
     expect(safeHref('/apiary')).toBe('/apiary');
+    // Dot segments must not resolve to a protocol-relative (other-site) target.
+    expect(safeHref('/..//evil.example')).toBeNull();
+    expect(safeHref('/.//evil.example')).toBeNull();
+    expect(safeHref('/x/..//evil')).toBeNull();
+    expect(safeHref('/x/..\\evil')).not.toMatch(/^\/[/\\]/);
+    // What is returned is the normalised target, never the raw text.
+    expect(safeHref('/a/./b/../c?x=1#top')).toBe('/a/c?x=1#top');
     // Same-site links stay in this tab; external ones open a new one.
     expect(links[0]!.getAttribute('target')).toBe('_blank');
     expect(links[0]!.getAttribute('rel')).toBe('noopener noreferrer nofollow');

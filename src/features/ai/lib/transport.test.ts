@@ -2,7 +2,18 @@ import { describe, expect, it } from 'vitest';
 
 import type { AiUIMessage } from '@/lib/ai/messages';
 
-import { chatErrorMessage, chatRequestBody } from './transport';
+import { chatErrorMessage, chatRequestBody, isForbiddenError } from './transport';
+
+describe('isForbiddenError', () => {
+  it('recognises the FORBIDDEN envelope only', () => {
+    expect(
+      isForbiddenError(new Error('{"error":{"code":"FORBIDDEN","message":"The AI assistant is turned off"}}')),
+    ).toBe(true);
+    expect(isForbiddenError(new Error('{"error":{"code":"RATE_LIMITED"}}'))).toBe(false);
+    expect(isForbiddenError(new Error('plain stream error'))).toBe(false);
+    expect(isForbiddenError(undefined)).toBe(false);
+  });
+});
 
 describe('chatErrorMessage', () => {
   it('reads our error envelope, plain stream errors and network failures', () => {

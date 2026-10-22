@@ -301,7 +301,9 @@ function HistoryMenu({
                     variant='ghost'
                     size='icon-sm'
                     aria-label={`Delete “${c.title}”`}
-                    onClick={() => remove.mutate(c.id)}
+                    onClick={() => {
+                      if (window.confirm(`Delete “${c.title}”? This can't be undone.`)) remove.mutate(c.id);
+                    }}
                   >
                     <Trash2Icon />
                   </Button>

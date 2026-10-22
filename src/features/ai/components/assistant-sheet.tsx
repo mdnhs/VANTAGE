@@ -15,7 +15,7 @@ import type { AiStatus } from '../types';
 
 import { AssistantPanel } from './assistant-panel';
 import { useContextTitle, useRouteContext } from '../lib/route-context';
-import { assistantTransport } from '../lib/transport';
+import { assistantTransport, isForbiddenError } from '../lib/transport';
 
 const EXPANDED_KEY = 'admin.ai-assistant.expanded';
 
@@ -37,7 +37,7 @@ function saveExpanded(value: boolean) {
 }
 
 // After a turn, the browser's id for the person's message becomes the saved
-// one, so a later edit can name it (Ruling R8: no client ids are trusted).
+// one, so a later edit can name it (no client ids are trusted).
 export function adoptUserMessageId(messages: AiUIMessage[], replyId: string, savedId: string): AiUIMessage[] {
   const reply = messages.findIndex((m) => m.id === replyId);
   for (let i = (reply === -1 ? messages.length : reply) - 1; i >= 0; i--) {
@@ -108,6 +108,10 @@ export default function AssistantSheet({
   const nextContext = () => (route && !dismissed ? route.context : null);
   const chat = useChat<AiUIMessage>({
     transport,
+    onError: (error) => {
+      // Turned off or role switched off: refresh the status so the button follows.
+      if (isForbiddenError(error)) void queryClient.invalidateQueries({ queryKey: AI_KEYS.status });
+    },
     onFinish: ({ message }) => {
       const id = message.metadata?.conversationId;
       if (id && session.adopt(id)) {
@@ -159,6 +163,7 @@ export default function AssistantSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
+        data-ai-assistant=''
         side='right'
         initialFocus={composer}
         finalFocus={trigger}
