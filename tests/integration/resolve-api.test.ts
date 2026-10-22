@@ -1,4 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
@@ -23,6 +24,7 @@ const pending: Promise<unknown>[] = [];
 
 beforeEach(async () => {
   pending.length = 0;
+  vi.mocked(revalidateTag).mockClear();
   await db.execute(sql`truncate table redirects cascade`);
 });
 
@@ -39,6 +41,22 @@ describe('GET /resolve', () => {
     const [row] = await db.select().from(redirects).where(eq(redirects.sourcePath, '/old'));
     expect(row!.hitCount).toBe(1);
     expect(row!.lastHitAt).not.toBeNull();
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('does not touch updated_at on a hit', async () => {
+    const old = new Date('2024-01-01T00:00:00Z');
+    await db.insert(redirects).values({ sourcePath: '/old', destination: '/services', updatedAt: old });
+    await resolve('/old');
+    await Promise.all(pending);
+    const [row] = await db.select().from(redirects).where(eq(redirects.sourcePath, '/old'));
+    expect(row!.hitCount).toBe(1);
+    expect(row!.updatedAt.getTime()).toBe(old.getTime());
+  });
+
+  it('resolves a legacy page source', async () => {
+    await db.insert(redirects).values({ sourcePath: '/about.html', destination: '/services' });
+    expect(await (await resolve('/about.html')).json()).toMatchObject({ kind: 'redirect', destination: '/services' });
   });
 
   it('passes an inactive row, a live page and an unknown path without a hit', async () => {

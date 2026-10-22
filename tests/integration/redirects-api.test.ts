@@ -126,6 +126,65 @@ describe('redirects rules', () => {
   });
 });
 
+describe('redirects canonical paths and flattening', () => {
+  it('refuses a loop written with a trailing slash', async () => {
+    await create(cookies.owner, '/a', '/b');
+    const res = await create(cookies.owner, '/b', '/a/');
+    expect(res.status).toBe(422);
+    expect((await json(res)).error.causes?.destination).toEqual(['That would create a redirect loop']);
+  });
+
+  it('stores a dot-segment destination normalised', async () => {
+    await create(cookies.owner, '/a', '/x/../b/?q=1');
+    expect(await dest('/a')).toBe('/b?q=1');
+  });
+
+  it('flattens a legacy row pointing at /a/ when /a gets a rule', async () => {
+    await db.insert(redirects).values({ sourcePath: '/x', destination: '/a/' });
+    await create(cookies.owner, '/a', '/c');
+    expect(await dest('/x')).toBe('/c');
+  });
+
+  it('flattens forward on create: a new /b to /c repoints /a', async () => {
+    await create(cookies.owner, '/a', '/b');
+    await create(cookies.owner, '/b', '/c');
+    expect(await dest('/a')).toBe('/c');
+    expect(await dest('/b')).toBe('/c');
+  });
+
+  it('creates through an existing chain end', async () => {
+    await create(cookies.owner, '/b', '/c');
+    await create(cookies.owner, '/a', '/b');
+    expect(await dest('/a')).toBe('/c');
+  });
+
+  it('a PATCH destination change repoints rows that point at this row', async () => {
+    const b = await json(await create(cookies.owner, '/b', '/c'));
+    await db.insert(redirects).values({ sourcePath: '/a', destination: '/b' });
+    const res = await call(`/admin/redirects/${b.data.id}`, cookies.owner, { method: 'PATCH', body: { destination: '/d' } });
+    expect(res.status).toBe(200);
+    expect(await dest('/b')).toBe('/d');
+    expect(await dest('/a')).toBe('/d');
+  });
+
+  it('re-activation re-flattens', async () => {
+    const a = await json(await create(cookies.owner, '/a', '/b'));
+    await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: false } });
+    await create(cookies.owner, '/b', '/c');
+    const res = await call(`/admin/redirects/${a.data.id}`, cookies.owner, { method: 'PATCH', body: { isActive: true } });
+    expect(res.status).toBe(200);
+    expect(await dest('/a')).toBe('/c');
+  });
+
+  it('does not expire the tag when a write fails', async () => {
+    await create(cookies.owner, '/a', '/b');
+    vi.mocked(revalidateTag).mockClear();
+    expect((await create(cookies.owner, '/a', '/c')).status).toBe(409);
+    expect((await create(cookies.owner, '/b', '/a')).status).toBe(422);
+    expect(revalidateTag).not.toHaveBeenCalled();
+  });
+});
+
 describe('redirects cache and View-as', () => {
   it('expires the redirects tag after each write', async () => {
     const a = await json(await create(cookies.owner, '/a', '/b'));

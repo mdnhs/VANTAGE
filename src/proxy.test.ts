@@ -141,6 +141,19 @@ describe('proxy: redirect enforcement', () => {
     expect((await pending).headers.get('location')).toBeNull();
   });
 
+  it('asks the resolver for legacy page URLs but not for asset files', async () => {
+    for (const p of ['/old.html', '/old.PHP', '/index.htm', '/page.aspx']) {
+      fetchMock.mockClear();
+      redirect('/services');
+      expect((await proxy(req(p))).status).toBe(301);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
+    fetchMock.mockClear();
+    redirect('/services');
+    await proxy(req('/logo.svg'));
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('skips non-GET requests and draft previews without fetching', async () => {
     redirect('/services');
     const post = new NextRequest('http://localhost:3000/old', { method: 'POST' });
@@ -153,7 +166,7 @@ describe('proxy: redirect enforcement', () => {
 describe('proxy matcher', () => {
   const matcher = new RegExp('^' + config.matcher[2] + '$');
   it('reaches custom page paths', () => {
-    for (const p of ['/old-page', '/apiary', '/og-old']) expect(matcher.test(p)).toBe(true);
+    for (const p of ['/old-page', '/apiary', '/og-old', '/old.html', '/page.php']) expect(matcher.test(p)).toBe(true);
   });
   it('skips api, assets and metadata files', () => {
     for (const p of ['/api/v1/x', '/_next/static/a.js', '/robots.txt', '/sitemap.xml', '/favicon.ico', '/assets/x.jpg', '/og'])

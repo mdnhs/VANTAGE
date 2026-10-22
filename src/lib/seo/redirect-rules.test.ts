@@ -10,6 +10,15 @@ describe('RedirectSource', () => {
     expect(RedirectSource.parse('/old/')).toBe('/old');
     expect(RedirectSource.parse(' /a/b ')).toBe('/a/b');
   });
+  it.each(['/a/../b', '/a/./b', '/./a', '/a/..', '/%2e%2e/a'])('rejects dot segments %j', (v) => {
+    expect(RedirectSource.safeParse(v).success).toBe(false);
+  });
+  it('accepts legacy page sources but not other files', () => {
+    for (const v of ['/about.html', '/services.php', '/index.htm', '/page.asp', '/Page.ASPX'])
+      expect(RedirectSource.safeParse(v).success, v).toBe(true);
+    for (const v of ['/logo.svg', '/robots.txt', '/dashboard/x.html'])
+      expect(msg(RedirectSource.safeParse(v)), v).toBe('That address is reserved');
+  });
   it.each(['//evil', '/\\evil', 'old', '/a b', '/a?x=1', ''])('rejects %j', (v) => {
     expect(RedirectSource.safeParse(v).success).toBe(false);
   });
@@ -27,6 +36,19 @@ describe('RedirectDestination', () => {
   });
   it.each(['https://evil.com', '//evil.com', '/\t/evil', '/\\evil', '/a#x', 'services'])('rejects %j', (v) => {
     expect(RedirectDestination.safeParse(v).success).toBe(false);
+  });
+});
+
+describe('RedirectDestination canonical form', () => {
+  it.each([
+    ['/a/../b', '/b'],
+    ['/a/./b/', '/a/b'],
+    ['/a/', '/a'],
+    ['/', '/'],
+    ['/a/?x=1', '/a?x=1'],
+    ['/../..', '/'],
+  ])('%s -> %s', (input, out) => {
+    expect(RedirectDestination.parse(input)).toBe(out);
   });
 });
 

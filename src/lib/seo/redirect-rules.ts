@@ -13,16 +13,28 @@ export const RedirectSource = z
   .max(300)
   .transform((v) => (v.length > 1 ? v.replace(/\/+$/, '') : v))
   .refine((v) => /^\/[A-Za-z0-9\-._~%/]*$/.test(v) && !v.startsWith('//'), 'Use a path on this site, e.g. /old-page')
+  // Dot segments would never match what the proxy sees (the URL parser collapses them).
+  .refine((v) => !/(?:^|\/)(?:\.|\.\.|%2e|%2e\.|\.%2e|%2e%2e)(?:\/|$)/i.test(v), 'Use a path on this site, e.g. /old-page')
   .refine((v) => v !== '/', "The home page can't redirect")
   .refine((v) => !LIVE_PATHS.has(v), 'That address is a live page')
   .refine((v) => !isReservedPath(v), 'That address is reserved');
+
+// The destination as the proxy will see it: dot segments collapsed, no trailing slash
+// (except "/"), query kept.
+function canonicalDestination(v: string): string {
+  const url = new URL(v, 'http://x');
+  const path = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') || '/' : url.pathname;
+  return path + url.search;
+}
 
 // Site paths only, optionally with a query string.
 export const RedirectDestination = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => /^\/(?![/\\])[^\s\\#]*$/.test(v), 'Use a path on this site, e.g. /new-page');
+  .refine((v) => /^\/(?![/\\])[^\s\\#]*$/.test(v), 'Use a path on this site, e.g. /new-page')
+  .transform(canonicalDestination)
+  .refine((v) => /^\/(?![/\\])/.test(v), 'Use a path on this site, e.g. /new-page');
 
 const Status = z.union([z.literal(301), z.literal(302), z.literal(307), z.literal(308)]);
 

@@ -17,7 +17,10 @@ export const REDIRECTS_LOCK_KEY = 0x76726478;
 const MAX_HOPS = 10;
 const LOOP = 'That would create a redirect loop';
 const SELF = "A redirect can't point at itself";
-const pathOf = (target: string) => target.split('?')[0]!;
+const pathOf = (target: string) => {
+  const path = target.split('?')[0]!;
+  return path.length > 1 ? path.replace(/\/+$/, '') : path;
+};
 
 // Serialises every transaction that writes redirects, so two writers can't each miss the
 // other's row and leave a loop or an unflattened chain. Transaction-scoped: pass a tx.
@@ -60,7 +63,13 @@ export async function createRedirect(
   await tx
     .update(redirects)
     .set({ destination: to })
-    .where(and(eq(redirects.destination, entry.from), ne(redirects.sourcePath, pathOf(to))));
+    .where(
+      and(
+        // Rows saved before destinations were canonical may still end in a slash.
+        or(eq(redirects.destination, entry.from), eq(redirects.destination, `${entry.from}/`)),
+        ne(redirects.sourcePath, pathOf(to)),
+      ),
+    );
   const values = { destination: to, statusCode: entry.statusCode ?? 301, isActive: true, note: entry.note };
   await tx
     .insert(redirects)
@@ -110,7 +119,7 @@ async function findRow(tx: DbLike, id: string) {
 
 async function writtenRow(tx: DbLike, sourcePath: string) {
   const [row] = await tx.select().from(redirects).where(eq(redirects.sourcePath, sourcePath));
-  if (!row) throw unprocessable(SELF, 'destination');
+  if (!row) throw new ApiError(ERROR_CODES.INTERNAL_ERROR, 'The redirect could not be saved', 500);
   return row;
 }
 
@@ -221,6 +230,11 @@ export async function deleteRedirect(actor: Actor, id: string): Promise<void> {
 export async function recordHit(path: string): Promise<void> {
   await db
     .update(redirects)
-    .set({ hitCount: sql`${redirects.hitCount} + 1`, lastHitAt: new Date() })
+    .set({
+      hitCount: sql`${redirects.hitCount} + 1`,
+      lastHitAt: new Date(),
+      // A hit is not an edit: keep the list order and "updated" time stable.
+      updatedAt: sql`${redirects.updatedAt}`,
+    })
     .where(eq(redirects.sourcePath, path));
 }
