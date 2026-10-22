@@ -5,6 +5,8 @@ import { expireCookie } from 'better-auth/cookies';
 
 import { audit } from '@/server/lib/audit';
 
+import { enforceAdminPasswordLength } from './password-policy';
+
 // Better Auth hooks key on `ctx.path`, the matched endpoint's declared path,
 // so URL variants (trailing slash, case, encoded segments) that Better Auth's
 // router still routes cannot slip past them the way they could slip past a
@@ -32,6 +34,7 @@ const isAdminPath = (path: string) => path.startsWith('/admin/');
 const HTTP_SESSION_PATHS = new Set(['/list-sessions', '/revoke-session', '/revoke-sessions', '/revoke-other-sessions']);
 
 export const beforeHook = createAuthMiddleware(async (ctx) => {
+  await enforceAdminPasswordLength(ctx);
   if (ctx.request && HTTP_SESSION_PATHS.has(ctx.path)) {
     throw new APIError('FORBIDDEN', {
       code: 'SESSION_ENDPOINT_DISABLED',

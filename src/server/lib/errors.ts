@@ -4,6 +4,8 @@ export const ERROR_CODES = {
   FORBIDDEN: 'FORBIDDEN',
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
+  LAST_OWNER: 'LAST_OWNER',
+  IMPERSONATION_READ_ONLY: 'IMPERSONATION_READ_ONLY',
   RATE_LIMITED: 'RATE_LIMITED',
   PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
   UNSUPPORTED_MEDIA_TYPE: 'UNSUPPORTED_MEDIA_TYPE',
@@ -35,6 +37,14 @@ export class ApiError extends Error {
   }
   static conflict(message = 'Conflict') {
     return new ApiError(ERROR_CODES.CONFLICT, message, 409);
+  }
+  // 409: there must always be at least one active owner.
+  static lastOwner(message = 'There must always be at least one owner') {
+    return new ApiError(ERROR_CODES.LAST_OWNER, message, 409);
+  }
+  // 403: View-as shows what a role can see; it never changes anything.
+  static impersonationReadOnly(message: string) {
+    return new ApiError(ERROR_CODES.IMPERSONATION_READ_ONLY, message, 403);
   }
   static payloadTooLarge(message: string) {
     return new ApiError(ERROR_CODES.PAYLOAD_TOO_LARGE, message, 413);

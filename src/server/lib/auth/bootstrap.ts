@@ -34,6 +34,12 @@ export function isDuplicateUserError(error: unknown): boolean {
   return false;
 }
 
+// Where an invitation's set-password link lands (`invite=1` words the email as an invitation).
+export function inviteRedirect(): string {
+  const appUrl = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  return new URL('/reset-password?invite=1', appUrl).toString();
+}
+
 export type ProvisionInput = { email: string; name: string; role: RoleName };
 // `headers` carries the acting user's request so Better Auth applies RBAC;
 // `system` skips that check and is for trusted server code (CLI bootstrap) only.
@@ -58,9 +64,9 @@ export async function provisionUser(input: ProvisionInput, context: ProvisionCon
     throw error;
   }
 
-  const appUrl = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const redirectTo = new URL('/reset-password?invite=1', appUrl).toString();
-  const { links } = await captureAuthLinks(() => auth.api.requestPasswordReset({ body: { email, redirectTo } }));
+  const { links } = await captureAuthLinks(() =>
+    auth.api.requestPasswordReset({ body: { email, redirectTo: inviteRedirect() } }),
+  );
 
   return {
     user: { id: user.id, email: user.email, name: user.name, role: input.role as string },
