@@ -26,6 +26,9 @@ export const DEMO_USERS: { email: string; name: string; role: RoleName; password
 ];
 
 export async function seedDemoUsers(): Promise<{ created: number; skipped: number }> {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Refusing to seed demo users in production.');
+  }
   if (process.env.SEED_DEMO_USERS !== 'true') {
     throw new Error('Refusing to seed demo users: set SEED_DEMO_USERS=true (local/staging only).');
   }

@@ -23,6 +23,7 @@ async function main() {
   for (const row of result.plan) {
     console.log(`${row.action.padEnd(6)} ${row.email} -> ${row.role}${row.banned ? ' (banned)' : ''}`);
   }
+  for (const w of result.warnings) console.warn(`WARN ${w}`);
   console.log(
     `${dryRun ? 'DRY RUN: would create' : 'created'} ${result.created}, skipped ${result.skipped}, ` +
       `${dryRun ? 'quote assignments to copy' : 'quote assignments copied'} ${result.quotesLinked}`,

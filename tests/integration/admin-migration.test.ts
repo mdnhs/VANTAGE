@@ -9,7 +9,7 @@ import { DEMO_USERS, seedDemoUsers } from '@/server/db/seed-demo-users';
 import { accounts, adminUsers, auditLogs, quoteRequests, users } from '@/server/db/schema';
 import { getAuth, resetAuthForTests } from '@/server/lib/auth';
 import { mapRole, migrateAdmins, verifyAdminMigration } from '@/server/lib/auth/admin-migration';
-import { createOwner } from '@/server/lib/auth/bootstrap';
+import { createOwner, isDuplicateUserError, provisionUser } from '@/server/lib/auth/bootstrap';
 
 const P = PERMISSIONS;
 const CONTENT: PermissionValue[] = [P.SERVICES_MANAGE, P.PROJECTS_MANAGE, P.SETTINGS_MANAGE];
@@ -253,6 +253,100 @@ describe('demo users', () => {
         returnHeaders: true,
       });
       expect(response.user.email).toBe(demo.email);
+    }
+  });
+});
+
+describe('provisionUser', () => {
+  beforeEach(async () => {
+    resetAuthForTests();
+    await wipe();
+  });
+  afterEach(wipe);
+
+  it('creates a user with the role and returns a manualLink without SMTP', async () => {
+    const result = await provisionUser({ email: 'New@Example.test', name: 'New', role: 'editor' }, { as: 'system' });
+    expect(result.user).toMatchObject({ email: 'new@example.test', name: 'New', role: 'editor' });
+    expect(result.manualLink).toContain('/reset-password');
+    expect(result.manualLink).toContain('invite');
+    const [u] = await db.select().from(users).where(eq(users.email, 'new@example.test'));
+    expect(u!.role).toBe('editor');
+  });
+
+  it('throws a recognisable duplicate error', async () => {
+    await provisionUser({ email: 'dup@example.test', name: 'Dup', role: 'viewer' }, { as: 'system' });
+    const err = await provisionUser({ email: 'DUP@example.test', name: 'Dup', role: 'viewer' }, { as: 'system' }).catch(
+      (e: unknown) => e,
+    );
+    expect(isDuplicateUserError(err)).toBe(true);
+  });
+});
+
+describe('admin migration: owners, skips', () => {
+  beforeEach(async () => {
+    resetAuthForTests();
+    await wipe();
+  });
+  afterEach(wipe);
+
+  it('ignores an inactive owner-capable admin when picking the fallback owner', async () => {
+    await seedAdmins();
+    await db.update(adminUsers).set({ isActive: false }).where(eq(adminUsers.id, ids.owner));
+    await migrateAdmins({});
+    const rows = Object.fromEntries((await db.select().from(users)).map((u) => [u.id, u]));
+    expect(rows[ids.owner]).toMatchObject({ role: 'owner', banned: true });
+    expect(rows[ids.editor]!.role).toBe('owner');
+    expect((await verifyAdminMigration()).ok).toBe(true);
+  });
+
+  it('verify fails when the only owners are banned', async () => {
+    await seedAdmins();
+    await migrateAdmins({});
+    await db.update(users).set({ banned: true }).where(eq(users.role, 'owner'));
+    await db.update(adminUsers).set({ isActive: false }).where(eq(adminUsers.id, ids.owner));
+    await db.delete(adminUsers).where(eq(adminUsers.id, ids.editor));
+    const result = await verifyAdminMigration();
+    expect(result.ok).toBe(false);
+    expect(result.problems.join('\n')).toContain('no active owner');
+  });
+
+  it('warns about a skipped admin, remaps its quotes, and verify flags orphans', async () => {
+    await seedAdmins();
+    await db
+      .insert(users)
+      .values({ id: 'existing-user', name: 'Existing', email: 'editor@legacy.test', role: 'editor' });
+    const [q] = await db
+      .insert(quoteRequests)
+      .values({ name: 'Q', email: 'q@x.test', phone: '1', assignedAdminId: ids.editor })
+      .returning();
+
+    const dry = await migrateAdmins({ dryRun: true });
+    expect(dry.warnings.join('\n')).toContain('editor@legacy.test');
+
+    const result = await migrateAdmins({});
+    expect(result.warnings).toHaveLength(1);
+    const [row] = await db.select().from(quoteRequests).where(eq(quoteRequests.id, q!.id));
+    expect(row!.assignedUserId).toBe('existing-user');
+    expect((await verifyAdminMigration()).ok).toBe(true);
+
+    await db.update(quoteRequests).set({ assignedUserId: null }).where(eq(quoteRequests.id, q!.id));
+    const bad = await verifyAdminMigration();
+    expect(bad.ok).toBe(false);
+    expect(bad.problems.join('\n')).toContain('no assigned_user_id');
+  });
+});
+
+describe('demo users in production', () => {
+  it('refuses even with SEED_DEMO_USERS=true', async () => {
+    const env = process.env as Record<string, string | undefined>;
+    const prev = env.NODE_ENV;
+    env.NODE_ENV = 'production';
+    process.env.SEED_DEMO_USERS = 'true';
+    try {
+      await expect(seedDemoUsers()).rejects.toThrow(/production/);
+    } finally {
+      env.NODE_ENV = prev;
+      delete process.env.SEED_DEMO_USERS;
     }
   });
 });

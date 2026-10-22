@@ -34,11 +34,11 @@ export function mapRole(admin: LegacyAdmin): RoleName {
 
 type FullAdmin = typeof adminUsers.$inferSelect;
 
-// Role per admin id. When nobody would be an owner (and none exists already),
-// the oldest active admin becomes one.
-function assignRoles(admins: FullAdmin[], existingOwner: boolean): Map<string, RoleName> {
+// Role per admin id. When nobody ACTIVE would be an owner (and no active owner
+// exists already), the oldest active admin becomes one.
+function assignRoles(admins: FullAdmin[], existingActiveOwner: boolean): Map<string, RoleName> {
   const roles = new Map(admins.map((a) => [a.id, mapRole(a)]));
-  const anyOwner = existingOwner || [...roles.values()].includes('owner');
+  const anyOwner = existingActiveOwner || admins.some((a) => a.isActive && roles.get(a.id) === 'owner');
   if (!anyOwner) {
     const oldest = admins.filter((a) => a.isActive).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
     if (oldest) roles.set(oldest.id, 'owner');
@@ -53,6 +53,7 @@ export type MigrationResult = {
   created: number;
   skipped: number;
   quotesLinked: number;
+  warnings: string[];
 };
 
 const norm = (email: string) => email.trim().toLowerCase();
@@ -60,9 +61,11 @@ const norm = (email: string) => email.trim().toLowerCase();
 export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {}): Promise<MigrationResult> {
   return db.transaction(async (tx) => {
     const admins = await tx.select().from(adminUsers).orderBy(asc(adminUsers.createdAt));
-    const existing = await tx.select({ email: users.email, role: users.role }).from(users);
+    const existing = await tx
+      .select({ email: users.email, role: users.role, id: users.id, banned: users.banned })
+      .from(users);
     const existingEmails = new Set(existing.map((u) => u.email));
-    const existingOwner = existing.some((u) => u.role === 'owner');
+    const existingOwner = existing.some((u) => u.role === 'owner' && !u.banned);
 
     const toCreate = admins.filter((a) => !existingEmails.has(norm(a.email)));
     const roles = assignRoles(toCreate, existingOwner);
@@ -77,6 +80,17 @@ export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {
       };
     });
 
+    // An admin whose email already belongs to another user id is not migrated.
+    const skippedAdmins = admins.filter((a) => existingEmails.has(norm(a.email)));
+    const warnings = skippedAdmins
+      .map((a) => {
+        const owner = existing.find((u) => u.email === norm(a.email))!;
+        return owner.id === a.id
+          ? ''
+          : `${norm(a.email)}: email already has user ${owner.id} (admin id ${a.id}); skipped, quotes remapped to the existing user`;
+      })
+      .filter(Boolean);
+
     if (dryRun) {
       const pending = await tx.execute(
         sql`select count(*)::int as n from quote_requests where assigned_admin_id is not null and assigned_user_id is null`,
@@ -87,6 +101,7 @@ export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {
         created: toCreate.length,
         skipped: admins.length - toCreate.length,
         quotesLinked: Number((pending.rows[0] as { n: number }).n),
+        warnings,
       };
     }
 
@@ -109,6 +124,15 @@ export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {
       });
     }
 
+    for (const a of skippedAdmins) {
+      const owner = existing.find((u) => u.email === norm(a.email))!;
+      if (owner.id === a.id) continue;
+      await tx.execute(sql`
+        update quote_requests set assigned_user_id = ${owner.id}
+        where assigned_admin_id = ${a.id}::uuid and assigned_user_id is null
+      `);
+    }
+
     // Only assignments whose admin now has a user row (a skipped email keeps its own id).
     const linked = await tx.execute(sql`
       update quote_requests q set assigned_user_id = q.assigned_admin_id::text
@@ -122,6 +146,7 @@ export async function migrateAdmins({ dryRun = false }: { dryRun?: boolean } = {
       created: toCreate.length,
       skipped: admins.length - toCreate.length,
       quotesLinked: linked.rowCount ?? 0,
+      warnings,
     };
   });
 }
@@ -135,8 +160,10 @@ export async function verifyAdminMigration(): Promise<VerifyResult> {
 
   const migrated = adminIds.length ? await db.select().from(users).where(inArray(users.id, adminIds)) : [];
   const byId = new Map(migrated.map((u) => [u.id, u]));
-  const allUsers = await db.select({ id: users.id, email: users.email, role: users.role }).from(users);
-  const ownedElsewhere = allUsers.some((u) => u.role === 'owner' && !byId.has(u.id));
+  const allUsers = await db
+    .select({ id: users.id, email: users.email, role: users.role, banned: users.banned })
+    .from(users);
+  const ownedElsewhere = allUsers.some((u) => u.role === 'owner' && !u.banned && !byId.has(u.id));
   const roles = assignRoles(
     admins.filter((a) => byId.has(a.id)),
     ownedElsewhere,
@@ -171,10 +198,15 @@ export async function verifyAdminMigration(): Promise<VerifyResult> {
   const n = Number((unlinked.rows[0] as { n: number }).n);
   if (n > 0) problems.push(`${n} quote assignment(s) not copied to assigned_user_id`);
 
-  const [{ n: owners }] = (await db.execute(sql`select count(*)::int as n from users where role = 'owner'`)).rows as {
-    n: number;
-  }[];
-  if (admins.length > 0 && Number(owners) === 0) problems.push('no owner exists');
+  const orphaned = await db.execute(
+    sql`select count(*)::int as n from quote_requests where assigned_admin_id is not null and assigned_user_id is null`,
+  );
+  const orphans = Number((orphaned.rows[0] as { n: number }).n);
+  if (orphans > 0) problems.push(`${orphans} quote(s) have assigned_admin_id but no assigned_user_id`);
+
+  if (admins.length > 0 && !allUsers.some((u) => u.role === 'owner' && !u.banned)) {
+    problems.push('no active owner exists');
+  }
 
   return { ok: problems.length === 0, problems, checked: admins.length };
 }
