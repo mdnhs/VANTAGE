@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/defaults';
 import {
   SECTION_BG,
@@ -35,7 +35,7 @@ export function StandardsSection({ eyebrow, title, image, items }: StandardsSect
       <div className={`${SECTION_CONTAINER} grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20`}>
         <div className='relative h-[260px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[380px] lg:h-[600px]'>
           <Image
-            src={image?.src ?? ABOUT_FALLBACK_IMAGES.standards}
+            src={image ? sizedSrc(image, 'w_1200') : ABOUT_FALLBACK_IMAGES.standards}
             alt='Vantage Autobody facility'
             fill
             sizes='(min-width: 1024px) 560px, 100vw'

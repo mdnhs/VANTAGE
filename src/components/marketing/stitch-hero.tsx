@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 import Image from 'next/image';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 // Icon per trust-row position is fixed (exact Figma SVGs); only the title/subtitle text is
 // CMS-driven (Site settings → Homepage tab), zipped in by index with `trustItems`.
@@ -48,7 +48,9 @@ export function StitchHero({
     sub: trustItems[index]?.subtitle ?? '',
   })).filter((item) => item.title || item.sub);
   const showVideo = heroVideoEnabled && Boolean(heroVideo);
-  const fallbackImageSrc = heroFallbackImage?.src ?? '/assets/marketing/stitch-hero.jpg';
+  const fallbackImageSrc = heroFallbackImage
+    ? sizedSrc(heroFallbackImage, 'w_1920')
+    : '/assets/marketing/stitch-hero.jpg';
 
   return (
     <section className='relative w-full overflow-hidden bg-[#111113] font-[family-name:var(--font-inter)]'>

@@ -2,7 +2,9 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { cldUrl } from '@/lib/cloudinary/url';
 import { parseGlobal } from '@/lib/content/globals';
+import type { PublicImage } from '@/lib/media/public-image';
 
 import { ContactForm } from './contact-form';
 import { QuoteForm } from './quote-form';
@@ -61,6 +63,24 @@ describe('StitchHeader from navigation defaults', () => {
     ]);
     const wide = screen.getByRole('link', { name: /Request Free Quote Online/ });
     expect(wide.getAttribute('href')).toBe('/get-a-quote');
+  });
+
+  it('sizes a legacy Cloudinary logo exactly as the old cldUrl did', () => {
+    const logo: PublicImage = {
+      id: null,
+      src: cldUrl('vantage/logo'),
+      mimeType: null,
+      width: null,
+      height: null,
+      alt: '',
+      blurDataUrl: null,
+      focal: { x: 0.5, y: 0.5 },
+    };
+    render(
+      <StitchHeader navigation={parseGlobal('navigation', {})} phone='+353 1 234' businessName='Shop' logo={logo} />,
+    );
+    const img = screen.getAllByAltText('Shop')[0]!;
+    expect(decodeURIComponent(img.getAttribute('src') ?? '')).toContain(cldUrl('vantage/logo', { height: 240 }));
   });
 
   it('follows edited navigation', () => {

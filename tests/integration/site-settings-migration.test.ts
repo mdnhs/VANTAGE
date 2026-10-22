@@ -10,6 +10,7 @@ import { db } from '@/server/db';
 import { auditLogs, revisions, siteSettings } from '@/server/db/schema';
 import {
   composeLegacyView,
+  composePublicSettings,
   FALLBACK_SETTINGS,
   PUBLIC_SETTINGS_KEYS,
   type PublicGlobals,
@@ -490,6 +491,14 @@ describe('site_settings -> versioned keys', () => {
       expect(fromKeys.address).toBe('Unit 4\nDublin Road');
       expect(formatOpeningHoursSummary(fromKeys.openingHours)).toBe(formatOpeningHoursSummary(structured));
       expect((await verifySiteSettingsMigration()).ok).toBe(true);
+    });
+
+    it('a never-saved key resolves the legacy logo to its Cloudinary URL', async () => {
+      const legacy = await seed();
+      const composed = composePublicSettings(resolvePublicGlobals(none, legacy), {});
+      expect(composed.logo?.src).toBe(
+        `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/vantage/branding/logo`,
+      );
     });
 
     it('a stored key always wins over the legacy row', async () => {

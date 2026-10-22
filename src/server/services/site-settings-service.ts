@@ -32,7 +32,7 @@ async function getPublic(): Promise<PublicSiteSettings> {
   } catch (error) {
     // A repair failure must never 500 the public site: render the defaults instead.
     console.warn('[site-settings] public read failed, using defaults:', error instanceof Error ? error.message : error);
-    return compose(resolvePublicGlobals(stored, null));
+    return composePublicSettings(resolvePublicGlobals(stored, null), {});
   }
 }
 

@@ -7,7 +7,9 @@ import type { PublicImage } from '@/lib/media/public-image';
 import { composeLegacyView, composePublicSettings, PUBLIC_SETTINGS_KEYS, type PublicGlobals } from './public-settings';
 
 const defaults = () =>
-  Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((key) => [key, parseGlobal(key, {})])) as unknown as PublicGlobals;
+  Object.fromEntries(
+    PUBLIC_SETTINGS_KEYS.map((key) => [key, structuredClone(parseGlobal(key, {}))]),
+  ) as unknown as PublicGlobals;
 
 describe('composePublicSettings blank list items', () => {
   it('drops list items whose primary text is blank, as the old forms did', () => {
@@ -75,24 +77,57 @@ describe('composePublicSettings images', () => {
     g.site.favicon = { kind: 'cloudinary', publicId: 'x' };
     const prev = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     delete process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const out = composePublicSettings(g, {});
-    if (prev !== undefined) process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = prev;
-    expect(out.logo).toBeNull();
-    expect(out.favicon).toBeNull();
-    expect(out.ogImage).toBeNull();
-    expect(out.aboutHeroImage).toBeNull();
+    try {
+      const out = composePublicSettings(g, {});
+      expect(out.logo).toBeNull();
+      expect(out.favicon).toBeNull();
+      expect(out.ogImage).toBeNull();
+      expect(out.aboutHeroImage).toBeNull();
+    } finally {
+      if (prev !== undefined) process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = prev;
+    }
   });
 
-  it('keeps every Phase 4 text field and drops the legacy image columns', () => {
-    const out = composePublicSettings(defaults(), {}) as Record<string, unknown>;
-    const { logo, favicon, heroVideo, heroFallbackImage, ogImage, aboutHeroImage, aboutHeritageImage, ...rest } = out;
-    void [logo, favicon, heroVideo, heroFallbackImage, ogImage, aboutHeroImage, aboutHeritageImage];
-    expect(out).not.toHaveProperty('logoPublicId');
-    expect(out).not.toHaveProperty('aboutStandardsImagePublicId');
-    const legacy = composeLegacyView(defaults()) as Record<string, unknown>;
-    expect(rest.businessName).toBe(legacy.businessName);
-    expect(rest.heroEyebrow).toBe(legacy.heroEyebrow);
-    expect(rest.aboutHeritageQuote).toBe(legacy.aboutHeritageQuote);
-    expect(rest.insuranceDisclaimer).toBe(legacy.insuranceDisclaimer);
+  it('keeps every Phase 4 field identical to the legacy view for a populated fixture', () => {
+    const g = defaults();
+    g.site.name = 'Acme Autobody';
+    g.site.logo = { kind: 'cloudinary', publicId: 'vantage/logo' };
+    g.contact.phone.display = '+353 1 999 0000';
+    g['page.home'].hero.eyebrow = 'Eyebrow';
+    g['page.about'].heritage.quote = 'A quote';
+    g['page.about'].team.members.push({ name: 'Ann', role: 'Painter', image: null });
+    g['page.insurance'].disclaimer = 'Fine print';
+    const out = composePublicSettings(g, {}) as Record<string, unknown>;
+    const legacy = composeLegacyView(g) as Record<string, unknown>;
+    const imageKeys = [
+      'logo',
+      'favicon',
+      'heroVideo',
+      'heroFallbackImage',
+      'ogImage',
+      'aboutHeroImage',
+      'aboutHeritageImage',
+      'aboutStandardsImage',
+    ];
+    const legacyImageKeys = [
+      'logoPublicId',
+      'faviconPublicId',
+      'heroVideoPublicId',
+      'heroFallbackImagePublicId',
+      'ogImagePublicId',
+      'aboutHeroImagePublicId',
+      'aboutHeritageImagePublicId',
+      'aboutStandardsImagePublicId',
+    ];
+    const strip = (o: Record<string, unknown>, drop: string[]) =>
+      Object.fromEntries(Object.entries(o).filter(([k]) => !drop.includes(k) && k !== 'aboutTeamMembers'));
+    expect(strip(out, imageKeys)).toEqual(strip(legacy, legacyImageKeys));
+    expect(out.aboutTeamMembers).toEqual(
+      (legacy.aboutTeamMembers as { name: string; role: string }[]).map((m) => ({
+        name: m.name,
+        role: m.role,
+        image: null,
+      })),
+    );
   });
 });

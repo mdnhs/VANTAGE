@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { LayoutDashboard } from 'lucide-react';
 import { LottieLogo } from '@/components/ui/lottie-logo';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 export interface AuthBrandProps {
   businessName: string;
@@ -12,7 +12,13 @@ export interface AuthBrandProps {
 
 function Mark({ businessName, logo }: Pick<AuthBrandProps, 'businessName' | 'logo'>) {
   return logo ? (
-    <Image src={logo.src} alt={businessName} width={40} height={40} className='size-10 object-contain' />
+    <Image
+      src={sizedSrc(logo, 'w_80,h_80,c_fit')}
+      alt={businessName}
+      width={40}
+      height={40}
+      className='size-10 object-contain'
+    />
   ) : (
     <div className='flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
       <LayoutDashboard className='size-5' />

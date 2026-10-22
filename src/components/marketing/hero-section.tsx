@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 interface HeroSectionProps {
   heroVideoEnabled?: boolean;
@@ -14,7 +14,7 @@ export function HeroSection({
   heroFallbackImage = null,
 }: HeroSectionProps) {
   const showVideo = heroVideoEnabled && Boolean(heroVideo);
-  const fallbackImageSrc = heroFallbackImage?.src ?? '/assets/marketing/hero.jpg';
+  const fallbackImageSrc = heroFallbackImage ? sizedSrc(heroFallbackImage, 'w_1920') : '/assets/marketing/hero.jpg';
 
   return (
     <section className='relative container mx-auto flex min-h-[580px] items-center overflow-hidden px-4 pt-28 pb-20 sm:min-h-[700px] sm:px-6 sm:pt-36 sm:pb-28 md:px-12 lg:min-h-[790px] lg:pt-40 lg:pb-40'>

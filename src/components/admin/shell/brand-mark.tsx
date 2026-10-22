@@ -4,7 +4,7 @@ import { LayoutDashboardIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { LottieLogo } from '@/components/ui/lottie-logo';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { cn } from '@/lib/utils';
 
 export type Brand = {
@@ -18,7 +18,13 @@ export type Brand = {
 // sized for admin chrome.
 export function BrandMark({ brand, className }: { brand: Brand; className?: string }) {
   const image = brand.logo ? (
-    <Image src={brand.logo.src} alt='' width={22} height={22} className='size-[22px] object-contain' />
+    <Image
+      src={sizedSrc(brand.logo, 'w_64,h_64,c_fit')}
+      alt=''
+      width={22}
+      height={22}
+      className='size-[22px] object-contain'
+    />
   ) : (
     <LayoutDashboardIcon aria-hidden className='size-[18px] text-accent-foreground' />
   );

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Quote } from 'lucide-react';
-import type { PublicImage } from '@/lib/media/public-image';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES } from '@/features/about-page/defaults';
 import {
   BODY_TEXT,
@@ -56,7 +56,7 @@ export function HeritageSection({ title, text, stat1, stat2, image, quote }: Her
         <div className='flex flex-col lg:col-span-6 lg:col-start-7'>
           <div className='relative h-[280px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[400px] lg:h-[500px]'>
             <Image
-              src={image?.src ?? ABOUT_FALLBACK_IMAGES.heritage}
+              src={image ? sizedSrc(image, 'w_1200') : ABOUT_FALLBACK_IMAGES.heritage}
               alt='Craftsman working on vehicle bodywork'
               fill
               sizes='(min-width: 1024px) 600px, 100vw'

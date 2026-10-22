@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/defaults';
 import {
   SECTION_BG,
@@ -30,7 +31,10 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
 
         <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
           {members.map((member, index) => {
-            const photo = member.image?.src ?? ABOUT_FALLBACK_IMAGES.team[index] ?? null;
+            const photo = member.image
+              ? sizedSrc(member.image, 'w_800,h_946,c_fill,g_face')
+              : (ABOUT_FALLBACK_IMAGES.team[index] ?? null);
+            const focal = member.image?.id ? member.image.focal : null;
 
             return (
               <article
@@ -44,6 +48,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
                       alt={member.name}
                       fill
                       sizes='(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw'
+                      style={focal ? { objectPosition: `${focal.x * 100}% ${focal.y * 100}%` } : undefined}
                       className='object-cover grayscale transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0'
                     />
                   )}
