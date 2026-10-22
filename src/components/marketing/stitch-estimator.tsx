@@ -476,7 +476,7 @@ export function StitchEstimator() {
                 >
                   ← Back to vehicle details
                 </button>
-                {errorMsg && <p className='text-[12px] text-brand'>{errorMsg}</p>}
+                {errorMsg && <p className='text-[12px] text-brand-soft'>{errorMsg}</p>}
                 <SubmitRow
                   label={isSubmitting ? 'Sending request…' : 'Send my free quote request'}
                   type='submit'

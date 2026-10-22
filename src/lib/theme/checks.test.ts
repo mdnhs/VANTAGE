@@ -19,9 +19,10 @@ describe('checkTheme', () => {
       expect.closeTo(6.47, 2),
       expect.closeTo(3.85, 2),
       expect.closeTo(9.79, 2),
+      expect.closeTo(5.79, 2),
     ]);
     expect(rows.every((r) => r.rating !== 'fail')).toBe(true);
-    expect(SITE_PAIRS).toHaveLength(4);
+    expect(SITE_PAIRS).toHaveLength(5);
   });
 
   it('a hard-to-read brand fails white-on-brand', () => {
@@ -104,5 +105,21 @@ describe('fix automatically', () => {
     expect(rating(4.6, 4.5)).toBe('AA');
     expect(rating(4.49, 4.5)).toBe('fail');
     expect(rating(4.6, 3)).toBe('AAA');
+  });
+});
+
+describe('brand-mid on surface', () => {
+  it('is a checked site pair', () => {
+    expect(SITE_PAIRS).toContainEqual(['brand-mid', 'surface', 4.5]);
+  });
+
+  it('passes for the default theme, every pair', () => {
+    expect(checkTheme(DEFAULT_THEME)).toEqual([]);
+    expect(pairRatings(DEFAULT_THEME).find((r) => r.text === 'brand-mid')?.rating).not.toBe('fail');
+  });
+
+  it('fails for a dark red brand', () => {
+    const issues = checkTheme(ThemeConfig.parse({ site: { brand: '#7f1d1d' } }));
+    expect(issues).toContainEqual(expect.objectContaining({ scope: 'site', text: 'brand-mid', surface: 'surface' }));
   });
 });

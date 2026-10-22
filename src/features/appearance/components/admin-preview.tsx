@@ -20,12 +20,27 @@ const CHARTS = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4', 'bg-char
 // the published <style>). The cleanup returns the page to the published one.
 export function useLiveAdmin(admin: AdminThemeConfig) {
   const { resolvedTheme } = useTheme();
-  const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
+  // A system draft follows whatever is showing; light and dark are drawn as chosen.
+  const mode = admin.mode === 'system' ? (resolvedTheme === 'dark' ? 'dark' : 'light') : admin.mode;
+  const forced = admin.mode !== 'system';
   useEffect(() => {
     // Wait for next-themes to resolve, so a dark user never sees light tokens.
     if (resolvedTheme === undefined) return;
-    return applyLive(document.documentElement, liveDeclarations(admin, mode));
-  }, [admin, mode, resolvedTheme]);
+    const root = document.documentElement;
+    const had = (['light', 'dark'] as const).filter((name) => root.classList.contains(name));
+    if (forced) {
+      root.classList.remove('light', 'dark');
+      root.classList.add(mode);
+    }
+    const restoreTokens = applyLive(root, liveDeclarations(admin, mode));
+    return () => {
+      restoreTokens();
+      if (!forced) return;
+      // Back to the published mode.
+      root.classList.remove('light', 'dark');
+      root.classList.add(...had);
+    };
+  }, [admin, mode, forced, resolvedTheme]);
 }
 
 export function AdminPreview() {
