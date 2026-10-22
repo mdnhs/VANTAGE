@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs } from '@/server/middleware/view-as';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import {
   createHomepageCatalogSchema,
@@ -13,6 +14,8 @@ import {
   reorderHomepageCatalogsSchema,
   updateHomepageCatalogSchema,
 } from '@/validations/homepage-catalog-schema';
+
+const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -39,6 +42,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_catalog.create',
       entityType: 'homepage_catalog',
@@ -55,6 +59,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_catalog.reorder',
       entityType: 'homepage_catalog',
@@ -71,6 +76,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_catalog.update',
       entityType: 'homepage_catalog',
@@ -91,6 +97,7 @@ export const homepageCatalogs = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_catalog.delete',
       entityType: 'homepage_catalog',

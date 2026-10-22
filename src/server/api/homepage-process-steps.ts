@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs } from '@/server/middleware/view-as';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import {
   createHomepageProcessStepSchema,
@@ -13,6 +14,8 @@ import {
   reorderHomepageProcessStepsSchema,
   updateHomepageProcessStepSchema,
 } from '@/validations/homepage-process-step-schema';
+
+const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -45,6 +48,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_process_step.create',
       entityType: 'homepage_process_step',
@@ -61,6 +65,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_process_step.reorder',
       entityType: 'homepage_process_step',
@@ -77,6 +82,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_process_step.update',
       entityType: 'homepage_process_step',
@@ -97,6 +103,7 @@ export const homepageProcessSteps = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'homepage_process_step.delete',
       entityType: 'homepage_process_step',

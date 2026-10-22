@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
@@ -35,6 +35,17 @@ const seedQuote = async () => {
   return row!;
 };
 
+const PROJECT = {
+  title: 'Audit project',
+  slug: 'audit-project',
+  vehicleModel: 'BMW 3',
+  serviceCategory: 'Respray',
+  beforeImagePublicId: 'before',
+  afterImagePublicId: 'after',
+  description: 'Done',
+  status: 'draft',
+} as never;
+const TESTIMONIAL = { customerName: 'Old Name', reviewText: 'OLD-REVIEW-TEXT', rating: 5 };
 const SERVICE = { name: 'Dent repair', slug: 'dent-repair', description: 'Fixes dents' };
 
 beforeEach(async () => {
@@ -146,6 +157,56 @@ describe('website content mutations', () => {
   });
 });
 
+describe('diff hygiene', () => {
+  it('records that identity fields changed without their values', async () => {
+    const q = await seedQuote();
+    const res = await call(`/quotes/${q.id}`, owner, {
+      method: 'PATCH',
+      body: { address: '12 SECRET-STREET', city: 'SECRET-CITY' },
+    });
+    expect(res.status).toBe(200);
+    const [row] = await rows('quote.update');
+    expect(row!.diff).toMatchObject({
+      address: { from: '[not recorded]', to: '[not recorded]' },
+      city: { from: '[not recorded]', to: '[not recorded]' },
+    });
+    expect(JSON.stringify(row)).not.toContain('SECRET');
+  });
+
+  it('project status changes record only the status', async () => {
+    const created = await call('/projects', owner, {
+      method: 'POST',
+      body: PROJECT,
+    });
+    expect(created.status).toBe(201);
+    const { data } = await body(created);
+    const res = await call(`/projects/${data.id}/status`, owner, { method: 'PATCH', body: { status: 'published' } });
+    expect(res.status).toBe(200);
+    const [row] = await rows('project.update');
+    expect(Object.keys(row!.diff as object)).toEqual(['status']);
+    expect(JSON.stringify(row)).not.toContain('galleryImages');
+  });
+
+  it('testimonial edits never record the review or the customer name', async () => {
+    const created = await call('/testimonials', owner, { method: 'POST', body: TESTIMONIAL });
+    expect(created.status).toBe(201);
+    const { data } = await body(created);
+    const res = await call(`/testimonials/${data.id}`, owner, {
+      method: 'PATCH',
+      body: { reviewText: 'NEW-REVIEW-SECRET', customerName: 'NEW-NAME-SECRET' },
+    });
+    expect(res.status).toBe(200);
+    const [row] = await rows('testimonial.update');
+    expect(row!.diff).toMatchObject({
+      reviewText: { from: '[not recorded]' },
+      customerName: { from: '[not recorded]' },
+    });
+    const dump = JSON.stringify(row);
+    expect(dump).not.toContain('SECRET');
+    expect(dump).not.toContain(TESTIMONIAL.reviewText);
+  });
+});
+
 describe('failure and attribution', () => {
   it('a throwing audit never fails the mutation', async () => {
     vi.spyOn(auditModule, 'audit').mockRejectedValue(new Error('boom'));
@@ -156,17 +217,15 @@ describe('failure and attribution', () => {
     expect(err).toHaveBeenCalledWith('[audit-route] failed', 'quote.update');
   });
 
-  it('records the real user as impersonator under View-as', async () => {
+  it('refuses writes during View-as and records nothing', async () => {
     const intake = await createTestUser('intake');
     const q = await seedQuote();
     const viewing = await viewAsCookie(owner, intake.id);
     const res = await call(`/quotes/${q.id}`, viewing, { method: 'PATCH', body: { status: 'contacted' } });
-    expect(res.status).toBe(200);
-    const [row] = await db
-      .select()
-      .from(auditLogs)
-      .where(eq(auditLogs.action, 'quote.update'))
-      .orderBy(desc(auditLogs.createdAt));
-    expect(row).toMatchObject({ actorId: intake.id, impersonatedBy: ownerId });
+    expect(res.status).toBe(403);
+    expect((await res.json()).error.code).toBe('IMPERSONATION_READ_ONLY');
+    expect(await rows('quote.update')).toHaveLength(0);
+    const [after] = await db.select().from(quoteRequests).where(eq(quoteRequests.id, q.id));
+    expect(after!.status).toBe('new');
   });
 });

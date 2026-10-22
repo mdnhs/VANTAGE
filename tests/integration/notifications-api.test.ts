@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { NotificationsDto } from '@/lib/notifications';
 import { db } from '@/server/db';
-import { contactMessages, quoteRequests, users } from '@/server/db/schema';
+import { auditLogs, contactMessages, quoteRequests, users } from '@/server/db/schema';
 import { notify } from '@/server/lib/notifications/notify';
 
 import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
@@ -159,6 +159,28 @@ describe('feed edge cases', () => {
     await notify('delivery_failed', { enquiry: 'contact', enquiryId: quote.id, channel: 'notification' });
     const u = await userWith('owner');
     expect((await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed')).toHaveLength(0);
+  });
+});
+
+describe('delivery_failed paging cap', () => {
+  it('terminates with more than 500 dead rows', async () => {
+    const live = await addQuote();
+    await notify('delivery_failed', { enquiry: 'quote', enquiryId: live.id, channel: 'notification' });
+    const now = Date.now();
+    await db.insert(auditLogs).values(
+      Array.from({ length: 520 }, (_, i) => ({
+        action: 'enquiry.delivery_failed',
+        entityType: 'quote',
+        entityId: randomUUID(),
+        summary: 'dead',
+        createdAt: new Date(now + 1000 + i),
+      })),
+    );
+    const u = await userWith('owner');
+    const { res, dto } = await get(u.cookie);
+    expect(res.status).toBe(200);
+    // The live row sits past the 10-page cap, so the feed ends without it instead of scanning forever.
+    expect(dto!.items.filter((i) => i.kind === 'delivery_failed')).toHaveLength(0);
   });
 });
 

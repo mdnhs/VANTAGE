@@ -42,13 +42,14 @@ const ROUTE_FILES = [
 ];
 
 describe('route coverage', () => {
-  it.each(ROUTE_FILES)('every guarded mutation in %s is audited', (file) => {
+  it.each(ROUTE_FILES)('every guarded mutation in %s is audited and refused during View-as', (file) => {
     const source = readFileSync(path.join(process.cwd(), 'src/server/api', `${file}.ts`), 'utf8');
     const segments = source.split(/\n {2}\.(?=(?:get|post|patch|put|delete)\()/).slice(1);
     const guarded = segments.filter((s) => /^(?:post|patch|put|delete)\(/.test(s) && s.includes('can({'));
     expect(guarded.length).toBeGreaterThan(0);
     for (const segment of guarded) {
       expect(segment, segment.slice(0, 60)).toContain('auditRoute(');
+      expect(segment, segment.slice(0, 60)).toContain('notViewingAs(');
     }
   });
 });

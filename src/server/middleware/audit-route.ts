@@ -49,15 +49,21 @@ export const auditRoute = (spec: AuditRouteSpec) =>
   createMiddleware<AppEnv>(async (c, next) => {
     const paramId = c.req.param('id');
     let before: object | null | undefined;
+    let loadFailed = false;
     if (spec.load && paramId && UUID.test(paramId)) {
       try {
         before = await spec.load(paramId);
       } catch {
-        before = undefined;
+        loadFailed = true;
       }
     }
     await next();
     if (c.res.status < 200 || c.res.status >= 300) return;
+    // Without the "before" record a diff would read as a full rewrite: log and write nothing.
+    if (loadFailed) {
+      console.error('[audit-route] load failed', spec.action);
+      return;
+    }
     try {
       let data: (Record<string, unknown> & { id?: unknown }) | undefined;
       try {
@@ -68,6 +74,7 @@ export const auditRoute = (spec: AuditRouteSpec) =>
       const entityId = paramId ?? (typeof data?.id === 'string' ? data.id : null);
       let diff: Diff | null = null;
       if (spec.load) {
+        if (!before) return;
         diff = auditDiff(before, data, spec);
         if (!diff) return;
       }

@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs } from '@/server/middleware/view-as';
 import { projectService } from '@/server/services/project-service';
 import {
   createProjectSchema,
@@ -14,6 +15,8 @@ import {
   reorderProjectsSchema,
   updateProjectSchema,
 } from '@/validations/project-schema';
+
+const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -47,6 +50,7 @@ export const projects = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'project.create', entityType: 'project', summary: 'Project created' }),
     zValidator('json', createProjectSchema),
     async (c) => {
@@ -59,6 +63,7 @@ export const projects = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'project.reorder', entityType: 'project', summary: 'Projects reordered' }),
     zValidator('json', reorderProjectsSchema),
     async (c) => {
@@ -71,10 +76,12 @@ export const projects = new Hono<AppEnv>()
   .patch(
     '/:id/status',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'project.update',
       entityType: 'project',
       summary: 'Project updated',
+      fields: ['status'],
       load: projectService.byId,
     }),
     zValidator('param', idParamSchema),
@@ -91,6 +98,7 @@ export const projects = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'project.update',
       entityType: 'project',
@@ -111,6 +119,7 @@ export const projects = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'project.delete', entityType: 'project', summary: 'Project deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

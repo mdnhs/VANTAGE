@@ -6,6 +6,7 @@ import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs } from '@/server/middleware/view-as';
 import { serviceService } from '@/server/services/service-service';
 import {
   createServiceSchema,
@@ -13,6 +14,8 @@ import {
   serviceListQuerySchema,
   updateServiceSchema,
 } from '@/validations/service-schema';
+
+const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -40,6 +43,7 @@ export const services = new Hono<AppEnv>()
   .post(
     '/',
     can({ content: ['create'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'service.create', entityType: 'service', summary: 'Service created' }),
     zValidator('json', createServiceSchema),
     async (c) => {
@@ -52,6 +56,7 @@ export const services = new Hono<AppEnv>()
   .patch(
     '/reorder',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'service.reorder', entityType: 'service', summary: 'Services reordered' }),
     zValidator('json', reorderServicesSchema),
     async (c) => {
@@ -64,6 +69,7 @@ export const services = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'service.update',
       entityType: 'service',
@@ -84,6 +90,7 @@ export const services = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ content: ['delete'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'service.delete', entityType: 'service', summary: 'Service deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {

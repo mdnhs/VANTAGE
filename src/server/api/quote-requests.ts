@@ -7,6 +7,7 @@ import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs } from '@/server/middleware/view-as';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
@@ -15,6 +16,8 @@ import {
   quoteRequestListQuerySchema,
   updateQuoteRequestSchema,
 } from '@/validations/quote-request-schema';
+
+const READ_ONLY_VIEW_AS = 'View-as is read-only: settings cannot be changed';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -32,6 +35,7 @@ export const quoteRequests = new Hono<AppEnv>()
   .post(
     '/admin',
     can({ quote: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'quote.create', entityType: 'quote', summary: 'Quote request created' }),
     zValidator('json', createQuoteRequestSchema),
     async (c) => {
@@ -65,12 +69,21 @@ export const quoteRequests = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ quote: ['update'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({
       action: 'quote.update',
       entityType: 'quote',
       summary: 'Quote request updated',
       load: quoteRequestService.byId,
       fields: [
+        'name',
+        'email',
+        'phone',
+        'address',
+        'city',
+        'eircode',
+        'registration',
+        'description',
         'status',
         'assignedUserId',
         'inspectionDate',
@@ -82,7 +95,7 @@ export const quoteRequests = new Hono<AppEnv>()
         'completedAt',
         'adminNotes',
       ],
-      redact: ['adminNotes'],
+      redact: ['adminNotes', 'name', 'email', 'phone', 'address', 'city', 'eircode', 'registration', 'description'],
     }),
     zValidator('param', idParamSchema),
     zValidator('json', updateQuoteRequestSchema),
@@ -99,6 +112,7 @@ export const quoteRequests = new Hono<AppEnv>()
   .delete(
     '/:id',
     can({ quote: ['delete'] }),
+    notViewingAs(READ_ONLY_VIEW_AS),
     auditRoute({ action: 'quote.delete', entityType: 'quote', summary: 'Quote request deleted' }),
     zValidator('param', idParamSchema),
     async (c) => {
