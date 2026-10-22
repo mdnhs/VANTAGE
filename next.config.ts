@@ -1,12 +1,32 @@
 import type { NextConfig } from 'next';
 
-const securityHeaders = [
+const baseHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  // SAMEORIGIN, not DENY: the Appearance preview frames the site from the admin (same origin).
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+];
+
+// The public site may be framed by itself only: the Appearance preview shows it
+// inside the admin (same origin). Admin, API and sign-in pages are never framed.
+const frameSelf = [
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+];
+const frameNone = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+];
+// Where framing stays denied. Later rules win for the same header key (Next).
+const NEVER_FRAMED = [
+  '/dashboard/:path*',
+  '/api/:path*',
+  '/login',
+  '/account/:path*',
+  '/forgot-password',
+  '/reset-password',
+  '/two-factor',
+  '/two-factor-setup',
 ];
 
 // The s3 media driver's public host, read at build (Docker passes MEDIA_PUBLIC_URL as a build arg).
@@ -37,7 +57,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com' }, ...mediaRemotePatterns()],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: [...baseHeaders, ...frameSelf] },
+      ...NEVER_FRAMED.map((source) => ({ source, headers: frameNone })),
+    ];
   },
 };
 

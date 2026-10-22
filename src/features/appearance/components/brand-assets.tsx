@@ -2,10 +2,12 @@
 
 import { toast } from 'sonner';
 
+import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
 import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
 import type { FormField } from '@/components/admin/schema-form/to-fields';
 import { ImageWidget } from '@/components/admin/schema-form/widgets/image-widget';
-import { useCan } from '@/contexts/actor-provider';
+import { Button } from '@/components/ui/button';
+import { useActor, useCan } from '@/contexts/actor-provider';
 import { useSaveGlobal } from '@/features/globals/hooks/api/mutation/use-save-global';
 import { useGlobal } from '@/features/globals/hooks/api/query/use-global';
 import { CONFLICT_MESSAGE } from '@/features/globals/lib/submit-result';
@@ -33,8 +35,21 @@ const FIELDS: Record<Key, FormField> = {
 export function BrandAssets() {
   const doc = useGlobal('site');
   const { save, isPending } = useSaveGlobal('site');
-  const canUpdate = useCan(GLOBAL_ACCESS.site.update);
-  if (!doc.data) return null;
+  const viewingAs = Boolean(useActor().impersonatedBy);
+  const canUpdate = useCan(GLOBAL_ACCESS.site.update) && !viewingAs;
+  if (doc.isError) {
+    return (
+      <DashboardCard title='Brand images'>
+        <div role='alert' className='flex flex-col items-start gap-3 text-sm'>
+          <p>{doc.error.message}</p>
+          <Button variant='outline' onClick={() => void doc.refetch()}>
+            Try again
+          </Button>
+        </div>
+      </DashboardCard>
+    );
+  }
+  if (!doc.data) return <CardSkeleton />;
   const { version } = doc.data;
   const value = doc.data.value as Record<Key, ImageRef | undefined>;
 

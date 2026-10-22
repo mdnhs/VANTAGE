@@ -9,8 +9,9 @@ import { DEFAULT_THEME, ThemeConfig } from '@/lib/theme/schema';
 
 import { AppearanceView } from './appearance-view';
 
-const can = vi.hoisted(() => ({ update: true, publish: true }));
+const can = vi.hoisted(() => ({ update: true, publish: true, viewAs: false }));
 vi.mock('@/contexts/actor-provider', () => ({
+  useActor: () => ({ impersonatedBy: can.viewAs ? 'owner-1' : null }),
   useCan: (p: { appearance?: string[]; settings?: string[] }) => {
     if (p.appearance?.includes('publish')) return can.publish;
     if (p.appearance?.includes('update')) return can.update;
@@ -40,6 +41,7 @@ const envelope = (data: unknown, status = 200) =>
 beforeEach(() => {
   can.update = true;
   can.publish = true;
+  can.viewAs = false;
   calls = [];
   doc = docFor({});
   publishStatus = 200;
@@ -132,12 +134,24 @@ describe('AppearanceView', () => {
     expect(brand.closest('fieldset')?.disabled).toBe(true);
   });
 
+  it('is read-only while viewing as another user', async () => {
+    can.viewAs = true;
+    renderView();
+    const brand = await screen.findByLabelText('Brand');
+    expect(brand.closest('fieldset')?.disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Publish' })).toBeNull();
+  });
+
   it('publishes with the current version and toasts', async () => {
     doc = docFor({ site: { brand: '#c42424' } });
     renderView();
     fireEvent.click(await screen.findByRole('button', { name: 'Publish' }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Theme published'));
     expect(calls.find((c) => c.url.endsWith('/admin/theme/publish'))?.body).toEqual({ version: 3 });
+    // Nothing left to publish: the button disables again.
+    await waitFor(() =>
+      expect((screen.getByRole('button', { name: 'Publish' }) as HTMLButtonElement).disabled).toBe(true),
+    );
   });
 
   it('on a stale publish toasts, and loads the other version', async () => {

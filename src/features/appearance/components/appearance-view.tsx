@@ -15,7 +15,7 @@ import { FORM_ACTION, PageHeader } from '@/components/admin/dashboard/page-heade
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useCan } from '@/contexts/actor-provider';
+import { useActor, useCan } from '@/contexts/actor-provider';
 import { GlobalApiError } from '@/features/globals/services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { describeIssue, checkTheme } from '@/lib/theme/checks';
@@ -89,8 +89,10 @@ function statusText(state: AutosaveState, hasDraft: boolean) {
 
 function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<void>; delay?: number }) {
   const queryClient = useQueryClient();
-  const canUpdate = useCan({ appearance: ['update'] });
-  const canPublish = useCan({ appearance: ['publish'] });
+  // View-as is read-only: the API refuses it, so the controls do not offer it.
+  const viewingAs = Boolean(useActor().impersonatedBy);
+  const canUpdate = useCan({ appearance: ['update'] }) && !viewingAs;
+  const canPublish = useCan({ appearance: ['publish'] }) && !viewingAs;
   const [draft, setDraft] = useState<ThemeConfigValue>(doc.draft);
   const [tab, setTab] = useState('site');
   const [serverError, setServerError] = useState<string | null>(null);
@@ -153,7 +155,8 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
   const onPublish = () =>
     attempt(
       (version) => publish.mutateAsync({ version }),
-      () => {
+      (res) => {
+        autosave.reset(res.version);
         setServerError(null);
         toast.success('Theme published');
       },
@@ -196,7 +199,15 @@ function Editor({ doc, reload, delay }: { doc: ThemeAdminDoc; reload(): Promise<
         title='Appearance'
         description={
           <span role='status' aria-live='polite'>
-            {statusText(state, doc.hasDraft)}
+            {state.status === 'conflict' ? (
+              // Dismissing the dialog chooses nothing; this brings it back.
+              <button type='button' className='underline underline-offset-2' onClick={() => setDismissed(null)}>
+                {statusText(state, doc.hasDraft)}
+              </button>
+            ) : (
+              statusText(state, doc.hasDraft)
+            )}
+            {state.status === 'error' && state.error ? `: ${state.error}` : ''}
           </span>
         }
         actions={
