@@ -25,6 +25,11 @@ Re-running is safe: existing keys are skipped. `--force` rewrites keys whose val
 Deploying before migrating, migrating before deploying, or stopping half way all show the
 same site. Once a key is saved (by the migration or an admin), the stored document wins.
 
+The migration CLI runs outside Next and cannot expire the page cache. A key the site already
+cached as "missing" keeps being served from the legacy row (same content, one extra database
+read per request) until that key is saved in the admin or the app is redeployed. To switch over
+at once, run the migration before the deploy, or restart the app after migrating.
+
 ## Known intentional differences
 
 - A trust badge left blank on an existing row shows the default copy (it used to render blank).
