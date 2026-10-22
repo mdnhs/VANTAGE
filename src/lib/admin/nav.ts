@@ -211,7 +211,7 @@ export const NAV: readonly NavItem[] = [
     label: 'Appearance',
     href: '/dashboard/appearance',
     permission: { appearance: ['read'] },
-    keywords: ['theme', 'colours', 'colors', 'brand', 'logo'],
+    keywords: ['theme', 'colours', 'colors', 'brand', 'logo', 'fonts', 'dark mode'],
   },
   {
     id: 'settings',
@@ -221,7 +221,7 @@ export const NAV: readonly NavItem[] = [
     // Opens for either grant: each child carries its own (identity, notifications
     // and privacy need settings.read; the rest globals.read).
     permission: [{ settings: ['read'] }, { globals: ['read'] }],
-    keywords: ['identity', 'contact', 'footer', 'navigation', 'privacy'],
+    keywords: ['identity', 'contact', 'footer', 'navigation', 'privacy', 'ai'],
     children: [
       settingsLink('identity', { settings: ['read'] }, ['logo', 'favicon', 'name', 'social']),
       settingsLink('contact', { globals: ['read'] }, ['phone', 'email', 'address', 'hours', 'map']),
@@ -230,6 +230,13 @@ export const NAV: readonly NavItem[] = [
       settingsLink('forms', { globals: ['read'] }, ['quote form', 'contact form', 'microcopy', 'labels']),
       settingsLink('notifications', { settings: ['read'] }, ['email', 'auto-reply', 'recipients']),
       settingsLink('privacy', { settings: ['read'] }, ['retention', 'gdpr', 'spam']),
+      {
+        id: 'settings-ai-assistant',
+        label: 'AI assistant',
+        href: '/dashboard/settings/ai-assistant',
+        permission: { ai: ['manage'] },
+        keywords: ['ai', 'assistant', 'gemini', 'claude', 'openai', 'chatbot'],
+      },
     ],
   },
   {

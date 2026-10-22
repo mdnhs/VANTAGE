@@ -4,7 +4,9 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 import {
   createPartnerLogoSchema,
@@ -36,21 +38,42 @@ export const partnerLogos = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createPartnerLogoSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await partnerLogoService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'partner_logo.create', entityType: 'partner_logo', summary: 'Partner logo created' }),
+    zValidator('json', createPartnerLogoSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await partnerLogoService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderPartnerLogosSchema), async (c) => {
-    const input = c.req.valid('json');
-    await partnerLogoService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'partner_logo.reorder', entityType: 'partner_logo', summary: 'Partner logos reordered' }),
+    zValidator('json', reorderPartnerLogosSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await partnerLogoService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'partner_logo.update',
+      entityType: 'partner_logo',
+      summary: 'Partner logo updated',
+      load: partnerLogoService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updatePartnerLogoSchema),
     async (c) => {
@@ -62,8 +85,15 @@ export const partnerLogos = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await partnerLogoService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'partner_logo.delete', entityType: 'partner_logo', summary: 'Partner logo deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await partnerLogoService.remove(id);
+      return ok(c, { success: true });
+    },
+  );

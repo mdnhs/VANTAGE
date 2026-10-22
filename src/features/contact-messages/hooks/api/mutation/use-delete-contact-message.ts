@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { deleteContactMessage } from '../../../services/api';
 import { contactMessageKeys } from '../../../utils/query-keys';
 
@@ -9,6 +10,7 @@ export function useDeleteContactMessage() {
 
   return useMutation({
     mutationFn: (id: string) => deleteContactMessage(id),
+    onError: (error: Error) => toast.error(error.message),
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: contactMessageKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: contactMessageKeys.lists() });

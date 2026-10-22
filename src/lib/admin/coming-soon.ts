@@ -22,10 +22,14 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/settings',
   // settings/[slug] serves every settings page.
   ...Object.keys(SETTINGS_PAGES).map((slug) => `/dashboard/settings/${slug}`),
+  // settings/ai-assistant is its own folder (Phase 9).
+  '/dashboard/settings/ai-assistant',
   '/dashboard/seo/defaults',
   '/dashboard/users',
   '/dashboard/account',
+  '/dashboard/appearance',
   '/dashboard/activity',
+  '/dashboard/media',
 ]);
 
 export type SectionParams = { section: string; rest: string[] };
