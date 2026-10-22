@@ -1,4 +1,13 @@
 # syntax=docker/dockerfile:1
+#
+# Build (the build prerenders pages and needs a reachable Postgres, hence --network host):
+#   docker build --network host \
+#     --build-arg DATABASE_URL=postgresql://vantage:vantage@localhost:5433/vantage \
+#     --build-arg AUTH_SECRET=<32+ char value> \
+#     --build-arg NEXT_PUBLIC_APP_URL=https://example.com \
+#     [--build-arg MEDIA_PUBLIC_URL=https://media.example.com] \
+#     -t vantage .
+# Build args live in the builder stage only; the runner stage gets runtime env from the host.
 FROM node:24-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -13,6 +22,9 @@ ARG MEDIA_PUBLIC_URL
 ENV MEDIA_PUBLIC_URL=$MEDIA_PUBLIC_URL
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+ARG DATABASE_URL
+ARG AUTH_SECRET
+ENV DATABASE_URL=$DATABASE_URL AUTH_SECRET=$AUTH_SECRET
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -27,6 +39,7 @@ RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+RUN mkdir -p /app/uploads && chown nextjs:nodejs /app/uploads
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]

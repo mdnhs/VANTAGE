@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Holds live MCP credentials (Stitch API key etc.) — copy .mcp.json.example instead
 .mcp.json
+
+# local media uploads
+/.uploads
+/.test-uploads
