@@ -166,6 +166,63 @@ describe('sendCapi', () => {
   });
 });
 
+describe('sendCapi hardening', () => {
+  const event = buildLeadEvent(input);
+
+  it('does not follow redirects: they are failures', async () => {
+    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      expect(init?.redirect).toBe('error');
+      throw new TypeError('redirect mode is set to error');
+    });
+    const result = await sendCapi({
+      pixelId: '1234567890',
+      token: 'EAAB-secret',
+      events: [event],
+      fetchImpl: fetchImpl as never,
+      sleep: async () => undefined,
+    });
+    expect(result).toEqual({ ok: false, status: 0, message: 'Meta could not be reached' });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it('treats a 307 response as a failure without reading a Location', async () => {
+    const res = new Response(null, { status: 307, headers: { location: 'https://evil.example/' } });
+    const result = await sendCapi({
+      pixelId: '1234567890',
+      token: 't',
+      events: [event],
+      fetchImpl: vi.fn(async () => res) as never,
+    });
+    expect(result).toEqual({ ok: false, status: 307, message: 'HTTP 307' });
+  });
+
+  it('reads only a bounded error body and survives non-JSON', async () => {
+    const huge = new Response('x'.repeat(5_000_000), { status: 400 });
+    const html = new Response('<html>nope</html>', { status: 400 });
+    const big = JSON.stringify({ error: { message: 'm'.repeat(10_000) } });
+    for (const [res, message] of [
+      [huge, 'HTTP 400'],
+      [html, 'HTTP 400'],
+    ] as const) {
+      const result = await sendCapi({
+        pixelId: '1234567890',
+        token: 't',
+        events: [event],
+        fetchImpl: vi.fn(async () => res) as never,
+      });
+      expect(result).toEqual({ ok: false, status: 400, message });
+    }
+    const long = await sendCapi({
+      pixelId: '1234567890',
+      token: 't',
+      events: [event],
+      fetchImpl: vi.fn(async () => new Response(big, { status: 400 })) as never,
+    });
+    // Cut off at 4 KB the JSON is no longer valid: no message, no crash.
+    expect(long).toEqual({ ok: false, status: 400, message: 'HTTP 400' });
+  });
+});
+
 describe('capiAllowedPath', () => {
   it('needs a single leading slash and a parseable path', () => {
     for (const path of ['/contact', '/services/x?x=1', '/']) expect(capiAllowedPath(path), path).toBe(true);

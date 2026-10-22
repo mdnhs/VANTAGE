@@ -9,7 +9,7 @@ import { auditLogs, revisions, settings } from '@/server/db/schema';
 import { publicTrackingFrom } from '@/server/queries/get-public-tracking';
 import { sendLeadToCapi } from '@/server/services/tracking-capi';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -295,5 +295,31 @@ describe('public tracking and lead sending', () => {
     expect(JSON.stringify(rows)).not.toContain(TOKEN);
     const admin = await json(await call('/admin/tracking', cookies.owner));
     expect(admin.data.lastCapiFailure.summary).toContain('HTTP 400');
+  });
+});
+
+describe('View-as and rate limit', () => {
+  it('refuses to save or send a test event while viewing as someone', async () => {
+    const target = await createTestUser('marketer');
+    const viewing = await viewAsCookie(cookies.owner, target.id);
+    const saved = await put(viewing, { version: 0, value, capiToken: TOKEN });
+    expect(saved.status).toBe(403);
+    expect((await json(saved)).error.code).toBe('IMPERSONATION_READ_ONLY');
+    const tested = await call('/admin/tracking/test-capi', viewing, { method: 'POST' });
+    expect(tested.status).toBe(403);
+    expect((await json(tested)).error.code).toBe('IMPERSONATION_READ_ONLY');
+    expect(await db.select().from(settings)).toHaveLength(0);
+    const rows = await db.select({ action: auditLogs.action }).from(auditLogs);
+    expect(rows.filter((r) => r.action.startsWith('tracking.'))).toEqual([]);
+  });
+
+  it('limits test events to 5 a minute with a clear message', async () => {
+    let last: Response | undefined;
+    for (let i = 0; i < 8; i++) {
+      last = await call('/admin/tracking/test-capi', cookies.owner, { method: 'POST' });
+      if (last.status === 429) break;
+    }
+    expect(last!.status).toBe(429);
+    expect((await json(last!)).error.message).toBe('Too many test events. Wait a minute and try again.');
   });
 });

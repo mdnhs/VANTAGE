@@ -63,6 +63,31 @@ export type CapiEvent = ReturnType<typeof buildLeadEvent>;
 
 export type CapiResult = { ok: true; status: number } | { ok: false; status: number; message: string };
 
+const MAX_BODY_BYTES = 4096;
+
+// Reads at most ~4 KB of an error body (the stream is cancelled beyond that);
+// anything that is not JSON gives null.
+async function readErrorBody(res: Response): Promise<{ error?: { message?: unknown } } | null> {
+  try {
+    const reader = res.body?.getReader();
+    if (!reader) return null;
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (size < MAX_BODY_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      size += value.byteLength;
+    }
+    await reader.cancel().catch(() => undefined);
+    const text = new TextDecoder().decode(Buffer.concat(chunks)).slice(0, MAX_BODY_BYTES);
+    const parsed: unknown = JSON.parse(text);
+    return parsed && typeof parsed === 'object' ? (parsed as { error?: { message?: unknown } }) : null;
+  } catch {
+    return null;
+  }
+}
+
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // Retries (0/1000/4000 ms) only on 429, 5xx and network errors. Error text is
@@ -92,12 +117,14 @@ export async function sendCapi(opts: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body,
+        // A redirect would send the token somewhere else: treat it as a failure.
+        redirect: 'error',
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       if (res.ok) return { ok: true, status: res.status };
-      const payload = (await res.json().catch(() => ({}))) as { error?: { message?: unknown } };
+      const payload = await readErrorBody(res);
       const message =
-        typeof payload.error?.message === 'string' ? scrub(payload.error.message).slice(0, 200) : `HTTP ${res.status}`;
+        typeof payload?.error?.message === 'string' ? scrub(payload.error.message).slice(0, 200) : `HTTP ${res.status}`;
       last = { ok: false, status: res.status, message };
       if (res.status !== 429 && res.status < 500) return last;
     } catch {

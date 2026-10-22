@@ -58,14 +58,20 @@ export async function readConsentSettings() {
   return (await readEffectiveGlobal('consent')).value;
 }
 
+// The one place the stored token is decrypted. Null when none is stored or it
+// cannot be read (wrong or missing key): a bad key never breaks the caller.
+export function readCapiToken(t: Pick<TrackingValue, 'capiTokenEncrypted'>): string | null {
+  if (!t.capiTokenEncrypted) return null;
+  try {
+    return decryptSecret(t.capiTokenEncrypted, CAPI_TOKEN_PURPOSE);
+  } catch {
+    return null;
+  }
+}
+
 function readable(encrypted: string | null): boolean | null {
   if (!encrypted) return null;
-  try {
-    return decryptSecret(encrypted, CAPI_TOKEN_PURPOSE) !== null;
-  } catch {
-    // A wrong-length key throws; the token is then unreadable, not the page.
-    return false;
-  }
+  return readCapiToken({ capiTokenEncrypted: encrypted }) !== null;
 }
 
 function channelStatus(t: TrackingValue, bannerOn: boolean) {
@@ -208,12 +214,7 @@ export async function saveTracking(actor: Actor, input: TrackingUpdate): Promise
 export async function sendTestEvent(actor: Actor, deps: { fetchImpl?: typeof fetch } = {}) {
   const t = await readTrackingSettings();
   const pixelId = validId(PIXEL_ID, t.metaPixelId);
-  let token: string | null = null;
-  try {
-    token = t.capiTokenEncrypted ? decryptSecret(t.capiTokenEncrypted, CAPI_TOKEN_PURPOSE) : null;
-  } catch {
-    token = null;
-  }
+  const token = readCapiToken(t);
   const errors: Record<string, string[]> = {};
   if (!pixelId) errors.metaPixelId = ['Add the Pixel ID first'];
   if (!token) errors.capiToken = ['Add a readable access token first'];
@@ -232,7 +233,7 @@ export async function sendTestEvent(actor: Actor, deps: { fetchImpl?: typeof fet
         event_time: Math.floor(Date.now() / 1000),
         event_id: randomUUID(),
         action_source: 'website',
-        event_source_url: `${clientEnv.NEXT_PUBLIC_APP_URL}/`,
+        event_source_url: new URL('/', clientEnv.NEXT_PUBLIC_APP_URL).href,
         user_data: { client_user_agent: 'admin-test-event', external_id: [sha256('admin-test-event')] },
       },
     ],
