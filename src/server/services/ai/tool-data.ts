@@ -256,7 +256,6 @@ export async function contactStats(
       .orderBy(desc(contactMessages.createdAt))
       .limit(20);
     result.recent = rows.map((r) => ({
-      id: r.id,
       firstName: firstNameOf(r.firstName),
       service: r.service || 'unspecified',
       status: r.status,

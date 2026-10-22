@@ -1,13 +1,13 @@
 'use client';
 
-import { MailIcon, SparklesIcon } from 'lucide-react';
+import { MailIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import { SearchPill } from '@/components/admin/command/search-pill';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCan } from '@/contexts/actor-provider';
+import { AiAssistant } from '@/features/ai/components/assistant';
 import { cn } from '@/lib/utils';
 
 import { ICON_BUTTON } from './constants';
@@ -25,25 +25,7 @@ export function Topbar() {
       <div className='flex min-w-0 flex-1' data-slot='topbar-search'>
         <SearchPill />
       </div>
-      {/* Disabled controls take no hover, so the tooltip hangs on a wrapper. */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <span
-              tabIndex={0}
-              role='button'
-              aria-disabled='true'
-              aria-label='AI assistant (coming soon)'
-              className='inline-flex rounded-full'
-            />
-          }
-        >
-          <Button variant='outline' size='icon-lg' className={ICON_BUTTON} aria-label='AI assistant' disabled>
-            <SparklesIcon />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>AI assistant is coming soon</TooltipContent>
-      </Tooltip>
+      <AiAssistant />
       {enquiriesHref ? (
         // A real link (role "link"), styled as an icon button.
         <Link

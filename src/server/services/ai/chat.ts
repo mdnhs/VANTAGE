@@ -191,7 +191,7 @@ export async function startChat(actor: Actor, input: ChatInput, signal?: AbortSi
     stream: ui.pipeThrough(
       new TransformStream({
         transform: (chunk, controller) => {
-          if (chunk.type === 'text-delta' && chunk.delta) sawText = true;
+          if (chunk.type === 'text-delta' && chunk.delta.trim()) sawText = true;
           if (chunk.type === 'finish' && !sawText) {
             if (chunk.finishReason === 'length') {
               controller.enqueue({ type: 'error', errorText: LENGTH_EXHAUSTED_MESSAGE });

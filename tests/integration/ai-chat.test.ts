@@ -150,14 +150,15 @@ describe('POST /admin/ai/chat', () => {
     await appendMessage(mine.id, { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text: 'mine' }] });
 
     const attempts = [
-      { text: 'x', conversationId: theirs.id },
-      { conversationId: theirs.id, regenerate: true },
-      { text: 'x', conversationId: theirs.id, editMessageId: theirMessage.id },
-      { text: 'x', conversationId: mine.id, editMessageId: theirMessage.id },
-    ];
-    for (const body of attempts) {
+      [{ text: 'x', conversationId: theirs.id }, 'Conversation not found'],
+      [{ conversationId: theirs.id, regenerate: true }, 'Conversation not found'],
+      [{ text: 'x', conversationId: theirs.id, editMessageId: theirMessage.id }, 'Conversation not found'],
+      [{ text: 'x', conversationId: mine.id, editMessageId: theirMessage.id }, 'Message not found'],
+    ] as const;
+    for (const [body, message] of attempts) {
       const res = await chat(users.editor.cookie, body);
       expect(res.status).toBe(404);
+      expect((await res.json()).error.message).toBe(message);
     }
     expect(await db.select().from(aiMessages)).toHaveLength(2);
     expect(await chatAudits()).toHaveLength(0);
@@ -255,11 +256,11 @@ describe('POST /admin/ai/chat', () => {
     const audit = await settled(async () => (await chatAudits())[0]);
     expect(audit.summary).toMatch(/· stopped\)$/);
     const assistant = (await db.select().from(aiMessages)).find((m) => m.role === 'assistant');
-    if (assistant) {
-      const text = (assistant.parts as { type: string; text: string }[]).map((p) => p.text).join('');
-      expect(full.startsWith(text)).toBe(true);
-      expect(text.length).toBeLessThan(full.length);
-    }
+    expect(assistant).toBeDefined();
+    const text = (assistant!.parts as { type: string; text: string }[]).map((p) => p.text).join('');
+    expect(text.length).toBeGreaterThan(0);
+    expect(full.startsWith(text)).toBe(true);
+    expect(text.length).toBeLessThan(full.length);
     expect(audit.summary).not.toContain('word1');
   });
 
@@ -271,6 +272,15 @@ describe('POST /admin/ai/chat', () => {
     expect(decline.find((c) => c.type === 'error')?.errorText).toBe(DECLINED_MESSAGE);
     await settled(async () => ((await chatAudits()).length === 2 ? true : null));
     expect((await db.select().from(aiMessages)).filter((m) => m.role === 'assistant')).toHaveLength(0);
+  });
+
+  it('answers 503 when the assistant is enabled but has no key', async () => {
+    vi.stubEnv('AI_PROVIDER_MOCK', 'false');
+    const res = await chat(users.editor.cookie, { text: 'hello' });
+    expect(res.status).toBe(503);
+    expect((await res.json()).error.message).toMatch(/isn't set up yet/);
+    expect(await db.select().from(aiMessages)).toHaveLength(0);
+    expect(await db.select().from(aiConversations)).toHaveLength(0);
   });
 
   it('the 31st message in 10 minutes is 429 with Retry-After', async () => {
