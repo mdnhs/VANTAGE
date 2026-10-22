@@ -3,7 +3,8 @@ export const TEXT_LIMIT = 8000;
 // Keys that hold structure or media references, not words a writer would read.
 const SKIP_KEYS = new Set(['kind', 'id', 'publicId', 'mediaId', 'url', 'href', 'json', 'e164']);
 const MEDIA_KEY = /(image|video|logo|favicon|poster|photo|icon)$/i;
-const NOT_PROSE = /^(https?:|\/|#)|^[0-9a-f-]{36}$/i;
+// Single-token paths, URLs and anchors only: prose that merely starts with "/" or "#" stays.
+const NOT_PROSE = /^(https?:\/\/\S+|\/[^\s]*|#[\w-]*)$|^[0-9a-f-]{36}$/i;
 
 export function clip(text: string, limit = TEXT_LIMIT): string {
   return text.length > limit ? text.slice(0, limit) : text;
