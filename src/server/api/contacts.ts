@@ -9,9 +9,10 @@ import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { contactMessageService } from '@/server/services/contact-message-service';
+import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import {
-  createContactMessageSchema,
+  publicContactMessageSchema,
   contactMessageListQuerySchema,
   updateContactMessageSchema,
 } from '@/validations/contact-message-schema';
@@ -20,12 +21,22 @@ const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const contacts = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), zValidator('json', createContactMessageSchema), async (c) => {
-    const input = c.req.valid('json');
+  .post('/', rateLimit(30, 60_000), zValidator('json', publicContactMessageSchema), async (c) => {
+    const { eventId, sourcePath, ...input } = c.req.valid('json');
 
     input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/inquiries');
 
     const row = await contactMessageService.create(input);
+    queueLeadConversionAfterResponse({
+      leadId: row.id,
+      eventId,
+      sourcePath,
+      email: row.email,
+      phone: row.phone,
+      cookieHeader: c.req.header('cookie'),
+      ip: clientIp(c.req.raw.headers),
+      userAgent: c.req.header('user-agent') ?? '',
+    });
     return ok(c, row, { status: 201 });
   })
 

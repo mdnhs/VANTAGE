@@ -1,17 +1,23 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { cldUrl } from '@/lib/cloudinary/url';
 import { parseGlobal } from '@/lib/content/globals';
 import type { PublicImage } from '@/lib/media/public-image';
 
+import { submitContactMessage } from '@/features/contact-messages/services/api';
+import { submitQuoteRequest } from '@/features/quote-requests/services/api';
+
 import { ContactForm } from './contact-form';
 import { QuoteForm } from './quote-form';
+import { StitchEstimator } from './stitch-estimator';
 import { StitchHeader } from './stitch-header';
 import { fillCopy } from './ui/copy-template';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/services' }));
+vi.mock('@/features/contact-messages/services/api', () => ({ submitContactMessage: vi.fn() }));
+vi.mock('@/features/quote-requests/services/api', () => ({ submitQuoteRequest: vi.fn() }));
 
 afterEach(cleanup);
 
@@ -131,5 +137,103 @@ describe('fillCopy', () => {
     const { container } = render(<p>{fillCopy('Hi {name}, {nope} at {phone}.', { name: 'Ann', phone: '1' })}</p>);
     expect(container.textContent).toBe('Hi Ann, {nope} at 1.');
     expect(container.querySelectorAll('strong')).toHaveLength(2);
+  });
+});
+
+describe('generate_lead from the contact form', () => {
+  const fill = () => {
+    render(<ContactForm services={[]} copy={parseGlobal('contactForm', {})} />);
+    fireEvent.change(screen.getByLabelText(/First Name/), { target: { value: 'Pat' } });
+    fireEvent.change(screen.getByLabelText(/Last Name/), { target: { value: 'Quinn' } });
+    fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'pat@example.com' } });
+    fireEvent.change(screen.getByLabelText(/Phone/), { target: { value: '0871234567' } });
+    fireEvent.change(screen.getByLabelText(/Message/), { target: { value: 'Hello there' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit enquiry' }));
+  };
+
+  beforeEach(() => {
+    vi.mocked(submitContactMessage).mockReset();
+    (window as unknown as { dataLayer?: unknown[] }).dataLayer = [];
+  });
+
+  it('pushes generate_lead with the same event id it posted', async () => {
+    vi.mocked(submitContactMessage).mockResolvedValue({} as never);
+    fill();
+    await waitFor(() => expect(submitContactMessage).toHaveBeenCalledTimes(1));
+    const posted = vi.mocked(submitContactMessage).mock.calls[0]![0];
+    expect(posted.eventId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(posted.sourcePath).toBe(window.location.pathname);
+    await waitFor(() => {
+      const lead = (window as unknown as { dataLayer: Record<string, unknown>[] }).dataLayer.find(
+        (e) => e.event === 'generate_lead',
+      );
+      expect(lead?.event_params).toMatchObject({
+        event_id: posted.eventId,
+        form_id: 'contact',
+        lead_source: 'contact_form',
+      });
+    });
+  });
+
+  it('pushes nothing when the submit fails', async () => {
+    vi.mocked(submitContactMessage).mockRejectedValue(new Error('nope'));
+    fill();
+    await waitFor(() => expect(submitContactMessage).toHaveBeenCalledTimes(1));
+    await screen.findByText('nope');
+    expect((window as unknown as { dataLayer: Record<string, unknown>[] }).dataLayer).toEqual([]);
+  });
+});
+
+describe.each([
+  ['QuoteForm', 'quote'],
+  ['StitchEstimator', 'estimator'],
+] as const)('generate_lead from %s', (which, formId) => {
+  const run = async () => {
+    if (which === 'QuoteForm') {
+      const copy = parseGlobal('quoteForm', {});
+      render(<QuoteForm services={[]} copy={copy} />);
+      fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
+      fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
+      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
+      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
+      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
+      fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
+    } else {
+      render(<StitchEstimator />);
+      fireEvent.click(screen.getByRole('button', { name: /Continue my free quote/ }));
+      fireEvent.change(screen.getByPlaceholderText('e.g. Liam Murphy'), { target: { value: 'Pat' } });
+      fireEvent.change(screen.getByPlaceholderText('+353 87 123 4567'), { target: { value: '0871234567' } });
+      fireEvent.change(screen.getByPlaceholderText('name@example.ie'), { target: { value: 'p@example.com' } });
+      fireEvent.click(screen.getByRole('button', { name: /Send my free quote request/ }));
+    }
+    await waitFor(() => expect(submitQuoteRequest).toHaveBeenCalledTimes(1));
+  };
+
+  beforeEach(() => {
+    vi.mocked(submitQuoteRequest).mockReset();
+    (window as unknown as { dataLayer?: unknown[] }).dataLayer = [];
+  });
+
+  it('pushes generate_lead with the posted event id', async () => {
+    vi.mocked(submitQuoteRequest).mockResolvedValue({} as never);
+    await run();
+    const posted = vi.mocked(submitQuoteRequest).mock.calls[0]![0];
+    await waitFor(() => {
+      const lead = (window as unknown as { dataLayer: Record<string, unknown>[] }).dataLayer.find(
+        (e) => e.event === 'generate_lead',
+      );
+      expect(lead?.event_params).toMatchObject({
+        event_id: posted.eventId,
+        form_id: formId,
+        lead_source: 'quote_form',
+      });
+    });
+  });
+
+  it('pushes nothing when the submit fails', async () => {
+    vi.mocked(submitQuoteRequest).mockRejectedValue(new Error('nope'));
+    await run();
+    await screen.findByText('nope');
+    expect((window as unknown as { dataLayer: unknown[] }).dataLayer).toEqual([]);
   });
 });

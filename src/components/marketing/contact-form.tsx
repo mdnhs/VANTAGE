@@ -6,6 +6,7 @@ import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
+import { track } from '@/lib/tracking/track';
 
 // Figma-exported glyphs shared with the homepage quote form (stitch-estimator.tsx, node 131:204).
 const ICONS = {
@@ -153,6 +154,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         }
       }
 
+      const eventId = crypto.randomUUID();
       await submitContactMessage({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -162,9 +164,20 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         message: message.trim(),
         photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
         source: 'contact_page',
+        eventId,
+        sourcePath: window.location.pathname,
       });
 
       setSubmitted(true);
+      try {
+        track({
+          event: 'generate_lead',
+          params: { lead_source: 'contact_form', form_id: 'contact' },
+          eventId,
+        });
+      } catch {
+        // Tracking must never turn a saved lead into an error.
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : copy.errors.generic;
       setErrorMessage(msg);

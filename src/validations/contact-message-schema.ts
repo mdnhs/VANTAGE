@@ -15,6 +15,11 @@ export const createContactMessageSchema = z.object({
   source: z.enum(['contact_page', 'footer', 'general']).optional().default('contact_page'),
 });
 
+export const publicContactMessageSchema = createContactMessageSchema.extend({
+  eventId: z.uuid().optional(),
+  sourcePath: z.string().max(300).optional(),
+});
+
 export const updateContactMessageSchema = z.object({
   status: z.enum(CONTACT_STATUSES).optional(),
   adminNotes: z.string().max(5000).nullable().optional(),
@@ -28,5 +33,6 @@ export const contactMessageListQuerySchema = z.object({
 });
 
 export type CreateContactMessageInput = z.input<typeof createContactMessageSchema>;
+export type PublicContactMessageInput = z.input<typeof publicContactMessageSchema>;
 export type UpdateContactMessageInput = z.infer<typeof updateContactMessageSchema>;
 export type ContactMessageListQuery = z.infer<typeof contactMessageListQuerySchema>;
