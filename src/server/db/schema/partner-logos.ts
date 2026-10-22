@@ -1,11 +1,13 @@
 import { boolean, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { media } from './media';
 
 export const partnerLogos = pgTable(
   'partner_logos',
   {
     id: uuid('id').primaryKey().defaultRandom(),
     companyName: varchar('company_name', { length: 120 }).notNull(),
-    logoPublicId: varchar('logo_public_id', { length: 255 }).notNull(),
+    logoPublicId: varchar('logo_public_id', { length: 255 }),
+    logoMediaId: uuid('logo_media_id').references(() => media.id, { onDelete: 'restrict' }),
     websiteUrl: varchar('website_url', { length: 255 }),
     displayOrder: integer('display_order').notNull().default(0),
     isEnabled: boolean('is_enabled').notNull().default(true),

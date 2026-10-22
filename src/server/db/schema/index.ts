@@ -18,5 +18,6 @@ export * from './settings';
 export * from './revisions';
 export * from './media';
 export * from './consent';
+export * from './enquiry-photos';
 export * from './relations';
 // export * from './orders';

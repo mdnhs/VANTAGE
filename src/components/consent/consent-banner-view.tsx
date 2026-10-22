@@ -1,11 +1,10 @@
 import type { GlobalValue } from '@/lib/content/globals';
+import type { ConsentChoice } from '@/lib/tracking/consent';
 
 export type ConsentCopy = Pick<
   GlobalValue<'consent'>,
   'title' | 'body' | 'accept' | 'reject' | 'customise' | 'save' | 'policyLabel' | 'policyHref' | 'categories'
 >;
-
-export type ConsentBannerChoice = { analytics: boolean; marketing: boolean };
 
 // One class for every choice: equal prominence, no primary styling.
 const BUTTON =
@@ -31,7 +30,7 @@ export function ConsentBannerView({
 }: {
   copy: ConsentCopy;
   mode: 'first' | 'custom';
-  choice: ConsentBannerChoice;
+  choice: ConsentChoice;
   onAccept: () => void;
   onReject: () => void;
   onCustomise: () => void;

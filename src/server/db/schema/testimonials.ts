@@ -1,4 +1,5 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { media } from './media';
 
 // `status` is a plain varchar validated in Zod ('published' | 'hidden'), not a DB enum —
 // matches the varchar-status convention used by `projects`. `rating` is a plain integer;
@@ -11,6 +12,7 @@ export const testimonials = pgTable(
     rating: integer('rating').notNull(),
     reviewText: text('review_text').notNull(),
     avatarPublicId: varchar('avatar_public_id', { length: 255 }),
+    avatarMediaId: uuid('avatar_media_id').references(() => media.id, { onDelete: 'restrict' }),
     serviceReceived: varchar('service_received', { length: 120 }),
     receivedAt: timestamp('received_at', { withTimezone: true }),
     isFeatured: boolean('is_featured').notNull().default(false),

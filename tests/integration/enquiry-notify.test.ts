@@ -50,7 +50,7 @@ const saveSetting = (key: string, value: unknown) => settingsRepository.save(key
 
 beforeEach(async () => {
   await db.execute(
-    sql`truncate table settings, site_settings, revisions, audit_logs, quote_requests, contact_messages`,
+    sql`truncate table settings, site_settings, revisions, audit_logs, enquiry_photos, quote_requests, contact_messages`,
   );
 });
 

@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -101,6 +102,16 @@ describe('local driver', () => {
       storage.put('other/media/2026/01/0123456789abcdef-a.jpg', Buffer.from('x'), 'image/jpeg'),
     ).rejects.toThrow();
   });
+
+  it('remove deletes the file, ignores a missing one and refuses a bad key', async () => {
+    const storage = getStorage();
+    await storage.put(KEY, Buffer.from('abc'), 'image/jpeg');
+    await storage.remove(KEY);
+    expect(existsSync(path.resolve('.test-uploads', KEY))).toBe(false);
+    await expect(storage.remove(KEY)).resolves.toBeUndefined();
+    await expect(storage.remove('vantage/media/../../x.jpg')).rejects.toThrow();
+    await expect(storage.remove('other/media/2026/01/0123456789abcdef-a.jpg')).rejects.toThrow();
+  });
 });
 
 describe('s3 put', () => {
@@ -111,6 +122,9 @@ describe('s3 put', () => {
         send = vi.fn(async (command: { input: Record<string, unknown> }) => void inputs.push(command.input));
       },
       PutObjectCommand: class {
+        constructor(public input: Record<string, unknown>) {}
+      },
+      DeleteObjectCommand: class {
         constructor(public input: Record<string, unknown>) {}
       },
     }));
@@ -124,7 +138,9 @@ describe('s3 put', () => {
     const storage = getStorage();
     await storage.put(KEY, Buffer.from('x'), 'image/jpeg');
     await storage.put('vantage/media/2026/10/0123456789abcdef-brochure.pdf', Buffer.from('x'), 'application/pdf');
+    await storage.remove(KEY);
     vi.doUnmock('@aws-sdk/client-s3');
+    expect(inputs[2]).toEqual({ Bucket: 'b', Key: KEY });
     expect(inputs[0]).toMatchObject({
       Bucket: 'b',
       Key: KEY,

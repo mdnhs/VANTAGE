@@ -13,4 +13,5 @@ export const TEST_ENV = {
   MEDIA_DRIVER: 'local',
   MEDIA_LOCAL_DIR: '.test-uploads',
   MEDIA_KEY_PREFIX: 'vantage',
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: 'demo',
 };

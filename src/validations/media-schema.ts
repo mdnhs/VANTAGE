@@ -10,6 +10,17 @@ export const mediaListQuerySchema = z.object({
     .transform((v) => v === 'true')
     .optional(),
   q: z.string().trim().max(80).optional(),
+  // Comma-separated ids, so the picker can load the items a field already holds.
+  ids: z
+    .string()
+    .transform((v) =>
+      v
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().uuid()).max(100))
+    .optional(),
 });
 
 export const mediaPatchSchema = z

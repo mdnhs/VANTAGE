@@ -1,5 +1,6 @@
 import { index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { projects } from './projects';
+import { media } from './media';
 
 export const projectGalleryImages = pgTable(
   'project_gallery_images',
@@ -8,7 +9,8 @@ export const projectGalleryImages = pgTable(
     projectId: uuid('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
-    imagePublicId: varchar('image_public_id', { length: 255 }).notNull(),
+    imagePublicId: varchar('image_public_id', { length: 255 }),
+    mediaId: uuid('media_id').references(() => media.id, { onDelete: 'restrict' }),
     displayOrder: integer('display_order').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

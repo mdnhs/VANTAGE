@@ -37,7 +37,9 @@ const names = async () => ({
 });
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs, quote_requests, contact_messages`);
+  await db.execute(
+    sql`truncate table settings, revisions, audit_logs, enquiry_photos, quote_requests, contact_messages`,
+  );
   // 12 months / 10 days so the windows are easy to read; defaults would be 24 / 30.
   await settingsRepository.save(
     'privacy',

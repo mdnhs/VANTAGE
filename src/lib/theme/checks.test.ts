@@ -15,10 +15,10 @@ describe('checkTheme', () => {
   it('rates the default site pairs as passing with the expected ratios', () => {
     const rows = pairRatings(DEFAULT_THEME).filter((r) => r.scope === 'site');
     expect(rows.map((r) => r.ratio)).toEqual([
-      expect.closeTo(4.83, 1),
-      expect.closeTo(6.48, 1),
-      expect.closeTo(3.85, 1),
-      expect.closeTo(9.8, 1),
+      expect.closeTo(4.83, 2),
+      expect.closeTo(6.47, 2),
+      expect.closeTo(3.85, 2),
+      expect.closeTo(9.79, 2),
     ]);
     expect(rows.every((r) => r.rating !== 'fail')).toBe(true);
     expect(SITE_PAIRS).toHaveLength(4);

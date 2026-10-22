@@ -101,7 +101,9 @@ describe('schema safety', () => {
 
   it('parseTheme falls back to the default on drift', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(parseTheme({ site: { brand: 42 } })).toBe(DEFAULT_THEME);
+    const fallback = parseTheme({ site: { brand: 42 } });
+    expect(fallback).toEqual(DEFAULT_THEME);
+    expect(fallback).not.toBe(DEFAULT_THEME);
     expect(warn).toHaveBeenCalledOnce();
     warn.mockRestore();
     expect(parseTheme(undefined)).toEqual(DEFAULT_THEME);
