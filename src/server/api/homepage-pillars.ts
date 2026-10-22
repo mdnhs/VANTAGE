@@ -4,6 +4,7 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { homepagePillarService } from '@/server/services/homepage-pillar-service';
 import {
@@ -36,21 +37,43 @@ export const homepagePillars = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createHomepagePillarSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await homepagePillarService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    auditRoute({ action: 'homepage_pillar.create', entityType: 'homepage_pillar', summary: 'Homepage pillar created' }),
+    zValidator('json', createHomepagePillarSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await homepagePillarService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderHomepagePillarsSchema), async (c) => {
-    const input = c.req.valid('json');
-    await homepagePillarService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    auditRoute({
+      action: 'homepage_pillar.reorder',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillars reordered',
+    }),
+    zValidator('json', reorderHomepagePillarsSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await homepagePillarService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    auditRoute({
+      action: 'homepage_pillar.update',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillar updated',
+      load: homepagePillarService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateHomepagePillarSchema),
     async (c) => {
@@ -62,8 +85,14 @@ export const homepagePillars = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await homepagePillarService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    auditRoute({ action: 'homepage_pillar.delete', entityType: 'homepage_pillar', summary: 'Homepage pillar deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await homepagePillarService.remove(id);
+      return ok(c, { success: true });
+    },
+  );

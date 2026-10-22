@@ -4,6 +4,7 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import {
@@ -35,21 +36,47 @@ export const homepageCatalogs = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createHomepageCatalogSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await homepageCatalogService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    auditRoute({
+      action: 'homepage_catalog.create',
+      entityType: 'homepage_catalog',
+      summary: 'Homepage catalog created',
+    }),
+    zValidator('json', createHomepageCatalogSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await homepageCatalogService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderHomepageCatalogsSchema), async (c) => {
-    const input = c.req.valid('json');
-    await homepageCatalogService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    auditRoute({
+      action: 'homepage_catalog.reorder',
+      entityType: 'homepage_catalog',
+      summary: 'Homepage catalogs reordered',
+    }),
+    zValidator('json', reorderHomepageCatalogsSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await homepageCatalogService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    auditRoute({
+      action: 'homepage_catalog.update',
+      entityType: 'homepage_catalog',
+      summary: 'Homepage catalog updated',
+      load: homepageCatalogService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateHomepageCatalogSchema),
     async (c) => {
@@ -61,8 +88,18 @@ export const homepageCatalogs = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await homepageCatalogService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    auditRoute({
+      action: 'homepage_catalog.delete',
+      entityType: 'homepage_catalog',
+      summary: 'Homepage catalog deleted',
+    }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await homepageCatalogService.remove(id);
+      return ok(c, { success: true });
+    },
+  );

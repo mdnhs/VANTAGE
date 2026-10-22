@@ -145,7 +145,7 @@ describe('feed edge cases', () => {
   it('keeps the feed full when newer failures point at deleted enquiries', async () => {
     const live = await addQuote();
     await notify('delivery_failed', { enquiry: 'quote', enquiryId: live.id, channel: 'notification' });
-    for (let i = 0; i < 25; i += 1) {
+    for (let i = 0; i < 55; i += 1) {
       await notify('delivery_failed', { enquiry: 'quote', enquiryId: randomUUID(), channel: 'notification' });
     }
     const u = await userWith('owner');

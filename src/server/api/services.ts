@@ -4,6 +4,7 @@ import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { serviceService } from '@/server/services/service-service';
 import {
@@ -36,21 +37,39 @@ export const services = new Hono<AppEnv>()
     return ok(c, row);
   })
 
-  .post('/', can({ content: ['create'] }), zValidator('json', createServiceSchema), async (c) => {
-    const input = c.req.valid('json');
-    const row = await serviceService.create(input);
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/',
+    can({ content: ['create'] }),
+    auditRoute({ action: 'service.create', entityType: 'service', summary: 'Service created' }),
+    zValidator('json', createServiceSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      const row = await serviceService.create(input);
+      return ok(c, row, { status: 201 });
+    },
+  )
 
-  .patch('/reorder', can({ content: ['update'] }), zValidator('json', reorderServicesSchema), async (c) => {
-    const input = c.req.valid('json');
-    await serviceService.reorder(input);
-    return ok(c, { success: true });
-  })
+  .patch(
+    '/reorder',
+    can({ content: ['update'] }),
+    auditRoute({ action: 'service.reorder', entityType: 'service', summary: 'Services reordered' }),
+    zValidator('json', reorderServicesSchema),
+    async (c) => {
+      const input = c.req.valid('json');
+      await serviceService.reorder(input);
+      return ok(c, { success: true });
+    },
+  )
 
   .patch(
     '/:id',
     can({ content: ['update'] }),
+    auditRoute({
+      action: 'service.update',
+      entityType: 'service',
+      summary: 'Service updated',
+      load: serviceService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateServiceSchema),
     async (c) => {
@@ -62,8 +81,14 @@ export const services = new Hono<AppEnv>()
     },
   )
 
-  .delete('/:id', can({ content: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await serviceService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ content: ['delete'] }),
+    auditRoute({ action: 'service.delete', entityType: 'service', summary: 'Service deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await serviceService.remove(id);
+      return ok(c, { success: true });
+    },
+  );

@@ -5,6 +5,7 @@ import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
 import { can } from '@/server/middleware/auth';
 import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
 import { quoteRequestService } from '@/server/services/quote-request-service';
@@ -28,10 +29,16 @@ export const quoteRequests = new Hono<AppEnv>()
   })
 
   // Staff-entered enquiry (phone / walk-in): full admin schema.
-  .post('/admin', can({ quote: ['update'] }), zValidator('json', createQuoteRequestSchema), async (c) => {
-    const row = await quoteRequestService.create(c.req.valid('json'), { notify: false });
-    return ok(c, row, { status: 201 });
-  })
+  .post(
+    '/admin',
+    can({ quote: ['update'] }),
+    auditRoute({ action: 'quote.create', entityType: 'quote', summary: 'Quote request created' }),
+    zValidator('json', createQuoteRequestSchema),
+    async (c) => {
+      const row = await quoteRequestService.create(c.req.valid('json'), { notify: false });
+      return ok(c, row, { status: 201 });
+    },
+  )
 
   // Admin list with pagination, search, and status filtering
   .get('/admin/list', can({ quote: ['read'] }), zValidator('query', quoteRequestListQuerySchema), async (c) => {
@@ -58,6 +65,25 @@ export const quoteRequests = new Hono<AppEnv>()
   .patch(
     '/:id',
     can({ quote: ['update'] }),
+    auditRoute({
+      action: 'quote.update',
+      entityType: 'quote',
+      summary: 'Quote request updated',
+      load: quoteRequestService.byId,
+      fields: [
+        'status',
+        'assignedUserId',
+        'inspectionDate',
+        'estimatedCost',
+        'paymentStatus',
+        'paidAmount',
+        'paymentMethod',
+        'invoiceNumber',
+        'completedAt',
+        'adminNotes',
+      ],
+      redact: ['adminNotes'],
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateQuoteRequestSchema),
     async (c) => {
@@ -70,8 +96,14 @@ export const quoteRequests = new Hono<AppEnv>()
   )
 
   // Delete quote request
-  .delete('/:id', can({ quote: ['delete'] }), zValidator('param', idParamSchema), async (c) => {
-    const { id } = c.req.valid('param');
-    await quoteRequestService.remove(id);
-    return ok(c, { success: true });
-  });
+  .delete(
+    '/:id',
+    can({ quote: ['delete'] }),
+    auditRoute({ action: 'quote.delete', entityType: 'quote', summary: 'Quote request deleted' }),
+    zValidator('param', idParamSchema),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      await quoteRequestService.remove(id);
+      return ok(c, { success: true });
+    },
+  );
