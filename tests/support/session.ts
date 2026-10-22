@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { RoleName } from '@/lib/auth/permissions';
 import { api } from '@/server/api';
 import { getAuth } from '@/server/lib/auth';
+import { issueStamp } from '@/server/lib/enquiries/stamp';
 
 export const PASSWORD = 'Test-Password-2026!';
 export const ORIGIN = 'http://localhost:3000';
@@ -96,3 +97,10 @@ export async function viewAsCookie(actorCookie: string, targetId: string): Promi
   if (response.status !== 200) throw new Error(`View-as failed with ${response.status}`);
   return applyCookies(actorCookie, response.headers.getSetCookie());
 }
+
+// A stamp a visitor's form would carry: issued 10 s ago. The public forms file anything else as spam.
+export const humanStamp = () => issueStamp(Date.now() - 10_000);
+
+// Adds a valid stamp to a public form body unless the test sets its own `stamp`.
+export const stamped = <T>(body: T): T =>
+  body && typeof body === 'object' && !('stamp' in body) ? { stamp: humanStamp(), ...body } : body;

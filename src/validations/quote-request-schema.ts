@@ -15,7 +15,9 @@ export const PIPELINE_STATUSES = [
 ] as const;
 
 // Include legacy statuses for backward compatibility with existing records
-export const ALL_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived'] as const;
+// 'spam' is filed by the public-form checks or by staff; it is not a pipeline stage.
+export const STAFF_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived'] as const;
+export const ALL_QUOTE_STATUSES = [...STAFF_QUOTE_STATUSES, 'spam'] as const;
 
 export const QUOTE_STATUSES = ALL_QUOTE_STATUSES;
 
@@ -57,7 +59,8 @@ export const createQuoteRequestSchema = z.object({
   serviceType: z.string().max(120).nullable().optional(),
   description: z.string().max(3000).nullable().optional(),
   source: z.enum(QUOTE_SOURCES).optional().default('website'),
-  status: z.enum(ALL_QUOTE_STATUSES).optional().default('new'),
+  // Staff create never files spam; the public checks and PATCH do.
+  status: z.enum(STAFF_QUOTE_STATUSES).optional().default('new'),
   assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),
@@ -93,6 +96,9 @@ export const publicQuoteRequestSchema = createQuoteRequestSchema
     photoUrls: publicPhotoUrlsSchema,
     eventId: z.uuid().optional(),
     sourcePath: z.string().max(300).optional(),
+    // Spam checks: the hidden field and the signed form stamp. Both are stripped before create.
+    website: z.string().max(200).optional(),
+    stamp: z.string().max(100).optional(),
   });
 
 export const updateQuoteRequestSchema = z.object({

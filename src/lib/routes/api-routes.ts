@@ -5,6 +5,7 @@ export const API_ROUTES = {
     me: '/auth/me',
   },
   health: '/health',
+  enquiryStamp: '/public/enquiry-stamp',
   services: {
     public: '/services',
     adminList: '/services/admin/list',

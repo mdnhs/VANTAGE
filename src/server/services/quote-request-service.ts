@@ -1,3 +1,5 @@
+import { SPAM_STATUS, type SpamReason } from '@/lib/enquiries/spam';
+import { hasBillingData, SPAM_BILLING_ERROR } from '@/server/lib/enquiries/billing';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import { notifyNewQuote } from '@/server/services/enquiry-notify';
@@ -32,16 +34,31 @@ export const quoteRequestService = {
   },
 
   // `notify: false` for staff-entered enquiries (phone / walk-in): no one to alert, no auto-reply.
-  async create(data: CreateQuoteRequestOutput, options: { notify?: boolean; photoMediaIds?: string[] } = {}) {
+  // `spamReason` files the row as spam and sends nothing.
+  async create(
+    data: CreateQuoteRequestOutput,
+    options: { notify?: boolean; photoMediaIds?: string[]; spamReason?: SpamReason } = {},
+  ) {
     await assertAssignable(data.assignedUserId);
-    const row = await quoteRequestRepository.create(data, options.photoMediaIds);
+    const row = await quoteRequestRepository.create(data, options.photoMediaIds, options.spamReason);
     // After the row is committed; fire-and-forget, so mail never fails the request.
-    if (options.notify !== false && row) notifyNewQuote(row);
+    if (options.notify !== false && !options.spamReason && row) notifyNewQuote(row);
     return row;
   },
 
   async update(id: string, data: UpdateQuoteRequestOutput) {
     await assertAssignable(data.assignedUserId);
+    // Billing sent in the same patch counts; the repository checks what is already stored.
+    if (
+      data.status === SPAM_STATUS &&
+      hasBillingData({
+        invoiceNumber: data.invoiceNumber ?? null,
+        paymentStatus: data.paymentStatus ?? 'unpaid',
+        paidAmount: data.paidAmount != null ? String(data.paidAmount) : null,
+        paymentMethod: data.paymentMethod ?? null,
+      })
+    )
+      throw SPAM_BILLING_ERROR();
     return quoteRequestRepository.update(id, data);
   },
 

@@ -11,6 +11,8 @@ import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
 import { newEventId } from '@/lib/tracking/event-id';
+import { HoneypotField } from '@/components/marketing/honeypot-field';
+import { useEnquiryStamp } from '@/features/enquiries/hooks/use-enquiry-stamp';
 
 const DEFAULT_SERVICE_ICON = '/assets/marketing/icon-crash-repair.svg';
 
@@ -211,6 +213,8 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
   const [email, setEmail] = useState('');
 
   // Submission State
+  const [website, setWebsite] = useState('');
+  const stamp = useEnquiryStamp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -244,6 +248,8 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
         source: 'quote_page',
         eventId,
         sourcePath: window.location.pathname,
+        website,
+        stamp,
       });
       setSubmitted(true);
       try {
@@ -497,6 +503,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
           </>
         ) : (
           <form onSubmit={handleSubmit} className='flex w-full flex-col gap-[28px]'>
+            <HoneypotField value={website} onChange={setWebsite} />
             <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
               <FormField
                 id='quote-name'

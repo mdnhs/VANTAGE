@@ -1,4 +1,5 @@
-import { desc, sql } from 'drizzle-orm';
+import { desc, ne, sql } from 'drizzle-orm';
+import { SPAM_STATUS } from '@/lib/enquiries/spam';
 import { db } from '@/server/db';
 import { quoteRequests } from '@/server/db/schema';
 import type {
@@ -7,6 +8,9 @@ import type {
   MonthlyTrendItem,
   ChannelBreakdownItem,
 } from '@/features/dashboard-overview/types';
+
+// Spam is not an enquiry: it stays out of every dashboard figure.
+const notSpam = ne(quoteRequests.status, SPAM_STATUS);
 
 export const analyticsService = {
   async getOverviewData(): Promise<DashboardOverviewData> {
@@ -23,7 +27,8 @@ export const analyticsService = {
           salesRevenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
           pipelineValue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} not in ('cancelled', 'archived')), 0)::text`,
         })
-        .from(quoteRequests),
+        .from(quoteRequests)
+        .where(notSpam),
       db
         .select({
           monthKey: sql<string>`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
@@ -34,6 +39,7 @@ export const analyticsService = {
           revenue: sql<string>`coalesce(sum(cast(${quoteRequests.estimatedCost} as numeric)) filter (where ${quoteRequests.status} in ('approved', 'in_progress', 'completed')), 0)::text`,
         })
         .from(quoteRequests)
+        .where(notSpam)
         .groupBy(
           sql`to_char(${quoteRequests.createdAt}, 'YYYY-MM')`,
           sql`to_char(${quoteRequests.createdAt}, 'Mon YYYY')`,
@@ -48,9 +54,11 @@ export const analyticsService = {
           count: sql<number>`count(*)::int`,
         })
         .from(quoteRequests)
+        .where(notSpam)
         .groupBy(quoteRequests.source)
         .orderBy(desc(sql`count(*)`)),
       db.query.quoteRequests.findMany({
+        where: notSpam,
         orderBy: [desc(quoteRequests.createdAt)],
         limit: 5,
       }),

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { photoDataUrlSchema } from '@/validations/photo-url';
 
-export const CONTACT_STATUSES = ['new', 'read', 'replied', 'archived'] as const;
+export const CONTACT_STATUSES = ['new', 'read', 'replied', 'archived', 'spam'] as const;
 
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 
@@ -20,6 +20,9 @@ export const createContactMessageSchema = z.object({
 export const publicContactMessageSchema = createContactMessageSchema.extend({
   eventId: z.uuid().optional(),
   sourcePath: z.string().max(300).optional(),
+  // Spam checks: the hidden field and the signed form stamp. Both are stripped before create.
+  website: z.string().max(200).optional(),
+  stamp: z.string().max(100).optional(),
 });
 
 export const updateContactMessageSchema = z.object({

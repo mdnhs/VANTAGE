@@ -1,9 +1,10 @@
 import 'server-only';
 
-import { and, count, desc, eq, gte, ilike, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, ilike, ne, or, sql } from 'drizzle-orm';
 
 import { PAGE_KEYS, type PageKey } from '@/lib/ai/schema';
 import { hasPermission, type Permissions } from '@/lib/auth/permissions';
+import { SPAM_STATUS } from '@/lib/enquiries/spam';
 import { GLOBAL_LABELS } from '@/lib/content/global-access';
 import { db } from '@/server/db';
 import { contactMessages, projects, quoteRequests, services } from '@/server/db/schema';
@@ -145,7 +146,7 @@ export async function quoteStats(
   range: EnquiryRange,
   now = new Date(),
 ): Promise<ToolResult> {
-  const where = gte(quoteRequests.createdAt, sinceOf(range, now));
+  const where = and(gte(quoteRequests.createdAt, sinceOf(range, now)), ne(quoteRequests.status, SPAM_STATUS));
   const week = isoWeek(quoteRequests.createdAt);
   const [byStatus, byServiceType, byWeek, bySource] = await Promise.all([
     db.select({ key: quoteRequests.status, n: count() }).from(quoteRequests).where(where).groupBy(quoteRequests.status),
@@ -199,7 +200,7 @@ export async function contactStats(
   range: EnquiryRange,
   now = new Date(),
 ): Promise<ToolResult> {
-  const where = gte(contactMessages.createdAt, sinceOf(range, now));
+  const where = and(gte(contactMessages.createdAt, sinceOf(range, now)), ne(contactMessages.status, SPAM_STATUS));
   const week = isoWeek(contactMessages.createdAt);
   const [byStatus, byService, byWeek, bySource] = await Promise.all([
     db

@@ -1,11 +1,13 @@
 import 'server-only';
 
-import { and, count, eq, inArray, isNull, lt, not, notExists, or, sql, type SQL } from 'drizzle-orm';
+import { and, count, eq, inArray, lt, not, notExists, or, sql, type SQL } from 'drizzle-orm';
 
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
 import { contactMessages, enquiryPhotos, media, quoteRequests } from '@/server/db/schema';
+import { SPAM_STATUS } from '@/lib/enquiries/spam';
 import { audit } from '@/server/lib/audit';
+import { noBillingData } from '@/server/lib/enquiries/billing';
 import { settingsRepository } from '@/server/repositories/settings-repository';
 
 const DAY = 86_400_000;
@@ -17,8 +19,7 @@ const chunk = <T>(items: T[]): T[][] =>
 // Quotes: finished status, no invoice number, 'unpaid', nothing paid, no payment method. Contacts: replied or archived.
 export const TERMINAL_QUOTE_STATUSES = ['completed', 'cancelled', 'archived'] as const;
 export const TERMINAL_CONTACT_STATUSES = ['replied', 'archived'] as const;
-// No spam marking exists yet, so nothing matches today; the window applies once rows can carry it.
-export const SPAM_STATUS = 'spam';
+export { SPAM_STATUS };
 
 export type RetentionCounts = { expired: number; spam: number };
 export type RetentionResult = {
@@ -82,14 +83,14 @@ export async function runRetention({
   };
   const { enquiryBefore, spamBefore } = retentionCutoffs(now, windows);
 
-  const quoteSpam: SQL = and(eq(quoteRequests.status, SPAM_STATUS), lt(quoteRequests.updatedAt, spamBefore))!;
+  const quoteSpam: SQL = and(
+    eq(quoteRequests.status, SPAM_STATUS),
+    noBillingData(),
+    lt(quoteRequests.updatedAt, spamBefore),
+  )!;
   const quoteExpired: SQL = and(
     inArray(quoteRequests.status, [...TERMINAL_QUOTE_STATUSES]),
-    // Every billing column must be empty: invoice, payment status, amount paid, payment method.
-    isNull(quoteRequests.invoiceNumber),
-    eq(quoteRequests.paymentStatus, 'unpaid'),
-    or(isNull(quoteRequests.paidAmount), eq(quoteRequests.paidAmount, '0'))!,
-    isNull(quoteRequests.paymentMethod),
+    noBillingData(),
     lt(quoteRequests.updatedAt, enquiryBefore),
   )!;
   const contactSpam: SQL = and(eq(contactMessages.status, SPAM_STATUS), lt(contactMessages.updatedAt, spamBefore))!;

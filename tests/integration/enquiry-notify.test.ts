@@ -11,7 +11,7 @@ import { contactMessageService } from '@/server/services/contact-message-service
 import { sendEnquiryEmails, settleNotifications } from '@/server/services/enquiry-notify';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, stamped } from '../support/session';
 
 const QUOTE = {
   name: 'Pat Murphy',
@@ -64,7 +64,7 @@ describe('SMTP not configured', () => {
   it('a public quote still saves and returns 201; nothing is sent, nothing throws', async () => {
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: { name: 'Pat', email: 'pat@example.com', phone: '0871234567' },
+      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
     });
     expect(res.status).toBe(201);
     expect(await db.select().from(quoteRequests)).toHaveLength(1);
@@ -73,7 +73,13 @@ describe('SMTP not configured', () => {
   it('a public contact message still saves and returns 201', async () => {
     const res = await call('/contacts', undefined, {
       method: 'POST',
-      body: { firstName: 'Pat', lastName: 'M', email: 'pat@example.com', phone: '0871234567', message: 'Hello there' },
+      body: stamped({
+        firstName: 'Pat',
+        lastName: 'M',
+        email: 'pat@example.com',
+        phone: '0871234567',
+        message: 'Hello there',
+      }),
     });
     expect(res.status).toBe(201);
     expect(await db.select().from(contactMessages)).toHaveLength(1);
@@ -211,7 +217,7 @@ describe('SMTP configured (injected transport)', () => {
     await saveSetting('notifications', { recipients: ['staff@example.com'] });
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: { name: 'Pat', email: 'pat@example.com', phone: '0871234567' },
+      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
     });
     expect(res.status).toBe(201);
     await settleNotifications();

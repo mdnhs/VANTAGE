@@ -25,6 +25,7 @@ import { partnerLogos } from './partner-logos';
 import { preview } from './preview';
 import { projects } from './projects';
 import { publicConsent } from './public-consent';
+import { publicStamp } from './public-stamp';
 import { quoteRequests } from './quote-requests';
 import { resolve } from './resolve';
 import { services } from './services';
@@ -85,7 +86,8 @@ export const api = app
   .route('/homepage-process-steps', homepageProcessSteps)
   .route('/quotes', quoteRequests)
   .route('/contacts', contacts)
-  .route('/public/consent', publicConsent);
+  .route('/public/consent', publicConsent)
+  .route('/public/enquiry-stamp', publicStamp);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 

@@ -9,6 +9,8 @@ import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
 import { track } from '@/lib/tracking/track';
 import { newEventId } from '@/lib/tracking/event-id';
+import { HoneypotField } from '@/components/marketing/honeypot-field';
+import { useEnquiryStamp } from '@/features/enquiries/hooks/use-enquiry-stamp';
 
 // Figma-exported glyphs shared with the homepage quote form (stitch-estimator.tsx, node 131:204).
 const ICONS = {
@@ -105,6 +107,8 @@ export function ContactForm({ services, copy }: ContactFormProps) {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [website, setWebsite] = useState('');
+  const stamp = useEnquiryStamp();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -159,6 +163,8 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         source: 'contact_page',
         eventId,
         sourcePath: window.location.pathname,
+        website,
+        stamp,
       });
 
       setSubmitted(true);
@@ -210,6 +216,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className={panel}>
+      <HoneypotField value={website} onChange={setWebsite} />
       <div className='flex flex-col gap-2'>
         <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
           {copy.title}

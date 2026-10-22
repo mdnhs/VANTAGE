@@ -110,7 +110,8 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     spamRetentionDays: {
       label: 'Keep spam for (days)',
-      description: 'Applies to enquiries marked as spam (none until spam marking ships).',
+      description:
+        'Applies to enquiries filed as spam, counted from their last update. A quote with invoice or payment records is never deleted.',
     },
   },
   'page.home': {

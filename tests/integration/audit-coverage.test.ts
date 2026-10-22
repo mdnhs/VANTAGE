@@ -7,7 +7,7 @@ import * as auditModule from '@/server/lib/audit';
 import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import { sql } from 'drizzle-orm';
 
-import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
+import { call, createTestUser, signInCookie, stamped, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -113,7 +113,7 @@ describe('quote and contact mutations', () => {
   it('does not audit the public submissions', async () => {
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: { name: 'Pat', email: 'pat@example.com', phone: '0871234567' },
+      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
     });
     expect(res.status).toBe(201);
     expect(await rows('quote.create')).toHaveLength(0);

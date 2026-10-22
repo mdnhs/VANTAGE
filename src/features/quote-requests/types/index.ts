@@ -51,6 +51,7 @@ export interface QuoteRequestStats {
   in_progress: number;
   completed: number;
   cancelled: number;
+  spam: number;
   // Legacy support
   quoted?: number;
   archived?: number;

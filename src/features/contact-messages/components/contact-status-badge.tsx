@@ -17,6 +17,11 @@ const STATUS_CONFIG: Record<ContactStatus, { label: string; className: string; d
     className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     dotClassName: 'bg-emerald-400',
   },
+  spam: {
+    label: 'Spam',
+    className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+    dotClassName: 'bg-zinc-500',
+  },
   archived: {
     label: 'Archived',
     className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
