@@ -53,7 +53,7 @@ afterAll(() => {
 afterEach(() => vi.restoreAllMocks());
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs`);
+  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings`);
   vi.mocked(revalidateTag).mockClear();
 });
 
