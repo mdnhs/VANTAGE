@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { auditLogs, contactMessages, quoteRequests } from '@/server/db/schema';
+import { auditLogs, contactMessages, media, quoteRequests } from '@/server/db/schema';
 import * as auditModule from '@/server/lib/audit';
 import { quoteRequestRepository } from '@/server/repositories/quote-request-repository';
 import { sql } from 'drizzle-orm';
@@ -41,11 +41,9 @@ const PROJECT = {
   slug: 'audit-project',
   vehicleModel: 'BMW 3',
   serviceCategory: 'Respray',
-  beforeImagePublicId: 'before',
-  afterImagePublicId: 'after',
   description: 'Done',
   status: 'draft',
-} as never;
+};
 const TESTIMONIAL = { customerName: 'Old Name', reviewText: 'OLD-REVIEW-TEXT', rating: 5 };
 const SERVICE = { name: 'Dent repair', slug: 'dent-repair', description: 'Fixes dents' };
 
@@ -186,9 +184,22 @@ describe('diff hygiene', () => {
   });
 
   it('project status changes record only the status', async () => {
+    const [before, after] = await db
+      .insert(media)
+      .values(
+        ['audit-before', 'audit-after'].map((name, i) => ({
+          driver: 'local' as const,
+          key: `vantage/media/2026/10/${String(i + 1).padStart(16, '0')}-${name}.png`,
+          url: `/uploads/${name}.png`,
+          filename: `${name}.png`,
+          mimeType: 'image/png',
+          sizeBytes: 1,
+        })),
+      )
+      .returning();
     const created = await call('/projects', owner, {
       method: 'POST',
-      body: PROJECT,
+      body: { ...PROJECT, beforeImageMediaId: before!.id, afterImageMediaId: after!.id },
     });
     expect(created.status).toBe(201);
     const { data } = await body(created);
