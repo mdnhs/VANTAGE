@@ -169,6 +169,13 @@
       "when": 1792652161421,
       "tag": "0023_rich_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792667454384,
+      "tag": "0024_consent_events",
+      "breakpoints": true
     }
   ]
 }

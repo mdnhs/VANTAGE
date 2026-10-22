@@ -16,6 +16,7 @@ import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { media } from './media';
 import { partnerLogos } from './partner-logos';
+import { publicConsent } from './public-consent';
 import { projects } from './projects';
 import { quoteRequests } from './quote-requests';
 import { services } from './services';
@@ -67,7 +68,8 @@ export const api = app
   .route('/homepage-catalogs', homepageCatalogs)
   .route('/homepage-process-steps', homepageProcessSteps)
   .route('/quotes', quoteRequests)
-  .route('/contacts', contacts);
+  .route('/contacts', contacts)
+  .route('/public/consent', publicConsent);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 
