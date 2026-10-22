@@ -6,6 +6,7 @@
 #     --build-arg AUTH_SECRET=<32+ char value> \
 #     --build-arg NEXT_PUBLIC_APP_URL=https://example.com \
 #     --build-arg MEDIA_PUBLIC_URL=https://media.example.com \   (required with MEDIA_DRIVER=s3)
+#     --build-arg SITE_ENV=production \                          (live site: else robots.txt blocks crawlers)
 #     -t vantage .
 # Behind a reverse proxy, allow bodies of up to ~111 MB (nginx: client_max_body_size 111m: the public
 # forms accept 110 MB, admin uploads 101 MB); the app itself rejects larger bodies with 413.
@@ -22,6 +23,10 @@ FROM base AS builder
 # Public host of the s3 media driver; next.config.ts allows it for next/image. Unset = local driver.
 ARG MEDIA_PUBLIC_URL
 ENV MEDIA_PUBLIC_URL=$MEDIA_PUBLIC_URL
+# Whether the site may be indexed (production | preview | development). robots.txt is prerendered at
+# build time, so this MUST be passed as a build arg (and set at runtime) for the live site.
+ARG SITE_ENV
+ENV SITE_ENV=$SITE_ENV
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ARG DATABASE_URL

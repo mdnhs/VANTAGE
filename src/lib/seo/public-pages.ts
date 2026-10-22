@@ -1,7 +1,6 @@
 // The eight public pages are code routes, not CMS rows, so this registry is the one list the
 // SEO area (overview, per-page tab, checks, sitemap, proxy) works from. Isomorphic: no server imports.
-// Titles and descriptions equal each page's own `metadata` today (public-pages.test.ts reads the
-// page sources to keep them honest).
+// Titles and descriptions equal each page's metadata before Phase 6 (default-parity.test.ts pins them).
 
 export const HOME_DESCRIPTION =
   'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.';
@@ -179,12 +178,17 @@ export const RESERVED_PREFIXES = [
   '/maintenance',
 ] as const;
 
+// Page URLs of the site this one replaces: /about.html, /services.php, /page.aspx ...
+export const LEGACY_PAGE_EXTENSION = /\.(?:html?|php|aspx?)$/i;
+
 export function isReservedPath(path: string): boolean {
   // Collapse leading slashes so "//dashboard" is judged as "/dashboard".
   const clean = '/' + path.split(/[?#]/, 1)[0]!.replace(/^\/+/, '');
   if (RESERVED_PREFIXES.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))) return true;
-  // Files (robots.txt, sitemap.xml, favicon.ico, any asset): a last segment with a dot.
-  return clean.split('/').pop()!.includes('.');
+  // Files (robots.txt, sitemap.xml, favicon.ico, any asset): a last segment with a dot, except
+  // the legacy page extensions of the old site, which stay redirectable (public/ never holds one).
+  const last = clean.split('/').pop()!;
+  return last.includes('.') && !LEGACY_PAGE_EXTENSION.test(last);
 }
 
 export function isPublicPageId(value: string): value is PublicPageId {

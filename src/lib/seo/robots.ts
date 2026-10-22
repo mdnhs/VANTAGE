@@ -4,7 +4,7 @@ export type SiteEnv = 'production' | 'staging' | 'development';
 
 // SITE_ENV wins; without it Vercel's production deployment counts as production (today's rule).
 export function siteEnvFrom(env: { SITE_ENV?: string; VERCEL_ENV?: string }): SiteEnv {
-  const site = env.SITE_ENV;
+  const site = env.SITE_ENV === 'preview' ? 'staging' : env.SITE_ENV;
   if (site === 'production' || site === 'staging' || site === 'development') return site;
   return env.VERCEL_ENV === 'production' ? 'production' : 'development';
 }

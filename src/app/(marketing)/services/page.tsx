@@ -1,5 +1,6 @@
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { sizedSrc } from '@/lib/media/public-image';
-import type { Metadata } from 'next';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
 import {
@@ -12,12 +13,9 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Services',
-  description:
-    'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
-  alternates: { canonical: '/services' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('services');
+}
 
 const FALLBACK_IMAGE = '/assets/marketing/service-crash-repair.jpg';
 
@@ -27,6 +25,7 @@ export default async function ServicesPage() {
 
   return (
     <main className='flex flex-col'>
+      <PageJsonLd id='services' />
       <ServicesHero
         eyebrow={settings.servicesHeroEyebrow ?? 'Master Craftsmanship'}
         headlineLine1={settings.servicesHeroHeadlineLine1 ?? 'Professional Bodywork.'}

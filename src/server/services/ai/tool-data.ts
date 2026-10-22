@@ -10,6 +10,7 @@ import { contactMessages, projects, quoteRequests, services } from '@/server/db/
 import type { Actor } from '@/server/lib/auth/actor';
 import { analyticsService } from '@/server/services/analytics-service';
 import { readEffectiveGlobal } from '@/server/services/globals-service';
+import { getSeoHealth } from '@/server/queries/get-seo-health';
 
 import { clip, flattenValue } from './flatten';
 import { firstNameOf } from './prompt';
@@ -98,34 +99,16 @@ export async function readPage(actor: Actor, key: PageKey): Promise<ToolResult> 
   return { label: GLOBAL_LABELS[key], key, text: flattenValue(value) };
 }
 
-// V9-R9: a minimal report over the `seo` global. Phase 6/11 swaps this for the
-// full report without touching the contract { label, score, issues[{ where, problem }] }.
+// Read-only view of the SEO center report (docs/brief.md §11). Contract unchanged:
+// { label, score, issues[{ where, problem }] }.
 export async function seoHealth(actor: Actor): Promise<ToolResult> {
   if (!allowed(actor, { seo: ['read'] })) return refuse('SEO health');
-  const { value } = await readEffectiveGlobal('seo');
-  const issues: { where: string; problem: string }[] = [];
-  const where = GLOBAL_LABELS.seo;
-  if (!value.titleTemplate.trim()) {
-    issues.push({ where: `${where} › Title template`, problem: 'There is no title template' });
-  } else if (!value.titleTemplate.includes('%s')) {
-    issues.push({ where: `${where} › Title template`, problem: 'The title template is missing %s' });
-  }
-  const description = value.defaultDescription.trim();
-  if (!description) {
-    issues.push({ where: `${where} › Default description`, problem: 'There is no default description' });
-  } else if (description.length < 50 || description.length > 160) {
-    issues.push({
-      where: `${where} › Default description`,
-      problem: `The default description is ${description.length} characters; aim for 50 to 160`,
-    });
-  }
-  if (!value.defaultOgImage) {
-    issues.push({ where: `${where} › Default share image`, problem: 'There is no default share image' });
-  }
-  if (value.robots === 'noindex') {
-    issues.push({ where: `${where} › Robots`, problem: 'The whole site is set to noindex' });
-  }
-  return { label: 'SEO health', score: Math.max(0, 100 - 20 * issues.length), issues };
+  const report = await getSeoHealth();
+  const issues = report.issues.map((i) => ({
+    where: i.kind === 'page' && i.path ? `${i.title} (${i.path})` : i.title,
+    problem: i.message,
+  }));
+  return { label: 'SEO health', score: report.score, issues };
 }
 
 // V9-R8: counts for everyone; money only with quote.read; never recent leads.

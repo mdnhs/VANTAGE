@@ -96,6 +96,7 @@ export const API_ROUTES = {
     revisions: (key: string) => `/admin/globals/${key}/revisions`,
     restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
   },
+  seo: { overview: '/admin/seo/overview' },
   tracking: {
     detail: '/admin/tracking',
     testCapi: '/admin/tracking/test-capi',
@@ -118,6 +119,11 @@ export const API_ROUTES = {
     revisions: '/admin/theme/revisions',
     restore: (revisionId: string) => `/admin/theme/revisions/${revisionId}/restore`,
   },
+  redirects: {
+    list: '/admin/redirects',
+    detail: (id: string) => `/admin/redirects/${id}`,
+  },
+  resolve: '/resolve',
   preview: {
     enter: (path: string) => `/preview?path=${encodeURIComponent(path)}`,
     exit: (path: string) => `/preview/exit?path=${encodeURIComponent(path)}`,

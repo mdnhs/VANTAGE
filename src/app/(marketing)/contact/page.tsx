@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { ContactInfo } from '@/components/marketing/contact-info';
 import { ContactForm } from '@/components/marketing/contact-form';
 import { VisitUsSection } from '@/components/marketing/visit-us-section';
@@ -7,18 +8,16 @@ import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Contact',
-  description:
-    'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
-  alternates: { canonical: '/contact' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('contact');
+}
 
 export default async function ContactPage() {
   const [services, copy] = await Promise.all([serviceService.listPublished(), getSetting('contactForm')]);
 
   return (
     <main className='grow'>
+      <PageJsonLd id='contact' />
       <PageHero
         eyebrow='Visit · Call · Message'
         lines={['Get in', 'touch.']}

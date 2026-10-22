@@ -34,6 +34,8 @@ const serverSchema = z.object({
   SEED_DEMO_USERS: z.stringbool().optional(),
   // Loopback origin the proxy uses to reach the redirect resolver; defaults per environment.
   INTERNAL_ORIGIN: z.string().url().optional(),
+  // Whether this deployment may be indexed. MUST be 'production' on the live VPS (crawlers are blocked otherwise).
+  SITE_ENV: z.enum(['production', 'preview', 'development']).optional(),
 });
 
 const serverEnvSchema = serverSchema.superRefine((env, ctx) => {

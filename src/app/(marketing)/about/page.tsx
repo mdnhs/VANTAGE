@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { AboutHero } from '@/components/marketing/about-hero';
 import { HeritageSection } from '@/components/marketing/heritage-section';
 import { TeamSection } from '@/components/marketing/team-section';
@@ -7,12 +8,9 @@ import { resolveAboutPageContent } from '@/features/about-page/defaults';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'About',
-  description:
-    "Founded in 1998, Vantage Autobody has evolved into Ireland's premier high-end collision and repair facility.",
-  alternates: { canonical: '/about' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('about');
+}
 
 // Content is CMS-driven (Dashboard → About page); blank fields fall back to the design copy.
 export default async function AboutPage() {
@@ -21,6 +19,7 @@ export default async function AboutPage() {
 
   return (
     <>
+      <PageJsonLd id='about' />
       <main>
         <AboutHero
           eyebrow={content.heroEyebrow}

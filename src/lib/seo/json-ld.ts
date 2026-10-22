@@ -5,18 +5,8 @@ import type { GlobalValue } from '@/lib/content/globals';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 const abs = (origin: string, path: string) => (path === '/' ? origin : `${origin}${path}`);
 
-// < > & and the line separators are escaped, so no string can end the script element; the result
-// is still valid JSON (and JavaScript).
-const ESCAPES: Record<string, string> = {
-  '<': '\\u003c',
-  '>': '\\u003e',
-  '&': '\\u0026',
-  '\u2028': '\\u2028',
-  '\u2029': '\\u2029',
-};
-export function scriptJson(value: unknown): string {
-  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (c) => ESCAPES[c]!);
-}
+// One implementation: < > & and the line separators are escaped, so no string can end the script element.
+export { scriptJson } from '@/lib/tracking/script-json';
 
 export const graph = (nodes: Thing[]): Graph => ({
   '@context': 'https://schema.org',
@@ -43,7 +33,7 @@ export function businessNode(i: {
   logoUrl?: string | null;
 }): LocalBusiness {
   const { address, phone, hours } = i.contact;
-  const sameAs = [...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)];
+  const sameAs = [...new Set([...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)])];
   return {
     '@type': i.seo.business.type,
     '@id': `${i.origin}/#organization`,

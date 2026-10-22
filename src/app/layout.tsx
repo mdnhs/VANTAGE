@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { geistMono, SITE_FONT_VARIABLES } from '@/lib/font';
-import { JsonLd } from '@/components/seo/json-ld';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
-import { sizedSrc } from '@/lib/media/public-image';
+import { rootMetadata } from '@/lib/seo/metadata';
+import { withLegacyMeta } from '@/server/queries/get-page-seo';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
@@ -10,52 +10,17 @@ import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
-// Site-wide fallback metadata — editable from the admin's Settings > SEO tab. Individual
-// pages that set their own `metadata`/`generateMetadata` still override these per-field.
+// Site-wide fallback metadata — editable from the admin's SEO defaults. Every public page
+// sets its own metadata through getPageMetadata and overrides these per field.
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, seo] = await Promise.all([siteSettingsService.getPublic(), getSetting('seo')]);
-  const title = settings.metaTitle || settings.businessName;
-  const description =
-    settings.metaDescription || `${settings.businessName} — ${formatOpeningHoursSummary(settings.openingHours)}`;
-  const ogImage = settings.ogImage ? sizedSrc(settings.ogImage, 'w_1200,h_630,c_fill') : '/opengraph-image.png';
-
-  return {
-    metadataBase: new URL(APP_URL),
-    title: {
-      default: title,
-      template: seo.titleTemplate.includes('%s') ? seo.titleTemplate : `%s | ${settings.businessName}`,
-    },
-    description,
-    applicationName: settings.businessName,
-    generator: 'Next.js',
-    referrer: 'origin-when-cross-origin',
-    formatDetection: { email: false, address: false, telephone: false },
-    alternates: { canonical: '/' },
-    openGraph: {
-      type: 'website',
-      siteName: settings.businessName,
-      locale: 'en_IE',
-      url: '/',
-      title,
-      description,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: settings.businessName }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      site: settings.twitterHandle || undefined,
-      title,
-      description,
-      images: [ogImage],
-    },
-    robots:
-      seo.robots === 'noindex'
-        ? { index: false, follow: false }
-        : {
-            index: true,
-            follow: true,
-            googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
-          },
-  };
+  return rootMetadata({
+    appUrl: APP_URL,
+    seo: withLegacyMeta(seo, settings),
+    siteName: settings.businessName,
+    hoursSummary: formatOpeningHoursSummary(settings.openingHours),
+    defaultOgImage: settings.ogImage,
+  });
 }
 
 export const viewport: Viewport = {
@@ -67,9 +32,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({ children }: LayoutProps<'/'>) {
-  const settings = await siteSettingsService.getPublic();
-
+export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang='en'
@@ -77,25 +40,6 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
       className={`${SITE_FONT_VARIABLES} ${geistMono.variable} h-full antialiased`}
     >
       <body className='flex min-h-full flex-col font-sans'>
-        <JsonLd
-          schema={{
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            '@id': `${APP_URL}/#organization`,
-            name: settings.businessName,
-            url: APP_URL,
-          }}
-        />
-        <JsonLd
-          schema={{
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            '@id': `${APP_URL}/#website`,
-            url: APP_URL,
-            name: settings.businessName,
-            publisher: { '@id': `${APP_URL}/#organization` },
-          }}
-        />
         <ProviderWrapper>{children}</ProviderWrapper>
       </body>
     </html>

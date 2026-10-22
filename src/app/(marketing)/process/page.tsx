@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchProcess } from '@/components/marketing/stitch-process';
 import { ButtonLink, PageHero } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
@@ -6,12 +7,9 @@ import { resolveProcessPageContent } from '@/features/process-page/defaults';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Our Process',
-  description:
-    'From initial digital triage to strict multi-point handoff inspection, the Vantage repair standard is transparently logged every time.',
-  alternates: { canonical: '/process' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('process');
+}
 
 // Splits the CMS title into hero lines — the last two words become the red accent line.
 function toHeroLines(title: string): string[] {
@@ -32,6 +30,7 @@ export default async function ProcessPage() {
   // section heading of its own so the same headline isn't repeated twice.
   return (
     <main className='flex flex-col'>
+      <PageJsonLd id='process' />
       <PageHero eyebrow={content.eyebrow} lines={toHeroLines(title)} subtext={content.subtext}>
         <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
         <ButtonLink href='/services' variant='secondary'>
