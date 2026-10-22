@@ -33,9 +33,12 @@ the public site. So a build containing Stage A may take traffic only after the c
 Deploy order:
 
 1. **Back up first.** `pg_dump "$DATABASE_URL" -Fc -f vantage-before-phase11.dump`
-2. **Migrate the database.** `yarn db:deploy` (migration 0028).
+2. **Migrate the database.** `yarn db:deploy` (migration 0028). It only adds nullable columns, one index
+   per new column and one empty table, so the old build keeps working against it.
 3. **Migrate the legacy data**, in this order, each with its `--verify` where it has one. Run them while the
-   old build (the tag below) is still serving, then re-run to confirm they are quiet:
+   old build (the tag below) is still serving, then re-run to confirm they are quiet. Any non-zero exit from a
+   `--verify` run blocks the deploy: fix what it reports first. `yarn legacy:check` counts what is left but does
+   not re-check that copied files are readable, which is what `media:migrate --verify` does.
    1. `yarn auth:migrate-admins`, then `yarn auth:migrate-admins --verify`
    2. `yarn settings:migrate`, then `yarn settings:migrate --verify`
    3. `yarn media:migrate`, then `yarn media:migrate --verify`
