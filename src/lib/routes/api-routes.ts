@@ -7,7 +7,6 @@ export const API_ROUTES = {
   health: '/health',
   media: {
     sign: '/media/sign',
-    delete: (publicId: string) => `/media/${publicId}`,
   },
   services: {
     public: '/services',
