@@ -10,6 +10,8 @@ import { documentTitle, effectiveTemplate } from './title';
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 // The generated "Vantage" share card (src/app/og/route.tsx).
 export const GENERATED_OG = '/og';
+// The per-page card (src/app/og/[page]/route.tsx), used when a page has no share image.
+export const pageOgPath = (id: PublicPageId): string => `/og/${id}`;
 const LOCALE = 'en_IE';
 
 // A stored "" or whitespace counts as missing, so the fallbacks still apply.
@@ -52,7 +54,7 @@ export function pageMetadata(i: PageSeoInput): Metadata {
         height: i.ogImage.height ?? undefined,
         alt: i.ogImage.alt || ogTitle,
       }
-    : { url: GENERATED_OG, ...OG_SIZE, alt: ogTitle };
+    : { url: pageOgPath(i.id), ...OG_SIZE, alt: ogTitle };
   const robots =
     i.defaults.robots === 'noindex'
       ? { index: false, follow: false }

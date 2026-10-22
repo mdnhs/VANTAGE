@@ -36,7 +36,7 @@ describe('pageMetadata default state', () => {
       expect(m.description).toBe(page.description);
       expect(m.alternates?.canonical).toBe(page.path);
       expect(m.openGraph?.images).toEqual([
-        { url: '/og', width: 1200, height: 630, alt: `${page.title} | Vantage Autobody` },
+        { url: `/og/${id}`, width: 1200, height: 630, alt: `${page.title} | Vantage Autobody` },
       ]);
       expect(m.robots).toBeUndefined();
     });
@@ -46,6 +46,14 @@ describe('pageMetadata default state', () => {
     const m = pageMetadata(input('home'));
     expect(m.title).toEqual({ absolute: 'Vantage Autobody — Precision Crash Repair & Restoration Dublin' });
     expect(m.description).toBe(HOME_DESCRIPTION);
+  });
+});
+
+describe('pageMetadata generated card', () => {
+  it('points the share image at the per-page card', () => {
+    const m = pageMetadata(input('about'));
+    expect(m.openGraph?.images).toEqual([expect.objectContaining({ url: '/og/about', width: 1200, height: 630 })]);
+    expect(m.twitter?.images).toEqual(['/og/about']);
   });
 });
 

@@ -40,7 +40,7 @@ describe('public page SEO', () => {
     const m = await getPageMetadata('services');
     expect(m.title).toEqual({ absolute: 'Services | Vantage Autobody' });
     expect(m.alternates?.canonical).toBe('/services');
-    expect(firstImage(m).url).toBe('/og');
+    expect(firstImage(m).url).toBe('/og/services');
     expect(m.robots).toBeUndefined();
   });
 

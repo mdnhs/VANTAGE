@@ -51,6 +51,8 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['undici'],
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
+  // The share-card font is read from disk at runtime; trace it into the standalone bundle.
+  outputFileTracingIncludes: { '/og/\\[page\\]': ['./assets/fonts/*.ttf'] },
   // Media is served as stored (R2 or /uploads); Next optimises it. res.cloudinary.com is the legacy
   // fallback for images not yet migrated (Phase 11 removes it). No localPatterns: this site serves
   // many /public paths.
