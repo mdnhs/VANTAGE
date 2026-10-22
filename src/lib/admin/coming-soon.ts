@@ -24,6 +24,7 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   ...Object.keys(SETTINGS_PAGES).map((slug) => `/dashboard/settings/${slug}`),
   // settings/ai-assistant is its own folder (Phase 9).
   '/dashboard/settings/ai-assistant',
+  '/dashboard/seo',
   '/dashboard/seo/defaults',
   '/dashboard/seo/redirects',
   '/dashboard/users',

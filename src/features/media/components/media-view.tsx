@@ -1,6 +1,7 @@
 'use client';
 
 import { ImageIcon } from 'lucide-react';
+import { parseAsBoolean, parseAsString, useQueryStates } from 'nuqs';
 import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/admin/dashboard/empty-state';
@@ -25,20 +26,27 @@ const TYPES: ReadonlyArray<readonly [MediaTypeFilter | null, string]> = [
   ['pdf', 'PDFs'],
 ];
 
+// The library filters live in the URL, so a link such as the SEO overview's
+// "Find images without alt text" opens the library already filtered.
+const filterParams = {
+  q: parseAsString.withDefault('').withOptions({ clearOnDefault: true }),
+  missingAlt: parseAsBoolean.withDefault(false).withOptions({ clearOnDefault: true }),
+};
+
 export function MediaView() {
   const actor = useActor();
   const canUpload = useCan({ media: ['upload'] }) && !actor.impersonatedBy;
-  const [search, setSearch] = useState('');
-  const [q, setQ] = useState('');
+  const [filters, setFilters] = useQueryStates(filterParams, { history: 'replace' });
+  const { q, missingAlt } = filters;
+  const [search, setSearch] = useState(q);
   const [type, setType] = useState<MediaTypeFilter | null>(null);
-  const [missingAlt, setMissingAlt] = useState(false);
   // Keep the opened item itself: a filter change or a save must not close its sheet.
   const [openItem, setOpenItem] = useState<MediaItem | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setQ(search.trim()), 250);
+    const timer = setTimeout(() => void setFilters({ q: search.trim() }), 250);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, setFilters]);
 
   const list = useMediaList({ q: q || undefined, type: type ?? undefined, missingAlt: missingAlt || undefined });
   const opened: MediaItem | null = openItem ? (list.items.find((item) => item.id === openItem.id) ?? openItem) : null;
@@ -72,7 +80,7 @@ export function MediaView() {
           ))}
         </div>
         <div className='flex items-center gap-2'>
-          <Switch id='media-missing-alt' checked={missingAlt} onCheckedChange={setMissingAlt} />
+          <Switch id='media-missing-alt' checked={missingAlt} onCheckedChange={(checked) => void setFilters({ missingAlt: checked })} />
           <Label htmlFor='media-missing-alt'>Missing alt text</Label>
         </div>
       </div>

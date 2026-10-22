@@ -35,9 +35,11 @@ describe('comingSoonLink', () => {
 describe('comingSoonParams', () => {
   const keys = comingSoonParams().map((p) => [p.section, ...p.rest].join('/'));
   it('lists the placeholder destinations', () => {
-    for (const k of ['seo', 'help']) {
-      expect(keys).toContain(k);
-    }
+    expect(keys).toEqual(['help']);
+  });
+  it('treats the SEO overview as a real route', () => {
+    expect(keys).not.toContain('seo');
+    expect(REAL_ROUTES.has('/dashboard/seo')).toBe(true);
   });
   it('no longer yields any marketing placeholder', () => {
     expect(keys.filter((k) => k === 'marketing' || k.startsWith('marketing/'))).toEqual([]);
@@ -53,6 +55,7 @@ describe('comingSoonParams', () => {
       'settings',
       'users',
       'account',
+      'seo',
       'seo/defaults',
       'seo/redirects',
       'appearance',
