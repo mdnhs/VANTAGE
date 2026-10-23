@@ -32,6 +32,7 @@ ARG DATABASE_URL
 ARG AUTH_SECRET
 ENV DATABASE_URL=$DATABASE_URL AUTH_SECRET=$AUTH_SECRET
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV LD_LIBRARY_PATH=/app/node_modules/@img/sharp-libvips-linux-x64/lib:$LD_LIBRARY_PATH
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN yarn build
@@ -40,7 +41,8 @@ FROM base AS runner
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    LD_LIBRARY_PATH=/app/node_modules/@img/sharp-libvips-linux-x64/lib:$LD_LIBRARY_PATH
 RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 -g nodejs nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

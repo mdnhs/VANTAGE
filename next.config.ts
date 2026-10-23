@@ -47,8 +47,8 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the VPS Docker image (sharp is externalized by default).
   output: 'standalone',
   poweredByHeader: false,
-  // undici is imported at runtime by the AI base-URL guard; keep it out of the bundle.
-  serverExternalPackages: ['undici'],
+  // undici and sharp are imported at runtime; keep native bindings out of the Turbopack bundle.
+  serverExternalPackages: ['undici', 'sharp'],
   // Next.js 16 Cache Components — enables `'use cache'` / cacheTag / cacheLife.
   cacheComponents: true,
   // The share-card font is read from disk at runtime; trace it into the standalone bundle.
