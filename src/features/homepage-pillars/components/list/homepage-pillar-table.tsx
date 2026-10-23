@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useHomepagePillarList } from '../../hooks/api/query/use-homepage-pillar-list';
@@ -25,19 +27,26 @@ const FILTERS = { page: 1, limit: 50 };
 function EnabledToggle({ pillar }: { pillar: HomepagePillar }) {
   const authorOnly = useAuthorOnly();
   const updateHomepagePillar = useUpdateHomepagePillar(pillar.id);
+  const status = pillar.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={pillar.isEnabled}
-      disabled={authorOnly || updateHomepagePillar.isPending}
-      onCheckedChange={(checked) => updateHomepagePillar.mutate({ isEnabled: checked })}
-      aria-label={`${pillar.isEnabled ? 'Disable' : 'Enable'} ${pillar.title}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={pillar.isEnabled}
+        disabled={authorOnly || updateHomepagePillar.isPending}
+        onCheckedChange={(checked) => updateHomepagePillar.mutate({ isEnabled: checked })}
+        aria-label={`${pillar.isEnabled ? 'Disable' : 'Enable'} ${pillar.title}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
   const authorOnly = useAuthorOnly();
   const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useHomepagePillarList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepagePillar = useDeleteHomepagePillar();
@@ -58,7 +67,22 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No homepage pillars yet. Add the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No homepage pillars yet'
+        description='Add the first homepage pillar to get started.'
+        action={
+          canCreate ? (
+            <Link
+              href={APP_ROUTES.content.homepagePillars.create}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              Add pillar
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -70,7 +94,7 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
             <th className='px-4 py-2.5 font-medium'>Icon</th>
             <th className='px-4 py-2.5 font-medium'>Title</th>
             <th className='px-4 py-2.5 font-medium'>Description</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>

@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUp, Check, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useHomepageProcessStepList } from '../../hooks/api/query/use-homepage-process-step-list';
@@ -25,19 +27,26 @@ const FILTERS = { page: 1, limit: 50 };
 function EnabledToggle({ step }: { step: HomepageProcessStep }) {
   const authorOnly = useAuthorOnly();
   const updateHomepageProcessStep = useUpdateHomepageProcessStep(step.id);
+  const status = step.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={step.isEnabled}
-      disabled={authorOnly || updateHomepageProcessStep.isPending}
-      onCheckedChange={(checked) => updateHomepageProcessStep.mutate({ isEnabled: checked })}
-      aria-label={`${step.isEnabled ? 'Disable' : 'Enable'} ${step.title}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={step.isEnabled}
+        disabled={authorOnly || updateHomepageProcessStep.isPending}
+        onCheckedChange={(checked) => updateHomepageProcessStep.mutate({ isEnabled: checked })}
+        aria-label={`${step.isEnabled ? 'Disable' : 'Enable'} ${step.title}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTableProps) {
   const authorOnly = useAuthorOnly();
   const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useHomepageProcessStepList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageProcessStep = useDeleteHomepageProcessStep();
@@ -58,7 +67,22 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No process steps yet. Add the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No process steps yet'
+        description='Add the first process step to get started.'
+        action={
+          canCreate ? (
+            <Link
+              href={APP_ROUTES.content.homepageProcessSteps.create}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              Add step
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -70,7 +94,7 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
             <th className='px-4 py-2.5 font-medium'>Title</th>
             <th className='px-4 py-2.5 font-medium'>Description</th>
             <th className='px-4 py-2.5 font-medium'>Highlighted</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>

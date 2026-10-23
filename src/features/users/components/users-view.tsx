@@ -4,6 +4,7 @@ import { PlusIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { PageHeader, PRIMARY_ACTION } from '@/components/admin/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -230,14 +231,17 @@ export function UsersView() {
               </Button>
             </div>
           ) : list.data.items.length === 0 ? (
-            <div className='flex flex-col items-center gap-3 rounded-lg border p-6 text-center text-sm text-muted-foreground'>
-              <p>Nobody matches these filters. Try a different search or clear the filters.</p>
-              {page > 1 ? (
-                <Button variant='outline' size='sm' onClick={() => setPage(1)}>
-                  Back to the first page
-                </Button>
-              ) : null}
-            </div>
+            <EmptyState
+              title='No people found'
+              description='Nobody matches these filters. Try a different search or clear the filters.'
+              action={
+                page > 1 ? (
+                  <Button variant='outline' size='sm' onClick={() => setPage(1)}>
+                    Back to the first page
+                  </Button>
+                ) : undefined
+              }
+            />
           ) : (
             <>
               <div aria-busy={list.isFetching || undefined} className={cn(list.isFetching && 'opacity-70')}>

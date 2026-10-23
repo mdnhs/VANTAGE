@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -26,19 +28,26 @@ const FILTERS = { page: 1, limit: 50 };
 function EnabledToggle({ item }: { item: HomepageCatalog }) {
   const authorOnly = useAuthorOnly();
   const updateHomepageCatalog = useUpdateHomepageCatalog(item.id);
+  const status = item.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={item.isEnabled}
-      disabled={authorOnly || updateHomepageCatalog.isPending}
-      onCheckedChange={(checked) => updateHomepageCatalog.mutate({ isEnabled: checked })}
-      aria-label={`${item.isEnabled ? 'Disable' : 'Enable'} ${item.title}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={item.isEnabled}
+        disabled={authorOnly || updateHomepageCatalog.isPending}
+        onCheckedChange={(checked) => updateHomepageCatalog.mutate({ isEnabled: checked })}
+        aria-label={`${item.isEnabled ? 'Disable' : 'Enable'} ${item.title}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps) {
   const authorOnly = useAuthorOnly();
   const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useHomepageCatalogList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageCatalog = useDeleteHomepageCatalog();
@@ -60,9 +69,20 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
 
   if (rows.length === 0) {
     return (
-      <p className='text-sm text-muted-foreground'>
-        No catalog items yet. Add the first one to display in the homepage catalog.
-      </p>
+      <EmptyState
+        title='No catalog items yet'
+        description='Add the first one to display in the homepage catalog.'
+        action={
+          canCreate ? (
+            <Link
+              href={APP_ROUTES.content.homepageCatalogs.create}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              Add catalog item
+            </Link>
+          ) : undefined
+        }
+      />
     );
   }
 
@@ -77,7 +97,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
             <th className='px-4 py-2.5 font-medium'>Badge</th>
             <th className='px-4 py-2.5 font-medium'>Footnote</th>
             <th className='px-4 py-2.5 font-medium'>Description</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>

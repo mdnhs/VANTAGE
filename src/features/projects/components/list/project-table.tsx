@@ -7,6 +7,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useActor, useCan } from '@/contexts/actor-provider';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useProjectList } from '../../hooks/api/query/use-project-list';
@@ -35,9 +37,9 @@ function StatusToggle({ project }: { project: Project }) {
         onCheckedChange={(checked) => toggleStatus.mutate(checked ? 'published' : 'draft')}
         aria-label={`${isPublished ? 'Unpublish' : 'Publish'} ${project.title}`}
       />
-      <span className={cn('text-xs font-medium uppercase', isPublished ? 'text-emerald-600' : 'text-muted-foreground')}>
+      <StatusPill tone={toneForStatus(project.status)} className='capitalize'>
         {project.status}
-      </span>
+      </StatusPill>
     </div>
   );
 }
@@ -46,17 +48,20 @@ function FeaturedToggle({ project }: { project: Project }) {
   const authorOnly = useAuthorOnly();
   const updateProject = useUpdateProject(project.id);
   return (
-    <Button
-      type='button'
-      variant='ghost'
-      size='icon'
-      className={cn('size-8', project.isFeatured ? 'text-amber-500' : 'text-muted-foreground')}
-      disabled={authorOnly || updateProject.isPending}
-      onClick={() => updateProject.mutate({ isFeatured: !project.isFeatured })}
-      aria-label={project.isFeatured ? 'Unfeature' : 'Feature on homepage'}
-    >
-      <Star className={cn('size-4', project.isFeatured && 'fill-current')} />
-    </Button>
+    <div className='flex items-center gap-1.5'>
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className={cn('size-8', project.isFeatured ? 'text-amber-500' : 'text-muted-foreground')}
+        disabled={authorOnly || updateProject.isPending}
+        onClick={() => updateProject.mutate({ isFeatured: !project.isFeatured })}
+        aria-label={project.isFeatured ? 'Unfeature' : 'Feature on homepage'}
+      >
+        <Star className={cn('size-4', project.isFeatured && 'fill-current')} />
+      </Button>
+      {project.isFeatured ? <StatusPill tone={toneForStatus('featured')}>Featured</StatusPill> : null}
+    </div>
   );
 }
 
@@ -64,6 +69,7 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
   const authorOnly = useAuthorOnly();
   const userId = useActor().user.id;
   const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] });
   // Authors edit only their own drafts; everything else is read-only for them.
   const canEdit = (project: Project) => !authorOnly || (project.createdBy === userId && project.status === 'draft');
   const { data } = useProjectList(FILTERS);
@@ -86,7 +92,19 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No projects yet. Create the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No projects yet'
+        description='Create the first project to get started.'
+        action={
+          canCreate ? (
+            <Link href={APP_ROUTES.content.projects.create} className={cn(buttonVariants({ variant: 'default' }))}>
+              Add project
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
