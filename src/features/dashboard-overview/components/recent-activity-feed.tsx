@@ -47,57 +47,50 @@ export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
             <p className='text-xs font-medium'>No inquiries logged yet</p>
           </div>
         ) : (
-          <div className='divide-y divide-border/60'>
+          <div className='max-h-130 divide-y divide-border/60 overflow-y-auto outline-none sm:max-h-90'>
             {leads.map((lead) => {
               const vehicleText = [lead.year, lead.make, lead.model].filter(Boolean).join(' ');
 
               return (
-                <div
-                  key={lead.id}
-                  className='flex flex-col justify-between gap-3 p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center'
-                >
-                  {/* Customer info & Source */}
-                  <div className='flex min-w-0 items-start gap-3'>
-                    <div className='flex min-w-0 flex-col gap-1'>
-                      <div className='flex items-center gap-2'>
-                        <h4 className='truncate text-xs font-semibold text-foreground'>{lead.name}</h4>
-                        <QuoteSourceBadge source={lead.source} />
-                      </div>
-                      <span className='truncate text-[11px] text-muted-foreground'>
-                        {lead.serviceType || 'Standard Collision Repair'}
-                      </span>
+                <div key={lead.id} className='flex flex-col gap-2 p-3.5 transition-colors hover:bg-muted/30'>
+                  {/* Top row: Customer name & source on left, status & price on right */}
+                  <div className='flex items-center justify-between gap-2'>
+                    <div className='flex min-w-0 items-center gap-2'>
+                      <h4 className='truncate text-xs font-semibold text-foreground'>{lead.name}</h4>
+                      <QuoteSourceBadge source={lead.source} />
+                    </div>
+                    <div className='flex shrink-0 items-center gap-2'>
+                      <QuoteStatusBadge status={lead.status} />
+                      {lead.estimatedCost ? (
+                        <span className='font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400'>
+                          €{parseFloat(lead.estimatedCost).toLocaleString('en-IE', { minimumFractionDigits: 0 })}
+                        </span>
+                      ) : (
+                        <span className='text-[11px] text-muted-foreground/60 italic'>Unpriced</span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Vehicle & Plate */}
-                  <div className='flex items-center gap-2'>
-                    {(lead.registration || vehicleText) && (
-                      <div className='flex items-center gap-1.5 rounded-md bg-muted/60 px-2 py-1 font-mono text-[11px]'>
-                        <Car className='size-3 shrink-0 text-muted-foreground' />
-                        {lead.registration && (
-                          <span className='font-bold tracking-wider text-red-600 uppercase dark:text-red-400'>
-                            {lead.registration}
-                          </span>
-                        )}
-                        {lead.registration && vehicleText && <span>•</span>}
-                        {vehicleText && <span className='truncate text-foreground/80'>{vehicleText}</span>}
-                      </div>
-                    )}
-                  </div>
+                  {/* Bottom row: Vehicle & service info on left, time on right */}
+                  <div className='flex items-center justify-between gap-2 text-xs'>
+                    <div className='flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground'>
+                      {lead.registration || vehicleText ? (
+                        <div className='flex items-center gap-1.5 rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[11px]'>
+                          <Car className='size-3 shrink-0 text-muted-foreground' />
+                          {lead.registration && (
+                            <span className='font-bold tracking-wider whitespace-nowrap text-red-600 uppercase dark:text-red-400'>
+                              {lead.registration}
+                            </span>
+                          )}
+                          {lead.registration && vehicleText && <span>•</span>}
+                          {vehicleText && <span className='truncate text-foreground/80'>{vehicleText}</span>}
+                        </div>
+                      ) : (
+                        <span className='truncate'>{lead.serviceType || 'Standard Collision Repair'}</span>
+                      )}
+                    </div>
 
-                  {/* Status, Pricing & Time */}
-                  <div className='flex items-center justify-between gap-3 sm:justify-end'>
-                    <QuoteStatusBadge status={lead.status} />
-
-                    {lead.estimatedCost ? (
-                      <span className='font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400'>
-                        €{parseFloat(lead.estimatedCost).toLocaleString('en-IE', { minimumFractionDigits: 0 })}
-                      </span>
-                    ) : (
-                      <span className='text-[11px] text-muted-foreground/60 italic'>Unpriced</span>
-                    )}
-
-                    <span className='flex items-center gap-1 font-mono text-[10px] text-muted-foreground/80'>
+                    <span className='flex shrink-0 items-center gap-1 font-mono text-[10px] text-muted-foreground/80'>
                       <Clock className='size-2.5' />
                       {formatRelativeTime(lead.createdAt)}
                     </span>

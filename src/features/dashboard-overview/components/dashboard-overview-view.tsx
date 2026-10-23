@@ -280,7 +280,6 @@ function DashboardBody({ data }: { data: DashboardDto }) {
             <div>
               <DashboardCard
                 title='Team activity'
-                className='h-full'
                 action={
                   <span className='text-xs text-muted-foreground'>{data.recentActivity.length} recent actions</span>
                 }
