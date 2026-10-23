@@ -15,14 +15,16 @@ import type { RoleName } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
 import { accounts, users } from '@/server/db/schema';
 
+export const DEMO_PASSWORD = 'Demo12345678!';
+
 export const DEMO_USERS: { email: string; name: string; role: RoleName; password: string }[] = [
-  { email: 'owner@vantage.test', name: 'Olivia Owner', role: 'owner', password: 'Demo-Owner-2026!' },
-  { email: 'admin@vantage.test', name: 'Adam Admin', role: 'admin', password: 'Demo-Admin-2026!' },
-  { email: 'editor@vantage.test', name: 'Erin Editor', role: 'editor', password: 'Demo-Editor-2026!' },
-  { email: 'author@vantage.test', name: 'Aaron Author', role: 'author', password: 'Demo-Author-2026!' },
-  { email: 'marketer@vantage.test', name: 'Maya Marketer', role: 'marketer', password: 'Demo-Marketer-2026!' },
-  { email: 'intake@vantage.test', name: 'Ian Intake', role: 'intake', password: 'Demo-Intake-2026!' },
-  { email: 'viewer@vantage.test', name: 'Vera Viewer', role: 'viewer', password: 'Demo-Viewer-2026!' },
+  { email: 'owner@vantage.test', name: 'Olivia Owner', role: 'owner', password: DEMO_PASSWORD },
+  { email: 'admin@vantage.test', name: 'Adam Admin', role: 'admin', password: DEMO_PASSWORD },
+  { email: 'editor@vantage.test', name: 'Erin Editor', role: 'editor', password: DEMO_PASSWORD },
+  { email: 'author@vantage.test', name: 'Aaron Author', role: 'author', password: DEMO_PASSWORD },
+  { email: 'marketer@vantage.test', name: 'Maya Marketer', role: 'marketer', password: DEMO_PASSWORD },
+  { email: 'intake@vantage.test', name: 'Ian Intake', role: 'intake', password: DEMO_PASSWORD },
+  { email: 'viewer@vantage.test', name: 'Vera Viewer', role: 'viewer', password: DEMO_PASSWORD },
 ];
 
 export async function seedDemoUsers(): Promise<{ created: number; skipped: number }> {
