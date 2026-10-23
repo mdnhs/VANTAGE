@@ -85,7 +85,8 @@ export const API_ROUTES = {
   enquiries: {
     exportCsv: (type: 'quotes' | 'contacts', status?: string) =>
       `/admin/enquiries/export.csv?type=${type}${status && status !== 'all' ? `&status=${encodeURIComponent(status)}` : ''}`,
-    privacy: (email: string) => `/admin/enquiries/privacy?email=${encodeURIComponent(email)}`,
+    privacyExport: '/admin/enquiries/privacy/export',
+    privacyErase: '/admin/enquiries/privacy/erase',
   },
   contacts: {
     submit: '/contacts',

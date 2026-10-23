@@ -153,7 +153,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
         }
         actions={
           <>
-            <EnquiryActions type='quotes' />
+            <EnquiryActions type='quotes' status={viewMode === 'kanban' ? undefined : status} />
             {/* View Mode Switcher */}
             <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
               <Button

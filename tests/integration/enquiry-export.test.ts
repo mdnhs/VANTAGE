@@ -2,9 +2,10 @@ import { eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
+import { exportLimits } from '@/server/services/enquiry-export-service';
 import { auditLogs, contactMessages, quoteRequests } from '@/server/db/schema';
 
-import { call, createTestUser, signInCookie } from '../support/session';
+import { call, createTestUser, signInCookie, viewAsCookie } from '../support/session';
 
 vi.mock('next/cache', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/cache')>()),
@@ -38,7 +39,10 @@ describe('GET /admin/enquiries/export.csv', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('text/csv; charset=utf-8');
     expect(res.headers.get('content-disposition')).toMatch(/^attachment; filename="quotes-\d{4}-\d{2}-\d{2}\.csv"$/);
-    const text = await res.text();
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    // UTF-8 byte order mark (text decoding would strip it).
+    expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes).slice(1);
     const lines = text.trim().split('\n');
     expect(lines).toHaveLength(3);
     expect(lines[0]).toContain('Name');
@@ -74,6 +78,41 @@ describe('GET /admin/enquiries/export.csv', () => {
 
   it('rejects an unknown type', async () => {
     expect((await call(`${csv}?type=other`, owner)).status).toBe(422);
+  });
+
+  it('stops at the cap, says so in a header and keeps the file clean', async () => {
+    await db.insert(contactMessages).values(
+      [2, 3].map((n) => ({
+        firstName: `Extra${n}`,
+        lastName: 'T',
+        email: `e${n}@example.com`,
+        phone: '1',
+        message: 'm',
+      })),
+    );
+    const before = exportLimits.rows;
+    exportLimits.rows = 2;
+    try {
+      const res = await call(`${csv}?type=contacts`, owner, { headers: { 'x-forwarded-for': '203.0.113.9' } });
+      expect(res.headers.get('x-export-capped')).toBe('2');
+      expect(res.headers.get('content-disposition')).toContain('contacts-');
+      expect((await res.text()).trim().split('\n')).toHaveLength(3);
+      const rows = await audits('contact.export');
+      expect(rows[0]!.summary).toBe('Exported 2 rows (capped at 2)');
+      // Exactly at the cap is not capped.
+      const small = await call(`${csv}?type=quotes`, owner, { headers: { 'x-forwarded-for': '203.0.113.9' } });
+      expect(small.headers.get('x-export-capped')).toBeNull();
+    } finally {
+      exportLimits.rows = before;
+    }
+    const full = await call(`${csv}?type=contacts`, owner, { headers: { 'x-forwarded-for': '203.0.113.9' } });
+    expect(full.headers.get('x-export-capped')).toBeNull();
+  });
+
+  it('is refused during View-as', async () => {
+    const admin = await createTestUser('admin');
+    const viewing = await viewAsCookie(owner, admin.id);
+    expect((await call(`${csv}?type=quotes`, viewing)).status).toBe(403);
   });
 
   it('answers 429 on the 11th call in a minute', async () => {

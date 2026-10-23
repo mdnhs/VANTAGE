@@ -14,16 +14,22 @@ import { PrivacyRequestDialog } from './privacy-request-dialog';
 // people who may use it. The API checks the same rights.
 export function EnquiryActions({ type, status }: { type: 'quotes' | 'contacts'; status?: string }) {
   const actor = useActor();
-  const canExport = useCan(type === 'quotes' ? { quote: ['export'] } : { contact: ['export'] });
-  const canPrivacy = useCan({ quote: ['export'], contact: ['export'] });
-  const canErase = useCan({ quote: ['delete'], contact: ['delete'] }) && !actor.impersonatedBy;
+  const mayExport = useCan(type === 'quotes' ? { quote: ['export'] } : { contact: ['export'] });
+  const mayPrivacy = useCan({ quote: ['export'], contact: ['export'] });
+  // View-as is read-only: the API refuses these too.
+  const viewing = Boolean(actor.impersonatedBy);
+  const canExport = mayExport && !viewing;
+  const canPrivacy = mayPrivacy && !viewing;
+  const canErase = useCan({ quote: ['delete'], contact: ['delete'] });
   const [busy, setBusy] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   async function exportCsv() {
     setBusy(true);
     try {
-      await downloadEnquiryCsv(type, status);
+      const capped = await downloadEnquiryCsv(type, status);
+      if (capped)
+        toast.warning(`Export stopped at ${capped.toLocaleString('en-IE')} rows. Narrow the folder to see the rest.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Export failed');
     } finally {

@@ -88,7 +88,7 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
         description='General enquiries and questions submitted through the Contact page.'
         actions={
           <>
-            <EnquiryActions type='contacts' />
+            <EnquiryActions type='contacts' status={status} />
             <Button
               type='button'
               variant='outline'

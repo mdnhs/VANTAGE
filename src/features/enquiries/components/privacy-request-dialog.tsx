@@ -110,7 +110,8 @@ export function PrivacyRequestDialog({
             <div className='rounded-lg border border-border p-3 text-sm' role='status'>
               <p>
                 Erased {result.deleted.quotes} {result.deleted.quotes === 1 ? 'quote' : 'quotes'} and{' '}
-                {result.deleted.contacts} {result.deleted.contacts === 1 ? 'contact message' : 'contact messages'}.
+                {result.deleted.contacts} {result.deleted.contacts === 1 ? 'contact message' : 'contact messages'}
+                {result.deleted.aiMessages > 0 && ` and ${result.deleted.aiMessages} saved AI messages`}.
               </p>
               {result.kept.length > 0 && (
                 <ul className='mt-2 space-y-1 text-muted-foreground'>

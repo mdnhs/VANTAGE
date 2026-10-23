@@ -14,7 +14,8 @@ import { SPAM_STATUS } from '@/server/services/retention-service';
 export type EnquiryExportType = 'quotes' | 'contacts';
 
 // One file never grows without bound; a final row says when it stopped early.
-export const EXPORT_ROW_LIMIT = 10_000;
+// Mutable only so a test can lower it.
+export const exportLimits = { rows: 10_000 };
 
 const QUOTE_COLUMNS = [
   { key: 'createdAt', label: 'Received' },
@@ -61,7 +62,7 @@ export async function exportCsv(
   actor: Actor,
   type: EnquiryExportType,
   status?: string,
-): Promise<{ filename: string; csv: string; count: number }> {
+): Promise<{ filename: string; csv: string; count: number; capped: boolean }> {
   const permission = type === 'quotes' ? { quote: ['export' as const] } : { contact: ['export' as const] };
   if (!hasPermission(actor.roles, permission)) throw ApiError.forbidden("You don't have permission to do that");
 
@@ -72,29 +73,23 @@ export async function exportCsv(
           .from(quoteRequests)
           .where(statusFilter(quoteRequests.status, status))
           .orderBy(asc(quoteRequests.createdAt))
-          .limit(EXPORT_ROW_LIMIT + 1)
+          .limit(exportLimits.rows + 1)
       : await db
           .select()
           .from(contactMessages)
           .where(statusFilter(contactMessages.status, status))
           .orderBy(asc(contactMessages.createdAt))
-          .limit(EXPORT_ROW_LIMIT + 1);
+          .limit(exportLimits.rows + 1);
 
-  const capped = fetched.length > EXPORT_ROW_LIMIT;
-  const rows = capped ? fetched.slice(0, EXPORT_ROW_LIMIT) : fetched;
-  const data = capped
-    ? [
-        ...rows,
-        { status: 'export.capped', name: `Export capped at ${EXPORT_ROW_LIMIT} rows. Narrow the status filter.` },
-      ]
-    : rows;
-  const csv = toCsv(data, type === 'quotes' ? QUOTE_COLUMNS : CONTACT_COLUMNS);
+  const capped = fetched.length > exportLimits.rows;
+  const rows = capped ? fetched.slice(0, exportLimits.rows) : fetched;
+  const csv = toCsv(rows, type === 'quotes' ? QUOTE_COLUMNS : CONTACT_COLUMNS);
 
   const label = type === 'quotes' ? 'quote' : 'contact';
   await audit(actor, {
     action: `${label}.export`,
     entityType: label,
-    summary: `Exported ${rows.length} rows${capped ? ` (capped at ${EXPORT_ROW_LIMIT})` : ''}`,
+    summary: `Exported ${rows.length} rows${capped ? ` (capped at ${exportLimits.rows})` : ''}`,
   });
-  return { filename: `${type}-${irishDay()}.csv`, csv, count: rows.length };
+  return { filename: `${type}-${irishDay()}.csv`, csv, count: rows.length, capped };
 }

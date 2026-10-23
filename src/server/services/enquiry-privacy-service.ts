@@ -1,9 +1,9 @@
 import 'server-only';
 
-import { and, inArray, sql } from 'drizzle-orm';
+import { and, asc, inArray, notExists, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/server/db';
-import { contactMessages, enquiryPhotos, quoteRequests } from '@/server/db/schema';
+import { aiConversations, aiMessages, contactMessages, enquiryPhotos, quoteRequests } from '@/server/db/schema';
 import { audit } from '@/server/lib/audit';
 import type { Actor } from '@/server/lib/auth/actor';
 import { derivedHmac } from '@/server/lib/crypto';
@@ -12,14 +12,20 @@ import { attachPhotos } from '@/server/lib/media/enquiry-photos';
 import { hardDeleteEnquiryMedia } from '@/server/services/media-library-service';
 
 export type PrivacyKept = { id: string; reason: 'billing' };
-export type ErasureResult = { deleted: { quotes: number; contacts: number }; kept: PrivacyKept[] };
+export type ErasureResult = {
+  deleted: { quotes: number; contacts: number; aiMessages: number };
+  kept: PrivacyKept[];
+};
 
 const normalise = (email: string) => email.trim().toLowerCase();
+
+// Saved assistant replies that quote the address (substring, case-insensitive; no pattern, so nothing to escape).
+const mentions = (email: string) => sql`position(${normalise(email)} in lower(${aiMessages.parts}::text)) > 0`;
 // The audit log identifies the person by a keyed hash, never by the address.
 const personId = (email: string) => derivedHmac('privacy-email', normalise(email));
 
-const quoteMatch = (email: string) => sql`lower(${quoteRequests.email}) = ${normalise(email)}`;
-const contactMatch = (email: string) => sql`lower(${contactMessages.email}) = ${normalise(email)}`;
+const quoteMatch = (email: string) => sql`lower(trim(${quoteRequests.email})) = ${normalise(email)}`;
+const contactMatch = (email: string) => sql`lower(trim(${contactMessages.email})) = ${normalise(email)}`;
 
 export async function exportPerson(actor: Actor, email: string) {
   const quotes = await attachPhotos('quoteRequestId', await db.select().from(quoteRequests).where(quoteMatch(email)));
@@ -27,13 +33,18 @@ export async function exportPerson(actor: Actor, email: string) {
     'contactMessageId',
     await db.select().from(contactMessages).where(contactMatch(email)),
   );
+  const ai = await db
+    .select({ role: aiMessages.role, parts: aiMessages.parts, createdAt: aiMessages.createdAt })
+    .from(aiMessages)
+    .where(mentions(email))
+    .orderBy(asc(aiMessages.createdAt));
   await audit(actor, {
     action: 'privacy.export',
     entityType: 'person',
     entityId: personId(email),
-    summary: `Privacy export: ${quotes.length} quotes and ${contacts.length} contact messages`,
+    summary: `Privacy export: ${quotes.length} quotes, ${contacts.length} contact messages and ${ai.length} AI messages`,
   });
-  return { email: normalise(email), exportedAt: new Date().toISOString(), quotes, contacts };
+  return { email: normalise(email), exportedAt: new Date().toISOString(), quotes, contacts, aiMessages: ai };
 }
 
 // Deletes every contact message and every quote without invoice or payment data (and their enquiry
@@ -88,14 +99,34 @@ export async function erasePerson(actor: Actor, email: string): Promise<ErasureR
     const gone = new Set(deletedQuotes.map((r) => r.id));
     for (const id of quoteIds) if (!gone.has(id)) kept.push({ id, reason: 'billing' });
 
-    const deleted = { quotes: deletedQuotes.length, contacts: deletedContacts.length };
+    // Opted-in enquiry quotes in saved assistant replies. Conversations left empty go too.
+    const goneAi = await tx
+      .delete(aiMessages)
+      .where(mentions(email))
+      .returning({ conversationId: aiMessages.conversationId });
+    const touched = [...new Set(goneAi.map((r) => r.conversationId))];
+    if (touched.length > 0) {
+      await tx.delete(aiConversations).where(
+        and(
+          inArray(aiConversations.id, touched),
+          notExists(
+            tx
+              .select({ one: sql`1` })
+              .from(aiMessages)
+              .where(eq(aiMessages.conversationId, aiConversations.id)),
+          ),
+        ),
+      );
+    }
+
+    const deleted = { quotes: deletedQuotes.length, contacts: deletedContacts.length, aiMessages: goneAi.length };
     await audit(
       actor,
       {
         action: 'privacy.erase',
         entityType: 'person',
         entityId: personId(email),
-        summary: `Privacy erase: ${deleted.quotes} quotes and ${deleted.contacts} contact messages deleted, ${kept.length} quotes kept (invoice or payment records)`,
+        summary: `Privacy erase: ${deleted.quotes} quotes and ${deleted.contacts} contact messages and ${deleted.aiMessages} AI messages deleted, ${kept.length} quotes kept (invoice or payment records)`,
       },
       tx,
     );
