@@ -1,5 +1,5 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
-import { db } from '@/server/db';
+import { db, type DbLike } from '@/server/db';
 import { homepageCatalogs } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
 import type {
@@ -50,18 +50,27 @@ export const homepageCatalogRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateHomepageCatalogInput) {
-    const [row] = await db.insert(homepageCatalogs).values(data).returning({ id: homepageCatalogs.id });
-    return homepageCatalogRepository.byId(row.id);
+  // Write-only halves of create/update: the caller's transaction re-checks media first.
+  async insert(data: CreateHomepageCatalogInput, dbLike: DbLike = db) {
+    const [row] = await dbLike.insert(homepageCatalogs).values(data).returning({ id: homepageCatalogs.id });
+    return row.id;
   },
 
-  async update(id: string, data: UpdateHomepageCatalogInput) {
-    const [row] = await db
+  async patch(id: string, data: UpdateHomepageCatalogInput, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(homepageCatalogs)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(homepageCatalogs.id, id))
       .returning({ id: homepageCatalogs.id });
-    return row ? homepageCatalogRepository.byId(id) : undefined;
+    return row?.id;
+  },
+
+  async create(data: CreateHomepageCatalogInput) {
+    return homepageCatalogRepository.byId(await homepageCatalogRepository.insert(data));
+  },
+
+  async update(id: string, data: UpdateHomepageCatalogInput) {
+    return (await homepageCatalogRepository.patch(id, data)) ? homepageCatalogRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

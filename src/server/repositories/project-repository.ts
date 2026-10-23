@@ -91,9 +91,11 @@ export const projectRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateProjectInput & { createdBy?: string }) {
+  // `beforeWrite` runs first inside the write transaction (the media re-check).
+  async create(data: CreateProjectInput & { createdBy?: string }, beforeWrite?: (tx: Tx) => Promise<void>) {
     const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
+      await beforeWrite?.(tx);
       const [inserted] = await tx.insert(projects).values(rest).returning();
       if (galleryMediaIds) await replaceGalleryImages(tx, inserted.id, galleryMediaIds);
       return inserted;
@@ -103,9 +105,15 @@ export const projectRepository = {
 
   // `guard` pins the write to the author's own draft inside the same statement, so a
   // concurrent publish or reassignment cannot slip between the service's read and this write.
-  async update(id: string, data: UpdateProjectInput, guard?: { ownerId: string }) {
+  async update(
+    id: string,
+    data: UpdateProjectInput,
+    guard?: { ownerId: string },
+    beforeWrite?: (tx: Tx) => Promise<void>,
+  ) {
     const { galleryMediaIds, ...rest } = data;
     const row = await db.transaction(async (tx) => {
+      await beforeWrite?.(tx);
       const [updated] = await tx
         .update(projects)
         .set({ ...rest, updatedAt: new Date() })

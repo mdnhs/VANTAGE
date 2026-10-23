@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
-import { prepareMediaWrite } from '@/server/lib/media/content-images';
+import { mediaIdsOf, prepareMediaWrite, writeWithMedia } from '@/server/lib/media/content-images';
 import { testimonialRepository } from '@/server/repositories/testimonial-repository';
 import type {
   CreateTestimonialInput,
@@ -58,7 +58,8 @@ export const testimonialService = {
 
   async create(data: CreateTestimonialInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await testimonialRepository.create(input);
+    const id = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => testimonialRepository.insert(input, tx));
+    const row = await testimonialRepository.byId(id);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -67,7 +68,8 @@ export const testimonialService = {
 
   async update(id: string, data: UpdateTestimonialInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await testimonialRepository.update(id, input);
+    const saved = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => testimonialRepository.patch(id, input, tx));
+    const row = saved ? await testimonialRepository.byId(id) : undefined;
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
     revalidateTag(detailTag(id), 'minutes');

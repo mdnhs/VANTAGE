@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { db } from '@/server/db';
@@ -12,17 +12,20 @@ import {
   testimonials,
 } from '@/server/db/schema';
 import { ApiError } from '@/server/lib/errors';
+import { assertMediaExistsLocked } from '@/server/lib/media/assert-media';
+import { MEDIA_REFERRER_TABLES } from '@/server/lib/media/usage';
 import { homepageCatalogRepository } from '@/server/repositories/homepage-catalog-repository';
 import { partnerLogoRepository } from '@/server/repositories/partner-logo-repository';
 import { projectRepository } from '@/server/repositories/project-repository';
 import { serviceRepository } from '@/server/repositories/service-repository';
 import { testimonialRepository } from '@/server/repositories/testimonial-repository';
+import { mediaLibraryService } from '@/server/services/media-library-service';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { projectService, SYSTEM_ACTOR } from '@/server/services/project-service';
 import { serviceService } from '@/server/services/service-service';
 import { testimonialService } from '@/server/services/testimonial-service';
-import { call, sessionCookie } from '../support/session';
+import { call, createTestUser, sessionCookie } from '../support/session';
 import { createPartnerLogoSchema, updatePartnerLogoSchema } from '@/validations/partner-logo-schema';
 import { createProjectSchema, updateProjectSchema } from '@/validations/project-schema';
 
@@ -360,5 +363,90 @@ describe('API contract', () => {
     expect(res3.status).toBe(200);
     const after3 = await homepageCatalogRepository.byId(c!.id);
     expect([after3?.icon, after3?.footnote]).toEqual(['wrench', 'Custom note']);
+  });
+});
+
+describe('save versus delete (P5 M1)', () => {
+  let owner: never;
+  beforeAll(async () => {
+    const user = await createTestUser('owner');
+    owner = { userId: user.id, email: user.email, roles: ['owner'] } as never;
+  });
+  const settle = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  it('a delete holding the lock makes the in-flight save fail with the media 422', async () => {
+    const icon = await insertMedia();
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const hasLock = new Promise<void>((resolve) => (locked = resolve));
+    const deleting = db.transaction(async (tx) => {
+      await tx.execute(sql.raw(`lock table ${MEDIA_REFERRER_TABLES.join(', ')} in share row exclusive mode`));
+      await tx.update(media).set({ deletedAt: new Date() }).where(eq(media.id, icon.id));
+      locked();
+      await held;
+    });
+    await hasLock;
+    // The pre-check still sees the live row (the delete is uncommitted); only the re-check can catch it.
+    const saving = serviceService.create(service({ iconMediaId: icon.id })).then(
+      () => 'saved',
+      (e: unknown) => e,
+    );
+    await settle();
+    release();
+    await deleting;
+    const outcome = await saving;
+    expect(outcome).toBeInstanceOf(ApiError);
+    expect((outcome as ApiError).status).toBe(422);
+    expect(await db.select().from(services)).toHaveLength(0);
+  });
+
+  it('a save holding the lock makes the delete fail with 409', async () => {
+    const icon = await insertMedia();
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const hasLock = new Promise<void>((resolve) => (locked = resolve));
+    const saving = db.transaction(async (tx) => {
+      await assertMediaExistsLocked(tx, [icon.id]);
+      await serviceRepository.insert({ ...service(), iconMediaId: icon.id } as never, tx);
+      locked();
+      await held;
+    });
+    await hasLock;
+    const deleting = mediaLibraryService.remove(owner, icon.id).then(
+      () => 'deleted',
+      (e: unknown) => e,
+    );
+    await settle();
+    release();
+    await saving;
+    const outcome = await deleting;
+    expect(outcome).toBeInstanceOf(ApiError);
+    expect((outcome as ApiError).status).toBe(409);
+  });
+
+  it('racing save and delete never both succeed', async () => {
+    for (let i = 0; i < 12; i += 1) {
+      const icon = await insertMedia();
+      const [saved, deleted] = await Promise.all([
+        serviceService.create(service({ iconMediaId: icon.id })).then(
+          () => true,
+          (e: unknown) => {
+            expect((e as ApiError).status).toBe(422);
+            return false;
+          },
+        ),
+        mediaLibraryService.remove(owner, icon.id).then(
+          () => true,
+          (e: unknown) => {
+            expect((e as ApiError).status).toBe(409);
+            return false;
+          },
+        ),
+      ]);
+      expect(saved && deleted).toBe(false);
+      expect(saved || deleted).toBe(true);
+    }
   });
 });

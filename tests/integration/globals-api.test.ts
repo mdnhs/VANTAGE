@@ -7,6 +7,7 @@ import { EDITABLE_GLOBAL_KEYS, GLOBAL_ACCESS } from '@/lib/content/global-access
 import { parseGlobal } from '@/lib/content/globals';
 import { db } from '@/server/db';
 import { auditLogs, media, revisions, settings } from '@/server/db/schema';
+import { MEDIA_REFERRER_TABLES } from '@/server/lib/media/usage';
 
 import { call, createTestUser, sessionCookie, signInCookie, viewAsCookie } from '../support/session';
 
@@ -220,6 +221,29 @@ describe('media refs in settings', () => {
     const logo = await insertMedia();
     const res = await put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: logo.id } } });
     expect(res.status).toBe(200);
+  });
+
+  it('re-checks the ref inside the save: a delete committing mid-save gives 422 and no write', async () => {
+    const logo = await insertMedia();
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const hasLock = new Promise<void>((resolve) => (locked = resolve));
+    const deleting = db.transaction(async (tx) => {
+      await tx.execute(sql.raw(`lock table ${MEDIA_REFERRER_TABLES.join(', ')} in share row exclusive mode`));
+      await tx.update(media).set({ deletedAt: new Date() }).where(eq(media.id, logo.id));
+      locked();
+      await held;
+    });
+    await hasLock;
+    const saving = put(cookies.owner, 'site', { version: 0, value: { logo: { kind: 'media', id: logo.id } } });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    release();
+    await deleting;
+    const res = await saving;
+    expect(res.status).toBe(422);
+    expect((await json(res)).error.causes?._media).toEqual([`Image ${logo.id} no longer exists`]);
+    expect(await db.select().from(settings)).toHaveLength(0);
   });
 
   it('refuses a soft-deleted logo with a 422 _media', async () => {

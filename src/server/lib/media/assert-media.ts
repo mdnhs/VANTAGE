@@ -1,11 +1,12 @@
 import 'server-only';
 
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { db, type DbLike } from '@/server/db';
 import { media } from '@/server/db/schema/media';
 import { isShareImageSize, SHARE_IMAGE_MESSAGE } from '@/lib/seo/share-image';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
+import { MEDIA_REFERRER_TABLES } from '@/server/lib/media/usage';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isMediaId = (id: string) => UUID.test(id);
@@ -13,11 +14,8 @@ export const isMediaId = (id: string) => UUID.test(id);
 // Every id a save names must be a live (not soft-deleted) library media row;
 // anonymous enquiry uploads (scope 'enquiry') are never valid references.
 //
-// Known gap (not closed on purpose): this check runs before the content write, outside the
-// referrer-table lock that `mediaLibraryService.remove` holds. A delete committing in that
-// window leaves a reference to a soft-deleted row, which renders as no image (or the legacy
-// URL). Closing it means threading one transaction through every content service and
-// repository (services, catalogs, logos, projects, testimonials, globals), which is not small.
+// The pre-check form runs outside any lock; a save's real guarantee is `assertMediaExistsLocked`,
+// called inside the write transaction (see `writeWithMedia`).
 export async function assertMediaExists(ids: string[], dbLike: DbLike = db): Promise<void> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return;
@@ -35,6 +33,17 @@ export async function assertMediaExists(ids: string[], dbLike: DbLike = db): Pro
   throw new ApiError(ERROR_CODES.VALIDATION_ERROR, 'Some images were deleted. Choose new ones before saving.', 422, {
     _media: missing.map((id) => `Image ${id} no longer exists`),
   });
+}
+
+// Save-versus-delete: `mediaLibraryService.remove` holds SHARE ROW EXCLUSIVE on every referrer
+// table while it checks usage and soft-deletes. Taking ROW EXCLUSIVE on the same tables here
+// conflicts with that, so either the delete commits first (the re-check below fails with the
+// media 422) or this transaction commits first (the delete's usage check sees the new
+// reference and fails with 409). Concurrent saves do not block one another.
+export async function assertMediaExistsLocked(tx: DbLike, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  await tx.execute(sql.raw(`lock table ${MEDIA_REFERRER_TABLES.join(', ')} in row exclusive mode`));
+  await assertMediaExists(ids, tx);
 }
 
 // A custom share image must be at least 1200×630 at 1.91:1 (docs/brief.md §11). Media whose

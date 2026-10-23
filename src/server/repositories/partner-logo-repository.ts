@@ -1,5 +1,5 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
-import { db } from '@/server/db';
+import { db, type DbLike } from '@/server/db';
 import { partnerLogos } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
 import type {
@@ -53,18 +53,27 @@ export const partnerLogoRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreatePartnerLogoInput) {
-    const [row] = await db.insert(partnerLogos).values(data).returning({ id: partnerLogos.id });
-    return partnerLogoRepository.byId(row.id);
+  // Write-only halves of create/update: the caller's transaction re-checks media first.
+  async insert(data: CreatePartnerLogoInput, dbLike: DbLike = db) {
+    const [row] = await dbLike.insert(partnerLogos).values(data).returning({ id: partnerLogos.id });
+    return row.id;
   },
 
-  async update(id: string, data: UpdatePartnerLogoInput) {
-    const [row] = await db
+  async patch(id: string, data: UpdatePartnerLogoInput, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(partnerLogos)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(partnerLogos.id, id))
       .returning({ id: partnerLogos.id });
-    return row ? partnerLogoRepository.byId(id) : undefined;
+    return row?.id;
+  },
+
+  async create(data: CreatePartnerLogoInput) {
+    return partnerLogoRepository.byId(await partnerLogoRepository.insert(data));
+  },
+
+  async update(id: string, data: UpdatePartnerLogoInput) {
+    return (await partnerLogoRepository.patch(id, data)) ? partnerLogoRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {
