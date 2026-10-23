@@ -16,6 +16,7 @@ const TABS: Array<{ value: ContactStatus | 'all'; label: string }> = [
   { value: 'read', label: 'Read' },
   { value: 'replied', label: 'Replied' },
   { value: 'archived', label: 'Archived' },
+  { value: 'spam', label: 'Spam' },
 ];
 
 export function ContactStatusTabs({ currentStatus, onStatusChange, stats }: ContactStatusTabsProps) {

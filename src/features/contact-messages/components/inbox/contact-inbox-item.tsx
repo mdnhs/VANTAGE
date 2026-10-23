@@ -73,7 +73,7 @@ export function ContactInboxItem({ message, isSelected, onSelect }: ContactInbox
         <p className='line-clamp-1 text-[11px] leading-normal text-muted-foreground'>{message.message}</p>
 
         <div className='mt-0.5 flex flex-wrap items-center gap-1.5'>
-          <ContactStatusBadge status={message.status} />
+          <ContactStatusBadge status={message.status} spamReason={message.spamReason} />
 
           {photoCount > 0 && (
             <span className='inline-flex items-center gap-1 rounded bg-muted/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>

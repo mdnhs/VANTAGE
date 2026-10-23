@@ -34,6 +34,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import { QuoteStatusBadge } from '../quote-status-badge';
 import { QuoteSourceBadge } from '../quote-source-badge';
 import { useUpdateQuoteRequest } from '../../hooks/api/mutation/use-update-quote-request';
@@ -258,7 +260,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
           >
             <SelectTrigger className='h-8 w-[180px] text-xs'>
               <SelectValue>
-                <QuoteStatusBadge status={status} />
+                <QuoteStatusBadge status={status} spamReason={quote.spamReason} />
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -267,6 +269,9 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
                   <QuoteStatusBadge status={s} />
                 </SelectItem>
               ))}
+              <SelectItem key='spam' value='spam' className='text-xs'>
+                <QuoteStatusBadge status='spam' />
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -326,6 +331,14 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             <ExternalLink className='size-3.5' />
           </Link>
 
+          <SpamActions
+            kind='quote'
+            id={quote.id}
+            status={quote.status}
+            spamReason={quote.spamReason}
+            hasBilling={Boolean(invoiceNumber || paymentStatus !== 'unpaid' || paidAmountNum > 0 || paymentMethod)}
+          />
+
           {/* Delete Quote */}
           <Button
             type='button'
@@ -343,6 +356,11 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
 
       {/* Main Reading & Management Body */}
       <div className='flex w-full flex-col gap-6 p-4 sm:p-6 lg:p-8'>
+        {quote.status === 'spam' && (
+          <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+            Held as spam: {spamReasonLabel(quote.spamReason)}.
+          </div>
+        )}
         {/* Email Header: Customer & Meta */}
         <div className='flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5'>
           <div className='flex items-start gap-3.5'>
