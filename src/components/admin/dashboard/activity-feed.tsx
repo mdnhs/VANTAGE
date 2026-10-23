@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { cn } from '@/lib/utils';
 
 import { EmptyState } from './empty-state';
 import { relativeTime } from './format';
@@ -28,6 +29,7 @@ export function ActivityFeed({
   emptyTitle,
   emptyDescription,
   label = 'Recent activity',
+  className,
 }: {
   entries: readonly ActivityEntry[];
   now: number;
@@ -36,6 +38,7 @@ export function ActivityFeed({
   // Names the scrollable list, which takes keyboard focus once it overflows
   // so it can be scrolled without a mouse.
   label?: string;
+  className?: string;
 }) {
   if (entries.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
@@ -45,7 +48,10 @@ export function ActivityFeed({
       role='region'
       aria-label={label}
       tabIndex={0}
-      className='max-h-130 overflow-y-auto outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:max-h-90'
+      className={cn(
+        'flex flex-1 flex-col overflow-y-auto outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
+        className,
+      )}
     >
       <ItemGroup className='gap-1 pr-3'>
         {entries.map((entry) => (

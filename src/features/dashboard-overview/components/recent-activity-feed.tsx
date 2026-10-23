@@ -29,6 +29,7 @@ export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
   return (
     <DashboardCard
       title='Recent Customer Enquiries'
+      className='flex h-full flex-col'
       action={
         <Link
           href={APP_ROUTES.leads.quotes.index}
@@ -40,14 +41,14 @@ export function RecentActivityFeed({ leads }: RecentActivityFeedProps) {
       }
     >
       <p className='-mt-3 text-xs text-muted-foreground'>Latest incoming leads across all workshop intake channels</p>
-      <div className='-mx-5 flex flex-col sm:-mx-6'>
+      <div className='-mx-5 flex flex-1 flex-col sm:-mx-6'>
         {leads.length === 0 ? (
-          <div className='flex flex-col items-center justify-center p-8 text-center text-muted-foreground'>
+          <div className='flex flex-1 flex-col items-center justify-center p-8 text-center text-muted-foreground'>
             <Inbox className='mb-2 size-8 text-muted-foreground/50' />
             <p className='text-xs font-medium'>No inquiries logged yet</p>
           </div>
         ) : (
-          <div className='max-h-130 divide-y divide-border/60 overflow-y-auto outline-none sm:max-h-90'>
+          <div className='flex-1 divide-y divide-border/60 overflow-y-auto outline-none'>
             {leads.map((lead) => {
               const vehicleText = [lead.year, lead.make, lead.model].filter(Boolean).join(' ');
 

@@ -272,14 +272,15 @@ function DashboardBody({ data }: { data: DashboardDto }) {
         </div>
 
         {/* Tier 4: Customer Inquiries & Team Activity (Balanced 50/50 side by side) */}
-        <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
-          <div>
+        <div className='grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2'>
+          <div className='flex h-full flex-col'>
             <RecentActivityFeed leads={pipeline.recentLeads} />
           </div>
           {data.recentActivity ? (
-            <div>
+            <div className='flex h-full flex-col'>
               <DashboardCard
                 title='Team activity'
+                className='flex h-full flex-col'
                 action={
                   <span className='text-xs text-muted-foreground'>{data.recentActivity.length} recent actions</span>
                 }
@@ -287,6 +288,7 @@ function DashboardBody({ data }: { data: DashboardDto }) {
                 <p className='-mt-3 text-xs text-muted-foreground'>Publishing, enquiries and sign-ins by your team</p>
                 <ActivityFeed
                   now={now}
+                  className='flex-1'
                   emptyTitle='No activity yet'
                   emptyDescription='Publishing, enquiries and sign-ins by your team will show here.'
                   entries={data.recentActivity.map((row) => ({
