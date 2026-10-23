@@ -7,7 +7,11 @@ import type {
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
 
-export type PartnerLogo = PartnerLogoRow & { logo: PublicImage | null };
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
+export type PartnerLogo = WithoutLegacy<PartnerLogoRow> & { logo: PublicImage | null };
 
 export type {
   NewPartnerLogo,

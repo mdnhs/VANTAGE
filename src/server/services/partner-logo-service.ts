@@ -10,7 +10,7 @@ import type {
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
 
-const MEDIA_PAIRS = [['logoMediaId', 'logoPublicId']] as const;
+const MEDIA_PAIRS = [['logoMediaId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('partner-logos');
 const detailTag = (id: string) => CACHE_TAGS.detail('partner-logos', id);

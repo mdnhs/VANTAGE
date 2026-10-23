@@ -110,13 +110,11 @@ describe('services', () => {
     expect((error as ApiError).causes?._media).toEqual([`Image ${lead.id} no longer exists`]);
   });
 
-  it('falls back to the legacy Cloudinary URL for a legacy-only row', async () => {
+  it('a service with only icon_public_id renders icon: null and its API DTO has no iconPublicId', async () => {
     await db.insert(services).values({ ...service(), iconPublicId: 'vantage/legacy-icon' });
     const [listed] = await serviceRepository.listPublished();
-    expect(listed?.icon).toMatchObject({
-      id: null,
-      src: 'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/vantage/legacy-icon',
-    });
+    expect(listed?.icon).toBeNull();
+    expect(listed).not.toHaveProperty('iconPublicId');
   });
 
   it('clearing the media id on a legacy row removes the image for good', async () => {
@@ -132,13 +130,15 @@ describe('services', () => {
     expect((await serviceRepository.listPublished())[0]?.icon).toBeNull();
   });
 
-  it('leaves the legacy image alone when the media key is not written', async () => {
+  it('leaves the legacy column alone when the media key is not written, but renders icon: null', async () => {
     const [row] = await db
       .insert(services)
       .values({ ...service(), iconPublicId: 'vantage/legacy-icon' })
       .returning();
     const updated = await serviceService.update(row!.id, { name: 'Renamed' });
-    expect(updated?.icon?.src).toContain('vantage/legacy-icon');
+    expect(updated?.icon).toBeNull();
+    const [stored] = await db.select().from(services).where(eq(services.id, row!.id));
+    expect(stored?.iconPublicId).toBe('vantage/legacy-icon');
   });
 
   it('tags public reads with the media tag and shows alt changes', async () => {
@@ -170,7 +170,7 @@ describe('projects', () => {
     expect(rows.every((r) => r.imagePublicId === null && r.mediaId)).toBe(true);
   });
 
-  it('mixes legacy and media gallery rows on read and drops empty ones', async () => {
+  it('reads media gallery rows and drops legacy/empty ones', async () => {
     const [before, after, g1] = await Promise.all([1, 2, 3].map(() => insertMedia()));
     const created = await projectService.create(
       {
@@ -186,10 +186,7 @@ describe('projects', () => {
       { projectId: created!.id, displayOrder: 2 },
     ]);
     const found = await projectRepository.byId(created!.id);
-    expect(found?.gallery.map((g) => g.src)).toEqual([
-      'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/vantage/old',
-      g1!.url,
-    ]);
+    expect(found?.gallery.map((g) => g.src)).toEqual([g1!.url]);
   });
 
   it('requires a before and an after media id', () => {
@@ -205,7 +202,7 @@ describe('projects', () => {
     );
   });
 
-  it('refuses to replace a gallery that still has legacy rows; an all-media gallery can be reordered', async () => {
+  it('an all-media gallery can be reordered or replaced', async () => {
     const [before, after, g1, g2] = await Promise.all([1, 2, 3, 4].map(() => insertMedia()));
     const created = await projectService.create(
       {
@@ -219,20 +216,6 @@ describe('projects', () => {
     // all-media gallery: reorder and shrink are fine
     await projectService.update(created!.id, { galleryMediaIds: [g2!.id, g1!.id] }, SYSTEM_ACTOR);
     expect((await projectRepository.byId(created!.id))?.gallery.map((g) => g.id)).toEqual([g2!.id, g1!.id]);
-    // a legacy row makes the whole gallery read-only
-    await db
-      .insert(projectGalleryImages)
-      .values({ projectId: created!.id, imagePublicId: 'vantage/old', displayOrder: 2 });
-    await projectService.update(created!.id, { title: 'Renamed' }, SYSTEM_ACTOR);
-    await expect(projectService.update(created!.id, { galleryMediaIds: [g1!.id] }, SYSTEM_ACTOR)).rejects.toMatchObject(
-      {
-        status: 409,
-        message: 'Migrate this gallery first',
-      },
-    );
-    const found = await projectRepository.byId(created!.id);
-    expect(found?.galleryImages.map((g) => g.mediaId)).toEqual([g2!.id, g1!.id, null]);
-    expect(found?.galleryImages[2]?.imagePublicId).toBe('vantage/old');
   });
 
   it('cannot clear a required image on update, and an update may leave it out', () => {
@@ -298,12 +281,12 @@ describe('catalogs and testimonials', () => {
     expect(row?.iconImage?.src).toBe(icon.url);
   });
 
-  it('resolves a testimonial avatar and clears a legacy one', async () => {
+  it('clears a legacy testimonial avatar when avatarMediaId is written', async () => {
     const [row] = await db
       .insert(testimonials)
       .values({ customerName: 'N', rating: 5, reviewText: 'r', avatarPublicId: 'vantage/av' })
       .returning();
-    expect((await testimonialRepository.byId(row!.id))?.avatar?.src).toContain('vantage/av');
+    expect((await testimonialRepository.byId(row!.id))?.avatar).toBeNull();
     const avatar = await insertMedia();
     const updated = await testimonialService.update(row!.id, { avatarMediaId: avatar.id });
     expect(updated?.avatar?.src).toBe(avatar.url);

@@ -5,15 +5,10 @@ import type { ImageRef } from '@/lib/content/image-ref';
 export type Slot = string | null | undefined;
 
 // What the MediaField shows for the slot: the chosen media, else the row's own media,
-// else its legacy image (read-only until replaced), else nothing.
-export function slotRef(
-  slot: Slot,
-  rowMediaId: string | null | undefined,
-  legacyPublicId: string | null | undefined,
-): ImageRef {
+// else nothing.
+export function slotRef(slot: Slot, rowMediaId: string | null | undefined): ImageRef {
   const id = slot === undefined ? rowMediaId : slot;
   if (id) return { kind: 'media', id };
-  if (slot === undefined && legacyPublicId) return { kind: 'cloudinary', publicId: legacyPublicId };
   return null;
 }
 

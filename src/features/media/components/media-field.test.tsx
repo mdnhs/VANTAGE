@@ -41,23 +41,6 @@ describe('MediaField', () => {
     expect(onChange).toHaveBeenCalledWith(null);
   });
 
-  it('flags a legacy Cloudinary ref and lets it be replaced or removed', () => {
-    render(
-      wrap(
-        <MediaField
-          kind='image'
-          label='Hero'
-          value={{ kind: 'cloudinary', publicId: 'x' }}
-          nullable
-          onChange={vi.fn()}
-        />,
-      ),
-    );
-    expect(screen.getByText(/Legacy image — choose a new one to replace it/)).not.toBeNull();
-    expect(screen.getByRole('button', { name: /change hero image/i })).not.toBeNull();
-    expect(screen.getByRole('button', { name: /remove hero image/i })).not.toBeNull();
-  });
-
   it('hides Remove when the slot is not nullable', () => {
     render(wrap(<MediaField kind='video' label='Clip' value={{ kind: 'media', id: 'a' }} onChange={vi.fn()} />));
     expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();

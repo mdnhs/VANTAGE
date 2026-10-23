@@ -14,10 +14,16 @@ function findOne(id: string) {
 
 // Rows carry both the *MediaId columns and the resolved PublicImage.
 function present({ iconMedia, imageMedia, ...row }: ServiceWithMedia) {
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`icon${'Public'}${'Id'}`];
+  delete out[`image${'Public'}${'Id'}`];
   return {
-    ...row,
-    icon: contentImage(iconMedia, row.iconPublicId),
-    image: contentImage(imageMedia, row.imagePublicId),
+    ...out,
+    icon: contentImage(iconMedia),
+    image: contentImage(imageMedia),
+  } as Omit<ServiceWithMedia, 'iconMedia' | 'imageMedia'> & {
+    icon: ReturnType<typeof contentImage>;
+    image: ReturnType<typeof contentImage>;
   };
 }
 

@@ -163,7 +163,7 @@ export function HomepageCatalogForm({
               kind='image'
               label='Custom icon'
               nullable
-              value={slotRef(form.iconMediaId, initialData?.iconMediaId, initialData?.iconPublicId)}
+              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
               onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
             />
           </div>

@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
-import { ApiError, ERROR_CODES } from '@/server/lib/errors';
+import { ApiError } from '@/server/lib/errors';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { assertMediaExists, assertMediaExistsLocked } from '@/server/lib/media/assert-media';
@@ -16,10 +16,7 @@ import type {
   UpdateProjectInput,
 } from '@/validations/project-schema';
 
-const MEDIA_PAIRS = [
-  ['beforeImageMediaId', 'beforeImagePublicId'],
-  ['afterImageMediaId', 'afterImagePublicId'],
-] as const;
+const MEDIA_PAIRS = [['beforeImageMediaId'], ['afterImageMediaId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('projects');
 const FEATURED_TAG = CACHE_TAGS.list('projects-featured');
@@ -115,10 +112,6 @@ export const projectService = {
     if (guard === 'missing') return undefined;
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
     await assertMediaExists(input.galleryMediaIds ?? []);
-    // A gallery that still has old-storage images is replaced only by the media migration.
-    if (input.galleryMediaIds !== undefined && (await projectRepository.legacyGalleryCount(id)) > 0) {
-      throw new ApiError(ERROR_CODES.CONFLICT, 'Migrate this gallery first', 409);
-    }
     const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
     const row = await projectRepository.update(id, input, guard, (tx) => assertMediaExistsLocked(tx, ids));
     revalidateTag(LIST_TAG, 'minutes');

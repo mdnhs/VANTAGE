@@ -4,7 +4,7 @@ import type { ImageRef } from '@/lib/content/image-ref';
 import { telHref } from '@/lib/content/phone';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
-import { toPublicImage } from '@/server/lib/media/resolve';
+import { legacyCloudinaryUrl } from '@/server/lib/media/legacy-cloudinary';
 
 // Turns the versioned setting documents into the flat shape the
 // public site was built against (`site_settings` columns), so marketing components keep
@@ -201,6 +201,21 @@ export function composeLegacyView(g: PublicGlobals): LegacySiteView {
   };
 }
 
+function toPublicLegacy(publicId: string, resourceType: 'image' | 'video'): PublicImage | null {
+  const src = legacyCloudinaryUrl({ publicId, resourceType });
+  if (!src) return null;
+  return {
+    id: null,
+    src,
+    mimeType: null,
+    width: null,
+    height: null,
+    alt: '',
+    blurDataUrl: null,
+    focal: { x: 0.5, y: 0.5 },
+  };
+}
+
 // A media ref reads the preloaded row (missing or soft-deleted: no image); a Cloudinary ref
 // becomes its legacy URL until Phase 11.
 function resolveRef(
@@ -210,7 +225,8 @@ function resolveRef(
 ): PublicImage | null {
   if (!ref) return null;
   if (ref.kind === 'media') return images[ref.id.toLowerCase()] ?? null;
-  return toPublicImage(null, { publicId: ref.publicId, resourceType });
+  if (ref.kind === 'cloudinary') return toPublicLegacy(ref.publicId, resourceType);
+  return null;
 }
 
 export function composePublicSettings(g: PublicGlobals, images: Record<string, PublicImage>): PublicSiteSettings {

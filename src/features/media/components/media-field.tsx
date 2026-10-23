@@ -34,10 +34,9 @@ export function MediaField({
   const id = useId();
   const [open, setOpen] = useState(false);
   const mediaId = value?.kind === 'media' ? value.id : null;
-  const legacy = value?.kind === 'cloudinary';
   const found = useMediaByIds(mediaId ? [mediaId] : []);
   const current = found.data?.[0];
-  const hasValue = Boolean(mediaId || legacy);
+  const hasValue = Boolean(mediaId);
   const Placeholder = kind === 'video' ? FilmIcon : ImageIcon;
   return (
     <div className='flex items-center gap-3'>
@@ -45,9 +44,6 @@ export function MediaField({
         {current ? <MediaThumb item={current} /> : <Placeholder aria-hidden className='size-6 text-muted-foreground' />}
       </div>
       <div className='flex flex-col items-start gap-2'>
-        {legacy ? (
-          <p className='text-sm text-muted-foreground'>Legacy {kind} — choose a new one to replace it</p>
-        ) : null}
         <div className='flex gap-2'>
           <Button
             id={id}

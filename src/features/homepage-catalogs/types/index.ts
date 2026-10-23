@@ -8,8 +8,12 @@ import type {
   UpdateHomepageCatalogInput,
 } from '@/validations/homepage-catalog-schema';
 
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
 // `icon` is the lucide icon name; `iconImage` is the optional uploaded icon.
-export type HomepageCatalog = HomepageCatalogRow & { iconImage: PublicImage | null };
+export type HomepageCatalog = WithoutLegacy<HomepageCatalogRow> & { iconImage: PublicImage | null };
 
 export type {
   NewHomepageCatalog,
