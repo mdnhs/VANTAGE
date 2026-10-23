@@ -2,8 +2,8 @@ import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
-import { assertMediaExists } from '@/server/lib/media/assert-media';
-import { prepareMediaWrite } from '@/server/lib/media/content-images';
+import { assertMediaExists, assertMediaExistsLocked } from '@/server/lib/media/assert-media';
+import { mediaIdsOf, prepareMediaWrite } from '@/server/lib/media/content-images';
 import { isAuthorOnly } from '@/lib/auth/content-access';
 import type { Actor } from '@/server/lib/auth/actor';
 import { assertContentWrite } from '@/server/lib/auth/content-access';
@@ -102,7 +102,8 @@ export const projectService = {
       MEDIA_PAIRS,
     );
     await assertMediaExists(input.galleryMediaIds ?? []);
-    const row = await projectRepository.create(input);
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const row = await projectRepository.create(input, (tx) => assertMediaExistsLocked(tx, ids));
     // Second arg must match the `cacheLife` profile used in the cached reads above.
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
@@ -118,7 +119,8 @@ export const projectService = {
     if (input.galleryMediaIds !== undefined && (await projectRepository.legacyGalleryCount(id)) > 0) {
       throw new ApiError(ERROR_CODES.CONFLICT, 'Migrate this gallery first', 409);
     }
-    const row = await projectRepository.update(id, input, guard);
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const row = await projectRepository.update(id, input, guard, (tx) => assertMediaExistsLocked(tx, ids));
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');
     revalidateTag(detailTag(id), 'minutes');

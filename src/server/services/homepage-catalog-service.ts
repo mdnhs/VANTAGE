@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
-import { prepareMediaWrite } from '@/server/lib/media/content-images';
+import { mediaIdsOf, prepareMediaWrite, writeWithMedia } from '@/server/lib/media/content-images';
 import { homepageCatalogRepository } from '@/server/repositories/homepage-catalog-repository';
 import type {
   CreateHomepageCatalogInput,
@@ -40,14 +40,20 @@ export const homepageCatalogService = {
 
   async create(data: CreateHomepageCatalogInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await homepageCatalogRepository.create(input);
+    const id = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) =>
+      homepageCatalogRepository.insert(input, tx),
+    );
+    const row = await homepageCatalogRepository.byId(id);
     revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdateHomepageCatalogInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await homepageCatalogRepository.update(id, input);
+    const saved = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) =>
+      homepageCatalogRepository.patch(id, input, tx),
+    );
+    const row = saved ? await homepageCatalogRepository.byId(id) : undefined;
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');
     return row;

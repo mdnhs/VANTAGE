@@ -1,5 +1,5 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
-import { db } from '@/server/db';
+import { db, type DbLike } from '@/server/db';
 import { services } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
 import type { CreateServiceInput, ServiceListQuery, UpdateServiceInput } from '@/validations/service-schema';
@@ -60,18 +60,27 @@ export const serviceRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateServiceInput) {
-    const [row] = await db.insert(services).values(data).returning({ id: services.id });
-    return serviceRepository.byId(row.id);
+  // Write-only halves of create/update: the caller's transaction re-checks media first.
+  async insert(data: CreateServiceInput, dbLike: DbLike = db) {
+    const [row] = await dbLike.insert(services).values(data).returning({ id: services.id });
+    return row.id;
   },
 
-  async update(id: string, data: UpdateServiceInput) {
-    const [row] = await db
+  async patch(id: string, data: UpdateServiceInput, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(services)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(services.id, id))
       .returning({ id: services.id });
-    return row ? serviceRepository.byId(id) : undefined;
+    return row?.id;
+  },
+
+  async create(data: CreateServiceInput) {
+    return serviceRepository.byId(await serviceRepository.insert(data));
+  },
+
+  async update(id: string, data: UpdateServiceInput) {
+    return (await serviceRepository.patch(id, data)) ? serviceRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

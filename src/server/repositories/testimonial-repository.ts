@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
-import { db } from '@/server/db';
+import { db, type DbLike } from '@/server/db';
 import { testimonials } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
 import type {
@@ -66,18 +66,27 @@ export const testimonialRepository = {
     return row ? present(row) : undefined;
   },
 
-  async create(data: CreateTestimonialInput) {
-    const [row] = await db.insert(testimonials).values(data).returning({ id: testimonials.id });
-    return testimonialRepository.byId(row.id);
+  // Write-only halves of create/update: the caller's transaction re-checks media first.
+  async insert(data: CreateTestimonialInput, dbLike: DbLike = db) {
+    const [row] = await dbLike.insert(testimonials).values(data).returning({ id: testimonials.id });
+    return row.id;
   },
 
-  async update(id: string, data: UpdateTestimonialInput) {
-    const [row] = await db
+  async patch(id: string, data: UpdateTestimonialInput, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(testimonials)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(testimonials.id, id))
       .returning({ id: testimonials.id });
-    return row ? testimonialRepository.byId(id) : undefined;
+    return row?.id;
+  },
+
+  async create(data: CreateTestimonialInput) {
+    return testimonialRepository.byId(await testimonialRepository.insert(data));
+  },
+
+  async update(id: string, data: UpdateTestimonialInput) {
+    return (await testimonialRepository.patch(id, data)) ? testimonialRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

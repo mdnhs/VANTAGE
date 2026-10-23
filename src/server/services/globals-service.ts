@@ -14,7 +14,7 @@ import { audit } from '@/server/lib/audit';
 import type { Actor } from '@/server/lib/auth/actor';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { userName } from '@/server/lib/conflict';
-import { assertMediaExists, assertShareImage } from '@/server/lib/media/assert-media';
+import { assertMediaExists, assertMediaExistsLocked, assertShareImage } from '@/server/lib/media/assert-media';
 import { ApiError } from '@/server/lib/errors';
 import { findRevision, listRevisions } from '@/server/lib/revisions';
 import { invalid } from '@/server/lib/validator';
@@ -78,8 +78,11 @@ export async function saveGlobal(
     { version: input.version, value },
     actor.userId,
     note,
-    (tx, { before }) =>
-      audit(
+    async (tx, { before }) => {
+      // The settings write above already conflicts with a concurrent media delete's lock; this
+      // re-check, in the same transaction, rejects images that delete has since removed.
+      await assertMediaExistsLocked(tx, collectMediaIds(value));
+      await audit(
         actor,
         {
           action: 'globals.update',
@@ -89,7 +92,8 @@ export async function saveGlobal(
           diff: topLevelDiff(redactForAudit(key, before?.value), redactForAudit(key, value)),
         },
         tx,
-      ),
+      );
+    },
   );
   // Stale content is never served after a save: changes go live immediately.
   revalidateTag(settingTag(key), { expire: 0 });

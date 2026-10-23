@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
-import { prepareMediaWrite } from '@/server/lib/media/content-images';
+import { mediaIdsOf, prepareMediaWrite, writeWithMedia } from '@/server/lib/media/content-images';
 import { serviceRepository } from '@/server/repositories/service-repository';
 import type {
   CreateServiceInput,
@@ -46,7 +46,8 @@ export const serviceService = {
 
   async create(data: CreateServiceInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await serviceRepository.create(input);
+    const id = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => serviceRepository.insert(input, tx));
+    const row = await serviceRepository.byId(id);
     // Second arg must match the `cacheLife` profile used in listPublishedCached above.
     revalidateTag(LIST_TAG, 'hours');
     return row;
@@ -54,7 +55,8 @@ export const serviceService = {
 
   async update(id: string, data: UpdateServiceInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const row = await serviceRepository.update(id, input);
+    const saved = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => serviceRepository.patch(id, input, tx));
+    const row = saved ? await serviceRepository.byId(id) : undefined;
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');
     return row;
