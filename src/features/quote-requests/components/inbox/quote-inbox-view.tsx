@@ -285,8 +285,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
       ) : (
         /* VIEW MODE 2: CLASSIC SPLIT INBOX VIEW */
         <div className='flex min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden'>
-          {/* Mobile-Only Horizontal Filter Tabs Bar (< md) */}
-          <div className='flex w-full [scrollbar-width:none] items-center gap-1.5 overflow-x-auto pb-1 md:hidden [&::-webkit-scrollbar]:hidden'>
+          {/* Mobile-Only Horizontal Filter Tabs Bar (< lg) */}
+          <div className='flex w-full [scrollbar-width:none] items-center gap-1.5 overflow-x-auto pb-1 lg:hidden [&::-webkit-scrollbar]:hidden'>
             {FOLDERS.map((folder) => {
               const isSelected = status === folder.value;
               const count =
@@ -328,8 +328,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
           {/* Split-Pane Container: 3-pane layout */}
           <div className='flex min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border/80 bg-background shadow-2xs'>
-            {/* Pane 1: Vertical Mailbox Folders (Left side on md+) */}
-            <div className='hidden w-44 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border/70 bg-muted/15 p-2.5 md:flex lg:w-48 xl:w-52 dark:bg-muted/10'>
+            {/* Pane 1: Vertical Mailbox Folders (Left side on lg+) */}
+            <div className='hidden w-44 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border/70 bg-muted/15 p-2.5 lg:flex lg:w-48 xl:w-52 dark:bg-muted/10'>
               <span className='px-2.5 pt-1 pb-1.5 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase'>
                 Pipeline Folders
               </span>
@@ -387,8 +387,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             {/* Pane 2: Thread List */}
             <div
               className={cn(
-                'flex w-full shrink-0 flex-col overflow-hidden border-border/70 md:w-[310px] md:border-r lg:w-[350px] xl:w-[390px]',
-                isMobileDetailOpen ? 'hidden md:flex' : 'flex',
+                'flex w-full shrink-0 flex-col overflow-hidden border-border/70 lg:w-[350px] lg:border-r xl:w-[390px]',
+                isMobileDetailOpen ? 'hidden lg:flex' : 'flex',
               )}
             >
               {/* Search Box */}
@@ -447,7 +447,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             <div
               className={cn(
                 'flex w-full min-w-0 flex-1 flex-col overflow-hidden',
-                isMobileDetailOpen ? 'flex' : 'hidden md:flex',
+                isMobileDetailOpen ? 'flex' : 'hidden lg:flex',
               )}
             >
               {selectedQuote ? (

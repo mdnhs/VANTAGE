@@ -47,7 +47,7 @@ export function AdminShell({
             <main
               id='main'
               tabIndex={-1}
-              className='relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-card bg-sidebar p-4 outline-none [--main-pad:2rem] sm:p-6 sm:[--main-pad:3rem] lg:p-8 lg:[--main-pad:4rem]'
+              className='relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-card bg-sidebar p-4 pb-20 outline-none [--main-pad:2rem] sm:p-6 sm:pb-6 sm:[--main-pad:3rem] lg:p-8 lg:pb-8 lg:[--main-pad:4rem]'
             >
               <SectionRail>{children}</SectionRail>
             </main>
