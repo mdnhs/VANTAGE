@@ -123,7 +123,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
                   bleed='inset-[-4.17%]'
                 />
                 <Link
-                  href={`tel:${settings.phone.replace(/\s+/g, '')}`}
+                  href={settings.phoneHref}
                   className='text-[14px] leading-[normal] break-all text-[#d4d4d4] transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none'
                 >
                   {settings.phone}

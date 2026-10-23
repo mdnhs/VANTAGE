@@ -25,6 +25,7 @@ vi.mock('@/server/services/site-settings-service', () => ({
       logo: null,
       address: '1 Road',
       phone: '+353 1 234',
+      phoneHref: 'tel:+3531234',
       email: 'a@b.ie',
     }),
   },

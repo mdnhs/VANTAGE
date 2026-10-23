@@ -1,6 +1,7 @@
 import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
+import { telHref } from '@/lib/content/phone';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
 import { toPublicImage } from '@/server/lib/media/resolve';
@@ -50,6 +51,7 @@ export type PublicTeamMember = { name: string; role: string; image: PublicImage 
 // What public pages read: the legacy flat shape with every image column replaced by a
 // ready-to-render PublicImage (R2 row, or the legacy Cloudinary URL until Phase 11).
 export type PublicSiteSettings = Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUMNS)[number]> & {
+  phoneHref: string;
   logo: PublicImage | null;
   favicon: PublicImage | null;
   heroVideo: PublicImage | null;
@@ -60,7 +62,6 @@ export type PublicSiteSettings = Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUM
   aboutStandardsImage: PublicImage | null;
   aboutTeamMembers: PublicTeamMember[];
 };
-
 
 // Only Cloudinary refs have a public id.
 const publicId = (ref: ImageRef) => (ref?.kind === 'cloudinary' ? ref.publicId : null);
@@ -220,6 +221,7 @@ export function composePublicSettings(g: PublicGlobals, images: Record<string, P
   const about = g['page.about'];
   return {
     ...rest,
+    phoneHref: telHref(g.contact.phone.display, g.contact.phone.e164),
     logo: resolveRef(g.site.logo, images),
     favicon: resolveRef(g.site.favicon, images),
     heroVideo: resolveRef(g['page.home'].hero.video, images, 'video'),

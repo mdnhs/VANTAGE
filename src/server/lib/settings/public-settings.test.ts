@@ -108,6 +108,7 @@ describe('composePublicSettings images', () => {
       'aboutHeroImage',
       'aboutHeritageImage',
       'aboutStandardsImage',
+      'phoneHref',
     ];
     const legacyImageKeys = [
       'logoPublicId',
@@ -122,6 +123,7 @@ describe('composePublicSettings images', () => {
     const strip = (o: Record<string, unknown>, drop: string[]) =>
       Object.fromEntries(Object.entries(o).filter(([k]) => !drop.includes(k) && k !== 'aboutTeamMembers'));
     expect(strip(out, imageKeys)).toEqual(strip(legacy, legacyImageKeys));
+    expect(out.phoneHref).toBe('tel:+35312345678');
     expect(out.aboutTeamMembers).toEqual(
       (legacy.aboutTeamMembers as { name: string; role: string }[]).map((m) => ({
         name: m.name,

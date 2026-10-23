@@ -67,4 +67,14 @@ describe('JsonFileWidget', () => {
     expect(await screen.findByText('This file is not valid JSON.')).toBeTruthy();
     expect(latest).toBe('unchanged');
   });
+
+  it('rejects a file over 2 MB on selection with an error and does not call onChange', async () => {
+    let called = false;
+    render(<Harness spy={() => (called = true)} />);
+    const bigFile = new File(['x'], 'big.json', { type: 'application/json' });
+    Object.defineProperty(bigFile, 'size', { value: 2_000_001 });
+    fireEvent.change(screen.getByLabelText('Choose Lottie animation file'), { target: { files: [bigFile] } });
+    expect(await screen.findByText('Animations can be up to 2 MB')).toBeTruthy();
+    expect(called).toBe(false);
+  });
 });

@@ -20,6 +20,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
       <StitchHeader
         navigation={navigation}
         phone={settings.phone}
+        phoneHref={settings.phoneHref}
         businessName={settings.businessName}
         logo={settings.logo}
         logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BODY_TEXT, CARD, SectionHeader } from '@/components/marketing/ui/landing-primitives';
+import { whatsappHref } from '@/lib/content/phone';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
@@ -44,7 +45,7 @@ export async function ContactInfo() {
 
         <InfoCard icon={Phone} label={copy.directLine}>
           <Link
-            href={`tel:${settings.phone.replace(/\s+/g, '')}`}
+            href={settings.phoneHref}
             className='w-fit max-w-full truncate rounded-sm font-site-heading text-[22px] leading-[30px] font-extrabold tracking-[-0.44px] text-white transition-colors hover:text-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
           >
             {settings.phone}
@@ -52,7 +53,7 @@ export async function ContactInfo() {
           {settings.whatsappNumber && (
             <div className='mt-3 border-t border-[#232328] pt-4'>
               <Link
-                href={`https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}`}
+                href={whatsappHref(settings.whatsappNumber)}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='inline-flex w-fit items-center gap-2 rounded-full border border-[#2a2a30] bg-[#16161a] px-4 py-2 transition-colors hover:border-[#25d366]/60 hover:bg-[#25d366]/10 focus-visible:ring-2 focus-visible:ring-[#25d366] focus-visible:outline-none'

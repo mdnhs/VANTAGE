@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { LottieLogo } from '@/components/ui/lottie-logo';
+import { telHref } from '@/lib/content/phone';
 import type { GlobalValue } from '@/lib/content/globals';
 
 const ICON_PHONE = '/assets/landing/0943df176868fa54f9c4d56f120f2cb266e6fd3b.svg';
@@ -17,6 +18,7 @@ interface StitchHeaderProps {
   // Editable in Settings > Navigation; the defaults are the original links and button copy.
   navigation: GlobalValue<'navigation'>;
   phone: string;
+  phoneHref?: string;
   businessName: string;
   logo: PublicImage | null;
   logoLottieJson?: string | null;
@@ -64,6 +66,7 @@ function ArrowIcon() {
 export function StitchHeader({
   navigation,
   phone,
+  phoneHref: phoneHrefProp,
   businessName,
   logo,
   logoLottieJson,
@@ -73,7 +76,7 @@ export function StitchHeader({
   const desktopLinks = navigation.links.filter((link) => link.label && link.href && !link.mobileOnly);
   const mobileLinks = navigation.links.filter((link) => link.label && link.href);
   const { cta } = navigation;
-  const phoneHref = `tel:${phone.replace(/\s/g, '')}`;
+  const phoneHref = phoneHrefProp ?? telHref(phone);
   const logoSrc = logo ? sizedSrc(logo, 'h_240') : FALLBACK_LOGO;
 
   const pathname = usePathname();
