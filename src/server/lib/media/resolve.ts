@@ -31,13 +31,21 @@ async function loadSorted(ids: string[]): Promise<Record<string, PublicImage>> {
   cacheTag(MEDIA_TAG);
   cacheLife('max');
   if (ids.length === 0) return {};
-  const rows = await db.select().from(media).where(inArray(media.id, ids));
-  const out: Record<string, PublicImage> = {};
-  for (const row of rows) {
-    const image = toPublicImage(row);
-    if (image) out[row.id] = image;
+  try {
+    const rows = await db.select().from(media).where(inArray(media.id, ids));
+    const out: Record<string, PublicImage> = {};
+    for (const row of rows) {
+      const image = toPublicImage(row);
+      if (image) out[row.id] = image;
+    }
+    return out;
+  } catch (error) {
+    console.warn(
+      '[loadSorted] db query failed, returning empty image map:',
+      error instanceof Error ? error.message : error,
+    );
+    return {};
   }
-  return out;
 }
 
 // Live media rows by id as PublicImages. Ids are sorted and deduped first so

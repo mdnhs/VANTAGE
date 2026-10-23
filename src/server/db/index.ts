@@ -2,8 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) throw new Error('DATABASE_URL is not set');
+const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@127.0.0.1:5432/postgres';
 
 // Plain Postgres over the regular wire protocol (node-postgres). SSL is driven by the
 // connection string (`?sslmode=require` for a remote server). The pool is cached on

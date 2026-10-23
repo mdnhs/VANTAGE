@@ -12,6 +12,14 @@ export async function getSetting<K extends PublicGlobalKey>(key: K): Promise<Glo
   'use cache';
   cacheTag(settingTag(key));
   cacheLife('max');
-  const row = await settingsRepository.get(key);
-  return parseGlobal(key, row?.value);
+  try {
+    const row = await settingsRepository.get(key);
+    return parseGlobal(key, row?.value);
+  } catch (error) {
+    console.warn(
+      `[getSetting] db query for ${key} failed, using default:`,
+      error instanceof Error ? error.message : error,
+    );
+    return parseGlobal(key, undefined);
+  }
 }

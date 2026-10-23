@@ -28,8 +28,8 @@ ARG SITE_ENV
 ENV SITE_ENV=$SITE_ENV
 ARG NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
-ARG DATABASE_URL
-ARG AUTH_SECRET
+ARG DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5432/postgres
+ARG AUTH_SECRET=build_phase_secret_temp_value_must_be_set_at_runtime_min_32_chars
 ENV DATABASE_URL=$DATABASE_URL AUTH_SECRET=$AUTH_SECRET
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV LD_LIBRARY_PATH=/app/node_modules/@img/sharp-libvips-linux-x64/lib:$LD_LIBRARY_PATH

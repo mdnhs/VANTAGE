@@ -11,7 +11,11 @@ async function siteName() {
   'use cache';
   cacheTag(settingTag('site'));
   cacheLife('max');
-  return (await siteSettingsService.getPublic()).businessName;
+  try {
+    return (await siteSettingsService.getPublic()).businessName;
+  } catch {
+    return 'VANTAGE';
+  }
 }
 
 // The generated share card, used when no share image is set (GENERATED_OG in lib/seo).
