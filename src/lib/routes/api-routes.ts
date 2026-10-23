@@ -83,6 +83,12 @@ export const API_ROUTES = {
     update: (id: string) => `/quotes/${id}`,
     remove: (id: string) => `/quotes/${id}`,
   },
+  enquiries: {
+    exportCsv: (type: 'quotes' | 'contacts', status?: string) =>
+      `/admin/enquiries/export.csv?type=${type}${status && status !== 'all' ? `&status=${encodeURIComponent(status)}` : ''}`,
+    privacyExport: '/admin/enquiries/privacy/export',
+    privacyErase: '/admin/enquiries/privacy/erase',
+  },
   contacts: {
     submit: '/contacts',
     adminList: '/contacts/admin/list',

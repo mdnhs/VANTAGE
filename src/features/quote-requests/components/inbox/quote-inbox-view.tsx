@@ -2,6 +2,7 @@
 
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -152,6 +153,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
         }
         actions={
           <>
+            <EnquiryActions type='quotes' status={viewMode === 'kanban' ? undefined : status} />
             {/* View Mode Switcher */}
             <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
               <Button

@@ -6,6 +6,7 @@ import { requestLogger } from '@/server/middleware/logger';
 import { account } from './account';
 import { adminAi } from './admin-ai';
 import { adminAudit } from './admin-audit';
+import { adminEnquiries } from './admin-enquiries';
 import { adminGlobals } from './admin-globals';
 import { adminMedia } from './admin-media';
 import { adminNotifications } from './admin-notifications';
@@ -62,6 +63,7 @@ export const api = app
   })
   .route('/auth', auth)
   .route('/admin/media', adminMedia)
+  .route('/admin/enquiries', adminEnquiries)
   .route('/admin/globals', adminGlobals)
   .route('/admin/users', adminUsers)
   .route('/admin/search', adminSearch)
