@@ -26,7 +26,7 @@ const SECTIONS = [
   { value: 'seo', label: 'SEO' },
 ] as const;
 
-interface HomePageTabsProps {
+export interface HomePageTabsProps {
   pillars: { data: HomepagePillar[]; total: number };
   catalogItems: { data: HomepageCatalog[]; total: number };
   processSteps: { data: HomepageProcessStep[]; total: number };

@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CircleCheck, Circle, Globe, Kanban } from 'lucide-react';
+import { parseAsStringLiteral, useQueryState } from 'nuqs';
+import { ArrowRight, CircleCheck, Circle, ExternalLink, Globe, Kanban, LayoutDashboard } from 'lucide-react';
 import { useActor, useCan } from '@/contexts/actor-provider';
 import { ActivityFeed } from '@/components/admin/dashboard/activity-feed';
 import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
@@ -18,6 +19,7 @@ import { hasPermission, type Permissions } from '@/lib/auth/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { cn } from '@/lib/utils';
 import { NewEnquiryDialog } from '@/features/quote-requests/components/inbox/new-enquiry-dialog';
+import { HomePageTabs, type HomePageTabsProps } from '@/features/home-page/components/home-page-tabs';
 import { KpiMetricCards } from './kpi-metric-cards';
 import { MonthlyIntakeChart } from './monthly-intake-chart';
 import { ChannelBreakdown } from './channel-breakdown';
@@ -31,11 +33,23 @@ interface DashboardOverviewViewProps {
   siteUrl: string;
   // null when the dashboard failed to load.
   dashboard: DashboardDto | null;
+  websiteData?: HomePageTabsProps | null;
 }
 
-export function DashboardOverviewView({ adminName, renderedAt, siteUrl, dashboard }: DashboardOverviewViewProps) {
+export function DashboardOverviewView({
+  adminName,
+  renderedAt,
+  siteUrl,
+  dashboard,
+  websiteData,
+}: DashboardOverviewViewProps) {
   const canReadQuotes = useCan({ quote: ['read'] });
+  const canReadWebsite = useCan({ page: ['read'] });
   const router = useRouter();
+  const [view, setView] = useQueryState(
+    'view',
+    parseAsStringLiteral(['overview', 'website'] as const).withDefault('overview'),
+  );
   const greeting = dashboardGreeting(adminName, dashboard?.generatedAt, renderedAt);
 
   return (
@@ -45,7 +59,7 @@ export function DashboardOverviewView({ adminName, renderedAt, siteUrl, dashboar
         titleTestId='greeting'
         description="Here's what's happening across your admin."
         actions={
-          <>
+          <div className='flex flex-wrap items-center gap-2'>
             {canReadQuotes ? (
               <>
                 <NewEnquiryDialog />
@@ -55,19 +69,60 @@ export function DashboardOverviewView({ adminName, renderedAt, siteUrl, dashboar
                 </Link>
               </>
             ) : null}
-            <Link href={APP_ROUTES.content.homePage.index} className={LINK_SECONDARY}>
-              <Globe className='size-4' />
-              <span className='hidden sm:inline'>Website Pages</span>
-            </Link>
             <a href={siteUrl} target='_blank' rel='noreferrer' data-slot='button' className={LINK_SECONDARY}>
               View site
               <span className='sr-only'> (opens in a new tab)</span>
             </a>
-          </>
+          </div>
         }
       />
-      {dashboard ? (
-        <DashboardBody data={dashboard} />
+
+      {/* Unified Tab Switcher for Merged Dashboard */}
+      {canReadWebsite && websiteData ? (
+        <div className='flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/70 bg-card/60 p-1.5 shadow-xs backdrop-blur-md'>
+          <div className='flex items-center gap-1.5'>
+            <button
+              type='button'
+              onClick={() => setView('overview')}
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200',
+                view === 'overview'
+                  ? 'bg-primary font-semibold text-primary-foreground shadow-sm shadow-primary/20'
+                  : 'text-muted-foreground hover:bg-sidebar-accent/80 hover:text-foreground',
+              )}
+            >
+              <LayoutDashboard className='size-4' />
+              <span>Operations & Overview</span>
+            </button>
+            <button
+              type='button'
+              onClick={() => setView('website')}
+              className={cn(
+                'flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200',
+                view === 'website'
+                  ? 'bg-primary font-semibold text-primary-foreground shadow-sm shadow-primary/20'
+                  : 'text-muted-foreground hover:bg-sidebar-accent/80 hover:text-foreground',
+              )}
+            >
+              <Globe className='size-4' />
+              <span>Website Editor</span>
+              <span className='ml-1 rounded-full bg-primary/20 px-2 py-0.5 text-[11px] font-semibold text-primary group-hover:text-foreground'>
+                Live
+              </span>
+            </button>
+          </div>
+
+          <div className='hidden items-center gap-2 pr-2 text-xs text-muted-foreground md:flex'>
+            <span className='size-2 animate-pulse rounded-full bg-emerald-500' />
+            <span>Unified Admin Hub</span>
+          </div>
+        </div>
+      ) : null}
+
+      {view === 'website' && websiteData ? (
+        <WebsiteEditorPanel websiteData={websiteData} siteUrl={siteUrl} />
+      ) : dashboard ? (
+        <DashboardBody data={dashboard} onOpenWebsite={websiteData ? () => setView('website') : undefined} />
       ) : (
         <EmptyState
           title="The dashboard didn't load"
@@ -83,7 +138,87 @@ export function DashboardOverviewView({ adminName, renderedAt, siteUrl, dashboar
   );
 }
 
-function DashboardBody({ data }: { data: DashboardDto }) {
+function WebsiteEditorPanel({ websiteData, siteUrl }: { websiteData: HomePageTabsProps; siteUrl: string }) {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex flex-col gap-1'>
+          <div className='flex items-center gap-2'>
+            <h2 className='text-lg font-semibold tracking-tight text-foreground'>Website Editor & Content Hub</h2>
+            <span className='inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-500'>
+              <span className='size-1.5 animate-pulse rounded-full bg-emerald-500' />
+              Live CMS
+            </span>
+          </div>
+          <p className='text-xs text-muted-foreground sm:text-sm'>
+            Updates to page copy, pillars, testimonials, and catalog items save live to the production website.
+          </p>
+        </div>
+        <div className='flex shrink-0 items-center gap-2'>
+          <a
+            href={siteUrl}
+            target='_blank'
+            rel='noreferrer'
+            className='inline-flex items-center gap-1.5 rounded-xl border border-border bg-sidebar-accent px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-sidebar-accent/80'
+          >
+            <span>Live site preview</span>
+            <ExternalLink className='size-3.5' />
+          </a>
+        </div>
+      </div>
+
+      {/* Direct links to other website pages */}
+      <div className='flex flex-wrap items-center gap-2 border-b border-border/70 pb-3'>
+        <span className='mr-1 text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
+          Website Pages:
+        </span>
+        <span className='rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground shadow-xs'>
+          Home page
+        </span>
+        <Link
+          href='/dashboard/services'
+          className='rounded-lg bg-sidebar-accent/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground'
+        >
+          Services
+        </Link>
+        <Link
+          href='/dashboard/projects'
+          className='rounded-lg bg-sidebar-accent/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground'
+        >
+          Our work
+        </Link>
+        <Link
+          href='/dashboard/insurance'
+          className='rounded-lg bg-sidebar-accent/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground'
+        >
+          Insurance
+        </Link>
+        <Link
+          href='/dashboard/about'
+          className='rounded-lg bg-sidebar-accent/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground'
+        >
+          About
+        </Link>
+        <Link
+          href='/dashboard/process-page'
+          className='rounded-lg bg-sidebar-accent/80 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground'
+        >
+          Process
+        </Link>
+      </div>
+
+      <HomePageTabs
+        pillars={websiteData.pillars}
+        catalogItems={websiteData.catalogItems}
+        processSteps={websiteData.processSteps}
+        testimonials={websiteData.testimonials}
+        partnerLogos={websiteData.partnerLogos}
+      />
+    </div>
+  );
+}
+
+function DashboardBody({ data, onOpenWebsite }: { data: DashboardDto; onOpenWebsite?: () => void }) {
   const actor = useActor();
   const can = (p: Permissions) => hasPermission(actor.roles, p);
   // Relative times are measured from the server's clock, so they read the
@@ -98,6 +233,73 @@ function DashboardBody({ data }: { data: DashboardDto }) {
 
   return (
     <>
+      {/* Quick Website CMS banner on Overview */}
+      {onOpenWebsite ? (
+        <div className='relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-card via-card/95 to-primary/5 p-5 shadow-xs'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex items-start gap-3.5'>
+              <div className='flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary'>
+                <Globe className='size-5' />
+              </div>
+              <div className='flex flex-col gap-1'>
+                <div className='flex items-center gap-2'>
+                  <h3 className='text-sm font-semibold text-foreground sm:text-base'>Website Content & Live CMS</h3>
+                  <span className='inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-500'>
+                    <span className='size-1.5 animate-pulse rounded-full bg-emerald-500' />
+                    Live
+                  </span>
+                </div>
+                <p className='text-xs text-muted-foreground sm:text-sm'>
+                  Edit homepage hero text, feature pillars, catalog, testimonials, and SEO right from this dashboard.
+                </p>
+                <div className='mt-1.5 flex flex-wrap gap-1.5 text-xs'>
+                  <Link
+                    href='/dashboard/services'
+                    className='rounded-md bg-sidebar-accent px-2 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  >
+                    Services
+                  </Link>
+                  <Link
+                    href='/dashboard/projects'
+                    className='rounded-md bg-sidebar-accent px-2 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  >
+                    Our work
+                  </Link>
+                  <Link
+                    href='/dashboard/insurance'
+                    className='rounded-md bg-sidebar-accent px-2 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  >
+                    Insurance
+                  </Link>
+                  <Link
+                    href='/dashboard/about'
+                    className='rounded-md bg-sidebar-accent px-2 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href='/dashboard/process-page'
+                    className='rounded-md bg-sidebar-accent px-2 py-0.5 font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  >
+                    Process
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className='flex shrink-0 items-center gap-2'>
+              <button
+                type='button'
+                onClick={onOpenWebsite}
+                className='inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90 sm:text-sm'
+              >
+                <span>Edit Website</span>
+                <ArrowRight className='size-4' />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {kpis.length > 0 ? (
         <>
           {/* The KPI cards title themselves with h3s; this keeps the outline
