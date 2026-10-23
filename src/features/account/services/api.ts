@@ -1,4 +1,4 @@
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/account`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/account`;
 
 export type Device = { id: string; device: string; lastActiveAt: string; current: boolean };
 

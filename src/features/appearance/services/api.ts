@@ -5,7 +5,7 @@ import { GlobalApiError } from '@/features/globals/services/api';
 
 import type { ThemeAdminDoc, ThemeResetScope, ThemeRevision } from '../types';
 
-const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 // Full-page navigations (the preview sets a cookie and redirects), so these
 // are hrefs, never fetch targets.

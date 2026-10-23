@@ -3,7 +3,7 @@ import type { InviteInput } from '@/validations/user-admin-schema';
 
 import type { InviteResult, ResendResult, UserListQuery, UserListResult } from '../types';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/admin/users`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/admin/users`;
 
 // Carries the server's per-field messages (422 `causes`) for inline form errors.
 export class UsersApiError extends Error {

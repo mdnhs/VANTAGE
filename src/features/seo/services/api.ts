@@ -1,7 +1,7 @@
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { SeoHealth } from '@/lib/seo/health-types';
 
-const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 export async function fetchSeoOverview(): Promise<SeoHealth> {
   const res = await fetch(`${baseUrl()}${API_ROUTES.seo.overview}`, { credentials: 'include' });

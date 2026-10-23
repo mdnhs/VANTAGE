@@ -4,7 +4,7 @@ import type { ConflictCurrent, ErrorCode } from '@/server/lib/errors';
 
 import type { AiAdmin, AiSettingsUpdate, AiStatus, ListModelsInput, ListModelsResult } from '../types';
 
-const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 // Carries what the screen needs to react: the status (403 / 409 / 422 / 429), the
 // per-field messages keyed by dotted path, and who holds the newer version.

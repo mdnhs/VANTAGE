@@ -8,7 +8,7 @@ export const ME_QUERY_KEY = ['auth', 'me'] as const;
 
 async function fetchMe(): Promise<MePayload> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}${API_ROUTES.auth.me}`,
+    `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}${API_ROUTES.auth.me}`,
     { credentials: 'include' },
   );
   const body = await res.json();

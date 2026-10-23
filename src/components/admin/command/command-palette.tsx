@@ -24,7 +24,7 @@ import { useCommandPalette } from './palette-context';
 
 type SearchHit = { id: string; kind: 'page'; label: string; href: string };
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 async function fetchSearch(q: string): Promise<SearchHit[]> {
   const res = await fetch(`${BASE_URL}/admin/search?q=${encodeURIComponent(q)}`);

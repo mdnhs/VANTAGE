@@ -38,7 +38,9 @@ function useDefaults() {
 type SiteMeta = { businessName: string };
 
 async function fetchSiteMeta(): Promise<SiteMeta> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/site-settings`);
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/site-settings`,
+  );
   const body = await res.json().catch(() => null);
   if (!res.ok || !body?.success) throw new Error('Site name unavailable');
   const d = body.data ?? {};

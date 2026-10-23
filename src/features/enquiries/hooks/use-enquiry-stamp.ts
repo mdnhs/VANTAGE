@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { API_ROUTES } from '@/lib/routes/api-routes';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 const RETRY_MS = [1_000, 3_000, 8_000];
 // The server accepts a stamp for 7 days; renew a little before that.
 const RENEW_AFTER_MS = 6 * 86_400_000;

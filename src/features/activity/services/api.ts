@@ -1,6 +1,6 @@
 import type { AuditDetail, AuditFacets, AuditListParams, AuditListResult } from '../types';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/admin/audit`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/admin/audit`;
 
 async function get<T>(path: string): Promise<{ data: T; total?: number }> {
   const res = await fetch(`${BASE_URL}${path}`, { credentials: 'include' });

@@ -1,7 +1,7 @@
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { RedirectDto, RedirectInput, RedirectPatch } from '@/lib/seo/redirect-rules';
 
-const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const baseUrl = () => `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 // Carries the server's per-field messages (422 / 409 `causes`).
 export class RedirectsApiError extends Error {

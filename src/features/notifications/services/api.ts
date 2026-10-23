@@ -1,6 +1,6 @@
 import type { NotificationsDto } from '@/lib/notifications';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/admin/notifications`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/admin/notifications`;
 
 async function parse<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => null);

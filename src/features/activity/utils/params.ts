@@ -52,7 +52,7 @@ export function toAuditParams(state: {
   };
 }
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/admin/audit`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/admin/audit`;
 
 // The CSV export carries the filters but not the paging.
 export function exportHref(params: AuditListParams): string {

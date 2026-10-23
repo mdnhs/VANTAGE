@@ -34,7 +34,7 @@ export function assistantTransport(
   getContext: () => ChatContext | null = () => null,
 ) {
   return new DefaultChatTransport<AiUIMessage>({
-    api: `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}${API_ROUTES.ai.chat}`,
+    api: `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}${API_ROUTES.ai.chat}`,
     credentials: 'same-origin',
     prepareSendMessagesRequest: (request) => ({
       body: chatRequestBody(request, getConversationId(), getContext()),

@@ -4,7 +4,7 @@ import { API_ROUTES } from '@/lib/routes/api-routes';
 
 async function fetchHealth() {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}${API_ROUTES.health}`,
+    `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}${API_ROUTES.health}`,
   );
   if (!res.ok) throw new Error('Health check failed');
   return res.json();

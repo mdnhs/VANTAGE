@@ -1,6 +1,6 @@
 import type { MediaItem, MediaListParams, MediaPage, MediaUse } from '../types';
 
-export const MEDIA_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/admin/media`;
+export const MEDIA_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}/admin/media`;
 
 export const PAGE_SIZE = 40;
 

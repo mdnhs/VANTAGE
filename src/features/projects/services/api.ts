@@ -11,7 +11,7 @@ import type {
   ReorderProjectsInput,
 } from '../types';
 
-const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}`;
+const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 async function parseOrThrow<T>(res: Response): Promise<T> {
   const body = await res.json();

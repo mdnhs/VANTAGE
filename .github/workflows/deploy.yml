@@ -38,6 +38,8 @@ jobs:
           push: true
           build-args: |
             NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
+            NEXT_PUBLIC_API_PREFIX=/api
+            NEXT_PUBLIC_API_VERSION=/v1
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           tags: |
