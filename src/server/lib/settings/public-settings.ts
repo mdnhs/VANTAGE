@@ -4,7 +4,6 @@ import type { ImageRef } from '@/lib/content/image-ref';
 import { telHref } from '@/lib/content/phone';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
-import { legacyCloudinaryUrl } from '@/server/lib/media/legacy-cloudinary';
 
 // Turns the versioned setting documents into the flat shape the
 // public site was built against (`site_settings` columns), so marketing components keep
@@ -48,19 +47,91 @@ const LEGACY_IMAGE_COLUMNS = [
 
 export type PublicTeamMember = { name: string; role: string; image: PublicImage | null };
 
-// What public pages read: the legacy flat shape with every image column replaced by a
-// ready-to-render PublicImage (R2 row, or the legacy Cloudinary URL until Phase 11).
-export type PublicSiteSettings = Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUMNS)[number]> & {
+export type PublicSiteSettings = {
+  businessName: string;
+  phone: string;
   phoneHref: string;
+  emergencyPhone: string | null;
+  email: string;
+  address: string;
+  openingHours: string;
+  googleMapsUrl: string | null;
+  whatsappNumber: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  tiktokUrl: string | null;
+  linkedinUrl: string | null;
   logo: PublicImage | null;
   favicon: PublicImage | null;
+  logoLottieJson: string | null;
+  logoUseLottie: boolean;
   heroVideo: PublicImage | null;
   heroFallbackImage: PublicImage | null;
-  ogImage: PublicImage | null;
+  heroVideoEnabled: boolean;
+  heroEyebrow: string | null;
+  heroHeadlineLine1: string | null;
+  heroHeadlineLine2: string | null;
+  heroHeadlineAccent: string | null;
+  heroSubtext: string | null;
+  trustBadge1Title: string | null;
+  trustBadge1Subtitle: string | null;
+  trustBadge2Title: string | null;
+  trustBadge2Subtitle: string | null;
+  trustBadge3Title: string | null;
+  trustBadge3Subtitle: string | null;
+  trustBadge4Title: string | null;
+  trustBadge4Subtitle: string | null;
+  catalogEyebrow: string | null;
+  catalogHeadlineLine1: string | null;
+  catalogHeadlineAccent: string | null;
+  catalogSubtext: string | null;
+  servicesHeroEyebrow: string | null;
+  servicesHeroHeadlineLine1: string | null;
+  servicesHeroHeadlineAccent: string | null;
+  servicesHeroSubtext: string | null;
+  ourWorkHeroEyebrow: string | null;
+  ourWorkHeroHeadlineLine1: string | null;
+  ourWorkHeroHeadlineAccent: string | null;
+  ourWorkHeroSubtext: string | null;
+  insuranceHeroEyebrow: string | null;
+  insuranceHeroLine1: string | null;
+  insuranceHeroLine2: string | null;
+  insuranceHeroLine3: string | null;
+  insuranceHeroSubtext: string | null;
+  insuranceCoordinationTitle: string | null;
+  insuranceCoordinationSubtext: string | null;
+  insuranceFeatures: { title: string; description: string }[] | null;
+  insuranceStepsEyebrow: string | null;
+  insuranceStepsTitle: string | null;
+  insuranceSteps: { label: string; description: string }[] | null;
+  insuranceCtaLine1: string | null;
+  insuranceCtaAccent: string | null;
+  insuranceCtaSubtext: string | null;
+  insuranceDisclaimer: string | null;
+  aboutHeroEyebrow: string | null;
+  aboutHeroLine1: string | null;
+  aboutHeroAccent1: string | null;
+  aboutHeroLine2: string | null;
+  aboutHeroAccent2: string | null;
   aboutHeroImage: PublicImage | null;
+  aboutHeritageTitle: string | null;
+  aboutHeritageText: string | null;
+  aboutHeritageStat1Value: string | null;
+  aboutHeritageStat1Label: string | null;
+  aboutHeritageStat2Value: string | null;
+  aboutHeritageStat2Label: string | null;
   aboutHeritageImage: PublicImage | null;
-  aboutStandardsImage: PublicImage | null;
+  aboutHeritageQuote: string | null;
+  aboutTeamTitle: string | null;
+  aboutTeamSubtext: string | null;
   aboutTeamMembers: PublicTeamMember[];
+  aboutStandardsEyebrow: string | null;
+  aboutStandardsTitle: string | null;
+  aboutStandardsImage: PublicImage | null;
+  aboutStandardsItems: { title: string; description: string }[] | null;
+  processPageEyebrow: string | null;
+  processPageTitle: string | null;
+  processPageSubtext: string | null;
 };
 
 // Only Cloudinary refs have a public id.
@@ -201,48 +272,29 @@ export function composeLegacyView(g: PublicGlobals): LegacySiteView {
   };
 }
 
-function toPublicLegacy(publicId: string, resourceType: 'image' | 'video'): PublicImage | null {
-  const src = legacyCloudinaryUrl({ publicId, resourceType });
-  if (!src) return null;
-  return {
-    id: null,
-    src,
-    mimeType: null,
-    width: null,
-    height: null,
-    alt: '',
-    blurDataUrl: null,
-    focal: { x: 0.5, y: 0.5 },
-  };
-}
-
 // A media ref reads the preloaded row (missing or soft-deleted: no image); a Cloudinary ref
-// becomes its legacy URL until Phase 11.
-function resolveRef(
-  ref: ImageRef,
-  images: Record<string, PublicImage>,
-  resourceType: 'image' | 'video' = 'image',
-): PublicImage | null {
-  if (!ref) return null;
+// resolves to null.
+function resolveRef(ref: ImageRef, images: Record<string, PublicImage>): PublicImage | null {
+  if (!ref || ref.kind === 'cloudinary') return null;
   if (ref.kind === 'media') return images[ref.id.toLowerCase()] ?? null;
-  if (ref.kind === 'cloudinary') return toPublicLegacy(ref.publicId, resourceType);
   return null;
 }
+
+const EXCLUDED_FROM_PUBLIC = [...LEGACY_IMAGE_COLUMNS, 'metaTitle', 'metaDescription', 'twitterHandle'] as const;
 
 export function composePublicSettings(g: PublicGlobals, images: Record<string, PublicImage>): PublicSiteSettings {
   const flat = composeLegacyView(g);
   const rest = Object.fromEntries(
-    Object.entries(flat).filter(([k]) => !(LEGACY_IMAGE_COLUMNS as readonly string[]).includes(k)),
-  ) as Omit<LegacySiteView, (typeof LEGACY_IMAGE_COLUMNS)[number]>;
+    Object.entries(flat).filter(([k]) => !(EXCLUDED_FROM_PUBLIC as readonly string[]).includes(k)),
+  ) as Omit<LegacySiteView, (typeof EXCLUDED_FROM_PUBLIC)[number]>;
   const about = g['page.about'];
   return {
     ...rest,
     phoneHref: telHref(g.contact.phone.display, g.contact.phone.e164),
     logo: resolveRef(g.site.logo, images),
     favicon: resolveRef(g.site.favicon, images),
-    heroVideo: resolveRef(g['page.home'].hero.video, images, 'video'),
+    heroVideo: resolveRef(g['page.home'].hero.video, images),
     heroFallbackImage: resolveRef(g['page.home'].hero.fallbackImage, images),
-    ogImage: resolveRef(g.seo.defaultOgImage, images),
     aboutHeroImage: resolveRef(about.hero.image, images),
     aboutHeritageImage: resolveRef(about.heritage.image, images),
     aboutStandardsImage: resolveRef(about.standards.image, images),

@@ -18,32 +18,13 @@ import { assertMediaExists, assertMediaExistsLocked, assertShareImage } from '@/
 import { ApiError } from '@/server/lib/errors';
 import { findRevision, listRevisions } from '@/server/lib/revisions';
 import { invalid } from '@/server/lib/validator';
-import { buildDocs } from '@/server/lib/settings/site-settings-migration';
-import { PUBLIC_SETTINGS_KEYS, type PublicSettingsKey } from '@/server/lib/settings/public-settings';
 import { settingsRepository } from '@/server/repositories/settings-repository';
-import { siteSettingsRepository } from '@/server/repositories/site-settings-repository';
-
-const isLegacyKey = (key: string): key is PublicSettingsKey =>
-  (PUBLIC_SETTINGS_KEYS as readonly string[]).includes(key);
 
 // Drift-safe read: a malformed row yields the defaults at the stored version, so the next
-// save heals it. A key that was never saved (version 0) shows what the public site shows:
-// the legacy site_settings copy until the migration has run, else the defaults.
+// save heals it. A key that was never saved (version 0) returns schema defaults.
 export async function readEffectiveGlobal<K extends EditableGlobalKey>(key: K) {
   const row = await settingsRepository.get(key);
-  let source: unknown = row?.value;
-  if (!row && isLegacyKey(key)) {
-    const legacy = await siteSettingsRepository.get();
-    try {
-      if (legacy) source = buildDocs(legacy).docs[key];
-    } catch (error) {
-      console.warn(
-        `[globals] legacy fallback for ${key} failed, using defaults:`,
-        error instanceof Error ? error.message : error,
-      );
-    }
-  }
-  return { row, value: parseGlobal(key, source) };
+  return { row, value: parseGlobal(key, row?.value) };
 }
 
 export async function getGlobal<K extends EditableGlobalKey>(key: K) {

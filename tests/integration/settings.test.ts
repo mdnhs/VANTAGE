@@ -1,9 +1,20 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
-import { revisions } from '@/server/db/schema';
+import { parseGlobal } from '@/lib/content/globals';
+import { revisions, siteSettings } from '@/server/db/schema';
 import { listRevisions, REVISION_LIMITS, writeRevision } from '@/server/lib/revisions';
 import { settingsRepository } from '@/server/repositories/settings-repository';
+import { siteSettingsService } from '@/server/services/site-settings-service';
+
+vi.mock('next/cache', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/cache')>()),
+  revalidateTag: vi.fn(),
+  revalidatePath: vi.fn(),
+  updateTag: vi.fn(),
+  cacheTag: vi.fn(),
+  cacheLife: vi.fn(),
+}));
 
 describe('settings repository', () => {
   beforeEach(async () => {
@@ -128,5 +139,39 @@ describe('settings text actor ids', () => {
     const row = await settingsRepository.get('site');
     expect(row?.updatedBy).toBe('user_xyz789');
     expect(row?.value).toEqual({ a: 1 });
+  });
+});
+
+describe('public settings with legacy row', () => {
+  beforeEach(async () => {
+    await db.execute(sql`truncate table settings, revisions, site_settings cascade`);
+  });
+
+  it('a site_settings row with business_name "Legacy Name" and a stored site key "New Name" -> public name "New Name"', async () => {
+    await db.insert(siteSettings).values({
+      id: 1,
+      businessName: 'Legacy Name',
+      phone: '01 234 5678',
+      email: 'info@example.com',
+      address: 'Dublin',
+      openingHours: 'Mon-Fri',
+    });
+    await settingsRepository.save('site', { version: 0, value: parseGlobal('site', { name: 'New Name' }) }, null);
+    const pub = await siteSettingsService.getPublic();
+    expect(pub.businessName).toBe('New Name');
+  });
+
+  it('with no stored site key -> schema default, never "Legacy Name"', async () => {
+    await db.insert(siteSettings).values({
+      id: 1,
+      businessName: 'Legacy Name',
+      phone: '01 234 5678',
+      email: 'info@example.com',
+      address: 'Dublin',
+      openingHours: 'Mon-Fri',
+    });
+    const pub = await siteSettingsService.getPublic();
+    expect(pub.businessName).toBe('Vantage Autobody');
+    expect(pub.businessName).not.toBe('Legacy Name');
   });
 });

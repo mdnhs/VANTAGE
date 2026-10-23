@@ -167,7 +167,7 @@ describe('SMTP configured (injected transport)', () => {
     expect(sent[0]!.text).not.toContain('CONTACT-BODY');
   });
 
-  it('falls back to the legacy site_settings email when the contact key was never saved', async () => {
+  it('falls back to the schema default contact email when the contact key was never saved, ignoring legacy site_settings', async () => {
     const sent = transport();
     await db.insert(siteSettings).values({
       id: 1,
@@ -187,7 +187,7 @@ describe('SMTP configured (injected transport)', () => {
     } as never);
     await settleNotifications();
     expect(sent).toHaveLength(1);
-    expect(sent[0]!.to).toEqual(['legacy@shop.ie']);
+    expect(sent[0]!.to).toEqual(['info@vantageautobody.ie']);
   });
 
   it('escapes customer data in html and keeps line breaks out of headers', async () => {

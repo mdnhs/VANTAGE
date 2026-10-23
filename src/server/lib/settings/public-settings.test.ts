@@ -58,16 +58,16 @@ describe('composePublicSettings images', () => {
     expect(out.logo?.src).toBe('https://cdn.example/logo.png');
   });
 
-  it('resolves a Cloudinary ref to its legacy URL (video for the hero video)', () => {
+  it('resolves a Cloudinary ref to null (no legacy Cloudinary fallback in settings)', () => {
     withCloud(() => {
       const g = defaults();
       g.site.logo = { kind: 'cloudinary', publicId: 'vantage/logo' };
       g['page.home'].hero.video = { kind: 'cloudinary', publicId: 'vantage/hero' };
       g['page.about'].team.members[0]!.image = { kind: 'cloudinary', publicId: 'vantage/ann' };
       const out = composePublicSettings(g, {});
-      expect(out.logo?.src).toBe('https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/vantage/logo');
-      expect(out.heroVideo?.src).toBe('https://res.cloudinary.com/demo/video/upload/f_auto,q_auto/vantage/hero');
-      expect(out.aboutTeamMembers[0]?.image?.src).toContain('/image/upload/f_auto,q_auto/vantage/ann');
+      expect(out.logo).toBeNull();
+      expect(out.heroVideo).toBeNull();
+      expect(out.aboutTeamMembers[0]?.image).toBeNull();
     });
   });
 
@@ -81,7 +81,6 @@ describe('composePublicSettings images', () => {
       const out = composePublicSettings(g, {});
       expect(out.logo).toBeNull();
       expect(out.favicon).toBeNull();
-      expect(out.ogImage).toBeNull();
       expect(out.aboutHeroImage).toBeNull();
     } finally {
       if (prev !== undefined) process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = prev;
@@ -104,7 +103,6 @@ describe('composePublicSettings images', () => {
       'favicon',
       'heroVideo',
       'heroFallbackImage',
-      'ogImage',
       'aboutHeroImage',
       'aboutHeritageImage',
       'aboutStandardsImage',
@@ -119,6 +117,9 @@ describe('composePublicSettings images', () => {
       'aboutHeroImagePublicId',
       'aboutHeritageImagePublicId',
       'aboutStandardsImagePublicId',
+      'metaTitle',
+      'metaDescription',
+      'twitterHandle',
     ];
     const strip = (o: Record<string, unknown>, drop: string[]) =>
       Object.fromEntries(Object.entries(o).filter(([k]) => !drop.includes(k) && k !== 'aboutTeamMembers'));

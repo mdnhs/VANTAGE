@@ -309,15 +309,13 @@ export function buildDocs(row: Legacy) {
   return { docs: repaired, warnings, lossy };
 }
 
-// Public reads before the migration has run (deploy-before-migrate): a key that was never
-// saved is taken from the legacy row; once saved, the stored document always wins.
+// Legacy fallback removed in Stage A. Unsaved keys return schema defaults.
 export function resolvePublicGlobals(
   stored: { [K in PublicSettingsKey]: PublicGlobals[K] | null },
-  legacy: Legacy | null | undefined,
+  _legacy?: Legacy | null | undefined,
 ): PublicGlobals {
-  const legacyDocs = legacy && PUBLIC_SETTINGS_KEYS.some((k) => stored[k] === null) ? buildDocs(legacy).docs : null;
   const out: Record<string, unknown> = {};
-  for (const key of PUBLIC_SETTINGS_KEYS) out[key] = stored[key] ?? parseGlobal(key, legacyDocs?.[key]);
+  for (const key of PUBLIC_SETTINGS_KEYS) out[key] = stored[key] ?? parseGlobal(key, undefined);
   return out as PublicGlobals;
 }
 

@@ -20,15 +20,17 @@ beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_API_PREFIX', '/api');
   vi.stubEnv('NEXT_PUBLIC_API_VERSION', '/v1');
   vi.stubGlobal('fetch', (url: string) => {
-    if ((globalsDenied && url.includes('/admin/globals/')) || (siteGlobalDenied && url.endsWith('/admin/globals/site')) || (globalsDenied && url.endsWith('/site-settings'))) {
+    if (
+      (globalsDenied && url.includes('/admin/globals/')) ||
+      (siteGlobalDenied && url.endsWith('/admin/globals/site')) ||
+      (globalsDenied && url.endsWith('/site-settings'))
+    ) {
       return Promise.resolve(
         new Response(JSON.stringify({ success: false, error: { code: 'FORBIDDEN', message: 'No' } }), { status: 403 }),
       );
     }
     if (url.endsWith('/site-settings')) {
-      return Promise.resolve(
-        new Response(JSON.stringify({ success: true, data: publicSite })),
-      );
+      return Promise.resolve(new Response(JSON.stringify({ success: true, data: publicSite })));
     }
     const key = url.split('/admin/globals/')[1];
     const value = parseGlobal('seo', seoValue);
@@ -72,18 +74,24 @@ describe('SeoAside', () => {
     expect(await screen.findByText('Hidden from search engines')).toBeTruthy();
   });
 
-  it('grades the description the home page ships, not a raw default the public settings drop', async () => {
+  it('grades the description the home page ships, using the seo defaultDescription when set and falling back to HOME_DESCRIPTION when empty', async () => {
     const derived = 'Vantage Autobody — Mon-Fri 9-5, a description of a comfortable and rather useful length here';
     seoValue = { defaultDescription: derived };
-    publicSite = { businessName: 'Vantage Autobody', metaDescription: null };
+    const { unmount } = render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <SeoAside id='home' values={parseGlobal('seo.page.home', {})} />
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(new RegExp(`Description is ${derived.length} characters`))).toBeTruthy();
+    unmount();
+
+    seoValue = { defaultDescription: '' };
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
         <SeoAside id='home' values={parseGlobal('seo.page.home', {})} />
       </QueryClientProvider>,
     );
-    // The registry text ships (the derived default is treated as "not set"), so its length is graded.
     expect(await screen.findByText(new RegExp(`Description is ${HOME_DESCRIPTION.length} characters`))).toBeTruthy();
-    expect(screen.queryByText(new RegExp(`Description is ${derived.length} characters`))).toBeNull();
   });
 
   it('shows the shipped title even when the site global is not readable (site name from the public settings)', async () => {
@@ -95,7 +103,9 @@ describe('SeoAside', () => {
   it('shows a placeholder and skips the size check for a legacy image', async () => {
     renderAside({ ogImage: { kind: 'cloudinary', publicId: 'old/pic' } });
     expect(await screen.findByText('Legacy image — no preview')).toBeTruthy();
-    expect((await screen.findByText('Legacy image — size not checked')).closest('li')?.textContent).toContain('Not checked:');
+    expect((await screen.findByText('Legacy image — size not checked')).closest('li')?.textContent).toContain(
+      'Not checked:',
+    );
   });
 
   it('still renders from the page label when the defaults cannot be read', async () => {

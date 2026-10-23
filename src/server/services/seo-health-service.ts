@@ -5,7 +5,6 @@ import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { collectMediaIds } from '@/lib/content/image-ref';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import { seoPageKey } from '@/lib/content/globals-seo';
-import { withLegacyMeta } from '@/lib/seo/legacy-meta';
 import { pageDescription } from '@/lib/seo/metadata';
 import { siteEnvFrom } from '@/lib/seo/robots';
 import { runChecks } from '@/lib/seo/checks';
@@ -150,10 +149,12 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
     dbLike,
     Object.fromEntries(perPage.map((p) => [p.page.id, p.doc])) as Partial<Record<PublicPageId, unknown>>,
   );
-  const seoDefaults = withLegacyMeta(defaults.value, publicSettings);
+  const seoDefaults = defaults.value;
   const siteName = publicSettings.businessName;
   // robots.txt is prerendered from SITE_ENV: a production server without it disallows everything.
-  const blockedByEnv = process.env.NODE_ENV === 'production' && siteEnvFrom({ SITE_ENV: process.env.SITE_ENV, VERCEL_ENV: process.env.VERCEL_ENV }) !== 'production';
+  const blockedByEnv =
+    process.env.NODE_ENV === 'production' &&
+    siteEnvFrom({ SITE_ENV: process.env.SITE_ENV, VERCEL_ENV: process.env.VERCEL_ENV }) !== 'production';
 
   const ogIds = ids([
     seoDefaults.defaultOgImage?.kind === 'media' ? seoDefaults.defaultOgImage.id : null,
@@ -172,10 +173,7 @@ export async function computeSeoHealth(dbLike: DbLike = defaultDb): Promise<SeoH
   const images = rows.filter((r) => r.mimeType.startsWith('image/') && onPages.has(r.id));
 
   const titleOf = (p: (typeof perPage)[number]) =>
-    documentTitle(
-      { id: p.page.id, seoTitle: p.seo.title },
-      { titleTemplate: seoDefaults.titleTemplate, siteName },
-    );
+    documentTitle({ id: p.page.id, seoTitle: p.seo.title }, { titleTemplate: seoDefaults.titleTemplate, siteName });
   const titles = perPage.map(titleOf);
   const tally = new Map<string, number>();
   for (const t of titles) tally.set(t.trim().toLowerCase(), (tally.get(t.trim().toLowerCase()) ?? 0) + 1);

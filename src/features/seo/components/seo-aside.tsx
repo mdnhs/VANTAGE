@@ -9,7 +9,6 @@ import { globalKeys } from '@/features/globals/utils/query-keys';
 import { useMediaByIds } from '@/features/media/hooks/use-media';
 import type { GlobalValue } from '@/lib/content/globals';
 import type { SeoPageKey } from '@/lib/content/globals-seo';
-import { withLegacyMeta } from '@/lib/seo/legacy-meta';
 import { blank, pageDescription } from '@/lib/seo/metadata';
 import { PUBLIC_PAGES, type PublicPageId } from '@/lib/seo/public-pages';
 import { documentTitle } from '@/lib/seo/title';
@@ -19,8 +18,7 @@ import { SerpPreview, serpUrl } from './serp-preview';
 import { SocialCard } from './social-card';
 
 // Defaults come from the `seo` global and the public site settings; a failed read settles as
-// "unknown" and falls back to the page's own label and registry text. The public settings also
-// carry the legacy meta values, so the defaults pass through the same withLegacyMeta as the shipped page.
+// "unknown" and falls back to the page's own label and registry text.
 function useDefaults() {
   const seo = useQuery({
     queryKey: globalKeys.detail('seo'),
@@ -31,13 +29,13 @@ function useDefaults() {
   const site = useQuery({ queryKey: ['seo', 'site-meta'], queryFn: fetchSiteMeta, retry: false });
   const raw = seo.data?.value as GlobalValue<'seo'> | undefined;
   return {
-    seo: raw && site.data ? withLegacyMeta(raw, site.data) : raw,
+    seo: raw,
     siteName: site.data?.businessName ?? '',
     settled: !seo.isPending && !site.isPending,
   };
 }
 
-type SiteMeta = { businessName: string; metaTitle: string | null; metaDescription: string | null; twitterHandle: string | null };
+type SiteMeta = { businessName: string };
 
 async function fetchSiteMeta(): Promise<SiteMeta> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC_API_VERSION}/site-settings`);
@@ -46,9 +44,6 @@ async function fetchSiteMeta(): Promise<SiteMeta> {
   const d = body.data ?? {};
   return {
     businessName: String(d.businessName ?? ''),
-    metaTitle: d.metaTitle ?? null,
-    metaDescription: d.metaDescription ?? null,
-    twitterHandle: d.twitterHandle ?? null,
   };
 }
 
@@ -107,19 +102,19 @@ export function SeoAside({ id, values }: { id: PublicPageId; values: GlobalValue
       </DashboardCard>
       <DashboardCard title='Checks'>
         {settled ? (
-        <SeoChecklist
-          ogUnknown={ogUnknown}
-          input={{
-            title,
-            titleUnique: true,
-            description,
-            ogImage: image?.width && image.height ? { width: image.width, height: image.height } : null,
-            imagesMissingAlt: 0,
-            hasH1: page.hasH1,
-            noindex: (values?.noindex ?? false) || seo?.robots === 'noindex',
-            internalLinks: page.codeLinks,
-          }}
-        />
+          <SeoChecklist
+            ogUnknown={ogUnknown}
+            input={{
+              title,
+              titleUnique: true,
+              description,
+              ogImage: image?.width && image.height ? { width: image.width, height: image.height } : null,
+              imagesMissingAlt: 0,
+              hasH1: page.hasH1,
+              noindex: (values?.noindex ?? false) || seo?.robots === 'noindex',
+              internalLinks: page.codeLinks,
+            }}
+          />
         ) : (
           <Skeleton className='h-24 w-full' />
         )}

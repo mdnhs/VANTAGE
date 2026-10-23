@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { parseGlobal, type PublicGlobalKey } from '@/lib/content/globals';
 
 vi.mock('@/server/queries/get-setting', () => ({
-  getStoredSetting: vi.fn(async () => null),
-  getLegacySettings: vi.fn(async () => null),
+  getSetting: vi.fn(async (key: PublicGlobalKey) => parseGlobal(key, undefined)),
 }));
 vi.mock('@/server/lib/media/resolve', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/lib/media/resolve')>()),

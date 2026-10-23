@@ -134,8 +134,8 @@ describe('computeSeoHealth', () => {
     const derived = `${pub.businessName} — ${formatOpeningHoursSummary(pub.openingHours)}`;
     await put('seo', { defaultDescription: derived });
     const msg = forPage(await computeSeoHealth(), 'home').find((i) => i.check === 'description')?.message;
-    // The shipped page drops the derived default and uses the registry text (180 characters).
-    expect(msg).toBe('Description is 180 characters (aim for 70–160)');
+    // Both the shipped page and SEO health read the stored defaultDescription directly (40 characters).
+    expect(msg).toBe('Description is 40 characters (aim for 70–160)');
   });
 
   it('flags noindex', async () => {

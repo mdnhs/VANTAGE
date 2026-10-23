@@ -115,7 +115,7 @@ describe('page.our-work and page.insurance reach the adapter', () => {
   });
 });
 
-describe('never-saved keys show the legacy copy until the migration has run', () => {
+describe('never-saved keys show schema defaults and ignore legacy row', () => {
   const legacy = {
     id: 1,
     businessName: 'Legacy Co',
@@ -127,17 +127,18 @@ describe('never-saved keys show the legacy copy until the migration has run', ()
     heroHeadlineLine1: 'Legacy line',
   };
 
-  it('GET shows the legacy values at version 0 and the first save creates version 1', async () => {
+  it('GET shows schema defaults at version 0 (ignoring legacy site_settings) and the first save creates version 1', async () => {
     await db.insert(siteSettings).values(legacy);
 
     const res = await call('/admin/globals/page.home', cookies.editor);
     expect(res.status).toBe(200);
     const { data } = (await res.json()) as { data: { version: number; value: { hero: Record<string, string> } } };
     expect(data.version).toBe(0);
-    expect(data.value.hero.eyebrow).toBe('Legacy eyebrow');
-    expect(data.value.hero.line1).toBe('Legacy line');
+    const defaults = parseGlobal('page.home', {});
+    expect(data.value.hero.eyebrow).toBe(defaults.hero.eyebrow);
+    expect(data.value.hero.line1).toBe(defaults.hero.line1);
     // The public site agrees with the editor.
-    expect((await siteSettingsService.getPublic()).heroEyebrow).toBe('Legacy eyebrow');
+    expect((await siteSettingsService.getPublic()).heroEyebrow).toBe(defaults.hero.eyebrow);
 
     const saved = await put('page.home', cookies.editor, { version: 0, value: data.value });
     expect(saved.status).toBe(200);
@@ -146,10 +147,10 @@ describe('never-saved keys show the legacy copy until the migration has run', ()
     const again = await call('/admin/globals/page.home', cookies.editor);
     const body = (await again.json()) as { data: { version: number; value: { hero: Record<string, string> } } };
     expect(body.data.version).toBe(1);
-    expect(body.data.value.hero.eyebrow).toBe('Legacy eyebrow');
+    expect(body.data.value.hero.eyebrow).toBe(defaults.hero.eyebrow);
   });
 
-  it('a stored key wins over the legacy row, and keys with no legacy row show the defaults', async () => {
+  it('a stored key wins over schema defaults and any legacy row', async () => {
     await db.insert(siteSettings).values(legacy);
     const value = parseGlobal('page.home', {});
     value.hero.eyebrow = 'Saved eyebrow';
@@ -238,21 +239,26 @@ describe('share image size on save', () => {
 
   it('rejects a small image on a page and on the site default with the message under the field', async () => {
     const small = await image({ width: 800, height: 400 });
-    const page = await put('seo.page.home', cookies.marketer, { version: 0, value: withImage('seo.page.home', small.id) });
+    const page = await put('seo.page.home', cookies.marketer, {
+      version: 0,
+      value: withImage('seo.page.home', small.id),
+    });
     expect(page.status).toBe(422);
     const body = (await page.json()) as { error: { causes: Record<string, string[]> } };
     expect(body.error.causes.ogImage).toEqual(['Use an image at least 1200×630 (1.91:1)']);
 
     const site = await put('seo', cookies.marketer, { version: 0, value: withImage('seo', small.id) });
     expect(site.status).toBe(422);
-    expect(((await site.json()) as { error: { causes: Record<string, string[]> } }).error.causes.defaultOgImage).toEqual([
-      'Use an image at least 1200×630 (1.91:1)',
-    ]);
+    expect(
+      ((await site.json()) as { error: { causes: Record<string, string[]> } }).error.causes.defaultOgImage,
+    ).toEqual(['Use an image at least 1200×630 (1.91:1)']);
   });
 
   it('accepts a right-sized image and one with unknown dimensions', async () => {
     const good = await image({ width: 1200, height: 630 });
-    expect((await put('seo.page.home', cookies.marketer, { version: 0, value: withImage('seo.page.home', good.id) })).status).toBe(200);
+    expect(
+      (await put('seo.page.home', cookies.marketer, { version: 0, value: withImage('seo.page.home', good.id) })).status,
+    ).toBe(200);
     const unknown = await image({ width: null, height: null });
     expect((await put('seo', cookies.marketer, { version: 0, value: withImage('seo', unknown.id) })).status).toBe(200);
   });

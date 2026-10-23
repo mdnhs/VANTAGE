@@ -9,25 +9,22 @@ import { CACHE_TAGS } from '@/lib/cache/tags';
 import type { ImageRef } from '@/lib/content/image-ref';
 import { seoPageKey } from '@/lib/content/globals-seo';
 import type { PublicImage } from '@/lib/media/public-image';
-import { withLegacyMeta } from '@/lib/seo/legacy-meta';
 import { pageMetadata } from '@/lib/seo/metadata';
 import { PUBLIC_PAGE_LIST, type PublicPageId } from '@/lib/seo/public-pages';
 import { db } from '@/server/db';
 import { projects, services } from '@/server/db/schema';
 import { settingsRepository } from '@/server/repositories/settings-repository';
-import { toPublicImage, loadPublicImages } from '@/server/lib/media/resolve';
+import { loadPublicImages } from '@/server/lib/media/resolve';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
-// A stored image ref as a PublicImage: a live media row, or the legacy Cloudinary URL.
+// A stored image ref as a PublicImage: a live media row only. Cloudinary refs return null.
 export async function resolveImageRef(ref: ImageRef): Promise<PublicImage | null> {
-  if (!ref) return null;
+  if (!ref || ref.kind === 'cloudinary') return null;
   if (ref.kind === 'media') return (await loadPublicImages([ref.id]))[ref.id.toLowerCase()] ?? null;
-  return toPublicImage(null, { publicId: ref.publicId, resourceType: 'image' });
+  return null;
 }
-
-export { withLegacyMeta };
 
 // Metadata for one public page. Only cached readers are used, so the page stays static.
 export async function getPageMetadata(id: PublicPageId): Promise<Metadata> {
@@ -37,12 +34,13 @@ export async function getPageMetadata(id: PublicPageId): Promise<Metadata> {
     getSetting(seoPageKey(id)),
   ]);
   const own = await resolveImageRef(seo.ogImage);
+  const defaultOg = await resolveImageRef(defaults.defaultOgImage);
   return pageMetadata({
     id,
     seo,
-    defaults: withLegacyMeta(defaults, settings),
+    defaults,
     siteName: settings.businessName,
-    ogImage: own ?? settings.ogImage,
+    ogImage: own ?? defaultOg,
   });
 }
 
@@ -84,8 +82,14 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
 
   const defaults = await getSetting('seo');
   if (defaults.robots === 'noindex') return [];
-  const [serviceRow] = await db.select({ at: max(services.updatedAt) }).from(services).where(eq(services.isEnabled, true));
-  const [projectRow] = await db.select({ at: max(projects.updatedAt) }).from(projects).where(eq(projects.status, 'published'));
+  const [serviceRow] = await db
+    .select({ at: max(services.updatedAt) })
+    .from(services)
+    .where(eq(services.isEnabled, true));
+  const [projectRow] = await db
+    .select({ at: max(projects.updatedAt) })
+    .from(projects)
+    .where(eq(projects.status, 'published'));
   const pages = await Promise.all(
     PUBLIC_PAGE_LIST.map(async (page) => {
       const [seoRow, copyRow] = await Promise.all([

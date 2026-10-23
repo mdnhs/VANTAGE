@@ -491,65 +491,27 @@ describe('site_settings -> versioned keys', () => {
     expect(composeLegacyView(parsed as PublicGlobals)).toEqual(DEFAULT_PUBLIC);
   });
 
-  describe('deploy before migrate', () => {
+  describe('stage A without legacy fallback in resolvePublicGlobals', () => {
     const none = Object.fromEntries(PUBLIC_SETTINGS_KEYS.map((k) => [k, null])) as Parameters<
       typeof resolvePublicGlobals
     >[0];
 
-    it('with no key rows, the public output deep-equals the legacy output', async () => {
-      const legacy = await seed();
-      const { id: _id, updatedAt: _updatedAt, ...expected } = legacy;
-      expect(composeLegacyView(resolvePublicGlobals(none, legacy))).toEqual(expected);
+    it('with no key rows, resolvePublicGlobals falls back to schema defaults', async () => {
+      await seed();
+      expect(composeLegacyView(resolvePublicGlobals(none))).toEqual(DEFAULT_PUBLIC);
     });
 
-    it('structured hours, a newline address and blank optional columns still match', async () => {
-      const structured = JSON.stringify(
-        ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => ({
-          day,
-          shortDay: day.slice(0, 3),
-          isOpen: i < 5,
-          openTime: '08:00',
-          closeTime: '17:30',
-        })),
-      );
-      const legacy = await seed({
-        openingHours: structured,
-        address: 'Unit 4\nDublin Road',
-        emergencyPhone: null,
-        whatsappNumber: '',
-        facebookUrl: null,
-        googleMapsUrl: null,
-        metaTitle: null,
-        metaDescription: null,
-        ogImagePublicId: null,
-        logoPublicId: null,
-        insuranceFeatures: null,
-        aboutTeamMembers: null,
-        heroEyebrow: '',
-      });
-      const fromLegacy = composeLegacyView(resolvePublicGlobals(none, legacy));
-      await migrateSiteSettings();
-      const fromKeys = await composeFromKeys();
-      expect(fromKeys).toEqual(fromLegacy);
-      expect(fromKeys.address).toBe('Unit 4\nDublin Road');
-      expect(formatOpeningHoursSummary(fromKeys.openingHours)).toBe(formatOpeningHoursSummary(structured));
-      expect((await verifySiteSettingsMigration()).ok).toBe(true);
+    it('a never-saved key resolves logo to null without Cloudinary fallback', async () => {
+      await seed();
+      const composed = composePublicSettings(resolvePublicGlobals(none), {});
+      expect(composed.logo).toBeNull();
     });
 
-    it('a never-saved key resolves the legacy logo to its Cloudinary URL', async () => {
-      const legacy = await seed();
-      const composed = composePublicSettings(resolvePublicGlobals(none, legacy), {});
-      expect(composed.logo?.src).toBe(
-        `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/vantage/branding/logo`,
-      );
-    });
-
-    it('a stored key always wins over the legacy row', async () => {
-      const legacy = await seed();
+    it('a stored key is preserved in resolvePublicGlobals', async () => {
+      await seed();
       const stored = { ...none, site: parseGlobal('site', { name: 'From keys' }) };
-      const composed = composeLegacyView(resolvePublicGlobals(stored, legacy));
+      const composed = composeLegacyView(resolvePublicGlobals(stored));
       expect(composed.businessName).toBe('From keys');
-      expect(composed.phone).toBe(legacy.phone);
     });
   });
 

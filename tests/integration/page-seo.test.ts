@@ -5,7 +5,7 @@ import { parseGlobal } from '@/lib/content/globals';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { media, services } from '@/server/db/schema';
+import { media, services, siteSettings } from '@/server/db/schema';
 import { getPageMetadata, getSitemapEntries } from '@/server/queries/get-page-seo';
 
 import { call, createTestUser, signInCookie } from '../support/session';
@@ -28,7 +28,9 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await db.execute(sql`truncate table settings, revisions, audit_logs, site_settings, media, services, projects cascade`);
+  await db.execute(
+    sql`truncate table settings, revisions, audit_logs, site_settings, media, services, projects cascade`,
+  );
   vi.mocked(revalidateTag).mockClear();
 });
 
@@ -90,7 +92,9 @@ describe('public page SEO', () => {
     expect(entries.find((e) => e.path === '/about')!.lastModified?.toISOString()).toBe('2025-06-01T00:00:00.000Z');
     expect(entries.find((e) => e.path === '/process')!.lastModified).toBeUndefined();
     const tags = vi.mocked(cacheTag).mock.calls.flat();
-    expect(tags).toEqual(expect.arrayContaining(['services', 'projects', 'settings:page.about', 'settings:seo.page.about']));
+    expect(tags).toEqual(
+      expect.arrayContaining(['services', 'projects', 'settings:page.about', 'settings:seo.page.about']),
+    );
   });
 
   it('ignores disabled services for the date', async () => {
@@ -105,7 +109,10 @@ describe('public page SEO', () => {
       .returning();
     const first = (await getSitemapEntries()).find((e) => e.path === '/services')!.lastModified!;
     expect(first.toISOString()).toBe('2025-01-01T00:00:00.000Z');
-    await db.update(services).set({ updatedAt: new Date('2026-02-02T00:00:00Z') }).where(eq(services.id, row!.id));
+    await db
+      .update(services)
+      .set({ updatedAt: new Date('2026-02-02T00:00:00Z') })
+      .where(eq(services.id, row!.id));
     const next = (await getSitemapEntries()).find((e) => e.path === '/services')!.lastModified!;
     expect(next.toISOString()).toBe('2026-02-02T00:00:00.000Z');
   });
@@ -133,5 +140,20 @@ describe('public page SEO', () => {
     expect(paths).toContain('/about');
     expect(paths).not.toContain('/contact');
     vi.unstubAllEnvs();
+  });
+
+  it('SEO defaults come only from the seo key, ignoring legacy site_settings meta', async () => {
+    await db.insert(siteSettings).values({
+      id: 1,
+      businessName: 'Legacy Name',
+      phone: '01 234 5678',
+      email: 'info@example.com',
+      address: 'Dublin',
+      openingHours: 'Mon-Fri',
+      metaTitle: 'Legacy Meta Title',
+      metaDescription: 'Legacy Meta Description',
+    });
+    const m = await getPageMetadata('services');
+    expect(m.title).toEqual({ absolute: 'Services | Vantage Autobody' });
   });
 });

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { geistMono, SITE_FONT_VARIABLES } from '@/lib/font';
 import ProviderWrapper from '@/contexts/ProviderWrapper';
 import { rootMetadata } from '@/lib/seo/metadata';
-import { withLegacyMeta } from '@/server/queries/get-page-seo';
+import { resolveImageRef } from '@/server/queries/get-page-seo';
 import { getSetting } from '@/server/queries/get-setting';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
@@ -14,12 +14,13 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 // sets its own metadata through getPageMetadata and overrides these per field.
 export async function generateMetadata(): Promise<Metadata> {
   const [settings, seo] = await Promise.all([siteSettingsService.getPublic(), getSetting('seo')]);
+  const defaultOgImage = await resolveImageRef(seo.defaultOgImage);
   return rootMetadata({
     appUrl: APP_URL,
-    seo: withLegacyMeta(seo, settings),
+    seo,
     siteName: settings.businessName,
     hoursSummary: formatOpeningHoursSummary(settings.openingHours),
-    defaultOgImage: settings.ogImage,
+    defaultOgImage,
   });
 }
 
