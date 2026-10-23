@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import { ContactStatusBadge } from '../contact-status-badge';
 import { useUpdateContactMessage } from '../../hooks/api/mutation/use-update-contact-message';
 import { useDeleteContactMessage } from '../../hooks/api/mutation/use-delete-contact-message';
@@ -134,12 +136,25 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
               <Trash2 className='size-3.5' />
               <span>Delete</span>
             </Button>
+
+            <SpamActions
+              kind='contact'
+              id={initialMessage.id}
+              status={initialMessage.status}
+              spamReason={initialMessage.spamReason}
+            />
           </>
         }
       />
 
+      {initialMessage.status === 'spam' && (
+        <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+          Held as spam: {spamReasonLabel(initialMessage.spamReason)}.
+        </div>
+      )}
+
       <div className='flex items-center gap-3'>
-        <ContactStatusBadge status={status} />
+        <ContactStatusBadge status={status} spamReason={initialMessage.spamReason} />
       </div>
 
       {/* Grid: Details & Notes */}
@@ -245,7 +260,7 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
                   <Select value={status} onValueChange={(val) => setStatus(val as ContactStatus)}>
                     <SelectTrigger id='status' className='w-full text-xs'>
                       <SelectValue>
-                        <ContactStatusBadge status={status} />
+                        <ContactStatusBadge status={status} spamReason={initialMessage.spamReason} />
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>

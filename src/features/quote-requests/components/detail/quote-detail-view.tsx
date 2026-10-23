@@ -34,12 +34,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import { QuoteStatusBadge } from '../quote-status-badge';
 import { useUpdateQuoteRequest } from '../../hooks/api/mutation/use-update-quote-request';
 import { useDeleteQuoteRequest } from '../../hooks/api/mutation/use-delete-quote-request';
 import { useAssignees } from '../../hooks/api/query/use-assignees';
 import {
-  QUOTE_STATUSES,
+  ALL_QUOTE_STATUSES,
   PAYMENT_STATUSES,
   PAYMENT_METHODS,
   type QuoteRequest,
@@ -255,13 +257,32 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
               <Trash2 className='size-3.5' />
               <span>Delete</span>
             </Button>
+
+            <SpamActions
+              kind='quote'
+              id={initialQuote.id}
+              status={initialQuote.status}
+              spamReason={initialQuote.spamReason}
+              hasBilling={Boolean(
+                initialQuote.invoiceNumber ||
+                  initialQuote.paymentStatus !== 'unpaid' ||
+                  (initialQuote.paidAmount && Number(initialQuote.paidAmount) !== 0) ||
+                  initialQuote.paymentMethod,
+              )}
+            />
           </>
         }
       />
 
+      {initialQuote.status === 'spam' && (
+        <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+          Held as spam: {spamReasonLabel(initialQuote.spamReason)}.
+        </div>
+      )}
+
       <div className='flex flex-wrap items-center justify-between gap-4'>
         <div className='flex flex-wrap items-center gap-3'>
-          <QuoteStatusBadge status={status} />
+          <QuoteStatusBadge status={status} spamReason={initialQuote.spamReason} />
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold',
@@ -732,7 +753,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {QUOTE_STATUSES.map((s) => (
+                  {ALL_QUOTE_STATUSES.map((s) => (
                     <SelectItem key={s} value={s} className='text-xs'>
                       <QuoteStatusBadge status={s} />
                     </SelectItem>

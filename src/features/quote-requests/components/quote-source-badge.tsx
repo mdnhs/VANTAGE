@@ -1,7 +1,7 @@
 'use client';
 
 import { Phone, MessageCircle, UserCheck, Mail, Share2, Globe } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { StatusPill } from '@/components/admin/dashboard/status-pill';
 
 export const SOURCE_CONFIG: Record<string, { label: string; icon: typeof Phone; className: string }> = {
   phone_call: {
@@ -54,32 +54,20 @@ export const SOURCE_CONFIG: Record<string, { label: string; icon: typeof Phone; 
 export function QuoteSourceBadge({
   source,
   className,
-  showIcon = true,
+  _showIcon = true,
 }: {
   source: string | null | undefined;
   className?: string;
-  showIcon?: boolean;
+  _showIcon?: boolean;
 }) {
   const key = source || 'website';
-  const config = SOURCE_CONFIG[key] ?? {
-    label: key.replace(/_/g, ' '),
-    icon: Globe,
-    className: 'bg-muted text-muted-foreground border-border',
-  };
-
-  const Icon = config.icon;
+  const config = SOURCE_CONFIG[key];
+  const rawLabel = config?.label ?? key.replace(/_/g, ' ');
+  const label = rawLabel.charAt(0).toUpperCase() + rawLabel.slice(1);
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-medium tracking-wide',
-        config.className,
-        className,
-      )}
-      title={`Intake Source: ${config.label}`}
-    >
-      {showIcon && <Icon className='size-3 shrink-0' />}
-      <span className='truncate'>{config.label}</span>
-    </span>
+    <StatusPill tone='neutral' className={className}>
+      {label}
+    </StatusPill>
   );
 }

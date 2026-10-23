@@ -3,7 +3,8 @@
 import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo } from 'react';
-import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X, RefreshCw } from 'lucide-react';
+import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X, RefreshCw, ShieldAlert } from 'lucide-react';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,7 @@ const FOLDERS: Array<{
   { value: 'read', label: 'Read', icon: MailOpen },
   { value: 'replied', label: 'Replied', icon: Reply },
   { value: 'archived', label: 'Archived', icon: Archive },
+  { value: 'spam', label: 'Spam', icon: ShieldAlert },
 ];
 
 export function ContactInboxView({ initialData, initialStats }: ContactInboxViewProps) {
@@ -245,16 +247,17 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
           {/* Threads List */}
           <div className='flex-1 overflow-y-auto'>
             {messages.length === 0 ? (
-              <div className='flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground'>
-                <div className='flex size-10 items-center justify-center rounded-full bg-muted/60'>
-                  <Inbox className='size-4 text-muted-foreground' />
-                </div>
-                <p className='mt-3 text-xs font-semibold text-foreground'>No messages found</p>
-                <p className='mt-1 text-[11px] text-muted-foreground'>
-                  {search || status !== 'all'
-                    ? 'Try clearing the search or switching filters.'
-                    : 'Messages sent from the Contact page will appear here.'}
-                </p>
+              <div className='p-4'>
+                <EmptyState
+                  title='No enquiries here yet'
+                  description={
+                    status === 'spam'
+                      ? 'No spam. Suspicious submissions land here.'
+                      : search || status !== 'all'
+                        ? 'Try clearing the search or switching filters.'
+                        : 'Messages sent from the Contact page will appear here.'
+                  }
+                />
               </div>
             ) : (
               <div>
