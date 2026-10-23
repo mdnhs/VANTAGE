@@ -27,7 +27,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Typecheck
-        run: yarn tsc --noEmit
+        run: yarn typecheck
 
   deploy:
     name: Deploy to Dokploy (autopaintshop.ie)
