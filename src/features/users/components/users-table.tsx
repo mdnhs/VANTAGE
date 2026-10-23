@@ -2,6 +2,8 @@
 
 import { MoreHorizontalIcon, ShieldCheckIcon } from 'lucide-react';
 
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill } from '@/components/admin/dashboard/status-pill';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,10 +15,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useActor } from '@/contexts/actor-provider';
 import { ROLE_LABELS } from '@/lib/auth/role-labels';
-import { cn } from '@/lib/utils';
 
 import type { UserAction, UserDto } from '../types';
-import { availableActions, userStatus, type StatusTone } from '../utils/present';
+import { availableActions, userStatus } from '../utils/present';
 
 const LABELS: Record<UserAction, string> = {
   roles: 'Change roles',
@@ -28,11 +29,6 @@ const LABELS: Record<UserAction, string> = {
   delete: 'Delete',
 };
 const DESTRUCTIVE = new Set<UserAction>(['ban', 'revoke', 'delete']);
-const TONES: Record<StatusTone, string> = {
-  success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
-  info: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300',
-  danger: 'bg-destructive/10 text-destructive',
-};
 
 const WHEN = new Intl.DateTimeFormat('en-IE', {
   day: 'numeric',
@@ -50,6 +46,11 @@ export function UsersTable({
   onAction(action: UserAction, user: UserDto): void;
 }) {
   const actor = useActor();
+
+  if (users.length === 0) {
+    return <EmptyState title='No people found' description='Nobody matches these filters or has been invited yet.' />;
+  }
+
   return (
     <ul role='list' aria-label='People' className='flex flex-col gap-3'>
       {users.map((user) => {
@@ -73,7 +74,7 @@ export function UsersTable({
               ))}
             </div>
             <div className='flex flex-wrap items-center gap-3 text-sm'>
-              <Badge className={cn(TONES[status.tone])}>{status.label}</Badge>
+              <StatusPill tone={status.tone}>{status.label}</StatusPill>
               <span className='flex items-center gap-1 text-muted-foreground'>
                 <ShieldCheckIcon aria-hidden className='size-4' />
                 {user.twoFactorEnabled ? '2FA on' : '2FA off'}

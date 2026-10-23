@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUp, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { usePartnerLogoList } from '../../hooks/api/query/use-partner-logo-list';
@@ -26,19 +28,26 @@ const FILTERS = { page: 1, limit: 50 };
 function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
   const authorOnly = useAuthorOnly();
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
+  const status = partnerLogo.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={partnerLogo.isEnabled}
-      disabled={authorOnly || updatePartnerLogo.isPending}
-      onCheckedChange={(checked) => updatePartnerLogo.mutate({ isEnabled: checked })}
-      aria-label={`${partnerLogo.isEnabled ? 'Disable' : 'Enable'} ${partnerLogo.companyName}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={partnerLogo.isEnabled}
+        disabled={authorOnly || updatePartnerLogo.isPending}
+        onCheckedChange={(checked) => updatePartnerLogo.mutate({ isEnabled: checked })}
+        aria-label={`${partnerLogo.isEnabled ? 'Disable' : 'Enable'} ${partnerLogo.companyName}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
   const authorOnly = useAuthorOnly();
   const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = usePartnerLogoList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deletePartnerLogo = useDeletePartnerLogo();
@@ -59,7 +68,19 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No partner logos yet. Add the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No partner logos yet'
+        description='Add the first partner logo to get started.'
+        action={
+          canCreate ? (
+            <Link href={APP_ROUTES.content.partnerLogos.create} className={cn(buttonVariants({ variant: 'default' }))}>
+              Add logo
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -71,7 +92,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
             <th className='px-4 py-2.5 font-medium'>Logo</th>
             <th className='px-4 py-2.5 font-medium'>Company</th>
             <th className='px-4 py-2.5 font-medium'>Website</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>

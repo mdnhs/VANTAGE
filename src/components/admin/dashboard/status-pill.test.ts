@@ -14,6 +14,8 @@ it.each([
   ['cancelled', 'neutral'],
   ['archived', 'neutral'],
   ['spam', 'danger'],
+  ['enabled', 'success'],
+  ['featured', 'warning'],
   ['Quote Sent', 'warning'],
   ['unknown', 'neutral'],
 ])('toneForStatus(%j) is %s', (status, tone) => {

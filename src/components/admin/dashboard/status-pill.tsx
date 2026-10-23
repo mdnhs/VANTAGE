@@ -25,6 +25,8 @@ const STATUS_TONES: Record<string, StatusTone> = {
   archived: 'neutral',
   draft: 'neutral',
   hidden: 'neutral',
+  enabled: 'success',
+  featured: 'warning',
   signed_in: 'success',
   invited: 'info',
   spam: 'danger',
