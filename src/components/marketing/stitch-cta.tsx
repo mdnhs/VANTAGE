@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { whatsappHref } from '@/lib/content/phone';
 
 // Figma 131:582 assets
 const SOFT_LIGHT = '/assets/landing/ca42a1888870af6cc8d5afe536a8dd82ec42daf7.svg';
@@ -9,8 +10,6 @@ const ICON_ARROW = '/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg
 const LOGO_WHATSAPP = '/assets/landing/09936fdd2159e847dcf168e3160a539c758f5211.svg';
 
 export function StitchCta({ phone }: { phone: string }) {
-  const digits = phone.replace(/[^\d+]/g, '');
-
   return (
     <section id='contact' className='w-full bg-[#111113]'>
       <div className='mx-auto w-full max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24 xl:p-[120px]'>
@@ -100,7 +99,7 @@ export function StitchCta({ phone }: { phone: string }) {
             </Link>
 
             <a
-              href={`https://wa.me/${digits.replace('+', '')}`}
+              href={whatsappHref(phone)}
               target='_blank'
               rel='noopener noreferrer'
               className='flex items-center justify-center gap-[10px] rounded-[8px] border border-white/[0.16] bg-white/[0.06] px-[24px] py-[16px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors hover:border-white/[0.28] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'

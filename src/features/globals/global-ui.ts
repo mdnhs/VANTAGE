@@ -30,7 +30,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'phone.e164': {
       label: 'Phone in international format (E.164)',
       placeholder: '+35312345678',
-      description: 'Stored for future use. Phone links on the site currently use the phone as shown.',
+      description: 'Used for phone links on the site when valid (e.g. +35312345678). Falls back to the display number.',
     },
     emergencyPhone: { label: 'Emergency phone', inputType: 'tel' },
     whatsapp: { label: 'WhatsApp number', inputType: 'tel' },
