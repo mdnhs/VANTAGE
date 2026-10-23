@@ -26,7 +26,7 @@ ENV MEDIA_PUBLIC_URL=$MEDIA_PUBLIC_URL
 # build time, so this MUST be passed as a build arg (and set at runtime) for the live site.
 ARG SITE_ENV
 ENV SITE_ENV=$SITE_ENV
-ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ARG NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ARG DATABASE_URL
 ARG AUTH_SECRET

@@ -22,11 +22,23 @@ import { VIEW_AS_ADMIN_ROLES, VIEW_AS_SECONDS } from './view-as-limit';
 export function buildAuth() {
   const env = serverEnv();
   const appUrl = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const trustedOrigins = Array.from(
+    new Set(
+      [
+        appUrl,
+        process.env.NEXT_PUBLIC_APP_URL,
+        process.env.BETTER_AUTH_URL,
+        'https://autopaintshop.ie',
+        'https://www.autopaintshop.ie',
+        'http://localhost:3000',
+      ].filter((u): u is string => !!u),
+    ),
+  );
   return betterAuth({
     appName: 'VANTAGE Admin',
     baseURL: appUrl,
     secret: env.AUTH_SECRET,
-    trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL ?? appUrl],
+    trustedOrigins,
     database: drizzleAdapter(db, {
       provider: 'pg',
       schema: {

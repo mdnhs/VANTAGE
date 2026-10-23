@@ -40,8 +40,14 @@ const originOf = (url: string | undefined) => {
     return null;
   }
 };
-const allowedOrigins = () =>
-  [originOf(process.env.NEXT_PUBLIC_APP_URL), originOf(process.env.BETTER_AUTH_URL)].filter((o): o is string => !!o);
+const allowedOrigins = () => {
+  const dynamic = [originOf(process.env.NEXT_PUBLIC_APP_URL), originOf(process.env.BETTER_AUTH_URL)].filter(
+    (o): o is string => !!o,
+  );
+  return Array.from(
+    new Set([...dynamic, 'https://autopaintshop.ie', 'https://www.autopaintshop.ie', 'http://localhost:3000']),
+  );
+};
 
 const app = new Hono().basePath('/api/v1');
 

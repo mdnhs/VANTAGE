@@ -3,9 +3,16 @@ import { createAuthClient } from 'better-auth/react';
 
 import { ac, roles } from '@/lib/auth/permissions';
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+};
+
 // Same origin, so cookies flow automatically.
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+  baseURL: getBaseURL(),
   plugins: [adminClient({ ac, roles }), twoFactorClient()],
 });
 
