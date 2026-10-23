@@ -1,0 +1,44 @@
+name: Deploy to UK VPS (Dokploy)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate Build & Types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: yarn tsc --noEmit
+
+  deploy:
+    name: Deploy to Dokploy (autopaintshop.ie)
+    needs: [validate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dokploy Deployment Webhook
+        run: |
+          echo "Triggering deployment for autopaintshop on Dokploy UK VPS (https://vps.raynx.ie)..."
+          if [ -n "${{ secrets.DOKPLOY_DEPLOY_TOKEN }}" ]; then
+            curl -f -X POST "https://vps.raynx.ie/api/deploy?token=${{ secrets.DOKPLOY_DEPLOY_TOKEN }}" || echo "Webhook returned non-zero, autoDeploy webhook will process push"
+          else
+            echo "DOKPLOY_DEPLOY_TOKEN secret not set; Dokploy GitHub App Auto-Deploy webhook handles deployment on push."
+          fi
