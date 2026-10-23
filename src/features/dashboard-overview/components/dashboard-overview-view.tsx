@@ -101,7 +101,7 @@ function DashboardBody({ data }: { data: DashboardDto }) {
 
     return (
       <div className='flex flex-col gap-6'>
-        {/* Tier 1: Merged Unified KPI Metrics */}
+        {/* Tier 1: Merged Unified KPI Metrics (Balanced 8 cards) */}
         <div>
           <h2 className='sr-only'>Key figures</h2>
           <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
@@ -169,7 +169,7 @@ function DashboardBody({ data }: { data: DashboardDto }) {
           </div>
         </div>
 
-        {/* Tier 2: Trends & Lead Channels */}
+        {/* Tier 2: Trends & Lead Channels (Balanced 2:1 split) */}
         <div className='grid grid-cols-1 gap-5 lg:grid-cols-3'>
           <div className='lg:col-span-2'>
             <MonthlyIntakeChart trends={pipeline.monthlyTrends} />
@@ -179,77 +179,113 @@ function DashboardBody({ data }: { data: DashboardDto }) {
           </div>
         </div>
 
-        {/* Tier 3: Operations, Recent Leads & Next Steps */}
-        <div className='grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]'>
-          <div>
-            <RecentActivityFeed leads={pipeline.recentLeads} />
-          </div>
-          <div className='flex flex-col gap-5'>
-            {/* Action items / Next up checklist */}
-            <DashboardCard title='Next up'>
-              <div className='flex flex-1 flex-col justify-between gap-6'>
-                <div className='flex flex-col gap-3'>
-                  <p className='text-2xl leading-tight font-semibold text-primary'>
-                    {next ? next.title : "You're all set"}
-                  </p>
-                  <p className='text-sm text-muted-foreground'>
-                    {next
-                      ? next.description
-                      : 'Every setup step is done. New suggestions will appear here as the site grows.'}
-                  </p>
-                </div>
-                {steps.length > 1 ? (
-                  <ul aria-label='Setup checklist' className='flex flex-col gap-2'>
-                    {steps.map((item) => (
-                      <li key={item.id} className='flex items-center gap-2 text-sm'>
-                        {item.done ? (
-                          <CircleCheck aria-hidden className='size-4 text-success' />
-                        ) : (
-                          <Circle aria-hidden className='size-4 text-muted-foreground' />
-                        )}
-                        <span className={cn(item.done && 'text-muted-foreground')}>{item.title}</span>
-                        <span className='sr-only'>{item.done ? '(done)' : '(to do)'}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {next ? (
-                  <Link href={next.href} data-slot='button' className={LINK_PRIMARY}>
-                    {next.cta}
-                  </Link>
+        {/* Tier 3: Operations, Action Items & Content Health (Balanced 3 equal cards) */}
+        <div className='grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3'>
+          {/* Card 1: Daily week chart */}
+          {week ? (
+            <DashboardCard title='Enquiries this week' className='h-full'>
+              <div className='relative'>
+                <PillBarChart
+                  title='Enquiries this week'
+                  data={week.days}
+                  currentLabel='This week'
+                  previousLabel='Last week'
+                />
+                {quiet ? (
+                  <div className='pointer-events-none absolute inset-x-0 top-0 flex h-64 flex-col items-center justify-center gap-1 text-center'>
+                    <p className='text-base font-semibold'>No enquiries yet</p>
+                    <p className='max-w-xs text-sm text-muted-foreground'>
+                      Each day&apos;s enquiries this week and last will show here.
+                    </p>
+                  </div>
                 ) : null}
               </div>
             </DashboardCard>
+          ) : null}
 
-            {/* Daily week chart */}
-            {week ? (
-              <DashboardCard title='Enquiries this week'>
-                <div className='relative'>
-                  <PillBarChart
-                    title='Enquiries this week'
-                    data={week.days}
-                    currentLabel='This week'
-                    previousLabel='Last week'
-                  />
-                  {quiet ? (
-                    <div className='pointer-events-none absolute inset-x-0 top-0 flex h-64 flex-col items-center justify-center gap-1 text-center'>
-                      <p className='text-base font-semibold'>No enquiries yet</p>
-                      <p className='max-w-xs text-sm text-muted-foreground'>
-                        Each day&apos;s enquiries this week and last will show here.
-                      </p>
-                    </div>
-                  ) : null}
+          {/* Card 2: Next up checklist */}
+          <DashboardCard title='Next up' className='h-full'>
+            <div className='flex flex-1 flex-col justify-between gap-6'>
+              <div className='flex flex-col gap-3'>
+                <p className='text-2xl leading-tight font-semibold text-primary'>
+                  {next ? next.title : "You're all set"}
+                </p>
+                <p className='text-sm text-muted-foreground'>
+                  {next
+                    ? next.description
+                    : 'Every setup step is done. New suggestions will appear here as the site grows.'}
+                </p>
+              </div>
+              {steps.length > 1 ? (
+                <ul aria-label='Setup checklist' className='flex flex-col gap-2'>
+                  {steps.map((item) => (
+                    <li key={item.id} className='flex items-center gap-2 text-sm'>
+                      {item.done ? (
+                        <CircleCheck aria-hidden className='size-4 text-success' />
+                      ) : (
+                        <Circle aria-hidden className='size-4 text-muted-foreground' />
+                      )}
+                      <span className={cn(item.done && 'text-muted-foreground')}>{item.title}</span>
+                      <span className='sr-only'>{item.done ? '(done)' : '(to do)'}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {next ? (
+                <Link href={next.href} data-slot='button' className={LINK_PRIMARY}>
+                  {next.cta}
+                </Link>
+              ) : null}
+            </div>
+          </DashboardCard>
+
+          {/* Card 3: Content health gauge */}
+          {health ? (
+            <DashboardCard title='Content health' className='h-full'>
+              <Gauge
+                title='Content health'
+                centerLabel='Complete'
+                headlineKey='complete'
+                parts={[
+                  { key: 'complete', label: 'Complete', value: health.complete, tone: 'solid' },
+                  { key: 'work', label: 'Needs work', value: health.needsWork, tone: 'dark' },
+                  { key: 'missing', label: 'Missing SEO or alt', value: health.missing, tone: 'hatched' },
+                ]}
+              />
+              {health.findings?.length ? (
+                <div className='flex flex-col gap-2'>
+                  <h3 className='text-sm font-semibold'>Content to review ({formatNumber(health.findingsTotal)})</h3>
+                  <ul aria-label='Content findings' className='flex flex-col gap-2 text-sm'>
+                    {health.findings.slice(0, 4).map((finding, index) => (
+                      <li key={`${index}:${finding.href}:${finding.label}`}>
+                        <Link href={finding.href} className='font-medium underline-offset-4 hover:underline'>
+                          {finding.label}
+                        </Link>
+                        <span className='block text-muted-foreground'>{finding.message}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </DashboardCard>
-            ) : null}
-          </div>
+              ) : null}
+            </DashboardCard>
+          ) : null}
         </div>
 
-        {/* Tier 4: Team Activity & Content Health */}
-        {data.recentActivity || health ? (
-          <div className={cn('grid gap-4', data.recentActivity && health && 'xl:grid-cols-[minmax(0,1fr)_380px]')}>
-            {data.recentActivity ? (
-              <DashboardCard title='Team activity'>
+        {/* Tier 4: Customer Inquiries & Team Activity (Balanced 50/50 side by side) */}
+        <div className='grid grid-cols-1 gap-5 lg:grid-cols-2'>
+          <div>
+            <RecentActivityFeed leads={pipeline.recentLeads} />
+          </div>
+          {data.recentActivity ? (
+            <div>
+              <DashboardCard
+                title='Team activity'
+                className='h-full'
+                action={
+                  <span className='text-xs text-muted-foreground'>{data.recentActivity.length} recent actions</span>
+                }
+              >
+                <p className='-mt-3 text-xs text-muted-foreground'>Publishing, enquiries and sign-ins by your team</p>
                 <ActivityFeed
                   now={now}
                   emptyTitle='No activity yet'
@@ -263,38 +299,9 @@ function DashboardBody({ data }: { data: DashboardDto }) {
                   }))}
                 />
               </DashboardCard>
-            ) : null}
-            {health ? (
-              <DashboardCard title='Content health'>
-                <Gauge
-                  title='Content health'
-                  centerLabel='Complete'
-                  headlineKey='complete'
-                  parts={[
-                    { key: 'complete', label: 'Complete', value: health.complete, tone: 'solid' },
-                    { key: 'work', label: 'Needs work', value: health.needsWork, tone: 'dark' },
-                    { key: 'missing', label: 'Missing SEO or alt', value: health.missing, tone: 'hatched' },
-                  ]}
-                />
-                {health.findings?.length ? (
-                  <div className='flex flex-col gap-2'>
-                    <h3 className='text-sm font-semibold'>Content to review ({formatNumber(health.findingsTotal)})</h3>
-                    <ul aria-label='Content findings' className='flex flex-col gap-2 text-sm'>
-                      {health.findings.map((finding, index) => (
-                        <li key={`${index}:${finding.href}:${finding.label}`}>
-                          <Link href={finding.href} className='font-medium underline-offset-4 hover:underline'>
-                            {finding.label}
-                          </Link>
-                          <span className='block text-muted-foreground'>{finding.message}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </DashboardCard>
-            ) : null}
-          </div>
-        ) : null}
+            </div>
+          ) : null}
+        </div>
       </div>
     );
   }

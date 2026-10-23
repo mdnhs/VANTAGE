@@ -60,7 +60,7 @@ export const analyticsService = {
       db.query.quoteRequests.findMany({
         where: notSpam,
         orderBy: [desc(quoteRequests.createdAt)],
-        limit: 5,
+        limit: 8,
       }),
     ]);
 
