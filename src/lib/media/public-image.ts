@@ -10,6 +10,5 @@ export type PublicImage = {
   focal: { x: number; y: number };
 };
 
-// Legacy Cloudinary images (id === null) can be resized at the edge; R2 images are served as stored.
-export const sizedSrc = (img: PublicImage, t: string): string =>
-  img.id === null ? img.src.replace('/upload/f_auto,q_auto/', `/upload/f_auto,q_auto,${t}/`) : img.src;
+// Images are served as stored; Next.js handles responsive sizing.
+export const sizedSrc = (img: PublicImage, _t?: string): string => img.src;

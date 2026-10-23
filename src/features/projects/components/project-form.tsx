@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { MediaField } from '@/features/media/components/media-field';
 import { MediaGalleryField } from '@/features/media/components/media-gallery-field';
-import { sizedSrc } from '@/lib/media/public-image';
 import { slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { ProjectWithGallery } from '../types';
@@ -106,8 +105,6 @@ export function ProjectForm({
   const authorOnly = useAuthorOnly();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
   const [imageError, setImageError] = useState<{ before?: string; after?: string }>({});
-  // Gallery rows still on the old storage make the whole gallery read-only until the media migration.
-  const legacyGalleryCount = (initialData?.galleryImages ?? []).filter((row) => !row.mediaId).length;
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -123,13 +120,9 @@ export function ProjectForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Both images are required: a chosen one, or the row's current (media or legacy) one.
-    const hasBefore = Boolean(
-      form.beforeImageMediaId ?? initialData?.beforeImageMediaId ?? initialData?.beforeImagePublicId,
-    );
-    const hasAfter = Boolean(
-      form.afterImageMediaId ?? initialData?.afterImageMediaId ?? initialData?.afterImagePublicId,
-    );
+    // Both images are required: a chosen one, or the row's current media one.
+    const hasBefore = Boolean(form.beforeImageMediaId ?? initialData?.beforeImageMediaId);
+    const hasAfter = Boolean(form.afterImageMediaId ?? initialData?.afterImageMediaId);
     if (!hasBefore || !hasAfter) {
       setImageError({
         before: hasBefore ? undefined : 'Choose a before image',
@@ -146,10 +139,10 @@ export function ProjectForm({
       description: form.description,
       completedAt: form.completedAt || null,
       ...(authorOnly ? {} : { isFeatured: form.isFeatured }),
-      // Untouched images are left out so the row keeps them (even legacy ones).
+      // Untouched images are left out so the row keeps them.
       ...(form.beforeImageMediaId ? { beforeImageMediaId: form.beforeImageMediaId } : {}),
       ...(form.afterImageMediaId ? { afterImageMediaId: form.afterImageMediaId } : {}),
-      ...(form.galleryTouched && legacyGalleryCount === 0 ? { galleryMediaIds: form.galleryMediaIds } : {}),
+      ...(form.galleryTouched ? { galleryMediaIds: form.galleryMediaIds } : {}),
     });
   };
 
@@ -237,11 +230,7 @@ export function ProjectForm({
             <MediaField
               kind='image'
               label='Before'
-              value={slotRef(
-                form.beforeImageMediaId,
-                initialData?.beforeImageMediaId,
-                initialData?.beforeImagePublicId,
-              )}
+              value={slotRef(form.beforeImageMediaId, initialData?.beforeImageMediaId)}
               onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
             />
             {(imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
@@ -255,7 +244,7 @@ export function ProjectForm({
             <MediaField
               kind='image'
               label='After'
-              value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId, initialData?.afterImagePublicId)}
+              value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId)}
               onChange={(ref) => setField('afterImageMediaId', ref?.id)}
             />
             {(imageError.after ?? submitCauses?.afterImageMediaId?.[0]) ? (
@@ -264,29 +253,12 @@ export function ProjectForm({
           </div>
           <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Gallery (up to 10 images)</Label>
-            {legacyGalleryCount > 0 ? (
-              <div className='flex flex-col gap-2'>
-                <p className='text-sm text-muted-foreground'>
-                  This gallery still has {legacyGalleryCount} {legacyGalleryCount === 1 ? 'image' : 'images'} from the
-                  old storage. It can be edited after the media migration runs.
-                </p>
-                <ul className='flex flex-wrap gap-2'>
-                  {(initialData?.gallery ?? []).map((image, index) => (
-                    <li key={image.src + index} className='size-16 overflow-hidden rounded-lg border bg-muted'>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={sizedSrc(image, 'w_96,h_96,c_fill')} alt='' className='size-full object-cover' />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <MediaGalleryField
-                label='Gallery image'
-                max={10}
-                value={form.galleryMediaIds}
-                onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
-              />
-            )}
+            <MediaGalleryField
+              label='Gallery image'
+              max={10}
+              value={form.galleryMediaIds}
+              onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
+            />
           </div>
         </CardContent>
       </Card>

@@ -7,7 +7,11 @@ import type {
   UpdateTestimonialInput,
 } from '@/validations/testimonial-schema';
 
-export type Testimonial = TestimonialRow & { avatar: PublicImage | null };
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
+export type Testimonial = WithoutLegacy<TestimonialRow> & { avatar: PublicImage | null };
 
 export type { CreateTestimonialInput, UpdateTestimonialInput, ReorderTestimonialsInput, TestimonialStatusInput };
 

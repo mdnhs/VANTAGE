@@ -69,7 +69,7 @@ describe('ProjectForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  const legacyProject = (galleryImages: object[]) =>
+  const sampleProject = (galleryImages: object[]) =>
     ({
       id: 'p1',
       title: 'Civic',
@@ -79,50 +79,19 @@ describe('ProjectForm', () => {
       description: 'd',
       completedAt: null,
       isFeatured: false,
-      beforeImagePublicId: 'old-before',
-      afterImagePublicId: 'old-after',
-      beforeImageMediaId: null,
-      afterImageMediaId: null,
+      beforeImageMediaId: 'bm1',
+      afterImageMediaId: 'am1',
       galleryImages,
       beforeImage: null,
       afterImage: null,
-      gallery: galleryImages.map((_, i) => ({ id: null, src: `https://res.cloudinary.com/demo/old-${i}` })),
+      gallery: galleryImages.map((_, i) => ({ id: `g-${i}`, src: `/uploads/img-${i}.jpg` })),
     }) as unknown as ProjectWithGallery;
-
-  it.each([
-    ['a legacy gallery', [{ id: 'r1', mediaId: null, imagePublicId: 'old-g', displayOrder: 0 }], 1],
-    [
-      'a mixed gallery',
-      [
-        { id: 'r1', mediaId: 'm1', imagePublicId: null, displayOrder: 0 },
-        { id: 'r2', mediaId: null, imagePublicId: 'old-g', displayOrder: 1 },
-      ],
-      1,
-    ],
-  ])('%s is read-only: note shown, no editor, and the payload never carries the gallery', async (_name, rows, n) => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(
-      <ProjectForm initialData={legacyProject(rows)} submitLabel='Save' isSubmitting={false} onSubmit={onSubmit} />,
-    );
-    expect(
-      screen.getByText(
-        `This gallery still has ${n} image from the old storage. It can be edited after the media migration runs.`,
-      ),
-    ).not.toBeNull();
-    expect(screen.queryByText('add gallery image')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const sent = onSubmit.mock.calls[0]![0];
-    expect(sent).not.toHaveProperty('beforeImageMediaId');
-    expect(sent).not.toHaveProperty('afterImageMediaId');
-    expect(sent).not.toHaveProperty('galleryMediaIds');
-  });
 
   it('an all-media gallery stays editable and sends the new order', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const rows = [{ id: 'r1', mediaId: 'm1', imagePublicId: null, displayOrder: 0 }];
+    const rows = [{ id: 'r1', mediaId: 'm1', displayOrder: 0 }];
     render(
-      <ProjectForm initialData={legacyProject(rows)} submitLabel='Save' isSubmitting={false} onSubmit={onSubmit} />,
+      <ProjectForm initialData={sampleProject(rows)} submitLabel='Save' isSubmitting={false} onSubmit={onSubmit} />,
     );
     fireEvent.click(screen.getByText('add gallery image'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));

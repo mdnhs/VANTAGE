@@ -1,5 +1,5 @@
 import type { PublicImage } from '@/lib/media/public-image';
-import type { Project, ProjectGalleryImage } from '@/server/db/schema';
+import type { Project as ProjectRow, ProjectGalleryImage as ProjectGalleryImageRow } from '@/server/db/schema';
 import type {
   CreateProjectInput,
   ProjectListQuery,
@@ -8,19 +8,18 @@ import type {
   UpdateProjectInput,
 } from '@/validations/project-schema';
 
-export type {
-  Project,
-  ProjectGalleryImage,
-  CreateProjectInput,
-  UpdateProjectInput,
-  ProjectListQuery,
-  ReorderProjectsInput,
-  ProjectStatusInput,
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
 };
 
+export type Project = WithoutLegacy<ProjectRow>;
+export type ProjectGalleryImage = WithoutLegacy<ProjectGalleryImageRow>;
+
+export type { CreateProjectInput, UpdateProjectInput, ProjectListQuery, ReorderProjectsInput, ProjectStatusInput };
+
 // Rows returned by repo/service reads always include the gallery relation.
-export type ProjectWithGallery = Project & {
-  galleryImages: ProjectGalleryImage[];
+export type ProjectWithGallery = WithoutLegacy<Project> & {
+  galleryImages: WithoutLegacy<ProjectGalleryImage>[];
   beforeImage: PublicImage | null;
   afterImage: PublicImage | null;
   gallery: PublicImage[];

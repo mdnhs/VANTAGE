@@ -10,10 +10,7 @@ import type {
   UpdateServiceInput,
 } from '@/validations/service-schema';
 
-const MEDIA_PAIRS = [
-  ['iconMediaId', 'iconPublicId'],
-  ['imageMediaId', 'imagePublicId'],
-] as const;
+const MEDIA_PAIRS = [['iconMediaId'], ['imageMediaId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('services');
 const detailTag = (id: string) => CACHE_TAGS.detail('services', id);

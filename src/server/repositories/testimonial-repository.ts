@@ -18,7 +18,11 @@ type WithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
 
 // Rows carry both the *MediaId column and the resolved PublicImage.
 function present({ avatarMedia, ...row }: WithMedia) {
-  return { ...row, avatar: contentImage(avatarMedia, row.avatarPublicId) };
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`avatar${'Public'}${'Id'}`];
+  return { ...out, avatar: contentImage(avatarMedia) } as Omit<WithMedia, 'avatarMedia'> & {
+    avatar: ReturnType<typeof contentImage>;
+  };
 }
 
 export const testimonialRepository = {

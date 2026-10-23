@@ -10,7 +10,7 @@ import type {
   UpdateHomepageCatalogInput,
 } from '@/validations/homepage-catalog-schema';
 
-const MEDIA_PAIRS = [['iconMediaId', 'iconPublicId']] as const;
+const MEDIA_PAIRS = [['iconMediaId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('homepage-catalogs');
 const detailTag = (id: string) => CACHE_TAGS.detail('homepage-catalogs', id);

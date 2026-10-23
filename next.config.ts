@@ -53,8 +53,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // The share-card font is read from disk at runtime; trace it into the standalone bundle.
   outputFileTracingIncludes: { '/og/\\[page\\]': ['./assets/fonts/*.ttf'] },
-  // Media is served as stored (R2 or /uploads); Next optimises it. res.cloudinary.com is the legacy
-  // fallback for images not yet migrated (Phase 11 removes it). No localPatterns: this site serves
+  // Media is served as stored (R2 or /uploads); Next optimises it. No localPatterns: this site serves
   // many /public paths.
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -62,7 +61,7 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     qualities: [75, 90],
     minimumCacheTTL: 31536000,
-    remotePatterns: [...mediaRemotePatterns(), { protocol: 'https', hostname: 'res.cloudinary.com' }],
+    remotePatterns: mediaRemotePatterns(),
   },
   async headers() {
     return [

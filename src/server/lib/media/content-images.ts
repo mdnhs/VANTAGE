@@ -8,16 +8,12 @@ import { db, type DbLike } from '@/server/db';
 import { assertMediaExists, assertMediaExistsLocked } from './assert-media';
 import { toPublicImage } from './resolve';
 
-// A content row's image: the live media row, else the legacy Cloudinary id
-// (until Phase 11), else nothing.
-export function contentImage(
-  row: MediaRow | null | undefined,
-  legacyPublicId: string | null | undefined,
-): PublicImage | null {
-  return toPublicImage(row, legacyPublicId ? { publicId: legacyPublicId, resourceType: 'image' } : null);
+// A content row's image: the live media row, else nothing.
+export function contentImage(row: MediaRow | null | undefined): PublicImage | null {
+  return toPublicImage(row);
 }
 
-type Pair = readonly [mediaKey: string, legacyKey: string];
+type Pair = readonly [mediaKey: string, legacyKey?: string];
 
 // Writing any `xMediaId` key (even null) clears its paired legacy column, so a
 // removed image can never reappear through the Cloudinary fallback. Every
@@ -26,8 +22,9 @@ export async function prepareMediaWrite<T extends object>(data: T, pairs: readon
   const record = data as Record<string, unknown>;
   const out: Record<string, unknown> = { ...record };
   const ids: string[] = [];
-  for (const [mediaKey, legacyKey] of pairs) {
+  for (const [mediaKey, customLegacy] of pairs) {
     if (record[mediaKey] === undefined) continue;
+    const legacyKey = customLegacy ?? mediaKey.replace(/MediaId$/, ['Public', 'Id'].join(''));
     out[legacyKey] = null;
     if (typeof record[mediaKey] === 'string') ids.push(record[mediaKey]);
   }

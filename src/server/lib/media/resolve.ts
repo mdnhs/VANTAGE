@@ -9,34 +9,20 @@ import { db } from '@/server/db';
 import { media, type MediaRow } from '@/server/db/schema/media';
 
 import { isMediaId } from './assert-media';
-import { legacyCloudinaryUrl, type LegacyRef } from './legacy-cloudinary';
 
-// A live row wins; a soft-deleted or missing row falls back to the legacy
-// Cloudinary URL (until Phase 11); with neither, there is no image.
-export function toPublicImage(row: MediaRow | null | undefined, legacy?: LegacyRef | null): PublicImage | null {
-  if (row && !row.deletedAt) {
-    return {
-      id: row.id,
-      src: row.url,
-      mimeType: row.mimeType,
-      width: row.width,
-      height: row.height,
-      alt: row.isDecorative ? '' : row.alt,
-      blurDataUrl: row.blurDataUrl,
-      focal: { x: row.focalX, y: row.focalY },
-    };
-  }
-  const src = legacy ? legacyCloudinaryUrl(legacy) : null;
-  if (!src) return null;
+// A live media row becomes a PublicImage; with a soft-deleted or missing row,
+// there is no image.
+export function toPublicImage(row: MediaRow | null | undefined, _legacy?: unknown): PublicImage | null {
+  if (!row || row.deletedAt) return null;
   return {
-    id: null,
-    src,
-    mimeType: null,
-    width: null,
-    height: null,
-    alt: '',
-    blurDataUrl: null,
-    focal: { x: 0.5, y: 0.5 },
+    id: row.id,
+    src: row.url,
+    mimeType: row.mimeType,
+    width: row.width,
+    height: row.height,
+    alt: row.isDecorative ? '' : row.alt,
+    blurDataUrl: row.blurDataUrl,
+    focal: { x: row.focalX, y: row.focalY },
   };
 }
 

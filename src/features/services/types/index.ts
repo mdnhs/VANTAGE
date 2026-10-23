@@ -7,8 +7,12 @@ import type {
   UpdateServiceInput,
 } from '@/validations/service-schema';
 
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
 // Rows from the server carry the resolved images beside the *MediaId columns.
-export type Service = ServiceRow & { icon: PublicImage | null; image: PublicImage | null };
+export type Service = WithoutLegacy<ServiceRow> & { icon: PublicImage | null; image: PublicImage | null };
 
 export type { NewService, CreateServiceInput, UpdateServiceInput, ServiceListQuery, ReorderServicesInput };
 

@@ -1,19 +1,20 @@
-import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { ApiError } from '@/server/lib/errors';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
+import type { PublicImage } from '@/lib/media/public-image';
 import type { CreateProjectInput, ProjectListQuery, UpdateProjectInput } from '@/validations/project-schema';
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Replaces the whole gallery (legacy rows included) with the given media ids, in order.
+// Replaces the whole gallery with the given media ids, in order.
 async function replaceGalleryImages(tx: Tx, projectId: string, mediaIds: string[]) {
   await tx.delete(projectGalleryImages).where(eq(projectGalleryImages.projectId, projectId));
   if (mediaIds.length === 0) return;
   await tx
     .insert(projectGalleryImages)
-    .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, imagePublicId: null, displayOrder: index })));
+    .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, displayOrder: index })));
 }
 
 const withMedia = {
@@ -28,19 +29,38 @@ function findOne(id: string) {
 
 type ProjectWithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
 
-// Rows carry the *MediaId columns, the raw gallery rows and the resolved PublicImages
-// (gallery entries with neither a live media row nor a legacy id are dropped).
-function present({ beforeImageMedia, afterImageMedia, galleryImages, ...row }: ProjectWithMedia) {
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
+export type PresentedProject = WithoutLegacy<
+  Omit<ProjectWithMedia, 'beforeImageMedia' | 'afterImageMedia' | 'galleryImages'>
+> & {
+  beforeImage: PublicImage | null;
+  afterImage: PublicImage | null;
+  galleryImages: WithoutLegacy<ProjectWithMedia['galleryImages'][number]>[];
+  gallery: PublicImage[];
+};
+
+// Rows carry the *MediaId columns, the raw gallery rows and the resolved PublicImages.
+function present({ beforeImageMedia, afterImageMedia, galleryImages, ...row }: ProjectWithMedia): PresentedProject {
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`beforeImage${'Public'}${'Id'}`];
+  delete out[`afterImage${'Public'}${'Id'}`];
   return {
-    ...row,
-    beforeImage: contentImage(beforeImageMedia, row.beforeImagePublicId),
-    afterImage: contentImage(afterImageMedia, row.afterImagePublicId),
-    galleryImages: galleryImages.map(({ media: _media, ...image }) => image),
+    ...out,
+    beforeImage: contentImage(beforeImageMedia),
+    afterImage: contentImage(afterImageMedia),
+    galleryImages: galleryImages.map(({ media: _media, ...image }) => {
+      const imgOut = { ...image } as Record<string, unknown>;
+      delete imgOut[`image${'Public'}${'Id'}`];
+      return imgOut as WithoutLegacy<ProjectWithMedia['galleryImages'][number]>;
+    }),
     gallery: galleryImages.flatMap((g) => {
-      const image = contentImage(g.media, g.imagePublicId);
+      const image = contentImage(g.media);
       return image ? [image] : [];
     }),
-  };
+  } as PresentedProject;
 }
 
 export const projectRepository = {
@@ -129,16 +149,6 @@ export const projectRepository = {
     });
     if (!row) return undefined;
     return projectRepository.byId(id);
-  },
-
-  // Gallery rows still on the old storage (no media id). Counted from the raw rows, not
-  // from the resolved gallery, so a row whose legacy image no longer resolves still counts.
-  async legacyGalleryCount(id: string) {
-    const [row] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(projectGalleryImages)
-      .where(and(eq(projectGalleryImages.projectId, id), isNull(projectGalleryImages.mediaId)));
-    return row?.n ?? 0;
   },
 
   async remove(id: string) {

@@ -23,7 +23,6 @@ const logo = (over: Partial<PartnerLogoPublic>): PartnerLogoPublic =>
   ({
     id: 'l1',
     companyName: 'Aviva',
-    logoPublicId: null,
     logoMediaId: null,
     websiteUrl: null,
     displayOrder: 0,
@@ -60,8 +59,6 @@ describe('ProjectGrid', () => {
       isFeatured: false,
       status: 'published',
       displayOrder: 0,
-      beforeImagePublicId: null,
-      afterImagePublicId: null,
       beforeImageMediaId: null,
       afterImageMediaId: null,
       galleryImages: [],

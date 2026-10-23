@@ -180,7 +180,7 @@ export function TestimonialForm({
               kind='image'
               label='Avatar'
               nullable
-              value={slotRef(form.avatarMediaId, initialData?.avatarMediaId, initialData?.avatarPublicId)}
+              value={slotRef(form.avatarMediaId, initialData?.avatarMediaId)}
               onChange={(ref) => setField('avatarMediaId', ref?.id ?? null)}
             />
           </div>

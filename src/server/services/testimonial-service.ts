@@ -11,7 +11,7 @@ import type {
   UpdateTestimonialInput,
 } from '@/validations/testimonial-schema';
 
-const MEDIA_PAIRS = [['avatarMediaId', 'avatarPublicId']] as const;
+const MEDIA_PAIRS = [['avatarMediaId']] as const;
 
 const LIST_TAG = CACHE_TAGS.all('testimonials');
 const FEATURED_TAG = CACHE_TAGS.list('testimonials-featured');

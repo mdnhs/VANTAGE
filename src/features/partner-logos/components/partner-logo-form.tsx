@@ -64,8 +64,8 @@ export function PartnerLogoForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // A logo is required: a chosen one, or the row's current (media or legacy) one.
-    if (!form.logoMediaId && !initialData?.logoMediaId && !initialData?.logoPublicId) {
+    // A logo is required: a chosen one, or the row's current media one.
+    if (!form.logoMediaId && !initialData?.logoMediaId) {
       setLogoError('Choose a logo');
       return;
     }
@@ -118,7 +118,7 @@ export function PartnerLogoForm({
             <MediaField
               kind='image'
               label='Logo'
-              value={slotRef(form.logoMediaId, initialData?.logoMediaId, initialData?.logoPublicId)}
+              value={slotRef(form.logoMediaId, initialData?.logoMediaId)}
               onChange={(ref) => setField('logoMediaId', ref?.id)}
             />
             {(logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]) ? (

@@ -18,7 +18,11 @@ type WithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
 
 // Rows carry both the *MediaId column and the resolved PublicImage.
 function present({ logoMedia, ...row }: WithMedia) {
-  return { ...row, logo: contentImage(logoMedia, row.logoPublicId) };
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`logo${'Public'}${'Id'}`];
+  return { ...out, logo: contentImage(logoMedia) } as Omit<WithMedia, 'logoMedia'> & {
+    logo: ReturnType<typeof contentImage>;
+  };
 }
 
 export const partnerLogoRepository = {

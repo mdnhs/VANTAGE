@@ -152,8 +152,9 @@ describe('enquiry photos through the media pipeline', () => {
     expect(detail.data.photos).toHaveLength(2);
   });
 
-  it('admin detail and list return photos with legacy urls last', async () => {
-    await post('/quotes', { ...quote, photoUrls: [await dataUrl('#c33')] });
+  it('a quote with only photo_urls returns photos: []', async () => {
+    const res = await post('/quotes', quote);
+    expect(res.status).toBe(201);
     const [row] = await db.select().from(quoteRequests);
     const legacy = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/old.jpg';
     await db
@@ -164,34 +165,11 @@ describe('enquiry photos through the media pipeline', () => {
     const detail = (await (await get(`/quotes/${row!.id}`, cookie)).json()) as {
       data: { photos: { id: string | null; url: string; width: number | null }[] };
     };
-    expect(detail.data.photos).toHaveLength(2);
-    expect(detail.data.photos[0]).toMatchObject({ width: 40 });
-    expect(detail.data.photos[0]!.id).not.toBeNull();
-    expect(detail.data.photos[1]).toEqual({ id: null, url: legacy, width: null, height: null });
+    expect(detail.data.photos).toEqual([]);
     expect(detail.data).not.toHaveProperty('photoUrls');
 
     const list = (await (await get('/quotes/admin/list', cookie)).json()) as { data: { photos: unknown[] }[] };
-    expect(list.data[0]!.photos).toHaveLength(2);
-  });
-
-  it('lists a migrated photo once: the legacy photo_urls entry is hidden, left in the database', async () => {
-    await post('/quotes', { ...quote, photoUrls: [await dataUrl('#c33')] });
-    const [row] = await db.select().from(quoteRequests);
-    const [linked] = await db.select().from(media);
-    const migrated = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/old.jpg';
-    const other = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/other.jpg';
-    await db.update(media).set({ legacySource: 'cloudinary:image:vantage/quotes/old' }).where(eq(media.id, linked!.id));
-    await db
-      .update(quoteRequests)
-      .set({ photoUrls: [migrated, other] })
-      .where(eq(quoteRequests.id, row!.id));
-
-    const detail = (await (await get(`/quotes/${row!.id}`, cookie)).json()) as {
-      data: { photos: { id: string | null; url: string }[] };
-    };
-    expect(detail.data.photos.map((p) => p.url)).toEqual([linked!.url, other]);
-    const [after] = await db.select().from(quoteRequests);
-    expect(after!.photoUrls).toEqual([migrated, other]);
+    expect(list.data[0]!.photos).toEqual([]);
   });
 
   it('writes the processed file to storage', async () => {

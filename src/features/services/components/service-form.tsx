@@ -156,7 +156,7 @@ export function ServiceForm({
               kind='image'
               label='Icon'
               nullable
-              value={slotRef(form.iconMediaId, initialData?.iconMediaId, initialData?.iconPublicId)}
+              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
               onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
             />
           </div>
@@ -166,7 +166,7 @@ export function ServiceForm({
               kind='image'
               label='Image'
               nullable
-              value={slotRef(form.imageMediaId, initialData?.imageMediaId, initialData?.imagePublicId)}
+              value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
               onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
             />
           </div>

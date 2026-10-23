@@ -93,10 +93,10 @@ describe('StitchHeader from navigation defaults', () => {
     expect(wide.getAttribute('href')).toBe('/get-a-quote');
   });
 
-  it('sizes a legacy Cloudinary logo exactly as the old cldUrl did', () => {
+  it('sizes a logo exactly as sizedSrc', () => {
     const logo: PublicImage = {
       id: null,
-      src: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/f_auto,q_auto/vantage/logo`,
+      src: '/uploads/logo.png',
       mimeType: null,
       width: null,
       height: null,
