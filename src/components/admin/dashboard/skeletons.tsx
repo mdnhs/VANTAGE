@@ -3,10 +3,15 @@ import { cn } from '@/lib/utils';
 
 // bg-skeleton, not the default bg-muted: muted is nearly the panel's own
 // grey, so the placeholders vanished on it in both themes.
-export function KpiRowSkeleton() {
+// The KPI row's columns: two from the small breakpoint, and as many as there
+// are cards (up to four) on wide screens.
+export const kpiGridClass = (count: number) =>
+  cn('grid gap-4 sm:grid-cols-2', count > 3 ? 'xl:grid-cols-4' : count === 3 ? 'xl:grid-cols-3' : '');
+
+export function KpiRowSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-4' aria-hidden>
-      {[0, 1, 2, 3].map((index) => (
+    <div className={kpiGridClass(count)} aria-hidden>
+      {Array.from({ length: count }, (_, index) => (
         <Skeleton key={index} className='h-[164px] rounded-card bg-skeleton' />
       ))}
     </div>

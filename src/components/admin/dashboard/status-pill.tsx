@@ -25,6 +25,8 @@ const STATUS_TONES: Record<string, StatusTone> = {
   archived: 'neutral',
   draft: 'neutral',
   hidden: 'neutral',
+  signed_in: 'success',
+  invited: 'info',
 };
 
 export const toneForStatus = (status: string): StatusTone =>
