@@ -1,44 +1,67 @@
-name: Deploy to UK VPS (Dokploy)
+name: Build & Deploy to Dokploy (GHCR)
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 concurrency:
-  group: deploy-main
+  group: deploy-autopaintshop
   cancel-in-progress: false
 
 jobs:
-  validate:
-    name: Validate Build & Types
+  build-and-push:
+    name: Build & Push Docker Image to GHCR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: 22
-          cache: yarn
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Typecheck
-        run: yarn typecheck
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
+          tags: |
+            ghcr.io/mdnhs/vantage:latest
+            ghcr.io/mdnhs/vantage:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy to Dokploy (autopaintshop.ie)
-    needs: [validate]
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Dokploy Deployment Webhook
+      - name: Trigger Dokploy Deployment
+        env:
+          DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+          DOKPLOY_APPLICATION_ID: ${{ secrets.DOKPLOY_APPLICATION_ID }}
         run: |
-          echo "Triggering deployment for autopaintshop on Dokploy UK VPS (https://vps.raynx.ie)..."
-          if [ -n "${{ secrets.DOKPLOY_DEPLOY_TOKEN }}" ]; then
-            curl -f -X POST "https://vps.raynx.ie/api/deploy?token=${{ secrets.DOKPLOY_DEPLOY_TOKEN }}" || echo "Webhook returned non-zero, autoDeploy webhook will process push"
-          else
-            echo "DOKPLOY_DEPLOY_TOKEN secret not set; Dokploy GitHub App Auto-Deploy webhook handles deployment on push."
+          echo "Triggering Dokploy deploy for autopaintshop (autopaintshop.ie)..."
+          if [ -z "$DOKPLOY_URL" ] || [ -z "$DOKPLOY_API_KEY" ] || [ -z "$DOKPLOY_APPLICATION_ID" ]; then
+            echo "::error::Dokploy secrets are not set (DOKPLOY_URL, DOKPLOY_API_KEY, DOKPLOY_APPLICATION_ID)."
+            exit 1
           fi
+          curl --fail-with-body -sS -X POST "$DOKPLOY_URL/api/application.deploy" \
+            -H "x-api-key: $DOKPLOY_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"applicationId\":\"$DOKPLOY_APPLICATION_ID\"}"
+          echo "Deployment successfully triggered on Dokploy."
