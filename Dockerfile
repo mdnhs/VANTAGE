@@ -11,8 +11,7 @@
 # Behind a reverse proxy, allow bodies of up to ~111 MB (nginx: client_max_body_size 111m: the public
 # forms accept 110 MB, admin uploads 101 MB); the app itself rejects larger bodies with 413.
 # Build args live in the builder stage only; the runner stage gets runtime env from the host.
-FROM node:24-alpine AS base
-RUN apk add --no-cache libc6-compat
+FROM node:24-slim AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -42,7 +41,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 -g nodejs nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
