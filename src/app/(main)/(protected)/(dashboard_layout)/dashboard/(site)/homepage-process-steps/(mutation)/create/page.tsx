@@ -1,6 +1,7 @@
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
 import { CreateHomepageProcessStepForm } from '@/features/homepage-process-steps/components/create';
 
 export const metadata: Metadata = {
@@ -8,20 +9,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via PermissionGate/getSession) per request — must not be
+// Reads the session cookie (via requirePermission) per request — must not be
 // prerendered.
 export const instant = false;
 
-export default function CreateHomepageProcessStepPage() {
+export default async function CreateHomepageProcessStepPage() {
+  await requirePermission(permissionFor('/dashboard/homepage-process-steps/create'));
   return (
-    <PermissionGate permissions={[PERMISSIONS.PROCESS_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>Add process step</h1>
-          <p className='text-sm text-muted-foreground'>Add a new homepage process-step card.</p>
-        </div>
-        <CreateHomepageProcessStepForm />
-      </div>
-    </PermissionGate>
+    <div className='flex flex-col gap-6'>
+      <PageHeader title='Add process step' description='Add a new homepage process-step card.' />
+      <CreateHomepageProcessStepForm />
+    </div>
   );
 }

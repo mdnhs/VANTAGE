@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { useRouter } from 'next/navigation';
 import { HomepagePillarForm } from '../homepage-pillar-form';
 import { useUpdateHomepagePillar } from '../../hooks/api/mutation/use-update-homepage-pillar';
@@ -12,7 +13,10 @@ interface EditHomepagePillarFormProps {
 
 export function EditHomepagePillarForm({ pillar }: EditHomepagePillarFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updateHomepagePillar = useUpdateHomepagePillar(pillar.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.homepagePillars.index} />;
 
   return (
     <HomepagePillarForm

@@ -1,4 +1,5 @@
-import { cn } from '@/lib/utils';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import type { QuoteStatus } from '../types';
 
 export const STATUS_CONFIG: Record<
@@ -53,6 +54,12 @@ export const STATUS_CONFIG: Record<
     dotClassName: 'bg-zinc-500',
     borderClassName: 'border-t-zinc-500',
   },
+  spam: {
+    label: 'Spam',
+    className: 'bg-zinc-500/10 text-zinc-600 border-zinc-500/25 dark:text-zinc-400',
+    dotClassName: 'bg-zinc-500',
+    borderClassName: 'border-t-zinc-500',
+  },
   // Legacy aliases
   quoted: {
     label: 'Quote Sent',
@@ -68,22 +75,24 @@ export const STATUS_CONFIG: Record<
   },
 };
 
-export function QuoteStatusBadge({ status, className }: { status: string; className?: string }) {
-  const config = STATUS_CONFIG[status as QuoteStatus] ?? {
-    label: status.replace(/_/g, ' '),
-    className: 'bg-muted text-muted-foreground border-border',
-  };
+export function QuoteStatusBadge({
+  status,
+  spamReason,
+  className,
+}: {
+  status: string;
+  spamReason?: string | null;
+  className?: string;
+}) {
+  const config = STATUS_CONFIG[status as QuoteStatus];
+  let label = config?.label ?? status.replace(/_/g, ' ');
+  if (status === 'spam') {
+    label = spamReason ? `Spam · ${spamReasonLabel(spamReason)}` : 'Spam';
+  }
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium',
-        config.className,
-        className,
-      )}
-    >
-      {config.dotClassName && <span className={cn('size-1.5 shrink-0 rounded-full', config.dotClassName)} />}
-      <span className='truncate'>{config.label}</span>
-    </span>
+    <StatusPill tone={toneForStatus(status)} className={className}>
+      {label}
+    </StatusPill>
   );
 }

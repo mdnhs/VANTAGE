@@ -1,5 +1,6 @@
 import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { adminUsers } from './admin-users';
+import { users } from './auth';
 
 export const quoteRequests = pgTable(
   'quote_requests',
@@ -20,6 +21,7 @@ export const quoteRequests = pgTable(
     photoUrls: jsonb('photo_urls').$type<string[]>().default([]),
     status: varchar('status', { length: 40 }).notNull().default('new'),
     assignedAdminId: uuid('assigned_admin_id').references(() => adminUsers.id, { onDelete: 'set null' }),
+    assignedUserId: text('assigned_user_id').references(() => users.id, { onDelete: 'set null' }),
     inspectionDate: timestamp('inspection_date', { withTimezone: true }),
     estimatedCost: numeric('estimated_cost', { precision: 10, scale: 2 }),
     paymentStatus: varchar('payment_status', { length: 40 }).notNull().default('unpaid'),
@@ -29,6 +31,7 @@ export const quoteRequests = pgTable(
     completedAt: timestamp('completed_at', { withTimezone: true }),
     adminNotes: text('admin_notes'),
     source: varchar('source', { length: 60 }).notNull().default('website'),
+    spamReason: varchar('spam_reason', { length: 40 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -36,6 +39,7 @@ export const quoteRequests = pgTable(
     index('quote_requests_status_idx').on(table.status),
     index('quote_requests_created_at_idx').on(table.createdAt),
     index('quote_requests_assigned_admin_idx').on(table.assignedAdminId),
+    index('quote_requests_assigned_user_idx').on(table.assignedUserId),
     index('quote_requests_payment_status_idx').on(table.paymentStatus),
   ],
 );

@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, Mail, MessageSquare, Phone, Trash2, Search, Inbox } from 'lucide-react';
+import { Eye, Mail, MessageSquare, Phone, Trash2, Search } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { ContactStatusBadge } from '../contact-status-badge';
 import { ContactStatusTabs } from './contact-status-tabs';
 import { useContactMessageList } from '../../hooks/api/query/use-contact-message-list';
@@ -43,7 +44,7 @@ function StatusQuickSelect({ message }: { message: ContactMessage }) {
     >
       <SelectTrigger className='h-7 w-[125px] text-xs'>
         <SelectValue>
-          <ContactStatusBadge status={message.status} />
+          <ContactStatusBadge status={message.status} spamReason={message.spamReason} />
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -118,17 +119,16 @@ export function ContactMessageTable({ initialData, initialStats }: ContactMessag
 
       {/* Table Container */}
       {rows.length === 0 ? (
-        <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center'>
-          <div className='flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground'>
-            <Inbox className='size-5' />
-          </div>
-          <h3 className='mt-3 text-sm font-semibold'>No contact inquiries found</h3>
-          <p className='mt-1 text-xs text-muted-foreground'>
-            {search || status !== 'all'
-              ? 'Try adjusting your search or status filter.'
-              : 'Inquiries submitted through the /contact page will appear here in real time.'}
-          </p>
-        </div>
+        <EmptyState
+          title='No enquiries here yet'
+          description={
+            status === 'spam'
+              ? 'No spam. Suspicious submissions land here.'
+              : search || status !== 'all'
+                ? 'Try adjusting your search or status filter.'
+                : 'Inquiries submitted through the /contact page will appear here in real time.'
+          }
+        />
       ) : (
         <div className='overflow-x-auto rounded-lg border border-border'>
           <table className='w-full text-sm'>
@@ -166,9 +166,9 @@ export function ContactMessageTable({ initialData, initialStats }: ContactMessag
                     <td className='px-4 py-3'>
                       <div className='flex max-w-sm flex-col gap-1'>
                         <span className='line-clamp-2 text-xs text-muted-foreground'>{msg.message}</span>
-                        {msg.photoUrls && msg.photoUrls.length > 0 && (
+                        {msg.photos.length > 0 && (
                           <span className='inline-flex w-fit items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
-                            📷 {msg.photoUrls.length} {msg.photoUrls.length === 1 ? 'attachment' : 'attachments'}
+                            📷 {msg.photos.length} {msg.photos.length === 1 ? 'attachment' : 'attachments'}
                           </span>
                         )}
                       </div>

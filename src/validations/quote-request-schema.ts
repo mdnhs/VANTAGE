@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { photoDataUrlSchema } from '@/validations/photo-url';
+
 // The 8 canonical workflow pipeline states from the specification
 export const PIPELINE_STATUSES = [
   'new',
@@ -13,7 +15,9 @@ export const PIPELINE_STATUSES = [
 ] as const;
 
 // Include legacy statuses for backward compatibility with existing records
-export const ALL_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived'] as const;
+// 'spam' is filed by the public-form checks or by staff; it is not a pipeline stage.
+export const STAFF_QUOTE_STATUSES = [...PIPELINE_STATUSES, 'quoted', 'archived'] as const;
+export const ALL_QUOTE_STATUSES = [...STAFF_QUOTE_STATUSES, 'spam'] as const;
 
 export const QUOTE_STATUSES = ALL_QUOTE_STATUSES;
 
@@ -54,10 +58,10 @@ export const createQuoteRequestSchema = z.object({
   year: z.number().int().min(1900).max(2100).nullable().optional(),
   serviceType: z.string().max(120).nullable().optional(),
   description: z.string().max(3000).nullable().optional(),
-  photoUrls: z.array(z.string()).max(6).optional(),
   source: z.enum(QUOTE_SOURCES).optional().default('website'),
-  status: z.enum(ALL_QUOTE_STATUSES).optional().default('new'),
-  assignedAdminId: z.string().uuid().nullable().optional(),
+  // Staff create never files spam; the public checks and PATCH do.
+  status: z.enum(STAFF_QUOTE_STATUSES).optional().default('new'),
+  assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional().default('unpaid'),
@@ -68,12 +72,41 @@ export const createQuoteRequestSchema = z.object({
   adminNotes: z.string().max(5000).nullable().optional(),
 });
 
+// Public website forms: customer-supplied fields only. Admin-only columns (status,
+// assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
+export const publicPhotoUrlsSchema = z.array(photoDataUrlSchema).max(4).optional();
+
+export const publicQuoteRequestSchema = createQuoteRequestSchema
+  .pick({
+    name: true,
+    email: true,
+    phone: true,
+    address: true,
+    city: true,
+    eircode: true,
+    registration: true,
+    make: true,
+    model: true,
+    year: true,
+    serviceType: true,
+    description: true,
+    source: true,
+  })
+  .extend({
+    photoUrls: publicPhotoUrlsSchema,
+    eventId: z.uuid().optional(),
+    sourcePath: z.string().max(300).optional(),
+    // Spam checks: the hidden field and the signed form stamp. Both are stripped before create.
+    website: z.string().max(200).optional(),
+    stamp: z.string().max(100).optional(),
+  });
+
 export const updateQuoteRequestSchema = z.object({
   status: z.enum(ALL_QUOTE_STATUSES).optional(),
   address: z.string().max(500).nullable().optional(),
   city: z.string().max(80).nullable().optional(),
   eircode: z.string().max(20).nullable().optional(),
-  assignedAdminId: z.string().uuid().nullable().optional(),
+  assignedUserId: z.string().min(1).nullable().optional(),
   inspectionDate: z.coerce.date().nullable().optional(),
   estimatedCost: z.coerce.number().min(0).nullable().optional(),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
@@ -89,9 +122,10 @@ export const quoteRequestListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   status: z.enum([...ALL_QUOTE_STATUSES, 'all']).default('all'),
   search: z.string().optional(),
-  assignedAdminId: z.string().uuid().optional(),
+  assignedUserId: z.string().min(1).optional(),
 });
 
+export type PublicQuoteRequestInput = z.input<typeof publicQuoteRequestSchema>;
 export type CreateQuoteRequestInput = z.input<typeof createQuoteRequestSchema>;
 export type CreateQuoteRequestOutput = z.infer<typeof createQuoteRequestSchema>;
 export type UpdateQuoteRequestInput = z.input<typeof updateQuoteRequestSchema>;

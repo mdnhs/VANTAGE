@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-export const CONTACT_STATUSES = ['new', 'read', 'replied', 'archived'] as const;
+import { photoDataUrlSchema } from '@/validations/photo-url';
+
+export const CONTACT_STATUSES = ['new', 'read', 'replied', 'archived', 'spam'] as const;
 
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 
@@ -11,8 +13,16 @@ export const createContactMessageSchema = z.object({
   phone: z.string().min(5, 'Valid phone number is required').max(50),
   service: z.string().max(120).nullable().optional(),
   message: z.string().min(1, 'Message is required').max(5000),
-  photoUrls: z.array(z.string()).optional(),
+  photoUrls: z.array(photoDataUrlSchema).max(4).optional(),
   source: z.enum(['contact_page', 'footer', 'general']).optional().default('contact_page'),
+});
+
+export const publicContactMessageSchema = createContactMessageSchema.extend({
+  eventId: z.uuid().optional(),
+  sourcePath: z.string().max(300).optional(),
+  // Spam checks: the hidden field and the signed form stamp. Both are stripped before create.
+  website: z.string().max(200).optional(),
+  stamp: z.string().max(100).optional(),
 });
 
 export const updateContactMessageSchema = z.object({
@@ -28,5 +38,6 @@ export const contactMessageListQuerySchema = z.object({
 });
 
 export type CreateContactMessageInput = z.input<typeof createContactMessageSchema>;
+export type PublicContactMessageInput = z.input<typeof publicContactMessageSchema>;
 export type UpdateContactMessageInput = z.infer<typeof updateContactMessageSchema>;
 export type ContactMessageListQuery = z.infer<typeof contactMessageListQuerySchema>;

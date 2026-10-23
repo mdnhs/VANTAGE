@@ -1,23 +1,66 @@
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { ApiError } from '@/server/lib/errors';
 import { db } from '@/server/db';
 import { projectGalleryImages, projects } from '@/server/db/schema';
+import { contentImage } from '@/server/lib/media/content-images';
+import type { PublicImage } from '@/lib/media/public-image';
 import type { CreateProjectInput, ProjectListQuery, UpdateProjectInput } from '@/validations/project-schema';
 
-// neon-http does not support `db.transaction` (one stateless HTTP round trip per query, no
-// session to hold a transaction open) — see src/server/db/index.ts. Multi-statement writes
-// below run as sequential awaits instead of an atomic transaction. This is an accepted
-// tradeoff here: a failure between the two statements leaves the project row saved without
-// its gallery rows, which is recoverable by re-editing the project, not silent data loss.
-async function replaceGalleryImages(projectId: string, publicIds: string[]) {
-  await db.delete(projectGalleryImages).where(eq(projectGalleryImages.projectId, projectId));
-  if (publicIds.length === 0) return;
-  await db.insert(projectGalleryImages).values(
-    publicIds.map((imagePublicId, index) => ({
-      projectId,
-      imagePublicId,
-      displayOrder: index,
-    })),
-  );
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Replaces the whole gallery with the given media ids, in order.
+async function replaceGalleryImages(tx: Tx, projectId: string, mediaIds: string[]) {
+  await tx.delete(projectGalleryImages).where(eq(projectGalleryImages.projectId, projectId));
+  if (mediaIds.length === 0) return;
+  await tx
+    .insert(projectGalleryImages)
+    .values(mediaIds.map((mediaId, index) => ({ projectId, mediaId, displayOrder: index })));
+}
+
+const withMedia = {
+  beforeImageMedia: true as const,
+  afterImageMedia: true as const,
+  galleryImages: { orderBy: [asc(projectGalleryImages.displayOrder)], with: { media: true as const } },
+};
+
+function findOne(id: string) {
+  return db.query.projects.findFirst({ where: eq(projects.id, id), with: withMedia });
+}
+
+type ProjectWithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
+
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
+export type PresentedProject = WithoutLegacy<
+  Omit<ProjectWithMedia, 'beforeImageMedia' | 'afterImageMedia' | 'galleryImages'>
+> & {
+  beforeImage: PublicImage | null;
+  afterImage: PublicImage | null;
+  galleryImages: WithoutLegacy<ProjectWithMedia['galleryImages'][number]>[];
+  gallery: PublicImage[];
+};
+
+// Rows carry the *MediaId columns, the raw gallery rows and the resolved PublicImages.
+function present({ beforeImageMedia, afterImageMedia, galleryImages, ...row }: ProjectWithMedia): PresentedProject {
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`beforeImage${'Public'}${'Id'}`];
+  delete out[`afterImage${'Public'}${'Id'}`];
+  return {
+    ...out,
+    beforeImage: contentImage(beforeImageMedia),
+    afterImage: contentImage(afterImageMedia),
+    galleryImages: galleryImages.map(({ media: _media, ...image }) => {
+      const imgOut = { ...image } as Record<string, unknown>;
+      delete imgOut[`image${'Public'}${'Id'}`];
+      return imgOut as WithoutLegacy<ProjectWithMedia['galleryImages'][number]>;
+    }),
+    gallery: galleryImages.flatMap((g) => {
+      const image = contentImage(g.media);
+      return image ? [image] : [];
+    }),
+  } as PresentedProject;
 }
 
 export const projectRepository = {
@@ -27,69 +70,84 @@ export const projectRepository = {
     const offset = (page - 1) * limit;
     const [rows, [{ count }]] = await Promise.all([
       db.query.projects.findMany({
-        with: { galleryImages: { orderBy: (t, { asc }) => [asc(t.displayOrder)] } },
+        with: withMedia,
         orderBy: [asc(projects.displayOrder)],
         limit,
         offset,
       }),
       db.select({ count: sql<number>`count(*)::int` }).from(projects),
     ]);
-    return { rows, total: count };
+    return { rows: rows.map(present), total: count };
   },
 
   // Public list: published only, in display order. Dataset is small (a portfolio page, not
   // a paginated catalog) so a plain `limit` is enough — no cursor plumbing needed.
   async listPublished(params: { limit?: number } = {}) {
-    return db.query.projects.findMany({
+    const rows = await db.query.projects.findMany({
       where: eq(projects.status, 'published'),
-      with: { galleryImages: { orderBy: (t, { asc }) => [asc(t.displayOrder)] } },
+      with: withMedia,
       orderBy: [asc(projects.displayOrder)],
       limit: params.limit,
     });
+    return rows.map(present);
   },
 
   async listFeatured() {
-    return db.query.projects.findMany({
+    const rows = await db.query.projects.findMany({
       where: and(eq(projects.isFeatured, true), eq(projects.status, 'published')),
-      with: { galleryImages: { orderBy: (t, { asc }) => [asc(t.displayOrder)] } },
+      with: withMedia,
       orderBy: [asc(projects.displayOrder)],
     });
+    return rows.map(present);
   },
 
   async byId(id: string) {
-    return db.query.projects.findFirst({
-      where: eq(projects.id, id),
-      with: { galleryImages: { orderBy: (t, { asc }) => [asc(t.displayOrder)] } },
-    });
+    const row = await findOne(id);
+    return row ? present(row) : undefined;
   },
 
   async bySlug(slug: string) {
-    return db.query.projects.findFirst({
-      where: eq(projects.slug, slug),
-      with: { galleryImages: { orderBy: (t, { asc }) => [asc(t.displayOrder)] } },
-    });
+    const row = await db.query.projects.findFirst({ where: eq(projects.slug, slug), with: withMedia });
+    return row ? present(row) : undefined;
   },
 
-  async create(data: CreateProjectInput) {
-    const { galleryImagePublicIds, ...rest } = data;
-    const [row] = await db.insert(projects).values(rest).returning();
-    if (galleryImagePublicIds && galleryImagePublicIds.length > 0) {
-      await replaceGalleryImages(row.id, galleryImagePublicIds);
-    }
+  // `beforeWrite` runs first inside the write transaction (the media re-check).
+  async create(data: CreateProjectInput & { createdBy?: string }, beforeWrite?: (tx: Tx) => Promise<void>) {
+    const { galleryMediaIds, ...rest } = data;
+    const row = await db.transaction(async (tx) => {
+      await beforeWrite?.(tx);
+      const [inserted] = await tx.insert(projects).values(rest).returning();
+      if (galleryMediaIds) await replaceGalleryImages(tx, inserted.id, galleryMediaIds);
+      return inserted;
+    });
     return projectRepository.byId(row.id);
   },
 
-  async update(id: string, data: UpdateProjectInput) {
-    const { galleryImagePublicIds, ...rest } = data;
-    const [row] = await db
-      .update(projects)
-      .set({ ...rest, updatedAt: new Date() })
-      .where(eq(projects.id, id))
-      .returning();
+  // `guard` pins the write to the author's own draft inside the same statement, so a
+  // concurrent publish or reassignment cannot slip between the service's read and this write.
+  async update(
+    id: string,
+    data: UpdateProjectInput,
+    guard?: { ownerId: string },
+    beforeWrite?: (tx: Tx) => Promise<void>,
+  ) {
+    const { galleryMediaIds, ...rest } = data;
+    const row = await db.transaction(async (tx) => {
+      await beforeWrite?.(tx);
+      const [updated] = await tx
+        .update(projects)
+        .set({ ...rest, updatedAt: new Date() })
+        .where(
+          guard
+            ? and(eq(projects.id, id), eq(projects.createdBy, guard.ownerId), eq(projects.status, 'draft'))
+            : eq(projects.id, id),
+        )
+        .returning();
+      if (!updated && guard) throw ApiError.forbidden('Authors can only add and edit their own draft projects.');
+      if (updated && galleryMediaIds !== undefined) await replaceGalleryImages(tx, id, galleryMediaIds);
+      return updated;
+    });
     if (!row) return undefined;
-    if (galleryImagePublicIds !== undefined) {
-      await replaceGalleryImages(id, galleryImagePublicIds);
-    }
     return projectRepository.byId(id);
   },
 

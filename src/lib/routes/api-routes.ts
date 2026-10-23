@@ -2,32 +2,10 @@
 // the Hono app in src/server/api. Keep them in sync with the `.route()` chain there.
 export const API_ROUTES = {
   auth: {
-    login: '/auth/login',
-    logout: '/auth/logout',
     me: '/auth/me',
   },
   health: '/health',
-  media: {
-    sign: '/media/sign',
-    delete: (publicId: string) => `/media/${publicId}`,
-  },
-  siteSettings: {
-    public: '/site-settings',
-    admin: '/site-settings/admin',
-    updateBusinessInfo: '/site-settings/business-info',
-    updateContact: '/site-settings/contact',
-    updateSocialLinks: '/site-settings/social-links',
-    updateBranding: '/site-settings/branding',
-    updateHeroMedia: '/site-settings/hero-media',
-    updateSeo: '/site-settings/seo',
-    updateHomepageHero: '/site-settings/homepage-hero',
-    updateHomepageCatalog: '/site-settings/homepage-catalog',
-    updateServicesHero: '/site-settings/services-hero',
-    updateOurWorkHero: '/site-settings/our-work-hero',
-    updateInsurancePage: '/site-settings/insurance-page',
-    updateAboutPage: '/site-settings/about-page',
-    updateProcessPage: '/site-settings/process-page',
-  },
+  enquiryStamp: '/public/enquiry-stamp',
   services: {
     public: '/services',
     adminList: '/services/admin/list',
@@ -95,24 +73,21 @@ export const API_ROUTES = {
     remove: (id: string) => `/homepage-process-steps/${id}`,
     reorder: '/homepage-process-steps/reorder',
   },
-  admins: {
-    list: '/admins',
-    detail: (id: string) => `/admins/${id}`,
-    create: '/admins',
-    update: (id: string) => `/admins/${id}`,
-    resetPassword: (id: string) => `/admins/${id}/password`,
-  },
-  users: {
-    list: '/users',
-    create: '/users',
-  },
   quotes: {
     submit: '/quotes',
+    adminCreate: '/quotes/admin',
+    assignees: '/admin/assignees',
     adminList: '/quotes/admin/list',
     stats: '/quotes/admin/stats',
     detail: (id: string) => `/quotes/${id}`,
     update: (id: string) => `/quotes/${id}`,
     remove: (id: string) => `/quotes/${id}`,
+  },
+  enquiries: {
+    exportCsv: (type: 'quotes' | 'contacts', status?: string) =>
+      `/admin/enquiries/export.csv?type=${type}${status && status !== 'all' ? `&status=${encodeURIComponent(status)}` : ''}`,
+    privacyExport: '/admin/enquiries/privacy/export',
+    privacyErase: '/admin/enquiries/privacy/erase',
   },
   contacts: {
     submit: '/contacts',
@@ -121,5 +96,43 @@ export const API_ROUTES = {
     detail: (id: string) => `/contacts/${id}`,
     update: (id: string) => `/contacts/${id}`,
     remove: (id: string) => `/contacts/${id}`,
+  },
+  globals: {
+    detail: (key: string) => `/admin/globals/${key}`,
+    notificationsTest: '/admin/globals/notifications/test',
+    revisions: (key: string) => `/admin/globals/${key}/revisions`,
+    restore: (key: string, revisionId: string) => `/admin/globals/${key}/revisions/${revisionId}/restore`,
+  },
+  seo: { overview: '/admin/seo/overview' },
+  tracking: {
+    detail: '/admin/tracking',
+    testCapi: '/admin/tracking/test-capi',
+  },
+  ai: {
+    status: '/admin/ai/status',
+    settings: '/admin/ai/settings',
+    models: '/admin/ai/settings/models',
+    test: '/admin/ai/settings/test',
+    chat: '/admin/ai/chat',
+    conversations: '/admin/ai/conversations',
+    conversation: (id: string) => `/admin/ai/conversations/${id}`,
+  },
+  theme: {
+    detail: '/admin/theme',
+    draft: '/admin/theme/draft',
+    publish: '/admin/theme/publish',
+    reset: '/admin/theme/reset',
+    discard: '/admin/theme/discard',
+    revisions: '/admin/theme/revisions',
+    restore: (revisionId: string) => `/admin/theme/revisions/${revisionId}/restore`,
+  },
+  redirects: {
+    list: '/admin/redirects',
+    detail: (id: string) => `/admin/redirects/${id}`,
+  },
+  resolve: '/resolve',
+  preview: {
+    enter: (path: string) => `/preview?path=${encodeURIComponent(path)}`,
+    exit: (path: string) => `/preview/exit?path=${encodeURIComponent(path)}`,
   },
 } as const;

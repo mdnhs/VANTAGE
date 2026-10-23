@@ -1,3 +1,4 @@
+import { MediaApiError } from '@/features/media/services/api';
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { PaginationMeta } from '@/server/lib/response';
 import type {
@@ -15,7 +16,13 @@ const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX}${process.env.NEXT_PUBLIC
 async function parseOrThrow<T>(res: Response): Promise<T> {
   const body = await res.json();
   if (!res.ok || !body.success) {
-    throw new Error(body?.error?.message ?? 'Request failed');
+    throw new MediaApiError(
+      body?.error?.message ?? 'Request failed',
+      res.status,
+      body?.error?.code,
+      body?.error?.causes,
+      body?.error?.details,
+    );
   }
   return body.data as T;
 }
@@ -23,7 +30,13 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
 async function parseWithPagination<T>(res: Response): Promise<{ data: T; pagination?: PaginationMeta }> {
   const body = await res.json();
   if (!res.ok || !body.success) {
-    throw new Error(body?.error?.message ?? 'Request failed');
+    throw new MediaApiError(
+      body?.error?.message ?? 'Request failed',
+      res.status,
+      body?.error?.code,
+      body?.error?.causes,
+      body?.error?.details,
+    );
   }
   return { data: body.data as T, pagination: body.pagination };
 }

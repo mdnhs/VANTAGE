@@ -1,33 +1,40 @@
 import type { Metadata } from 'next';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
-import { AboutPageForm } from '@/features/about-page/components/about-page-form';
-import { resolveAboutContent } from '@/features/about-page/defaults';
+import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { PageTabs } from '@/components/layout/page-tabs';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
+import { seoTab } from '@/features/seo/components/seo-tab';
+import { permissionFor } from '@/lib/admin/route-permissions';
+import { requirePermission } from '@/server/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'About page',
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via PermissionGate) per request — must not be prerendered.
+// Reads the session cookie (via requirePermission) per request — must not be prerendered.
 export const instant = false;
 
 export default async function AboutPageContentPage() {
-  const settings = await siteSettingsService.getAdmin();
+  const actor = await requirePermission(permissionFor('/dashboard/about'));
+  const seo = seoTab(actor, 'about');
+  if (seo.length === 0) return <GlobalEditor title='About page' keys={['page.about']} />;
 
   return (
-    <PermissionGate permissions={[PERMISSIONS.SETTINGS_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>About page</h1>
-          <p className='text-sm text-muted-foreground'>
-            Hero, heritage story, team members and standards shown on the public about page. Empty image slots show the
-            bundled photo.
-          </p>
-        </div>
-        <AboutPageForm initialContent={resolveAboutContent(settings)} />
-      </div>
-    </PermissionGate>
+    <div className='flex flex-col gap-6'>
+      <PageHeader
+        title='About page'
+        description='Page copy (changes go live as soon as you save), plus how the page appears in search results and when shared.'
+      />
+      <PageTabs
+        tabs={[
+          {
+            value: 'content',
+            label: 'Page copy',
+            content: <GlobalEditor title='About page' keys={['page.about']} embedded />,
+          },
+          ...seo,
+        ]}
+      />
+    </div>
   );
 }

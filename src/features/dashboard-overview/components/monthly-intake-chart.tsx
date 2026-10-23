@@ -1,12 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
 import type { MonthlyTrendItem } from '../types';
 
 interface MonthlyIntakeChartProps {
   trends: MonthlyTrendItem[];
 }
+
+const LEGEND = (
+  <div className='flex items-center gap-3 text-xs'>
+    <div className='flex items-center gap-1.5'>
+      <span className='size-2.5 rounded-sm bg-rose-500' />
+      <span className='text-muted-foreground'>Inquiries</span>
+    </div>
+    <div className='flex items-center gap-1.5'>
+      <span className='size-2.5 rounded-sm bg-emerald-500' />
+      <span className='text-muted-foreground'>Completed</span>
+    </div>
+  </div>
+);
 
 export function MonthlyIntakeChart({ trends }: MonthlyIntakeChartProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -21,31 +34,11 @@ export function MonthlyIntakeChart({ trends }: MonthlyIntakeChartProps) {
   const barWidth = 14;
 
   return (
-    <Card className='flex flex-col'>
-      <CardHeader className='flex flex-row items-center justify-between pb-3'>
-        <div>
-          <CardTitle className='text-sm font-bold tracking-wider text-foreground uppercase'>
-            Monthly Intake Trends
-          </CardTitle>
-          <CardDescription className='text-xs'>
-            Inquiry intake volume vs completed jobs over the last 6 months
-          </CardDescription>
-        </div>
-
-        {/* Legend */}
-        <div className='flex items-center gap-3 text-xs'>
-          <div className='flex items-center gap-1.5'>
-            <span className='size-2.5 rounded-sm bg-rose-500' />
-            <span className='text-muted-foreground'>Inquiries</span>
-          </div>
-          <div className='flex items-center gap-1.5'>
-            <span className='size-2.5 rounded-sm bg-emerald-500' />
-            <span className='text-muted-foreground'>Completed</span>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className='flex flex-1 flex-col justify-end pt-2'>
+    <DashboardCard title='Monthly Intake Trends' className='h-full' action={LEGEND}>
+      <p className='-mt-3 text-xs text-muted-foreground'>
+        Inquiry intake volume vs completed jobs over the last 6 months
+      </p>
+      <div className='flex flex-1 flex-col justify-end pt-2'>
         {/* Hover details badge */}
         <div className='flex h-6 items-center justify-between text-xs text-muted-foreground'>
           {hoveredIdx !== null ? (
@@ -127,7 +120,7 @@ export function MonthlyIntakeChart({ trends }: MonthlyIntakeChartProps) {
             {trends.reduce((acc, t) => acc + t.inquiries, 0)} Total Inquiries Recorded
           </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </DashboardCard>
   );
 }

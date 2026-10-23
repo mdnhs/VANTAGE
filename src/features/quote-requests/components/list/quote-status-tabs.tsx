@@ -20,6 +20,7 @@ const TABS: Array<{ value: QuoteStatus | 'all'; label: string }> = [
   { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
+  { value: 'spam', label: 'Spam' },
 ];
 
 export function QuoteStatusTabs({ currentStatus, onStatusChange, stats }: QuoteStatusTabsProps) {

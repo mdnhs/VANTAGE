@@ -23,6 +23,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import {
   formatFullDate,
   formatServiceType,
@@ -76,7 +78,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
     }
   };
 
-  const photos = message.photoUrls ?? [];
+  const photos = message.photos;
 
   return (
     <div className='flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
@@ -103,7 +105,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
           >
             <SelectTrigger className='h-8 w-[140px] text-xs'>
               <SelectValue>
-                <ContactStatusBadge status={status} />
+                <ContactStatusBadge status={status} spamReason={message.spamReason} />
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -166,6 +168,8 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
             <ExternalLink className='size-3.5' />
           </Link>
 
+          <SpamActions kind='contact' id={message.id} status={message.status} spamReason={message.spamReason} />
+
           <Button
             type='button'
             variant='ghost'
@@ -182,6 +186,11 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
 
       {/* Reading body */}
       <div className='flex w-full flex-col gap-6 p-4 sm:p-6 lg:p-8'>
+        {message.status === 'spam' && (
+          <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+            Held as spam: {spamReasonLabel(message.spamReason)}.
+          </div>
+        )}
         <div className='flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5'>
           <div className='flex items-start gap-3.5'>
             <div
@@ -196,7 +205,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
             <div className='flex flex-col gap-1'>
               <div className='flex flex-wrap items-center gap-2'>
                 <h2 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>{fullName}</h2>
-                <ContactStatusBadge status={status} />
+                <ContactStatusBadge status={status} spamReason={message.spamReason} />
               </div>
 
               <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
@@ -263,7 +272,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
             </div>
 
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4'>
-              {photos.map((url, idx) => (
+              {photos.map(({ url }, idx) => (
                 <button
                   key={idx}
                   type='button'

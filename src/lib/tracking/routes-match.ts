@@ -1,0 +1,5 @@
+// "/" and "/about" are exact; "/services/*" is a prefix (not "/services").
+export function matchesRoute(patterns: readonly string[], pathname: string) {
+  if (patterns.length === 0) return true;
+  return patterns.some((p) => (p.endsWith('*') ? pathname.startsWith(p.slice(0, -1)) : pathname === p));
+}

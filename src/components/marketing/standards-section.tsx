@@ -1,63 +1,72 @@
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
-import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/defaults';
+import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
+import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
+import { ABOUT_FALLBACK_IMAGES, type AboutStandard } from '@/features/about-page/content';
+import {
+  SECTION_BG,
+  SECTION_CONTAINER,
+  SECTION_PADDING,
+  SectionHeader,
+} from '@/components/marketing/ui/landing-primitives';
 
-// Icons are fixed by position; only the title/description text is CMS-driven.
-const ICONS = [
-  '/assets/marketing/icon-standard-alignment.svg',
-  '/assets/marketing/icon-standard-spraybooth.svg',
-  '/assets/marketing/icon-standard-nct.svg',
-];
+// Icons are fixed by position (alignment, spray booth, NCT); only the title/description text is
+// CMS-driven. No Figma equivalents exist, so lucide icons sit in the homepage's white icon tile.
+const ICONS: LucideIcon[] = [Crosshair, SprayCan, BadgeCheck];
 
 interface StandardsSectionProps {
   eyebrow: string;
   title: string;
-  imagePublicId: string | null;
+  image: PublicImage | null;
   items: AboutStandard[];
 }
 
-export function StandardsSection({ eyebrow, title, imagePublicId, items }: StandardsSectionProps) {
-  return (
-    <section className='container mx-auto grid grid-cols-1 items-center gap-10 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-[120px] lg:px-12 lg:py-[120px]'>
-      <div className='intersect-once relative h-[260px] w-full overflow-hidden rounded-2xl shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)] sm:h-[380px] lg:h-[600px] intersect:motion-preset-slide-right'>
-        <Image
-          src={imagePublicId ? cldUrl(imagePublicId, { width: 1200 }) : ABOUT_FALLBACK_IMAGES.standards}
-          alt='Vantage Autobody facility'
-          fill
-          className='object-cover'
-        />
-      </div>
+// Last word of the CMS title becomes the red accent; the CMS newline is folded into a space.
+function splitAccent(title: string) {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return { head: title, accent: undefined };
+  return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
+}
 
-      <div className='intersect-once flex flex-col gap-8 intersect:motion-preset-slide-left'>
-        <div className='flex items-center gap-4 opacity-80'>
-          <span className='text-xs font-semibold tracking-[1.2px] text-[#c4c7ca] uppercase'>{eyebrow}</span>
-          <span className='h-px w-12 bg-[#c4c7ca]' />
+export function StandardsSection({ eyebrow, title, image, items }: StandardsSectionProps) {
+  const { head, accent } = splitAccent(title);
+
+  return (
+    <section className={`w-full ${SECTION_BG.raised} ${SECTION_PADDING}`}>
+      <div className={`${SECTION_CONTAINER} grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20`}>
+        <div className='relative h-[260px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[380px] lg:h-[600px]'>
+          <Image
+            src={image ? sizedSrc(image, 'w_1200') : ABOUT_FALLBACK_IMAGES.standards}
+            alt='Vantage Autobody facility'
+            fill
+            sizes='(min-width: 1024px) 560px, 100vw'
+            className='object-cover'
+          />
         </div>
 
-        <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight whitespace-pre-line text-[#e5e2e1] uppercase sm:text-3xl lg:text-[40px] lg:leading-[48px]'>
-          {title}
-        </h2>
+        <div className='flex flex-col gap-10'>
+          <SectionHeader eyebrow={eyebrow} title={head} accent={accent} />
 
-        <div className='flex flex-col gap-6'>
-          {items.map((item, index) => (
-            <div key={`${item.title}-${index}`} className='group flex gap-4 sm:gap-6'>
-              <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] group-hover:motion-preset-pop sm:size-12'>
-                <Image
-                  src={ICONS[index % ICONS.length]}
-                  alt=''
-                  width={22}
-                  height={22}
-                  className='size-5 sm:size-[22px]'
-                />
-              </div>
-              <div className='flex flex-col gap-1.5 sm:gap-2'>
-                <h3 className='font-[family-name:var(--font-manrope)] text-xl font-semibold text-[#e5e2e1] sm:text-2xl'>
-                  {item.title}
-                </h3>
-                <p className='text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>{item.description}</p>
-              </div>
-            </div>
-          ))}
+          <div className='flex flex-col gap-4'>
+            {items.map((item, index) => {
+              const Icon = ICONS[index % ICONS.length];
+              return (
+                <article
+                  key={`${item.title}-${index}`}
+                  className='group flex gap-5 rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-6 transition-colors duration-300 hover:border-brand/60'
+                >
+                  <div className='flex size-12 shrink-0 items-center justify-center rounded-xl bg-white transition-transform duration-300 group-hover:scale-105'>
+                    <Icon aria-hidden className='size-6 text-[#111113]' />
+                  </div>
+                  <div className='flex flex-col gap-2'>
+                    <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                      {item.title}
+                    </h3>
+                    <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{item.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

@@ -1,24 +1,20 @@
 import type { MetadataRoute } from 'next';
+import { cacheLife, cacheTag } from 'next/cache';
+
+import { robotsFor, siteEnvFrom } from '@/lib/seo/robots';
+import { settingTag } from '@/server/lib/cache/settings-tags';
+import { getSetting } from '@/server/queries/get-setting';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
-export default function robots(): MetadataRoute.Robots {
-  // Keep preview and staging deployments out of the index entirely.
-  const isProduction = process.env.VERCEL_ENV === 'production';
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  'use cache';
+  cacheTag(settingTag('seo'));
+  cacheLife('max');
 
-  if (!isProduction) {
-    return { rules: { userAgent: '*', disallow: '/' } };
-  }
-
-  return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/dashboard/', '/login', '/unauthorized', '/maintenance', '/*?*'],
-      },
-    ],
-    sitemap: `${APP_URL}/sitemap.xml`,
-    host: APP_URL,
-  };
+  return robotsFor(
+    siteEnvFrom({ SITE_ENV: process.env.SITE_ENV, VERCEL_ENV: process.env.VERCEL_ENV }),
+    await getSetting('seo'),
+    APP_URL,
+  );
 }

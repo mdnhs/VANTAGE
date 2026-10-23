@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { slotPatch, slotRef, type Slot } from '@/features/media/lib/slot';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { Testimonial } from '../types';
@@ -52,7 +53,7 @@ interface FormState {
   customerName: string;
   rating: number;
   reviewText: string;
-  avatarPublicId: string;
+  avatarMediaId: Slot;
   serviceReceived: string;
   receivedAt: string;
   isFeatured: boolean;
@@ -63,7 +64,7 @@ function toFormState(data: Testimonial | null): FormState {
     customerName: data?.customerName ?? '',
     rating: data?.rating ?? 5,
     reviewText: data?.reviewText ?? '',
-    avatarPublicId: data?.avatarPublicId ?? '',
+    avatarMediaId: undefined,
     serviceReceived: data?.serviceReceived ?? '',
     receivedAt: toDateInputValue(data?.receivedAt),
     isFeatured: data?.isFeatured ?? false,
@@ -74,7 +75,7 @@ export interface TestimonialFormSubmitInput {
   customerName: string;
   rating: number;
   reviewText: string;
-  avatarPublicId: string | null;
+  avatarMediaId?: string | null;
   serviceReceived: string | null;
   receivedAt: string | null;
   isFeatured: boolean;
@@ -110,7 +111,7 @@ export function TestimonialForm({
       customerName: form.customerName,
       rating: form.rating,
       reviewText: form.reviewText,
-      avatarPublicId: form.avatarPublicId || null,
+      ...slotPatch('avatarMediaId', form.avatarMediaId),
       serviceReceived: form.serviceReceived || null,
       receivedAt: form.receivedAt || null,
       isFeatured: form.isFeatured,
@@ -175,11 +176,12 @@ export function TestimonialForm({
 
           <div className='flex flex-col gap-1.5'>
             <Label>Avatar (optional)</Label>
-            <CloudinaryUpload
-              mode='single-image'
-              folder='vantage/testimonials'
-              value={form.avatarPublicId || null}
-              onChange={(value) => setField('avatarPublicId', typeof value === 'string' ? value : '')}
+            <MediaField
+              kind='image'
+              label='Avatar'
+              nullable
+              value={slotRef(form.avatarMediaId, initialData?.avatarMediaId)}
+              onChange={(ref) => setField('avatarMediaId', ref?.id ?? null)}
             />
           </div>
         </CardContent>

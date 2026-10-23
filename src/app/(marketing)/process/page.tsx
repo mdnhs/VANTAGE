@@ -1,15 +1,22 @@
-import type { Metadata } from 'next';
+import { getPageMetadata } from '@/server/queries/get-page-seo';
+import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchProcess } from '@/components/marketing/stitch-process';
+import { ButtonLink, PageHero } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
-import { resolveProcessPageContent } from '@/features/process-page/defaults';
+import { resolveProcessPageContent } from '@/features/process-page/content';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
+import { PageAnimations } from '@/components/marketing/page-animations';
 
-export const metadata: Metadata = {
-  title: 'Our Process',
-  description:
-    'From initial digital triage to strict multi-point handoff inspection, the Vantage repair standard is transparently logged every time.',
-  alternates: { canonical: '/process' },
-};
+export async function generateMetadata() {
+  return getPageMetadata('process');
+}
+
+// Splits the CMS title into hero lines — the last two words become the red accent line.
+function toHeroLines(title: string): string[] {
+  const words = title.split(' ');
+  if (words.length <= 2) return [title];
+  return [words.slice(0, -2).join(' '), words.slice(-2).join(' ')];
+}
 
 export default async function ProcessPage() {
   const [steps, settings] = await Promise.all([
@@ -17,10 +24,21 @@ export default async function ProcessPage() {
     siteSettingsService.getPublic(),
   ]);
   const content = resolveProcessPageContent(settings);
+  const title = content.title.replace('{count}', String(steps.length));
 
+  // The CMS eyebrow/title/subtext lead the page in the hero; the phase slider below gets a short
+  // section heading of its own so the same headline isn't repeated twice.
   return (
-    <main>
-      <StitchProcess steps={steps} eyebrow={content.eyebrow} title={content.title} subtext={content.subtext} />
+    <main className='flex flex-col'>
+      <PageJsonLd id='process' />
+      <PageHero eyebrow={content.eyebrow} lines={toHeroLines(title)} subtext={content.subtext}>
+        <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
+        <ButtonLink href='/services' variant='secondary'>
+          Our services
+        </ButtonLink>
+      </PageHero>
+      <StitchProcess steps={steps} eyebrow='Phase by phase' title='Every Step, Fully Logged.' />
+      <PageAnimations />
     </main>
   );
 }

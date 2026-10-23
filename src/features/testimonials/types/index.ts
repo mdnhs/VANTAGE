@@ -1,4 +1,5 @@
-import type { Testimonial } from '@/server/db/schema';
+import type { PublicImage } from '@/lib/media/public-image';
+import type { Testimonial as TestimonialRow } from '@/server/db/schema';
 import type {
   CreateTestimonialInput,
   ReorderTestimonialsInput,
@@ -6,13 +7,13 @@ import type {
   UpdateTestimonialInput,
 } from '@/validations/testimonial-schema';
 
-export type {
-  Testimonial,
-  CreateTestimonialInput,
-  UpdateTestimonialInput,
-  ReorderTestimonialsInput,
-  TestimonialStatusInput,
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
 };
+
+export type Testimonial = WithoutLegacy<TestimonialRow> & { avatar: PublicImage | null };
+
+export type { CreateTestimonialInput, UpdateTestimonialInput, ReorderTestimonialsInput, TestimonialStatusInput };
 
 // Shape returned by the public `/testimonials` and `/testimonials/featured` routes.
 export type TestimonialPublic = Testimonial;

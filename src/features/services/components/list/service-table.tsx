@@ -1,10 +1,14 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useServiceList } from '../../hooks/api/query/use-service-list';
@@ -21,18 +25,26 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function EnabledToggle({ service }: { service: Service }) {
+  const authorOnly = useAuthorOnly();
   const updateService = useUpdateService(service.id);
+  const statusLabel = service.isEnabled ? 'Published' : 'Draft';
   return (
-    <Switch
-      checked={service.isEnabled}
-      disabled={updateService.isPending}
-      onCheckedChange={(checked) => updateService.mutate({ isEnabled: checked })}
-      aria-label={`${service.isEnabled ? 'Disable' : 'Enable'} ${service.name}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={service.isEnabled}
+        disabled={authorOnly || updateService.isPending}
+        onCheckedChange={(checked) => updateService.mutate({ isEnabled: checked })}
+        aria-label={`${service.isEnabled ? 'Disable' : 'Enable'} ${service.name}`}
+      />
+      <StatusPill tone={toneForStatus(statusLabel)}>{statusLabel}</StatusPill>
+    </div>
   );
 }
 
 export function ServiceTable({ initialData }: ServiceTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useServiceList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteService = useDeleteService();
@@ -53,7 +65,19 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No services yet. Create the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No services yet'
+        description='Create the first service to get started.'
+        action={
+          canCreate ? (
+            <Link href={APP_ROUTES.content.services.create} className={cn(buttonVariants({ variant: 'default' }))}>
+              Add service
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -65,7 +89,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
             <th className='px-4 py-2.5 font-medium'>Name</th>
             <th className='px-4 py-2.5 font-medium'>Slug</th>
             <th className='px-4 py-2.5 font-medium'>Checklist items</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>
@@ -79,7 +103,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderServices.isPending}
+                    disabled={authorOnly || index === 0 || reorderServices.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -90,7 +114,7 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderServices.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderServices.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -106,28 +130,32 @@ export function ServiceTable({ initialData }: ServiceTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.services.edit(service.id)}
-                    aria-label={`Edit ${service.name}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === service.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${service.name}"? This cannot be undone.`)) {
-                        handleDelete(service.id);
-                      }
-                    }}
-                    aria-label={`Delete ${service.name}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.services.edit(service.id)}
+                      aria-label={`Edit ${service.name}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === service.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${service.name}"? This cannot be undone.`)) {
+                          handleDelete(service.id);
+                        }
+                      }}
+                      aria-label={`Delete ${service.name}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

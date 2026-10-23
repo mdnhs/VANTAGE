@@ -1,56 +1,69 @@
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
-import { ABOUT_FALLBACK_IMAGES, type AboutTeamMember } from '@/features/about-page/defaults';
-
-// Literal class names so Tailwind's content scanner can pick them up statically.
-const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300'];
+import { sizedSrc } from '@/lib/media/public-image';
+import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/content';
+import {
+  SECTION_BG,
+  SECTION_CONTAINER,
+  SECTION_PADDING,
+  SectionHeader,
+} from '@/components/marketing/ui/landing-primitives';
 
 interface TeamSectionProps {
   title: string;
   subtext: string;
-  members: AboutTeamMember[];
+  members: AboutPageTeamMember[];
+}
+
+// Last word of the CMS title becomes the red accent, matching the homepage headings.
+function splitAccent(title: string) {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return { head: title, accent: undefined };
+  return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
 }
 
 export function TeamSection({ title, subtext, members }: TeamSectionProps) {
+  const { head, accent } = splitAccent(title);
+
   return (
-    <section className='relative container mx-auto overflow-hidden bg-[#1c1b1b] px-4 py-16 sm:px-6 sm:py-20 lg:px-12 lg:py-[120px]'>
-      <div className='pointer-events-none absolute inset-y-0 right-0 left-1/2 bg-gradient-to-l from-red-600/10 to-transparent' />
+    <section className={`w-full ${SECTION_BG.base} ${SECTION_PADDING}`}>
+      <div className={`${SECTION_CONTAINER} gap-12 lg:gap-16`}>
+        <SectionHeader eyebrow='Our People' title={head} accent={accent} intro={subtext} />
 
-      <div className='relative flex flex-col gap-10 sm:gap-16'>
-        <div className='intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up-sm'>
-          <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-[#e5e2e1] uppercase sm:text-3xl lg:text-[40px] lg:leading-[48px]'>
-            {title}
-          </h2>
-          <p className='max-w-[672px] text-base leading-6 text-neutral-400'>{subtext}</p>
-        </div>
-
-        <div className='grid grid-cols-1 gap-6 sm:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
           {members.map((member, index) => {
-            const photo = member.imagePublicId
-              ? cldUrl(member.imagePublicId, { width: 800, height: 946, crop: 'fill', gravity: 'face' })
+            const photo = member.image
+              ? sizedSrc(member.image, 'w_800,h_946,c_fill,g_face')
               : (ABOUT_FALLBACK_IMAGES.team[index] ?? null);
+            const focal = member.image?.id ? member.image.focal : null;
 
             return (
-              <div
+              <article
                 key={`${member.name}-${index}`}
-                className={`group intersect-once relative h-[360px] overflow-hidden rounded-lg bg-[#131313] shadow-md sm:h-[420px] lg:h-[473px] intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
+                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'
               >
-                {photo && (
-                  <Image
-                    src={photo}
-                    alt={member.name}
-                    fill
-                    className='object-cover grayscale transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0'
-                  />
-                )}
-                <div className='absolute inset-0 bg-gradient-to-t from-[rgba(53,53,52,0.9)] via-transparent via-50% to-transparent' />
-                <div className='absolute inset-x-6 bottom-6 flex flex-col gap-1'>
-                  <span className='font-[family-name:var(--font-manrope)] text-2xl font-semibold text-[#e5e2e1]'>
-                    {member.name}
-                  </span>
-                  <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>{member.role}</span>
+                <div className='relative h-[340px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
+                  {photo && (
+                    <Image
+                      src={photo}
+                      alt={member.name}
+                      fill
+                      sizes='(min-width: 1024px) 384px, (min-width: 640px) 50vw, 100vw'
+                      style={focal ? { objectPosition: `${focal.x * 100}% ${focal.y * 100}%` } : undefined}
+                      className='object-cover grayscale transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0'
+                    />
+                  )}
+                  <div className='absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(27,27,32,0)_0%,#1b1b20_100%)]' />
                 </div>
-              </div>
+
+                <div className='flex flex-col items-start gap-2 p-6'>
+                  <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-brand uppercase'>
+                    {member.role}
+                  </span>
+                  <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
+                    {member.name}
+                  </h3>
+                </div>
+              </article>
             );
           })}
         </div>

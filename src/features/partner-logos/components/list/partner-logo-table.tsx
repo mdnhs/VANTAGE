@@ -1,39 +1,53 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
-import { cldUrl } from '@/lib/cloudinary/url';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { usePartnerLogoList } from '../../hooks/api/query/use-partner-logo-list';
 import { useUpdatePartnerLogo } from '../../hooks/api/mutation/use-update-partner-logo';
 import { useDeletePartnerLogo } from '../../hooks/api/mutation/use-delete-partner-logo';
 import { useReorderPartnerLogos } from '../../hooks/api/mutation/use-reorder-partner-logos';
-import type { PartnerLogo } from '../../types';
+import { sizedSrc } from '@/lib/media/public-image';
+import type { PartnerLogoPublic } from '../../types';
 
 interface PartnerLogoTableProps {
-  initialData: { data: PartnerLogo[]; total: number };
+  initialData: { data: PartnerLogoPublic[]; total: number };
 }
 
 const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
-function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogo }) {
+function EnabledToggle({ partnerLogo }: { partnerLogo: PartnerLogoPublic }) {
+  const authorOnly = useAuthorOnly();
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
+  const status = partnerLogo.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={partnerLogo.isEnabled}
-      disabled={updatePartnerLogo.isPending}
-      onCheckedChange={(checked) => updatePartnerLogo.mutate({ isEnabled: checked })}
-      aria-label={`${partnerLogo.isEnabled ? 'Disable' : 'Enable'} ${partnerLogo.companyName}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={partnerLogo.isEnabled}
+        disabled={authorOnly || updatePartnerLogo.isPending}
+        onCheckedChange={(checked) => updatePartnerLogo.mutate({ isEnabled: checked })}
+        aria-label={`${partnerLogo.isEnabled ? 'Disable' : 'Enable'} ${partnerLogo.companyName}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = usePartnerLogoList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deletePartnerLogo = useDeletePartnerLogo();
@@ -54,7 +68,19 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No partner logos yet. Add the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No partner logos yet'
+        description='Add the first partner logo to get started.'
+        action={
+          canCreate ? (
+            <Link href={APP_ROUTES.content.partnerLogos.create} className={cn(buttonVariants({ variant: 'default' }))}>
+              Add logo
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -66,7 +92,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
             <th className='px-4 py-2.5 font-medium'>Logo</th>
             <th className='px-4 py-2.5 font-medium'>Company</th>
             <th className='px-4 py-2.5 font-medium'>Website</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>
@@ -80,7 +106,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderPartnerLogos.isPending}
+                    disabled={authorOnly || index === 0 || reorderPartnerLogos.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -91,7 +117,7 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderPartnerLogos.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderPartnerLogos.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -100,12 +126,16 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
                 </div>
               </td>
               <td className='px-4 py-2.5'>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cldUrl(partnerLogo.logoPublicId, { width: 96, height: 96, crop: 'fit' })}
-                  alt={partnerLogo.companyName}
-                  className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
-                />
+                {partnerLogo.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={sizedSrc(partnerLogo.logo, 'w_96,h_96,c_fit')}
+                    alt={partnerLogo.companyName}
+                    className='h-10 w-16 rounded border border-border bg-white/5 object-contain p-1'
+                  />
+                ) : (
+                  <div className='h-10 w-16 rounded border border-dashed border-border' aria-hidden />
+                )}
               </td>
               <td className='px-4 py-2.5 font-medium'>{partnerLogo.companyName}</td>
               <td className='px-4 py-2.5 text-muted-foreground'>
@@ -128,28 +158,32 @@ export function PartnerLogoTable({ initialData }: PartnerLogoTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.partnerLogos.edit(partnerLogo.id)}
-                    aria-label={`Edit ${partnerLogo.companyName}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === partnerLogo.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${partnerLogo.companyName}"? This cannot be undone.`)) {
-                        handleDelete(partnerLogo.id);
-                      }
-                    }}
-                    aria-label={`Delete ${partnerLogo.companyName}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.partnerLogos.edit(partnerLogo.id)}
+                      aria-label={`Edit ${partnerLogo.companyName}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === partnerLogo.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${partnerLogo.companyName}"? This cannot be undone.`)) {
+                          handleDelete(partnerLogo.id);
+                        }
+                      }}
+                      aria-label={`Delete ${partnerLogo.companyName}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

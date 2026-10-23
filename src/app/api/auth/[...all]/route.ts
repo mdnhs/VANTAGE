@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { toNextJsHandler } from 'better-auth/next-js';
-import { auth } from '@/server/lib/auth';
+import { getAuth } from '@/server/lib/auth';
 
-const { GET: authGET, POST: authPOST } = toNextJsHandler(auth);
+const handlers = () => toNextJsHandler(getAuth());
 
 // Accounts are provisioned by an admin (auth.api.createUser), not self-service —
 // block the public sign-up endpoint while leaving sign-in/session/sign-out intact.
@@ -13,8 +13,8 @@ function blockSignUp(request: NextRequest) {
   return null;
 }
 
-export const GET = authGET;
+export const GET = (request: NextRequest) => handlers().GET(request);
 
 export function POST(request: NextRequest) {
-  return blockSignUp(request) ?? authPOST(request);
+  return blockSignUp(request) ?? handlers().POST(request);
 }

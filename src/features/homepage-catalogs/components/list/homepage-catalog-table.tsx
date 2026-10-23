@@ -1,14 +1,18 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc } from '@/lib/media/public-image';
 import { useHomepageCatalogList } from '../../hooks/api/query/use-homepage-catalog-list';
 import { useUpdateHomepageCatalog } from '../../hooks/api/mutation/use-update-homepage-catalog';
 import { useDeleteHomepageCatalog } from '../../hooks/api/mutation/use-delete-homepage-catalog';
@@ -22,18 +26,28 @@ interface HomepageCatalogTableProps {
 const FILTERS = { page: 1, limit: 50 };
 
 function EnabledToggle({ item }: { item: HomepageCatalog }) {
+  const authorOnly = useAuthorOnly();
   const updateHomepageCatalog = useUpdateHomepageCatalog(item.id);
+  const status = item.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={item.isEnabled}
-      disabled={updateHomepageCatalog.isPending}
-      onCheckedChange={(checked) => updateHomepageCatalog.mutate({ isEnabled: checked })}
-      aria-label={`${item.isEnabled ? 'Disable' : 'Enable'} ${item.title}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={item.isEnabled}
+        disabled={authorOnly || updateHomepageCatalog.isPending}
+        onCheckedChange={(checked) => updateHomepageCatalog.mutate({ isEnabled: checked })}
+        aria-label={`${item.isEnabled ? 'Disable' : 'Enable'} ${item.title}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useHomepageCatalogList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepageCatalog = useDeleteHomepageCatalog();
@@ -55,9 +69,20 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
 
   if (rows.length === 0) {
     return (
-      <p className='text-sm text-muted-foreground'>
-        No catalog items yet. Add the first one to display in the homepage catalog.
-      </p>
+      <EmptyState
+        title='No catalog items yet'
+        description='Add the first one to display in the homepage catalog.'
+        action={
+          canCreate ? (
+            <Link
+              href={APP_ROUTES.content.homepageCatalogs.create}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              Add catalog item
+            </Link>
+          ) : undefined
+        }
+      />
     );
   }
 
@@ -72,7 +97,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
             <th className='px-4 py-2.5 font-medium'>Badge</th>
             <th className='px-4 py-2.5 font-medium'>Footnote</th>
             <th className='px-4 py-2.5 font-medium'>Description</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>
@@ -86,7 +111,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderHomepageCatalogs.isPending}
+                    disabled={authorOnly || index === 0 || reorderHomepageCatalogs.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -97,7 +122,7 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderHomepageCatalogs.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderHomepageCatalogs.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -106,10 +131,10 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
                 </div>
               </td>
               <td className='px-4 py-2.5'>
-                {item.iconPublicId ? (
+                {item.iconImage ? (
                   <div className='relative size-6 overflow-hidden rounded bg-muted'>
                     <Image
-                      src={cldUrl(item.iconPublicId, { width: 48, height: 48 })}
+                      src={sizedSrc(item.iconImage, 'w_48,h_48')}
                       alt={item.title}
                       fill
                       className='object-contain'
@@ -136,28 +161,32 @@ export function HomepageCatalogTable({ initialData }: HomepageCatalogTableProps)
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
-                    aria-label={`Edit ${item.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === item.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
-                        handleDelete(item.id);
-                      }
-                    }}
-                    aria-label={`Delete ${item.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.homepageCatalogs.edit(item.id)}
+                      aria-label={`Edit ${item.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === item.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${item.title}"? This cannot be undone.`)) {
+                          handleDelete(item.id);
+                        }
+                      }}
+                      aria-label={`Delete ${item.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

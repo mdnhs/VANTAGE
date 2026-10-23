@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { useRouter } from 'next/navigation';
 import { HomepageCatalogForm } from '../homepage-catalog-form';
 import { useUpdateHomepageCatalog } from '../../hooks/api/mutation/use-update-homepage-catalog';
@@ -12,7 +13,10 @@ interface EditHomepageCatalogFormProps {
 
 export function EditHomepageCatalogForm({ catalog }: EditHomepageCatalogFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updateHomepageCatalog = useUpdateHomepageCatalog(catalog.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.homepageCatalogs.index} />;
 
   return (
     <HomepageCatalogForm

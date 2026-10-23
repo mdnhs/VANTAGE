@@ -9,6 +9,7 @@ import type {
 } from '@/validations/homepage-process-step-schema';
 
 const LIST_TAG = CACHE_TAGS.all('homepage-process-steps');
+const detailTag = (id: string) => CACHE_TAGS.detail('homepage-process-steps', id);
 
 async function listEnabledUncached() {
   return homepageProcessStepRepository.listEnabled();
@@ -19,7 +20,7 @@ async function listEnabledUncached() {
 async function listEnabledCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('days');
+  cacheLife('hours');
   return listEnabledUncached();
 }
 
@@ -38,23 +39,25 @@ export const homepageProcessStepService = {
   async create(data: CreateHomepageProcessStepInput) {
     const row = await homepageProcessStepRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdateHomepageProcessStepInput) {
     const row = await homepageProcessStepRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await homepageProcessStepRepository.remove(id);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderHomepageProcessStepsInput) {
     await homepageProcessStepRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
   },
 };

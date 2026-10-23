@@ -1,25 +1,54 @@
 import { Hono } from 'hono';
+import { csrf } from 'hono/csrf';
 import { secureHeaders } from 'hono/secure-headers';
 import { onError, onNotFound } from '@/server/middleware/error';
 import { requestLogger } from '@/server/middleware/logger';
-import { admins } from './admins';
+import { account } from './account';
+import { adminAi } from './admin-ai';
+import { adminAudit } from './admin-audit';
+import { adminEnquiries } from './admin-enquiries';
+import { adminGlobals } from './admin-globals';
+import { adminMedia } from './admin-media';
+import { adminNotifications } from './admin-notifications';
+import { adminRedirects } from './admin-redirects';
+import { adminSearch } from './admin-search';
+import { adminSeo } from './admin-seo';
+import { adminTracking } from './admin-tracking';
+import { adminTheme } from './admin-theme';
+import { adminUsers } from './admin-users';
+import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
 import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
 import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
-import { media } from './media';
 import { partnerLogos } from './partner-logos';
+import { preview } from './preview';
 import { projects } from './projects';
+import { publicConsent } from './public-consent';
+import { publicStamp } from './public-stamp';
 import { quoteRequests } from './quote-requests';
+import { resolve } from './resolve';
 import { services } from './services';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
-import { users } from './users';
+
+const originOf = (url: string | undefined) => {
+  try {
+    return url ? new URL(url).origin : null;
+  } catch {
+    return null;
+  }
+};
+const allowedOrigins = () =>
+  [originOf(process.env.NEXT_PUBLIC_APP_URL), originOf(process.env.BETTER_AUTH_URL)].filter((o): o is string => !!o);
 
 const app = new Hono().basePath('/api/v1');
 
 app.use('*', secureHeaders());
+// Writes must come from the app's own origin (the public quote and contact
+// forms are same-origin posts too). GET/HEAD/OPTIONS are never checked.
+app.use('*', csrf({ origin: (origin) => allowedOrigins().includes(origin) }));
 app.use('*', requestLogger);
 
 app.onError(onError);
@@ -33,7 +62,22 @@ export const api = app
     return c.json({ success: true, data: { status: 'ok' } });
   })
   .route('/auth', auth)
-  .route('/media', media)
+  .route('/admin/media', adminMedia)
+  .route('/admin/enquiries', adminEnquiries)
+  .route('/admin/globals', adminGlobals)
+  .route('/admin/users', adminUsers)
+  .route('/admin/search', adminSearch)
+  .route('/admin/tracking', adminTracking)
+  .route('/admin/seo', adminSeo)
+  .route('/admin/ai', adminAi)
+  .route('/admin/theme', adminTheme)
+  .route('/admin/redirects', adminRedirects)
+  .route('/resolve', resolve)
+  .route('/preview', preview)
+  .route('/account', account)
+  .route('/admin/notifications', adminNotifications)
+  .route('/admin/audit', adminAudit)
+  .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)
   .route('/services', services)
   .route('/projects', projects)
@@ -44,8 +88,8 @@ export const api = app
   .route('/homepage-process-steps', homepageProcessSteps)
   .route('/quotes', quoteRequests)
   .route('/contacts', contacts)
-  .route('/admins', admins)
-  .route('/users', users);
+  .route('/public/consent', publicConsent)
+  .route('/public/enquiry-stamp', publicStamp);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)
 

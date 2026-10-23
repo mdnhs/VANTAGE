@@ -1,21 +1,10 @@
 'use client';
 
+import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  ArrowLeft,
-  Calendar,
-  Check,
-  Mail,
-  MessageSquare,
-  Phone,
-  Save,
-  Trash2,
-  ExternalLink,
-  User,
-  Inbox,
-} from 'lucide-react';
+import { ArrowLeft, Check, Mail, MessageSquare, Phone, Save, Trash2, ExternalLink, User, Inbox } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -23,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import { ContactStatusBadge } from '../contact-status-badge';
 import { useUpdateContactMessage } from '../../hooks/api/mutation/use-update-contact-message';
 import { useDeleteContactMessage } from '../../hooks/api/mutation/use-delete-contact-message';
@@ -81,85 +72,89 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
 
   return (
     <div className='flex max-w-5xl flex-col gap-6'>
-      {/* Top Bar with Back and Direct Actions */}
-      <div className='flex flex-wrap items-center justify-between gap-4'>
-        <Link
-          href={APP_ROUTES.leads.contacts.index}
-          className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-xs text-muted-foreground')}
-        >
-          <ArrowLeft className='size-3.5' />
-          <span>Back to all inquiries</span>
-        </Link>
-
-        {/* Quick Contact Buttons */}
-        <div className='flex items-center gap-2'>
-          {phoneDigits && (
-            <a
-              href={`https://wa.me/${phoneDigits.replace('+', '')}`}
-              target='_blank'
-              rel='noopener noreferrer'
-              className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'gap-1.5 text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400',
-              )}
-            >
-              <MessageSquare className='size-3.5' />
-              <span>WhatsApp Chat</span>
-            </a>
-          )}
-
-          {phoneDigits && (
-            <a
-              href={`tel:${phoneDigits}`}
-              className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'gap-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-500/10 hover:text-blue-400',
-              )}
-            >
-              <Phone className='size-3.5' />
-              <span>Call Phone</span>
-            </a>
-          )}
-
-          {initialMessage.email && (
-            <a
-              href={`mailto:${initialMessage.email}?subject=Re: Your enquiry with Vantage Bodyworks`}
-              className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'gap-1.5 text-xs font-semibold text-purple-500 hover:bg-purple-500/10 hover:text-purple-400',
-              )}
-            >
-              <Mail className='size-3.5' />
-              <span>Reply via Email</span>
-            </a>
-          )}
-
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleDelete}
-            className='gap-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600'
+      <PageHeader
+        breadcrumbs={
+          <Link
+            href={APP_ROUTES.leads.contacts.index}
+            className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1.5 text-xs text-muted-foreground')}
           >
-            <Trash2 className='size-3.5' />
-            <span>Delete</span>
-          </Button>
-        </div>
-      </div>
+            <ArrowLeft className='size-3.5' />
+            <span>Back to all inquiries</span>
+          </Link>
+        }
+        title={fullName}
+        description={`Received on ${formatDate(initialMessage.createdAt)} • Source: ${initialMessage.source.replace('_', ' ')}`}
+        actions={
+          <>
+            {phoneDigits && (
+              <a
+                href={`https://wa.me/${phoneDigits.replace('+', '')}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'gap-1.5 text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400',
+                )}
+              >
+                <MessageSquare className='size-3.5' />
+                <span>WhatsApp Chat</span>
+              </a>
+            )}
 
-      {/* Main Header */}
-      <div className='flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-6 shadow-xs'>
-        <div className='flex flex-col gap-2'>
-          <div className='flex items-center gap-3'>
-            <h1 className='text-2xl font-bold tracking-tight text-foreground'>{fullName}</h1>
-            <ContactStatusBadge status={status} />
-          </div>
-          <p className='flex items-center gap-2 text-xs text-muted-foreground'>
-            <Calendar className='size-3.5' />
-            <span>Received on {formatDate(initialMessage.createdAt)}</span>
-            <span>•</span>
-            <span className='capitalize'>Source: {initialMessage.source.replace('_', ' ')}</span>
-          </p>
+            {phoneDigits && (
+              <a
+                href={`tel:${phoneDigits}`}
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'gap-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-500/10 hover:text-blue-400',
+                )}
+              >
+                <Phone className='size-3.5' />
+                <span>Call Phone</span>
+              </a>
+            )}
+
+            {initialMessage.email && (
+              <a
+                href={`mailto:${initialMessage.email}?subject=Re: Your enquiry with Vantage Bodyworks`}
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'gap-1.5 text-xs font-semibold text-purple-500 hover:bg-purple-500/10 hover:text-purple-400',
+                )}
+              >
+                <Mail className='size-3.5' />
+                <span>Reply via Email</span>
+              </a>
+            )}
+
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleDelete}
+              className='gap-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600'
+            >
+              <Trash2 className='size-3.5' />
+              <span>Delete</span>
+            </Button>
+
+            <SpamActions
+              kind='contact'
+              id={initialMessage.id}
+              status={initialMessage.status}
+              spamReason={initialMessage.spamReason}
+            />
+          </>
+        }
+      />
+
+      {initialMessage.status === 'spam' && (
+        <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+          Held as spam: {spamReasonLabel(initialMessage.spamReason)}.
         </div>
+      )}
+
+      <div className='flex items-center gap-3'>
+        <ContactStatusBadge status={status} spamReason={initialMessage.spamReason} />
       </div>
 
       {/* Grid: Details & Notes */}
@@ -218,13 +213,13 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
               </div>
 
               {/* Photos / Attachments */}
-              {initialMessage.photoUrls && initialMessage.photoUrls.length > 0 && (
+              {initialMessage.photos.length > 0 && (
                 <div className='mt-2 flex flex-col gap-3'>
                   <span className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
-                    Attached Files / Photos ({initialMessage.photoUrls.length})
+                    Attached Files / Photos ({initialMessage.photos.length})
                   </span>
                   <div className='grid grid-cols-2 gap-3 sm:grid-cols-3'>
-                    {initialMessage.photoUrls.map((url, idx) => (
+                    {initialMessage.photos.map(({ url }, idx) => (
                       <div
                         key={url}
                         onClick={() => setSelectedPhoto(url)}
@@ -265,7 +260,7 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
                   <Select value={status} onValueChange={(val) => setStatus(val as ContactStatus)}>
                     <SelectTrigger id='status' className='w-full text-xs'>
                       <SelectValue>
-                        <ContactStatusBadge status={status} />
+                        <ContactStatusBadge status={status} spamReason={initialMessage.spamReason} />
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>

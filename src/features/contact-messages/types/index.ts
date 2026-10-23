@@ -1,7 +1,9 @@
-import type { ContactMessage, NewContactMessage } from '@/server/db/schema';
+import type { EnquiryPhoto } from '@/lib/media/enquiry-photo';
+import type { ContactMessage as DbContactMessage, NewContactMessage } from '@/server/db/schema';
 import {
   CONTACT_STATUSES,
   type CreateContactMessageInput,
+  type PublicContactMessageInput,
   type ContactMessageListQuery,
   type ContactStatus,
   type UpdateContactMessageInput,
@@ -9,10 +11,13 @@ import {
 
 export { CONTACT_STATUSES };
 
+export type ContactMessage = Omit<DbContactMessage, 'photoUrls'> & { photos: EnquiryPhoto[] };
+
 export type {
-  ContactMessage,
+  DbContactMessage,
   NewContactMessage,
   CreateContactMessageInput,
+  PublicContactMessageInput,
   UpdateContactMessageInput,
   ContactMessageListQuery,
   ContactStatus,
@@ -24,4 +29,5 @@ export interface ContactMessageStats {
   read: number;
   replied: number;
   archived: number;
+  spam: number;
 }

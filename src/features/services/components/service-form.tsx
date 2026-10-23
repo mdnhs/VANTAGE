@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { slotPatch, slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { Service } from '../types';
 
@@ -24,7 +25,8 @@ interface FormState {
   name: string;
   slug: string;
   description: string;
-  imagePublicId: string;
+  iconMediaId: Slot;
+  imageMediaId: Slot;
   checklist: string;
   isEnabled: boolean;
 }
@@ -34,7 +36,8 @@ function toFormState(data: Service | null): FormState {
     name: data?.name ?? '',
     slug: data?.slug ?? '',
     description: data?.description ?? '',
-    imagePublicId: data?.imagePublicId ?? '',
+    iconMediaId: undefined,
+    imageMediaId: undefined,
     checklist: (data?.checklist ?? []).join('\n'),
     isEnabled: data?.isEnabled ?? true,
   };
@@ -46,7 +49,8 @@ interface ServiceFormProps {
     name: string;
     slug: string;
     description: string;
-    imagePublicId: string | null;
+    iconMediaId?: string | null;
+    imageMediaId?: string | null;
     checklist: string[];
     isEnabled: boolean;
   }) => Promise<unknown>;
@@ -85,7 +89,8 @@ export function ServiceForm({
       name: form.name,
       slug: form.slug,
       description: form.description,
-      imagePublicId: form.imagePublicId || null,
+      ...slotPatch('iconMediaId', form.iconMediaId),
+      ...slotPatch('imageMediaId', form.imageMediaId),
       checklist: form.checklist
         .split('\n')
         .map((line) => line.trim())
@@ -146,12 +151,23 @@ export function ServiceForm({
             <Label htmlFor='isEnabled'>Visible on the public site</Label>
           </div>
           <div className='flex flex-col gap-1.5 sm:col-span-2'>
+            <Label>Icon</Label>
+            <MediaField
+              kind='image'
+              label='Icon'
+              nullable
+              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
+              onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
+            />
+          </div>
+          <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Image</Label>
-            <CloudinaryUpload
-              mode='single-image'
-              folder='vantage/services'
-              value={form.imagePublicId || null}
-              onChange={(v) => setField('imagePublicId', (v as string) ?? '')}
+            <MediaField
+              kind='image'
+              label='Image'
+              nullable
+              value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
+              onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
             />
           </div>
         </CardContent>

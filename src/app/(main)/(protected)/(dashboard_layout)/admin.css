@@ -1,0 +1,136 @@
+/*
+ * Admin shell tokens (ported from MK's "Evergreen" admin.css, VANTAGE red brand).
+ * Imported only by the dashboard layout. Every colour token is scoped to
+ * `:root:has([data-admin-root])` so it applies whenever the admin shell is mounted
+ * (portals for dialogs, popovers and toasts inherit from <html>) and the public
+ * site and auth screens keep globals.css. The `@theme` / `@utility` blocks live in globals.css (this file is not a Tailwind
+ * root, so it cannot generate utilities).
+ */
+
+:root:has([data-admin-root]) {
+  --radius: 0.75rem;
+  --background: #ffffff;
+  --foreground: #111411;
+  --card: #ffffff;
+  --card-foreground: #111411;
+  --popover: #ffffff;
+  --popover-foreground: #111411;
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --secondary: #e9ece9;
+  --secondary-foreground: #111411;
+  --muted: #eef0ee;
+  --muted-foreground: #666c67;
+  --accent: #fdecec;
+  --accent-foreground: #7f1d1d;
+  --destructive: #dc2626;
+  --border: #e5e8e5;
+  /* Control edges (WCAG 1.4.11): 3:1 on the panel, cards and canvas. */
+  --input: #7d867e;
+  --ring: #ef4444;
+  --chart-1: #b91c1c;
+  --chart-2: #dc2626;
+  --chart-3: #ef4444;
+  --chart-4: #7f1d1d;
+  --chart-5: #fca5a5;
+  --sidebar: #f2f3f2;
+  --sidebar-foreground: #111411;
+  --sidebar-primary: #dc2626;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fdecec;
+  --sidebar-accent-foreground: #7f1d1d;
+  --sidebar-border: #e5e8e5;
+  --sidebar-ring: #ef4444;
+  /* Status pills: soft fill, strong text. */
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  /* Loading placeholders: visible on both the grey panel and white cards. */
+  --skeleton: #e2e6e2;
+  /* Comparison-period stripes in charts and legends. */
+  --hatch: #f4a3a3;
+  /* Hero KPI card and the sidebar's promo card. */
+  --hero-from: #3a0d0d;
+  --hero-to: #7f1d1d;
+  --hero-foreground: #ffffff;
+  --hero-chip: #ffffff;
+  --hero-chip-foreground: #111411;
+  --hero-delta: #fecaca;
+  --promo-from: #120707;
+  --promo-to: #3a0d0d;
+  --promo-foreground: #ffffff;
+}
+
+:root:has([data-admin-root]).dark {
+  --background: #0c100d;
+  --foreground: #eef2ee;
+  --card: #1c251f;
+  --card-foreground: #eef2ee;
+  --popover: #1c251f;
+  --popover-foreground: #eef2ee;
+  --primary: #f05252;
+  --primary-foreground: #1a0505;
+  --secondary: #1c241e;
+  --secondary-foreground: #eef2ee;
+  --muted: #1c241e;
+  --muted-foreground: #9aa39c;
+  --accent: #3a1414;
+  --accent-foreground: #fecaca;
+  --destructive: #f87171;
+  --border: #243026;
+  --input: #667369;
+  --ring: #f87171;
+  --chart-1: #f87171;
+  --chart-2: #ef4444;
+  --chart-3: #fca5a5;
+  --chart-4: #b91c1c;
+  --chart-5: #7f1d1d;
+  --sidebar: #141b16;
+  --sidebar-foreground: #eef2ee;
+  --sidebar-primary: #f05252;
+  --sidebar-primary-foreground: #1a0505;
+  --sidebar-accent: #3a1414;
+  --sidebar-accent-foreground: #fecaca;
+  --sidebar-border: #243026;
+  --sidebar-ring: #f87171;
+  --success: #4ade80;
+  --success-soft: #12301c;
+  --warning: #fbbf24;
+  --warning-soft: #33270c;
+  --danger: #f87171;
+  --danger-soft: #3a1414;
+  --skeleton: #2a352d;
+  /* The hero card keeps its dark gradient in both themes, so its chip and delta do too. */
+  --hero-chip: #ffffff;
+  --hero-chip-foreground: #111411;
+  --hero-delta: #fecaca;
+  --hatch: #7f1d1d;
+}
+
+/* globals.css inlines var(--font-inter) into font-sans, so the admin font is applied
+   directly (Plus Jakarta Sans via the jakarta font variable). */
+:root:has([data-admin-root]),
+:root:has([data-admin-root]) :is(body, .font-sans) {
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root:has([data-admin-root]) * {
+  /* Narrow, quiet scrollbars across the admin (sidebar, tab rows, tables). */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Restrained motion, and none for people who ask for less. */
+@media (prefers-reduced-motion: reduce) {
+  :root:has([data-admin-root]) *,
+  :root:has([data-admin-root]) *::before,
+  :root:has([data-admin-root]) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

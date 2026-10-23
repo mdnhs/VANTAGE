@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepagePillarService } from '@/server/services/homepage-pillar-service';
 import {
   createHomepagePillarSchema,
@@ -15,46 +18,36 @@ import {
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const homepagePillars = new Hono<AuthEnv>()
-  // Public read — unused by the marketing frontend today (it reads homepagePillarService
-  // directly), kept for external API consumers.
+export const homepagePillars = new Hono<AppEnv>()
+  // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
   .get('/', async (c) => {
+    c.header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     const data = await homepagePillarService.listEnabled();
     return ok(c, data);
   })
 
-  .get(
-    '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
-    zValidator('query', homepagePillarListQuerySchema),
-    async (c) => {
-      const { page, limit } = c.req.valid('query');
-      const { rows, total } = await homepagePillarService.listAdmin({ page, limit });
-      return ok(c, rows, { pagination: buildPagination(total, page, limit) });
-    },
-  )
+  .get('/admin/list', can({ content: ['read'] }), zValidator('query', homepagePillarListQuerySchema), async (c) => {
+    const { page, limit } = c.req.valid('query');
+    const { rows, total } = await homepagePillarService.listAdmin({ page, limit });
+    return ok(c, rows, { pagination: buildPagination(total, page, limit) });
+  })
 
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await homepagePillarService.byId(id);
-      if (!row) throw ApiError.notFound('Homepage pillar not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ content: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await homepagePillarService.byId(id);
+    if (!row) throw ApiError.notFound('Homepage pillar not found');
+    return ok(c, row);
+  })
 
   .post(
     '/',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'homepage_pillar.create', entityType: 'homepage_pillar', summary: 'Homepage pillar created' }),
     zValidator('json', createHomepagePillarSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'create' });
       const row = await homepagePillarService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -62,11 +55,17 @@ export const homepagePillars = new Hono<AuthEnv>()
 
   .patch(
     '/reorder',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_pillar.reorder',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillars reordered',
+    }),
     zValidator('json', reorderHomepagePillarsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'reorder' });
       await homepagePillarService.reorder(input);
       return ok(c, { success: true });
     },
@@ -74,13 +73,20 @@ export const homepagePillars = new Hono<AuthEnv>()
 
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_pillar.update',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillar updated',
+      load: homepagePillarService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateHomepagePillarSchema),
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'pillar', action: 'update' });
       const row = await homepagePillarService.update(id, input);
       if (!row) throw ApiError.notFound('Homepage pillar not found');
       return ok(c, row);
@@ -89,8 +95,14 @@ export const homepagePillars = new Hono<AuthEnv>()
 
   .delete(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PILLARS_MANAGE),
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_pillar.delete',
+      entityType: 'homepage_pillar',
+      summary: 'Homepage pillar deleted',
+      load: homepagePillarService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

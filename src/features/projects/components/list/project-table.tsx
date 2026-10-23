@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Star, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuthorOnly } from '@/components/admin/author-gate';
+import { useActor, useCan } from '@/contexts/actor-provider';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useProjectList } from '../../hooks/api/query/use-project-list';
@@ -22,41 +26,52 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function StatusToggle({ project }: { project: Project }) {
+  const authorOnly = useAuthorOnly();
   const toggleStatus = useToggleProjectStatus(project.id);
   const isPublished = project.status === 'published';
   return (
     <div className='flex items-center gap-2'>
       <Switch
         checked={isPublished}
-        disabled={toggleStatus.isPending}
+        disabled={authorOnly || toggleStatus.isPending}
         onCheckedChange={(checked) => toggleStatus.mutate(checked ? 'published' : 'draft')}
         aria-label={`${isPublished ? 'Unpublish' : 'Publish'} ${project.title}`}
       />
-      <span className={cn('text-xs font-medium uppercase', isPublished ? 'text-emerald-600' : 'text-muted-foreground')}>
+      <StatusPill tone={toneForStatus(project.status)} className='capitalize'>
         {project.status}
-      </span>
+      </StatusPill>
     </div>
   );
 }
 
 function FeaturedToggle({ project }: { project: Project }) {
+  const authorOnly = useAuthorOnly();
   const updateProject = useUpdateProject(project.id);
   return (
-    <Button
-      type='button'
-      variant='ghost'
-      size='icon'
-      className={cn('size-8', project.isFeatured ? 'text-amber-500' : 'text-muted-foreground')}
-      disabled={updateProject.isPending}
-      onClick={() => updateProject.mutate({ isFeatured: !project.isFeatured })}
-      aria-label={project.isFeatured ? 'Unfeature' : 'Feature on homepage'}
-    >
-      <Star className={cn('size-4', project.isFeatured && 'fill-current')} />
-    </Button>
+    <div className='flex items-center gap-1.5'>
+      <Button
+        type='button'
+        variant='ghost'
+        size='icon'
+        className={cn('size-8', project.isFeatured ? 'text-amber-500' : 'text-muted-foreground')}
+        disabled={authorOnly || updateProject.isPending}
+        onClick={() => updateProject.mutate({ isFeatured: !project.isFeatured })}
+        aria-label={project.isFeatured ? 'Unfeature' : 'Feature on homepage'}
+      >
+        <Star className={cn('size-4', project.isFeatured && 'fill-current')} />
+      </Button>
+      {project.isFeatured ? <StatusPill tone={toneForStatus('featured')}>Featured</StatusPill> : null}
+    </div>
   );
 }
 
 export function ProjectTable({ initialData }: ProjectTableProps) {
+  const authorOnly = useAuthorOnly();
+  const userId = useActor().user.id;
+  const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] });
+  // Authors edit only their own drafts; everything else is read-only for them.
+  const canEdit = (project: Project) => !authorOnly || (project.createdBy === userId && project.status === 'draft');
   const { data } = useProjectList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteProject = useDeleteProject();
@@ -77,7 +92,19 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No projects yet. Create the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No projects yet'
+        description='Create the first project to get started.'
+        action={
+          canCreate ? (
+            <Link href={APP_ROUTES.content.projects.create} className={cn(buttonVariants({ variant: 'default' }))}>
+              Add project
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -104,7 +131,7 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderProjects.isPending}
+                    disabled={authorOnly || index === 0 || reorderProjects.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -115,7 +142,7 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderProjects.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderProjects.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -134,28 +161,32 @@ export function ProjectTable({ initialData }: ProjectTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.projects.edit(project.id)}
-                    aria-label={`Edit ${project.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === project.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${project.title}"? This cannot be undone.`)) {
-                        handleDelete(project.id);
-                      }
-                    }}
-                    aria-label={`Delete ${project.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {canEdit(project) && (
+                    <Link
+                      href={APP_ROUTES.content.projects.edit(project.id)}
+                      aria-label={`Edit ${project.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === project.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${project.title}"? This cannot be undone.`)) {
+                          handleDelete(project.id);
+                        }
+                      }}
+                      aria-label={`Delete ${project.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -54,6 +54,7 @@ function buildColumnsState(quotesList: QuoteRequest[]): Record<PipelineStatus, Q
   };
 
   for (const quote of quotesList) {
+    if (quote.status === 'spam') continue;
     const status = normalizeStatus(quote.status);
     if (initial[status]) {
       initial[status].push(quote);

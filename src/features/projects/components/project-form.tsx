@@ -2,13 +2,16 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { MediaGalleryField } from '@/features/media/components/media-gallery-field';
+import { slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { ProjectWithGallery } from '../types';
 
@@ -40,9 +43,12 @@ interface FormState {
   description: string;
   completedAt: string;
   isFeatured: boolean;
-  beforeImagePublicId: string;
-  afterImagePublicId: string;
-  galleryImagePublicIds: string[];
+  beforeImageMediaId: Slot;
+  afterImageMediaId: Slot;
+  // The library images of the gallery, in order. `galleryTouched` is false until the
+  // user changes it; an untouched gallery is not sent.
+  galleryMediaIds: string[];
+  galleryTouched: boolean;
 }
 
 function toFormState(data: ProjectWithGallery | null): FormState {
@@ -54,9 +60,10 @@ function toFormState(data: ProjectWithGallery | null): FormState {
     description: data?.description ?? '',
     completedAt: toDateInputValue(data?.completedAt),
     isFeatured: data?.isFeatured ?? false,
-    beforeImagePublicId: data?.beforeImagePublicId ?? '',
-    afterImagePublicId: data?.afterImagePublicId ?? '',
-    galleryImagePublicIds: data?.galleryImages?.map((g) => g.imagePublicId) ?? [],
+    beforeImageMediaId: undefined,
+    afterImageMediaId: undefined,
+    galleryMediaIds: data?.galleryImages?.flatMap((g) => (g.mediaId ? [g.mediaId] : [])) ?? [],
+    galleryTouched: false,
   };
 }
 
@@ -67,10 +74,10 @@ export interface ProjectFormSubmitInput {
   serviceCategory: string;
   description: string;
   completedAt: string | null;
-  isFeatured: boolean;
-  beforeImagePublicId: string;
-  afterImagePublicId: string;
-  galleryImagePublicIds: string[];
+  isFeatured?: boolean;
+  beforeImageMediaId?: string;
+  afterImageMediaId?: string;
+  galleryMediaIds?: string[];
 }
 
 interface ProjectFormProps {
@@ -78,6 +85,8 @@ interface ProjectFormProps {
   onSubmit: (input: ProjectFormSubmitInput) => Promise<unknown>;
   isSubmitting: boolean;
   submitError?: string | null;
+  // Server 422 causes: shown under the image fields they name.
+  submitCauses?: Record<string, string[]>;
   submitLabel: string;
 }
 
@@ -88,10 +97,14 @@ export function ProjectForm({
   onSubmit,
   isSubmitting,
   submitError,
+  submitCauses,
   submitLabel,
 }: ProjectFormProps) {
   const router = useRouter();
+  // Authors cannot feature or publish; the server refuses it too.
+  const authorOnly = useAuthorOnly();
   const [form, setForm] = useState<FormState>(() => toFormState(initialData));
+  const [imageError, setImageError] = useState<{ before?: string; after?: string }>({});
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -107,6 +120,17 @@ export function ProjectForm({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    // Both images are required: a chosen one, or the row's current media one.
+    const hasBefore = Boolean(form.beforeImageMediaId ?? initialData?.beforeImageMediaId);
+    const hasAfter = Boolean(form.afterImageMediaId ?? initialData?.afterImageMediaId);
+    if (!hasBefore || !hasAfter) {
+      setImageError({
+        before: hasBefore ? undefined : 'Choose a before image',
+        after: hasAfter ? undefined : 'Choose an after image',
+      });
+      return;
+    }
+    setImageError({});
     await onSubmit({
       title: form.title,
       slug: form.slug,
@@ -114,10 +138,11 @@ export function ProjectForm({
       serviceCategory: form.serviceCategory,
       description: form.description,
       completedAt: form.completedAt || null,
-      isFeatured: form.isFeatured,
-      beforeImagePublicId: form.beforeImagePublicId,
-      afterImagePublicId: form.afterImagePublicId,
-      galleryImagePublicIds: form.galleryImagePublicIds,
+      ...(authorOnly ? {} : { isFeatured: form.isFeatured }),
+      // Untouched images are left out so the row keeps them.
+      ...(form.beforeImageMediaId ? { beforeImageMediaId: form.beforeImageMediaId } : {}),
+      ...(form.afterImageMediaId ? { afterImageMediaId: form.afterImageMediaId } : {}),
+      ...(form.galleryTouched ? { galleryMediaIds: form.galleryMediaIds } : {}),
     });
   };
 
@@ -189,36 +214,50 @@ export function ProjectForm({
               onChange={(e) => setField('completedAt', e.target.value)}
             />
           </div>
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isFeatured'
-              checked={form.isFeatured}
-              onCheckedChange={(checked) => setField('isFeatured', checked)}
-            />
-            <Label htmlFor='isFeatured'>Feature on homepage</Label>
-          </div>
+          {!authorOnly && (
+            <div className='flex items-center gap-3 pt-6'>
+              <Switch
+                id='isFeatured'
+                checked={form.isFeatured}
+                onCheckedChange={(checked) => setField('isFeatured', checked)}
+              />
+              <Label htmlFor='isFeatured'>Feature on homepage</Label>
+            </div>
+          )}
 
           <div className='flex flex-col gap-1.5'>
-            <Label>Before / after images</Label>
-            <CloudinaryUpload
-              mode='before-after'
-              folder='vantage/projects'
-              value={[form.beforeImagePublicId, form.afterImagePublicId].filter(Boolean)}
-              onChange={(value) => {
-                const ids = Array.isArray(value) ? value : value ? [value] : [];
-                setField('beforeImagePublicId', ids[0] ?? '');
-                setField('afterImagePublicId', ids[1] ?? '');
-              }}
+            <Label>Before</Label>
+            <MediaField
+              kind='image'
+              label='Before'
+              value={slotRef(form.beforeImageMediaId, initialData?.beforeImageMediaId)}
+              onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
             />
+            {(imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+              <p className='text-sm text-destructive'>
+                {imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]}
+              </p>
+            ) : null}
           </div>
           <div className='flex flex-col gap-1.5'>
+            <Label>After</Label>
+            <MediaField
+              kind='image'
+              label='After'
+              value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId)}
+              onChange={(ref) => setField('afterImageMediaId', ref?.id)}
+            />
+            {(imageError.after ?? submitCauses?.afterImageMediaId?.[0]) ? (
+              <p className='text-sm text-destructive'>{imageError.after ?? submitCauses?.afterImageMediaId?.[0]}</p>
+            ) : null}
+          </div>
+          <div className='flex flex-col gap-1.5 sm:col-span-2'>
             <Label>Gallery (up to 10 images)</Label>
-            <CloudinaryUpload
-              mode='gallery'
-              folder='vantage/projects'
-              maxFiles={10}
-              value={form.galleryImagePublicIds}
-              onChange={(value) => setField('galleryImagePublicIds', Array.isArray(value) ? value : [])}
+            <MediaGalleryField
+              label='Gallery image'
+              max={10}
+              value={form.galleryMediaIds}
+              onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
             />
           </div>
         </CardContent>

@@ -1,4 +1,6 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { users } from './auth';
+import { media } from './media';
 
 // `status` is a plain varchar validated in Zod ('draft' | 'published'), not a DB enum —
 // matches the varchar-status convention already used elsewhere in this repo.
@@ -12,18 +14,22 @@ export const projects = pgTable(
     slug: varchar('slug', { length: 180 }).notNull().unique(),
     vehicleModel: varchar('vehicle_model', { length: 120 }).notNull(),
     serviceCategory: varchar('service_category', { length: 80 }).notNull(),
-    beforeImagePublicId: varchar('before_image_public_id', { length: 255 }).notNull(),
-    afterImagePublicId: varchar('after_image_public_id', { length: 255 }).notNull(),
+    beforeImagePublicId: varchar('before_image_public_id', { length: 255 }),
+    beforeImageMediaId: uuid('before_image_media_id').references(() => media.id, { onDelete: 'restrict' }),
+    afterImagePublicId: varchar('after_image_public_id', { length: 255 }),
+    afterImageMediaId: uuid('after_image_media_id').references(() => media.id, { onDelete: 'restrict' }),
     description: text('description').notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     isFeatured: boolean('is_featured').notNull().default(false),
     status: varchar('status', { length: 16 }).notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('projects_slug_idx').on(table.slug),
+    index('projects_created_by_idx').on(table.createdBy),
     index('projects_status_order_idx').on(table.status, table.displayOrder),
     index('projects_featured_status_idx').on(table.isFeatured, table.status),
   ],

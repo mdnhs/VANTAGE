@@ -16,7 +16,7 @@ interface QuoteInboxItemProps {
 export function QuoteInboxItem({ quote, isSelected, onSelect }: QuoteInboxItemProps) {
   const isNew = quote.status === 'new';
   const vehicleName = [quote.year, quote.make, quote.model].filter(Boolean).join(' ');
-  const photoCount = quote.photoUrls?.length ?? 0;
+  const photoCount = quote.photos.length;
 
   return (
     <button
@@ -87,7 +87,7 @@ export function QuoteInboxItem({ quote, isSelected, onSelect }: QuoteInboxItemPr
 
         {/* Bottom Badges */}
         <div className='mt-0.5 flex flex-wrap items-center gap-1.5'>
-          <QuoteStatusBadge status={quote.status} />
+          <QuoteStatusBadge status={quote.status} spamReason={quote.spamReason} />
           <QuoteSourceBadge source={quote.source} />
 
           {photoCount > 0 && (

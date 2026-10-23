@@ -1,7 +1,31 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
-import { db } from '@/server/db';
+import { db, type DbLike } from '@/server/db';
 import { services } from '@/server/db/schema';
+import { contentImage } from '@/server/lib/media/content-images';
 import type { CreateServiceInput, ServiceListQuery, UpdateServiceInput } from '@/validations/service-schema';
+
+const withMedia = { iconMedia: true, imageMedia: true } as const;
+
+type ServiceWithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
+
+function findOne(id: string) {
+  return db.query.services.findFirst({ where: eq(services.id, id), with: withMedia });
+}
+
+// Rows carry both the *MediaId columns and the resolved PublicImage.
+function present({ iconMedia, imageMedia, ...row }: ServiceWithMedia) {
+  const out = { ...row } as Record<string, unknown>;
+  delete out[`icon${'Public'}${'Id'}`];
+  delete out[`image${'Public'}${'Id'}`];
+  return {
+    ...out,
+    icon: contentImage(iconMedia),
+    image: contentImage(imageMedia),
+  } as Omit<ServiceWithMedia, 'iconMedia' | 'imageMedia'> & {
+    icon: ReturnType<typeof contentImage>;
+    image: ReturnType<typeof contentImage>;
+  };
+}
 
 export const serviceRepository = {
   // Admin list: every row (enabled + disabled), ordered for the reorder UI, with a total
@@ -12,43 +36,57 @@ export const serviceRepository = {
     const offset = (page - 1) * limit;
     const [rows, [{ count }]] = await Promise.all([
       db.query.services.findMany({
+        with: withMedia,
         orderBy: [asc(services.displayOrder)],
         limit,
         offset,
       }),
       db.select({ count: sql<number>`count(*)::int` }).from(services),
     ]);
-    return { rows, total: count };
+    return { rows: rows.map(present), total: count };
   },
 
   // Public list: small dataset, no pagination — every enabled service, in display order.
   async listPublished() {
-    return db.query.services.findMany({
+    const rows = await db.query.services.findMany({
       where: eq(services.isEnabled, true),
+      with: withMedia,
       orderBy: [asc(services.displayOrder)],
     });
+    return rows.map(present);
   },
 
   async byId(id: string) {
-    return db.query.services.findFirst({ where: eq(services.id, id) });
+    const row = await findOne(id);
+    return row ? present(row) : undefined;
   },
 
   async bySlug(slug: string) {
-    return db.query.services.findFirst({ where: eq(services.slug, slug) });
+    const row = await db.query.services.findFirst({ where: eq(services.slug, slug), with: withMedia });
+    return row ? present(row) : undefined;
   },
 
-  async create(data: CreateServiceInput) {
-    const [row] = await db.insert(services).values(data).returning();
-    return row;
+  // Write-only halves of create/update: the caller's transaction re-checks media first.
+  async insert(data: CreateServiceInput, dbLike: DbLike = db) {
+    const [row] = await dbLike.insert(services).values(data).returning({ id: services.id });
+    return row.id;
   },
 
-  async update(id: string, data: UpdateServiceInput) {
-    const [row] = await db
+  async patch(id: string, data: UpdateServiceInput, dbLike: DbLike = db) {
+    const [row] = await dbLike
       .update(services)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(services.id, id))
-      .returning();
-    return row;
+      .returning({ id: services.id });
+    return row?.id;
+  },
+
+  async create(data: CreateServiceInput) {
+    return serviceRepository.byId(await serviceRepository.insert(data));
+  },
+
+  async update(id: string, data: UpdateServiceInput) {
+    return (await serviceRepository.patch(id, data)) ? serviceRepository.byId(id) : undefined;
   },
 
   async remove(id: string) {

@@ -1,4 +1,5 @@
-import type { NewPartnerLogo, PartnerLogo } from '@/server/db/schema';
+import type { PublicImage } from '@/lib/media/public-image';
+import type { NewPartnerLogo, PartnerLogo as PartnerLogoRow } from '@/server/db/schema';
 import type {
   CreatePartnerLogoInput,
   PartnerLogoListQuery,
@@ -6,8 +7,13 @@ import type {
   UpdatePartnerLogoInput,
 } from '@/validations/partner-logo-schema';
 
+type WithoutLegacy<T> = {
+  [K in keyof T as K extends `${string}Public${string}` ? never : K]: T[K];
+};
+
+export type PartnerLogo = WithoutLegacy<PartnerLogoRow> & { logo: PublicImage | null };
+
 export type {
-  PartnerLogo,
   NewPartnerLogo,
   CreatePartnerLogoInput,
   UpdatePartnerLogoInput,

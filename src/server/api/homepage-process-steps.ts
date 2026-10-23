@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import {
   createHomepageProcessStepSchema,
@@ -15,18 +18,17 @@ import {
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const homepageProcessSteps = new Hono<AuthEnv>()
-  // Public read — unused by the marketing frontend today (it reads
-  // homepageProcessStepService directly), kept for external API consumers.
+export const homepageProcessSteps = new Hono<AppEnv>()
+  // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
   .get('/', async (c) => {
+    c.header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     const data = await homepageProcessStepService.listEnabled();
     return ok(c, data);
   })
 
   .get(
     '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
+    can({ content: ['read'] }),
     zValidator('query', homepageProcessStepListQuerySchema),
     async (c) => {
       const { page, limit } = c.req.valid('query');
@@ -35,26 +37,26 @@ export const homepageProcessSteps = new Hono<AuthEnv>()
     },
   )
 
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await homepageProcessStepService.byId(id);
-      if (!row) throw ApiError.notFound('Homepage process step not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ content: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await homepageProcessStepService.byId(id);
+    if (!row) throw ApiError.notFound('Homepage process step not found');
+    return ok(c, row);
+  })
 
   .post(
     '/',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.create',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step created',
+    }),
     zValidator('json', createHomepageProcessStepSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'create' });
       const row = await homepageProcessStepService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -62,11 +64,17 @@ export const homepageProcessSteps = new Hono<AuthEnv>()
 
   .patch(
     '/reorder',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.reorder',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process steps reordered',
+    }),
     zValidator('json', reorderHomepageProcessStepsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'reorder' });
       await homepageProcessStepService.reorder(input);
       return ok(c, { success: true });
     },
@@ -74,13 +82,20 @@ export const homepageProcessSteps = new Hono<AuthEnv>()
 
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.update',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step updated',
+      load: homepageProcessStepService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateHomepageProcessStepSchema),
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'process-step', action: 'update' });
       const row = await homepageProcessStepService.update(id, input);
       if (!row) throw ApiError.notFound('Homepage process step not found');
       return ok(c, row);
@@ -89,8 +104,14 @@ export const homepageProcessSteps = new Hono<AuthEnv>()
 
   .delete(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.PROCESS_MANAGE),
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'homepage_process_step.delete',
+      entityType: 'homepage_process_step',
+      summary: 'Homepage process step deleted',
+      load: homepageProcessStepService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

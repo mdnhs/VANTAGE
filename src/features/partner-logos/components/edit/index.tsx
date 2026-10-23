@@ -1,5 +1,8 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
+import { MediaApiError } from '@/features/media/services/api';
+
 import { useRouter } from 'next/navigation';
 import { PartnerLogoForm } from '../partner-logo-form';
 import { useUpdatePartnerLogo } from '../../hooks/api/mutation/use-update-partner-logo';
@@ -12,7 +15,10 @@ interface EditPartnerLogoFormProps {
 
 export function EditPartnerLogoForm({ partnerLogo }: EditPartnerLogoFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updatePartnerLogo = useUpdatePartnerLogo(partnerLogo.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.partnerLogos.index} />;
 
   return (
     <PartnerLogoForm
@@ -20,6 +26,7 @@ export function EditPartnerLogoForm({ partnerLogo }: EditPartnerLogoFormProps) {
       submitLabel='Save changes'
       isSubmitting={updatePartnerLogo.isPending}
       submitError={updatePartnerLogo.error?.message ?? null}
+      submitCauses={updatePartnerLogo.error instanceof MediaApiError ? updatePartnerLogo.error.causes : undefined}
       onSubmit={async (input) => {
         await updatePartnerLogo.mutateAsync(input, {
           onSuccess: () => router.push(APP_ROUTES.content.partnerLogos.index),

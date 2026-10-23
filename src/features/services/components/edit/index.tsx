@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { useRouter } from 'next/navigation';
 import { ServiceForm } from '../service-form';
 import { useUpdateService } from '../../hooks/api/mutation/use-update-service';
@@ -12,7 +13,10 @@ interface EditServiceFormProps {
 
 export function EditServiceForm({ service }: EditServiceFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updateService = useUpdateService(service.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.services.index} />;
 
   return (
     <ServiceForm

@@ -1,33 +1,40 @@
 import type { Metadata } from 'next';
-import { PermissionGate } from '@/lib/permission/permission-gate';
-import { PERMISSIONS } from '@/lib/permission/permissions';
-import { siteSettingsService } from '@/server/services/site-settings-service';
-import { InsurancePageForm } from '@/features/insurance-page/components/insurance-page-form';
-import { resolveInsuranceContent } from '@/features/insurance-page/defaults';
+import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { PageTabs } from '@/components/layout/page-tabs';
+import { GlobalEditor } from '@/features/globals/components/global-editor';
+import { seoTab } from '@/features/seo/components/seo-tab';
+import { permissionFor } from '@/lib/admin/route-permissions';
+import { requirePermission } from '@/server/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'Insurance page',
   robots: { index: false, follow: false, nocache: true },
 };
 
-// Reads the session cookie (via PermissionGate) per request — must not be prerendered.
+// Reads the session cookie (via requirePermission) per request — must not be prerendered.
 export const instant = false;
 
 export default async function InsurancePageContentPage() {
-  const settings = await siteSettingsService.getAdmin();
+  const actor = await requirePermission(permissionFor('/dashboard/insurance'));
+  const seo = seoTab(actor, 'insurance');
+  if (seo.length === 0) return <GlobalEditor title='Insurance page' keys={['page.insurance']} />;
 
   return (
-    <PermissionGate permissions={[PERMISSIONS.SETTINGS_MANAGE]} fallback={<p>You do not have access to this page.</p>}>
-      <div className='flex flex-col gap-6'>
-        <div>
-          <h1 className='text-xl font-semibold'>Insurance page</h1>
-          <p className='text-sm text-muted-foreground'>
-            Copy, feature cards and process steps shown on the public insurance page. Partner logos are managed under
-            Home page.
-          </p>
-        </div>
-        <InsurancePageForm initialContent={resolveInsuranceContent(settings)} />
-      </div>
-    </PermissionGate>
+    <div className='flex flex-col gap-6'>
+      <PageHeader
+        title='Insurance page'
+        description='Hero, steps and disclaimer copy (changes go live as soon as you save), plus how the page appears in search results and when shared.'
+      />
+      <PageTabs
+        tabs={[
+          {
+            value: 'content',
+            label: 'Page copy',
+            content: <GlobalEditor title='Insurance page' keys={['page.insurance']} embedded />,
+          },
+          ...seo,
+        ]}
+      />
+    </div>
   );
 }

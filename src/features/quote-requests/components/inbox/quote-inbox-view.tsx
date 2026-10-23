@@ -1,5 +1,8 @@
 'use client';
 
+import { toast } from 'sonner';
+import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,7 +19,9 @@ import {
   Wrench,
   X,
   RefreshCw,
+  ShieldAlert,
 } from 'lucide-react';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -52,6 +57,7 @@ const FOLDERS: Array<{
   { value: 'in_progress', label: 'In Progress', icon: Wrench },
   { value: 'completed', label: 'Completed', icon: CheckCircle2 },
   { value: 'cancelled', label: 'Cancelled', icon: Archive },
+  { value: 'spam', label: 'Spam', icon: ShieldAlert },
 ];
 
 export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProps) {
@@ -129,6 +135,9 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
         ]);
       } catch (err) {
         console.error('Failed to move quote status:', err);
+        toast.error(err instanceof Error ? err.message : 'Could not move the quote');
+        // Rethrow so the kanban rolls its optimistic move back.
+        throw err;
       } finally {
         setIsUpdatingStatus(false);
       }
@@ -137,91 +146,82 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
   );
 
   return (
-    <div className='flex h-[calc(100svh-6.5rem)] w-full flex-col gap-3.5 md:h-[calc(100svh-7.5rem)]'>
-      {/* Top Header: Title, View Switcher & Action Buttons */}
-      <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex items-center gap-3'>
-          <div className='flex size-9 items-center justify-center rounded-lg bg-red-600/10 text-red-600 dark:bg-red-600/20'>
-            {viewMode === 'kanban' ? <Kanban className='size-4.5' /> : <Inbox className='size-4.5' />}
-          </div>
-          <div>
-            <h1 className='text-lg font-bold tracking-tight text-foreground sm:text-xl'>
-              {viewMode === 'kanban' ? 'Quote & Job Pipeline' : 'Quote Requests Inbox'}
-            </h1>
-            <p className='text-xs text-muted-foreground'>
-              {viewMode === 'kanban'
-                ? 'Visual real-time workflow pipeline from initial enquiry to vehicle handover.'
-                : 'Customer collision, dent repair, and respray estimates received in real time.'}
-            </p>
-          </div>
-        </div>
+    <div className='flex h-[calc(var(--content-h)-var(--main-pad)-var(--rail-h,0px))] w-full flex-col gap-3.5'>
+      <PageHeader
+        title={viewMode === 'kanban' ? 'Quote & Job Pipeline' : 'Quote Requests Inbox'}
+        description={
+          viewMode === 'kanban'
+            ? 'Visual real-time workflow pipeline from initial enquiry to vehicle handover.'
+            : 'Customer collision, dent repair, and respray estimates received in real time.'
+        }
+        actions={
+          <>
+            <EnquiryActions type='quotes' status={viewMode === 'kanban' ? undefined : status} />
+            {/* View Mode Switcher */}
+            <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
+              <Button
+                type='button'
+                size='sm'
+                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('kanban')}
+                className={cn(
+                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
+                  viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs',
+                )}
+              >
+                <Kanban className='size-3.5 text-red-600' />
+                <span>Pipeline</span>
+              </Button>
+              <Button
+                type='button'
+                size='sm'
+                variant={viewMode === 'inbox' ? 'secondary' : 'ghost'}
+                onClick={() => setViewMode('inbox')}
+                className={cn(
+                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
+                  viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs',
+                )}
+              >
+                <LayoutList className='size-3.5 text-red-600' />
+                <span>Inbox</span>
+              </Button>
+            </div>
 
-        {/* Action Controls Toolbar */}
-        <div className='flex flex-wrap items-center gap-2 text-xs'>
-          {/* View Mode Switcher */}
-          <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
+            {/* New Enquiry Action Button */}
+            <NewEnquiryDialog
+              onCreated={(newId) => {
+                setSelectedId(newId);
+                // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
+              }}
+            />
+
+            {/* Refresh Button */}
             <Button
               type='button'
-              size='sm'
-              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-              onClick={() => setViewMode('kanban')}
-              className={cn(
-                'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs',
-              )}
+              variant='outline'
+              size='icon'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              title='Refresh data'
+              aria-label='Refresh data'
+              className='size-8'
             >
-              <Kanban className='size-3.5 text-red-600' />
-              <span>Pipeline</span>
+              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
             </Button>
-            <Button
-              type='button'
-              size='sm'
-              variant={viewMode === 'inbox' ? 'secondary' : 'ghost'}
-              onClick={() => setViewMode('inbox')}
-              className={cn(
-                'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs',
-              )}
-            >
-              <LayoutList className='size-3.5 text-red-600' />
-              <span>Inbox</span>
-            </Button>
-          </div>
 
-          {/* New Enquiry Action Button */}
-          <NewEnquiryDialog
-            onCreated={(newId) => {
-              setSelectedId(newId);
-              // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
-            }}
-          />
-
-          {/* Refresh Button */}
-          <Button
-            type='button'
-            variant='outline'
-            size='icon'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title='Refresh data'
-            aria-label='Refresh data'
-            className='size-8'
-          >
-            <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
-          </Button>
-
-          {/* Pipeline Summary Counter Badge */}
-          {currentStats.new > 0 && (
-            <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'>
-              <span className='size-1.5 animate-pulse rounded-full bg-rose-500' />
-              {currentStats.new} new
+            {/* Pipeline Summary Counter Badge */}
+            {currentStats.new > 0 && (
+              <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'>
+                <span className='size-1.5 animate-pulse rounded-full bg-rose-500' />
+                {currentStats.new} new
+              </span>
+            )}
+            <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
+              {quotes.length} total
             </span>
-          )}
-          <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
-            {quotes.length} total
-          </span>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* VIEW MODE 1: KANBAN PIPELINE BOARD */}
       {viewMode === 'kanban' ? (
@@ -285,8 +285,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
       ) : (
         /* VIEW MODE 2: CLASSIC SPLIT INBOX VIEW */
         <div className='flex min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden'>
-          {/* Mobile-Only Horizontal Filter Tabs Bar (< md) */}
-          <div className='flex w-full [scrollbar-width:none] items-center gap-1.5 overflow-x-auto pb-1 md:hidden [&::-webkit-scrollbar]:hidden'>
+          {/* Mobile-Only Horizontal Filter Tabs Bar (< lg) */}
+          <div className='flex w-full [scrollbar-width:none] items-center gap-1.5 overflow-x-auto pb-1 lg:hidden [&::-webkit-scrollbar]:hidden'>
             {FOLDERS.map((folder) => {
               const isSelected = status === folder.value;
               const count =
@@ -328,8 +328,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
 
           {/* Split-Pane Container: 3-pane layout */}
           <div className='flex min-h-0 w-full flex-1 overflow-hidden rounded-xl border border-border/80 bg-background shadow-2xs'>
-            {/* Pane 1: Vertical Mailbox Folders (Left side on md+) */}
-            <div className='hidden w-44 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border/70 bg-muted/15 p-2.5 md:flex lg:w-48 xl:w-52 dark:bg-muted/10'>
+            {/* Pane 1: Vertical Mailbox Folders (Left side on lg+) */}
+            <div className='hidden w-44 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border/70 bg-muted/15 p-2.5 lg:flex lg:w-48 xl:w-52 dark:bg-muted/10'>
               <span className='px-2.5 pt-1 pb-1.5 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase'>
                 Pipeline Folders
               </span>
@@ -387,8 +387,8 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             {/* Pane 2: Thread List */}
             <div
               className={cn(
-                'flex w-full shrink-0 flex-col overflow-hidden border-border/70 md:w-[310px] md:border-r lg:w-[350px] xl:w-[390px]',
-                isMobileDetailOpen ? 'hidden md:flex' : 'flex',
+                'flex w-full shrink-0 flex-col overflow-hidden border-border/70 lg:w-[350px] lg:border-r xl:w-[390px]',
+                isMobileDetailOpen ? 'hidden lg:flex' : 'flex',
               )}
             >
               {/* Search Box */}
@@ -416,16 +416,17 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
               {/* Threads List */}
               <div className='flex-1 overflow-y-auto'>
                 {quotes.length === 0 ? (
-                  <div className='flex h-full flex-col items-center justify-center p-6 text-center text-muted-foreground'>
-                    <div className='flex size-10 items-center justify-center rounded-full bg-muted/60'>
-                      <Wrench className='size-4 text-muted-foreground' />
-                    </div>
-                    <p className='mt-3 text-xs font-semibold text-foreground'>No quote inquiries found</p>
-                    <p className='mt-1 text-[11px] text-muted-foreground'>
-                      {search || status !== 'all'
-                        ? 'Try clearing the search or switching filters.'
-                        : 'Customer requests submitted online will appear here.'}
-                    </p>
+                  <div className='p-4'>
+                    <EmptyState
+                      title='No enquiries here yet'
+                      description={
+                        status === 'spam'
+                          ? 'No spam. Suspicious submissions land here.'
+                          : search || status !== 'all'
+                            ? 'Try clearing the search or switching filters.'
+                            : 'Customer requests submitted online will appear here.'
+                      }
+                    />
                   </div>
                 ) : (
                   <div>
@@ -446,7 +447,7 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
             <div
               className={cn(
                 'flex w-full min-w-0 flex-1 flex-col overflow-hidden',
-                isMobileDetailOpen ? 'flex' : 'hidden md:flex',
+                isMobileDetailOpen ? 'flex' : 'hidden lg:flex',
               )}
             >
               {selectedQuote ? (

@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CloudinaryUpload } from '@/components/form/cloudinary-upload';
+import { MediaField } from '@/features/media/components/media-field';
+import { slotPatch, slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { HOMEPAGE_CATALOG_ICONS, type HomepageCatalogIcon } from '@/validations/homepage-catalog-schema';
 import type { CreateHomepageCatalogInput, HomepageCatalog } from '../types';
@@ -20,7 +21,7 @@ interface FormState {
   badge: string;
   footnote: string;
   icon: HomepageCatalogIcon;
-  iconPublicId: string;
+  iconMediaId: Slot;
   isEnabled: boolean;
 }
 
@@ -31,7 +32,7 @@ function toFormState(data: HomepageCatalog | null): FormState {
     badge: data?.badge ?? '',
     footnote: data?.footnote ?? 'Free Estimate',
     icon: (data?.icon as HomepageCatalogIcon) ?? 'car-front',
-    iconPublicId: data?.iconPublicId ?? '',
+    iconMediaId: undefined,
     isEnabled: data?.isEnabled ?? true,
   };
 }
@@ -73,7 +74,7 @@ export function HomepageCatalogForm({
       badge: form.badge.trim() ? form.badge.trim() : null,
       footnote: form.footnote.trim() ? form.footnote.trim() : 'Free Estimate',
       icon: form.icon,
-      iconPublicId: form.iconPublicId || null,
+      ...slotPatch('iconMediaId', form.iconMediaId),
       isEnabled: form.isEnabled,
     });
   };
@@ -158,11 +159,12 @@ export function HomepageCatalogForm({
             <p className='text-xs text-muted-foreground'>
               Upload a custom SVG/PNG icon, or leave empty to use the preset icon chosen above.
             </p>
-            <CloudinaryUpload
-              mode='single-image'
-              folder='vantage/catalogs'
-              value={form.iconPublicId || null}
-              onChange={(v) => setField('iconPublicId', (v as string) ?? '')}
+            <MediaField
+              kind='image'
+              label='Custom icon'
+              nullable
+              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
+              onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
             />
           </div>
         </CardContent>

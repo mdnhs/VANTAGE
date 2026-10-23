@@ -14,6 +14,7 @@ export const contactMessages = pgTable(
     status: varchar('status', { length: 40 }).notNull().default('new'),
     adminNotes: text('admin_notes'),
     source: varchar('source', { length: 60 }).notNull().default('contact_page'),
+    spamReason: varchar('spam_reason', { length: 40 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

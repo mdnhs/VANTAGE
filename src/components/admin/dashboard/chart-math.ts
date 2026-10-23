@@ -1,0 +1,24 @@
+export type GaugePart = {
+  key: string;
+  label: string;
+  value: number;
+  tone: 'solid' | 'dark' | 'hatched';
+};
+
+// `ratio` is the headline part's share of the total, and `headline` its
+// value: the part whose key is `headlineKey`, or the first part when no key
+// is given. An empty gauge (or an unknown key) has a ratio of 0, never NaN.
+export function gaugeSummary(parts: readonly GaugePart[], headlineKey?: string) {
+  const clean = parts.map((part) => ({
+    ...part,
+    value: Number.isFinite(part.value) ? Math.max(0, part.value) : 0,
+  }));
+  const total = clean.reduce((sum, part) => sum + part.value, 0);
+  const headline = headlineKey === undefined ? clean[0] : clean.find((part) => part.key === headlineKey);
+  return {
+    parts: clean,
+    total,
+    headline: headline?.value ?? 0,
+    ratio: total === 0 ? 0 : (headline?.value ?? 0) / total,
+  };
+}

@@ -34,11 +34,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { SpamActions } from '@/features/enquiries/components/spam-actions';
+import { spamReasonLabel } from '@/lib/enquiries/spam';
 import { QuoteStatusBadge } from '../quote-status-badge';
 import { QuoteSourceBadge } from '../quote-source-badge';
 import { useUpdateQuoteRequest } from '../../hooks/api/mutation/use-update-quote-request';
 import { useDeleteQuoteRequest } from '../../hooks/api/mutation/use-delete-quote-request';
-import { useAdminUserList } from '@/features/admin-users/hooks/api/query/use-admin-user-list';
+import { useAssignees } from '../../hooks/api/query/use-assignees';
 import {
   PIPELINE_STATUSES,
   PAYMENT_STATUSES,
@@ -118,7 +120,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const [address, setAddress] = useState<string>(quote.address ?? '');
   const [city, setCity] = useState<string>(quote.city ?? '');
   const [eircode, setEircode] = useState<string>(quote.eircode ?? '');
-  const [assignedAdminId, setAssignedAdminId] = useState<string>(quote.assignedAdminId ?? 'unassigned');
+  const [assignedUserId, setAssignedUserId] = useState<string>(quote.assignedUserId ?? 'unassigned');
   const [inspectionDate, setInspectionDate] = useState<string>(toDatetimeLocal(quote.inspectionDate));
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>((quote.paymentStatus as PaymentStatus) ?? 'unpaid');
   const [paidAmount, setPaidAmount] = useState<string>(quote.paidAmount ?? '0.00');
@@ -129,7 +131,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
-  const { data: adminUsers } = useAdminUserList();
+  const { data: adminUsers } = useAssignees();
   const updateQuote = useUpdateQuoteRequest(quote.id);
   const deleteQuote = useDeleteQuoteRequest();
 
@@ -143,9 +145,9 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
 
   // Quick Staff Assignment
   const handleStaffChange = async (newStaffId: string) => {
-    setAssignedAdminId(newStaffId);
+    setAssignedUserId(newStaffId);
     await updateQuote.mutateAsync({
-      assignedAdminId: newStaffId === 'unassigned' ? null : newStaffId,
+      assignedUserId: newStaffId === 'unassigned' ? null : newStaffId,
     });
   };
 
@@ -191,7 +193,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
       address: address.trim() ? address.trim() : null,
       city: city.trim() ? city.trim() : null,
       eircode: eircode.trim() ? eircode.trim().toUpperCase() : null,
-      assignedAdminId: assignedAdminId === 'unassigned' ? null : assignedAdminId,
+      assignedUserId: assignedUserId === 'unassigned' ? null : assignedUserId,
       inspectionDate: inspectionDate ? new Date(inspectionDate).toISOString() : null,
       paymentStatus,
       paidAmount: paidAmount !== '' ? parseFloat(paidAmount) : 0,
@@ -228,7 +230,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
   const hasAddress = Boolean(address || quote.address || city || quote.city || eircode || quote.eircode);
 
   // Assigned staff representation
-  const currentAssignedStaff = adminUsers?.find((u) => u.id === assignedAdminId) || quote.assignedAdmin;
+  const currentAssignedStaff = adminUsers?.find((u) => u.id === assignedUserId) || quote.assignedUser;
 
   return (
     <div className='@container flex h-full w-full min-w-0 flex-1 flex-col overflow-y-auto bg-background'>
@@ -258,7 +260,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
           >
             <SelectTrigger className='h-8 w-[180px] text-xs'>
               <SelectValue>
-                <QuoteStatusBadge status={status} />
+                <QuoteStatusBadge status={status} spamReason={quote.spamReason} />
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -267,6 +269,9 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
                   <QuoteStatusBadge status={s} />
                 </SelectItem>
               ))}
+              <SelectItem key='spam' value='spam' className='text-xs'>
+                <QuoteStatusBadge status='spam' />
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -326,6 +331,14 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             <ExternalLink className='size-3.5' />
           </Link>
 
+          <SpamActions
+            kind='quote'
+            id={quote.id}
+            status={quote.status}
+            spamReason={quote.spamReason}
+            hasBilling={Boolean(invoiceNumber || paymentStatus !== 'unpaid' || paidAmountNum > 0 || paymentMethod)}
+          />
+
           {/* Delete Quote */}
           <Button
             type='button'
@@ -343,6 +356,11 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
 
       {/* Main Reading & Management Body */}
       <div className='flex w-full flex-col gap-6 p-4 sm:p-6 lg:p-8'>
+        {quote.status === 'spam' && (
+          <div className='rounded-xl bg-danger-soft p-3 text-sm text-danger'>
+            Held as spam: {spamReasonLabel(quote.spamReason)}.
+          </div>
+        )}
         {/* Email Header: Customer & Meta */}
         <div className='flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-5'>
           <div className='flex items-start gap-3.5'>
@@ -499,7 +517,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             </div>
 
             <Select
-              value={assignedAdminId}
+              value={assignedUserId}
               onValueChange={(val) => {
                 if (val) handleStaffChange(val);
               }}
@@ -583,17 +601,17 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
         </div>
 
         {/* Attachments: Customer Photos */}
-        {quote.photoUrls && quote.photoUrls.length > 0 && (
+        {quote.photos.length > 0 && (
           <div className='flex flex-col gap-2.5'>
             <div className='flex items-center justify-between'>
               <span className='text-xs font-semibold tracking-wider text-muted-foreground uppercase'>
-                Attached Damage Photos ({quote.photoUrls.length})
+                Attached Damage Photos ({quote.photos.length})
               </span>
               <span className='text-[11px] text-muted-foreground'>Click to expand full resolution</span>
             </div>
 
             <div className='grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4'>
-              {quote.photoUrls.map((url, idx) => (
+              {quote.photos.map(({ url }, idx) => (
                 <button
                   key={idx}
                   type='button'

@@ -1,6 +1,6 @@
 import Image from 'next/image';
+import { sizedSrc } from '@/lib/media/public-image';
 import { Star } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { TestimonialPublic } from '@/features/testimonials/types';
 
 // Literal class names so Tailwind's content scanner can pick them up statically.
@@ -39,13 +39,13 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
     >
       <div className='intersect-once flex flex-col gap-4 intersect:motion-preset-slide-up-sm'>
         <div className='flex items-center gap-4'>
-          <span className='h-px w-8 bg-red-500/50' />
-          <span className='text-xs font-semibold tracking-[1.2px] text-red-500 uppercase'>Client Feedback</span>
+          <span className='h-px w-8 bg-brand/50' />
+          <span className='text-xs font-semibold tracking-[1.2px] text-brand uppercase'>Client Feedback</span>
         </div>
-        <h2 className='xs:text-3xl font-[family-name:var(--font-manrope)] text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+        <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
           Trusted By
           <br />
-          <span className='text-[#dc2626]'>Our Customers.</span>
+          <span className='text-brand'>Our Customers.</span>
         </h2>
       </div>
 
@@ -53,7 +53,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
         {testimonials.map((testimonial, index) => (
           <div
             key={testimonial.id}
-            className={`intersect-once flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-red-500/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
+            className={`intersect-once flex min-h-[260px] flex-col gap-6 rounded-lg border border-white/10 bg-white/4 px-6 pt-6 pb-5 backdrop-blur-md transition-colors duration-300 hover:border-brand/40 sm:min-h-[280px] sm:px-8 sm:pt-8 sm:pb-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
           >
             <RatingStars rating={testimonial.rating} />
 
@@ -62,21 +62,24 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
             </p>
 
             <div className='flex items-center gap-3 border-t border-white/10 pt-6'>
-              {testimonial.avatarPublicId ? (
+              {testimonial.avatar ? (
                 <Image
-                  src={cldUrl(testimonial.avatarPublicId, { width: 88, height: 88, crop: 'fill', gravity: 'face' })}
+                  src={sizedSrc(testimonial.avatar, 'w_88,h_88,c_fill,g_face')}
+                  style={{
+                    objectPosition: `${testimonial.avatar.focal.x * 100}% ${testimonial.avatar.focal.y * 100}%`,
+                  }}
                   alt=''
                   width={44}
                   height={44}
                   className='size-11 shrink-0 rounded-full object-cover'
                 />
               ) : (
-                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] font-[family-name:var(--font-manrope)] text-sm font-semibold text-[#e5e2e1]'>
+                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] font-site-heading text-sm font-semibold text-[#e5e2e1]'>
                   {initials(testimonial.customerName)}
                 </div>
               )}
               <div className='flex flex-col'>
-                <span className='font-[family-name:var(--font-manrope)] text-sm font-semibold text-[#e5e2e1]'>
+                <span className='font-site-heading text-sm font-semibold text-[#e5e2e1]'>
                   {testimonial.customerName}
                 </span>
                 {testimonial.serviceReceived && (

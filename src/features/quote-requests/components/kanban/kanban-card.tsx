@@ -66,7 +66,7 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
     transition,
   };
 
-  const hasPhotos = Boolean(quote.photoUrls && quote.photoUrls.length > 0);
+  const hasPhotos = quote.photos.length > 0;
   const vehicleText = [quote.year, quote.make, quote.model].filter(Boolean).join(' ');
 
   // Determine next logical pipeline stage for quick advance
@@ -126,7 +126,7 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
       )}
 
       {/* Phase 3 Meta: Location, Assigned Staff & Inspection */}
-      {(quote.city || quote.assignedAdmin || quote.inspectionDate) && (
+      {(quote.city || quote.assignedUser || quote.inspectionDate) && (
         <div className='flex flex-wrap items-center gap-1.5 pt-0.5'>
           {quote.city && (
             <span className='inline-flex items-center gap-1 text-[10px] text-muted-foreground'>
@@ -134,10 +134,10 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
               <span>{quote.city}</span>
             </span>
           )}
-          {quote.assignedAdmin && (
+          {quote.assignedUser && (
             <span className='inline-flex items-center gap-1 rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-400'>
               <UserCheck2 className='size-2.5' />
-              <span>{quote.assignedAdmin.name.split(' ')[0]}</span>
+              <span>{quote.assignedUser.name.split(' ')[0]}</span>
             </span>
           )}
           {quote.inspectionDate && (
@@ -187,11 +187,11 @@ function KanbanCardImpl({ quote, onSelectQuote, onStatusChange, isOverlay = fals
 
           {hasPhotos && (
             <span
-              title={`${quote.photoUrls?.length} damage photos`}
+              title={`${quote.photos.length} damage photos`}
               className='ml-1 flex items-center gap-1 text-[10px] text-muted-foreground'
             >
               <ImageIcon className='size-3' />
-              {quote.photoUrls?.length}
+              {quote.photos.length}
             </span>
           )}
         </div>

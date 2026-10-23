@@ -1,22 +1,32 @@
-import { neon } from '@neondatabase/serverless';
-import { drizzle as drizzleNeonHttp } from 'drizzle-orm/neon-http';
-import { drizzle as drizzleNodePostgres } from 'drizzle-orm/node-postgres';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error('DATABASE_URL is not set');
 
-const isLocalPostgres = /^(localhost|127\.0\.0\.1)(:|\/)/.test(new URL(connectionString).host);
+// Plain Postgres over the regular wire protocol (node-postgres). SSL is driven by the
+// connection string (`?sslmode=require` for a remote server). The pool is cached on
+// globalThis so dev HMR reloads reuse it instead of leaking a new pool per reload.
+// Keep `max` small: every serverless instance holds its own pool, so total connections
+// = instances × max — size DB_POOL_MAX against the server's max_connections.
+const globalForDb = globalThis as unknown as { pgPool?: Pool };
 
-// Local dev talks to a plain Postgres server over the regular wire protocol (node-postgres) —
-// @neondatabase/serverless's neon-http driver only speaks Neon's HTTP proxy protocol, which a
-// vanilla local Postgres doesn't implement. Everywhere else (a real Neon endpoint) keeps using
-// neon-http: one stateless HTTP round trip per query, nothing held open, so the compute endpoint
-// can suspend the instant the query returns — this is why we do NOT use a WebSocket Pool there.
-export const db = isLocalPostgres
-  ? drizzleNodePostgres(new Pool({ connectionString }), { schema, logger: process.env.NODE_ENV === 'development' })
-  : drizzleNeonHttp(neon(connectionString), { schema, logger: process.env.NODE_ENV === 'development' });
+const pool =
+  globalForDb.pgPool ??
+  new Pool({
+    connectionString,
+    max: Number(process.env.DB_POOL_MAX ?? 5),
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForDb.pgPool = pool;
+
+export const db = drizzle(pool, { schema, logger: process.env.NODE_ENV === 'development' });
 
 export type Db = typeof db;
 export { schema };
+
+// Either the pool-backed client or a transaction handle, so helpers work in both.
+export type DbLike = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];

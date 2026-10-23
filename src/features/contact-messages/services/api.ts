@@ -1,10 +1,11 @@
+import { photoErrorOf } from '@/lib/media/photo-error';
 import { API_ROUTES } from '@/lib/routes/api-routes';
 import type { PaginationMeta } from '@/server/lib/response';
 import type {
   ContactMessage,
   ContactMessageListQuery,
   ContactMessageStats,
-  CreateContactMessageInput,
+  PublicContactMessageInput,
   UpdateContactMessageInput,
 } from '../types';
 
@@ -27,13 +28,19 @@ async function parseWithPagination<T>(res: Response): Promise<{ data: T; paginat
 }
 
 // Public submission
-export async function submitContactMessage(input: CreateContactMessageInput): Promise<ContactMessage> {
+export async function submitContactMessage(input: PublicContactMessageInput): Promise<Omit<ContactMessage, 'photos'>> {
   const res = await fetch(`${BASE_URL}${API_ROUTES.contacts.submit}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-  return parseOrThrow<ContactMessage>(res);
+  const body = await res
+    .clone()
+    .json()
+    .catch(() => null);
+  const photoError = res.status === 422 ? photoErrorOf(body) : null;
+  if (photoError) throw new Error(photoError);
+  return parseOrThrow<Omit<ContactMessage, 'photos'>>(res);
 }
 
 // Admin list with pagination & filters

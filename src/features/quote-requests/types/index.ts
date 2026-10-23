@@ -1,4 +1,5 @@
-import type { QuoteRequest as DbQuoteRequest, NewQuoteRequest, AdminUser } from '@/server/db/schema';
+import type { EnquiryPhoto } from '@/lib/media/enquiry-photo';
+import type { QuoteRequest as DbQuoteRequest, NewQuoteRequest, User } from '@/server/db/schema';
 import {
   QUOTE_STATUSES,
   PIPELINE_STATUSES,
@@ -7,6 +8,7 @@ import {
   PAYMENT_STATUSES,
   PAYMENT_METHODS,
   type CreateQuoteRequestInput,
+  type PublicQuoteRequestInput,
   type QuoteRequestListQuery,
   type QuoteStatus,
   type PipelineStatus,
@@ -18,8 +20,9 @@ import {
 
 export { QUOTE_STATUSES, PIPELINE_STATUSES, ALL_QUOTE_STATUSES, QUOTE_SOURCES, PAYMENT_STATUSES, PAYMENT_METHODS };
 
-export type QuoteRequest = DbQuoteRequest & {
-  assignedAdmin?: Pick<AdminUser, 'id' | 'name' | 'email'> | null;
+export type QuoteRequest = Omit<DbQuoteRequest, 'photoUrls'> & {
+  photos: EnquiryPhoto[];
+  assignedUser?: Pick<User, 'id' | 'name' | 'email'> | null;
 };
 
 export type QuoteRequestWithStaff = QuoteRequest;
@@ -28,6 +31,7 @@ export type {
   DbQuoteRequest,
   NewQuoteRequest,
   CreateQuoteRequestInput,
+  PublicQuoteRequestInput,
   UpdateQuoteRequestInput,
   QuoteRequestListQuery,
   QuoteStatus,
@@ -47,6 +51,7 @@ export interface QuoteRequestStats {
   in_progress: number;
   completed: number;
   cancelled: number;
+  spam: number;
   // Legacy support
   quoted?: number;
   archived?: number;

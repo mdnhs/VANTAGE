@@ -1,5 +1,7 @@
 // Re-export every table here as features are scaffolded.
 export * from './auth';
+export * from './audit';
+export * from './rate-limits';
 export * from './admin-users';
 export * from './site-settings';
 export * from './services';
@@ -12,5 +14,13 @@ export * from './homepage-process-steps';
 export * from './homepage-catalogs';
 export * from './quote-requests';
 export * from './contact-messages';
+export * from './settings';
+export * from './revisions';
+export * from './media';
+export * from './consent';
+export * from './enquiry-photos';
 export * from './relations';
+export * from './ai';
+export * from './redirects';
+export * from './media-purges';
 // export * from './orders';

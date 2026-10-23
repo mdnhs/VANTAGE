@@ -2,19 +2,20 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, MessageSquare, Phone, Trash2, Search, Wrench } from 'lucide-react';
+import { Eye, MessageSquare, Phone, Trash2, Search } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
 import { QuoteStatusBadge } from '../quote-status-badge';
 import { QuoteStatusTabs } from './quote-status-tabs';
 import { useQuoteRequestList } from '../../hooks/api/query/use-quote-request-list';
 import { useQuoteRequestStats } from '../../hooks/api/query/use-quote-request-stats';
 import { useUpdateQuoteRequest } from '../../hooks/api/mutation/use-update-quote-request';
 import { useDeleteQuoteRequest } from '../../hooks/api/mutation/use-delete-quote-request';
-import { QUOTE_STATUSES, type QuoteRequest, type QuoteRequestStats, type QuoteStatus } from '../../types';
+import { ALL_QUOTE_STATUSES, type QuoteRequest, type QuoteRequestStats, type QuoteStatus } from '../../types';
 
 interface QuoteRequestTableProps {
   initialData: { data: QuoteRequest[]; total: number };
@@ -43,11 +44,11 @@ function StatusQuickSelect({ quote }: { quote: QuoteRequest }) {
     >
       <SelectTrigger className='h-7 w-[125px] text-xs'>
         <SelectValue>
-          <QuoteStatusBadge status={quote.status} />
+          <QuoteStatusBadge status={quote.status} spamReason={quote.spamReason} />
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {QUOTE_STATUSES.map((s) => (
+        {ALL_QUOTE_STATUSES.map((s) => (
           <SelectItem key={s} value={s} className='text-xs'>
             <QuoteStatusBadge status={s} />
           </SelectItem>
@@ -118,17 +119,16 @@ export function QuoteRequestTable({ initialData, initialStats }: QuoteRequestTab
 
       {/* Table Container */}
       {rows.length === 0 ? (
-        <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center'>
-          <div className='flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground'>
-            <Wrench className='size-5' />
-          </div>
-          <h3 className='mt-3 text-sm font-semibold'>No quote requests found</h3>
-          <p className='mt-1 text-xs text-muted-foreground'>
-            {search || status !== 'all'
-              ? 'Try adjusting your search or status filter.'
-              : 'New quote inquiries submitted by visitors will appear here in real time.'}
-          </p>
-        </div>
+        <EmptyState
+          title='No enquiries here yet'
+          description={
+            status === 'spam'
+              ? 'No spam. Suspicious submissions land here.'
+              : search || status !== 'all'
+                ? 'Try adjusting your search or status filter.'
+                : 'New quote inquiries submitted by visitors will appear here in real time.'
+          }
+        />
       ) : (
         <div className='overflow-x-auto rounded-lg border border-border'>
           <table className='w-full text-sm'>
@@ -183,9 +183,9 @@ export function QuoteRequestTable({ initialData, initialStats }: QuoteRequestTab
                         ) : (
                           <span className='text-xs text-muted-foreground italic'>No description</span>
                         )}
-                        {quote.photoUrls && quote.photoUrls.length > 0 && (
+                        {quote.photos.length > 0 && (
                           <span className='mt-1 inline-flex w-fit items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground'>
-                            📷 {quote.photoUrls.length} {quote.photoUrls.length === 1 ? 'photo' : 'photos'}
+                            📷 {quote.photos.length} {quote.photos.length === 1 ? 'photo' : 'photos'}
                           </span>
                         )}
                       </div>

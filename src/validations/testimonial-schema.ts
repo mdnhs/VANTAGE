@@ -1,20 +1,26 @@
 import { z } from 'zod';
 
+import { legacyImageKey } from './legacy-image-key';
+
 export const testimonialStatusValues = ['published', 'hidden'] as const;
 
-export const createTestimonialSchema = z.object({
+const testimonialBase = z.object({
   customerName: z.string().min(1).max(120),
   rating: z.coerce.number().int().min(1).max(5),
   reviewText: z.string().min(1),
-  avatarPublicId: z.string().min(1).max(255).nullable().optional(),
+  avatarMediaId: z.string().uuid().nullable().optional(),
+  avatarPublicId: legacyImageKey('avatarMediaId'),
   serviceReceived: z.string().min(1).max(120).nullable().optional(),
   receivedAt: z.coerce.date().nullable().optional(),
-  isFeatured: z.boolean().default(false),
+  isFeatured: z.boolean().optional(),
   status: z.enum(testimonialStatusValues).optional(),
   displayOrder: z.number().int().optional(),
 });
 
-export const updateTestimonialSchema = createTestimonialSchema.partial();
+// Defaults apply on create only: a partial update must never reset a field it leaves out.
+export const createTestimonialSchema = testimonialBase.extend({ isFeatured: z.boolean().default(false) });
+
+export const updateTestimonialSchema = testimonialBase.partial();
 
 export const testimonialListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

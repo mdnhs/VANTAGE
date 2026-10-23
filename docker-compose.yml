@@ -1,0 +1,44 @@
+# Local Postgres for development. Start with `docker compose up -d`.
+# DATABASE_URL=postgresql://vantage:vantage@localhost:5433/vantage
+services:
+  postgres:
+    image: postgres:18.1
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vantage
+      POSTGRES_PASSWORD: vantage
+      POSTGRES_DB: vantage
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - vantage-pgdata:/var/lib/postgresql
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vantage -d vantage']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    profiles: ['app']
+    build:
+      context: .
+      args:
+        MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-}
+        SITE_ENV: ${SITE_ENV:-}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://vantage:vantage@postgres:5432/vantage
+      MEDIA_LOCAL_DIR: /app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+    volumes:
+      - vantage-uploads:/app/uploads
+volumes:
+  vantage-pgdata:
+  vantage-uploads:

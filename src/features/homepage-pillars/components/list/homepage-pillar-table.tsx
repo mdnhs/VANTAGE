@@ -1,10 +1,14 @@
 'use client';
 
+import { useCan } from '@/contexts/actor-provider';
+import { useAuthorOnly } from '@/components/admin/author-gate';
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/admin/dashboard/empty-state';
+import { StatusPill, toneForStatus } from '@/components/admin/dashboard/status-pill';
 import { Switch } from '@/components/ui/switch';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { useHomepagePillarList } from '../../hooks/api/query/use-homepage-pillar-list';
@@ -21,18 +25,28 @@ const FILTERS = { page: 1, limit: 50 };
 
 // Inline row toggle needs its own mutation instance scoped to that row's id.
 function EnabledToggle({ pillar }: { pillar: HomepagePillar }) {
+  const authorOnly = useAuthorOnly();
   const updateHomepagePillar = useUpdateHomepagePillar(pillar.id);
+  const status = pillar.isEnabled ? 'enabled' : 'hidden';
   return (
-    <Switch
-      checked={pillar.isEnabled}
-      disabled={updateHomepagePillar.isPending}
-      onCheckedChange={(checked) => updateHomepagePillar.mutate({ isEnabled: checked })}
-      aria-label={`${pillar.isEnabled ? 'Disable' : 'Enable'} ${pillar.title}`}
-    />
+    <div className='flex items-center gap-2'>
+      <Switch
+        checked={pillar.isEnabled}
+        disabled={authorOnly || updateHomepagePillar.isPending}
+        onCheckedChange={(checked) => updateHomepagePillar.mutate({ isEnabled: checked })}
+        aria-label={`${pillar.isEnabled ? 'Disable' : 'Enable'} ${pillar.title}`}
+      />
+      <StatusPill tone={toneForStatus(status)} className='capitalize'>
+        {status}
+      </StatusPill>
+    </div>
   );
 }
 
 export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
+  const authorOnly = useAuthorOnly();
+  const canDelete = useCan({ content: ['delete'] });
+  const canCreate = useCan({ content: ['create'] }) && !authorOnly;
   const { data } = useHomepagePillarList(FILTERS);
   const rows = data?.data ?? initialData.data;
   const deleteHomepagePillar = useDeleteHomepagePillar();
@@ -53,7 +67,22 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
   };
 
   if (rows.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No homepage pillars yet. Add the first one to get started.</p>;
+    return (
+      <EmptyState
+        title='No homepage pillars yet'
+        description='Add the first homepage pillar to get started.'
+        action={
+          canCreate ? (
+            <Link
+              href={APP_ROUTES.content.homepagePillars.create}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              Add pillar
+            </Link>
+          ) : undefined
+        }
+      />
+    );
   }
 
   return (
@@ -65,7 +94,7 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
             <th className='px-4 py-2.5 font-medium'>Icon</th>
             <th className='px-4 py-2.5 font-medium'>Title</th>
             <th className='px-4 py-2.5 font-medium'>Description</th>
-            <th className='px-4 py-2.5 font-medium'>Enabled</th>
+            <th className='px-4 py-2.5 font-medium'>Status</th>
             <th className='px-4 py-2.5 text-right font-medium'>Actions</th>
           </tr>
         </thead>
@@ -79,7 +108,7 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === 0 || reorderHomepagePillars.isPending}
+                    disabled={authorOnly || index === 0 || reorderHomepagePillars.isPending}
                     onClick={() => move(index, -1)}
                     aria-label='Move up'
                   >
@@ -90,7 +119,7 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
                     variant='ghost'
                     size='icon'
                     className='size-6'
-                    disabled={index === rows.length - 1 || reorderHomepagePillars.isPending}
+                    disabled={authorOnly || index === rows.length - 1 || reorderHomepagePillars.isPending}
                     onClick={() => move(index, 1)}
                     aria-label='Move down'
                   >
@@ -110,28 +139,32 @@ export function HomepagePillarTable({ initialData }: HomepagePillarTableProps) {
               </td>
               <td className='px-4 py-2.5'>
                 <div className='flex items-center justify-end gap-1'>
-                  <Link
-                    href={APP_ROUTES.content.homepagePillars.edit(pillar.id)}
-                    aria-label={`Edit ${pillar.title}`}
-                    className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-                  >
-                    <Pencil className='size-4' />
-                  </Link>
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon'
-                    className='size-8 text-destructive hover:text-destructive'
-                    disabled={pendingDeleteId === pillar.id}
-                    onClick={() => {
-                      if (window.confirm(`Delete "${pillar.title}"? This cannot be undone.`)) {
-                        handleDelete(pillar.id);
-                      }
-                    }}
-                    aria-label={`Delete ${pillar.title}`}
-                  >
-                    <Trash2 className='size-4' />
-                  </Button>
+                  {!authorOnly && (
+                    <Link
+                      href={APP_ROUTES.content.homepagePillars.edit(pillar.id)}
+                      aria-label={`Edit ${pillar.title}`}
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+                    >
+                      <Pencil className='size-4' />
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='icon'
+                      className='size-8 text-destructive hover:text-destructive'
+                      disabled={pendingDeleteId === pillar.id}
+                      onClick={() => {
+                        if (window.confirm(`Delete "${pillar.title}"? This cannot be undone.`)) {
+                          handleDelete(pillar.id);
+                        }
+                      }}
+                      aria-label={`Delete ${pillar.title}`}
+                    >
+                      <Trash2 className='size-4' />
+                    </Button>
+                  )}
                 </div>
               </td>
             </tr>

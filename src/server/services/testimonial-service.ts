@@ -1,5 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { mediaIdsOf, prepareMediaWrite, writeWithMedia } from '@/server/lib/media/content-images';
 import { testimonialRepository } from '@/server/repositories/testimonial-repository';
 import type {
   CreateTestimonialInput,
@@ -9,15 +11,11 @@ import type {
   UpdateTestimonialInput,
 } from '@/validations/testimonial-schema';
 
+const MEDIA_PAIRS = [['avatarMediaId']] as const;
+
 const LIST_TAG = CACHE_TAGS.all('testimonials');
 const FEATURED_TAG = CACHE_TAGS.list('testimonials-featured');
-
-// listPublishedCached only shows published rows, and listFeaturedCached only shows
-// published + featured rows — a row that was never published (or never featured) can't be
-// in either cached list, so a mutation to it never needs to bust that tag.
-type ListedRow = { status: string; isFeatured: boolean } | null | undefined;
-const isListed = (row: ListedRow) => row?.status === 'published';
-const isFeaturedListed = (row: ListedRow) => isListed(row) && !!row?.isFeatured;
+const detailTag = (id: string) => CACHE_TAGS.detail('testimonials', id);
 
 async function listPublishedUncached() {
   return testimonialRepository.listPublished();
@@ -27,19 +25,21 @@ async function listFeaturedUncached() {
   return testimonialRepository.listFeatured();
 }
 
-// Every mutation below revalidates on demand, so the long 'days' window is only a backstop —
-// a shorter one just triggers background regenerations (ISR writes) without fresher content.
+// Content changes moderately often (new reviews added regularly) — 'minutes' matches the
+// projects cache profile rather than services'/settings' 'hours'.
 async function listPublishedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
-  cacheLife('days');
+  cacheLife('minutes');
   return listPublishedUncached();
 }
 
 async function listFeaturedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(FEATURED_TAG);
-  cacheLife('days');
+  cacheLife('minutes');
   return listFeaturedUncached();
 }
 
@@ -57,46 +57,45 @@ export const testimonialService = {
   },
 
   async create(data: CreateTestimonialInput) {
-    const row = await testimonialRepository.create(data);
-    // A hidden, unfeatured create can't appear in either cached list — nothing to bust.
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const id = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => testimonialRepository.insert(input, tx));
+    const row = await testimonialRepository.byId(id);
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    if (isListed(row)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
     return row;
   },
 
   async update(id: string, data: UpdateTestimonialInput) {
-    const before = await testimonialRepository.byId(id);
-    const row = await testimonialRepository.update(id, data);
-    if (!row) return undefined;
-    // Bust a list if the row was in it before the edit, is in it after, or both — covers a
-    // content edit to an already-listed row and a status/featured change that adds or
-    // removes it.
-    if (isListed(before) || isListed(row)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(before) || isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    const saved = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) =>
+      testimonialRepository.patch(id, input, tx),
+    );
+    const row = saved ? await testimonialRepository.byId(id) : undefined;
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
     return row;
   },
 
   async remove(id: string) {
-    const before = await testimonialRepository.byId(id);
     await testimonialRepository.remove(id);
-    if (isListed(before)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(before)) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
   },
 
   async updateStatus(id: string, data: TestimonialStatusInput) {
     const row = await testimonialRepository.updateStatus(id, data.status);
-    if (!row) return undefined;
-    // Status just changed, so LIST_TAG membership necessarily flipped either way. Featured
-    // status didn't change here, so only bust FEATURED_TAG if this row is (or was) featured.
-    revalidateTag(LIST_TAG, 'days');
-    if (row.isFeatured) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
     return row;
   },
 
   async reorder(data: ReorderTestimonialsInput) {
     await testimonialRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'days');
-    revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
   },
 };

@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+
+import { authRequest, LOCKED, RATE_LIMITED, UNREACHABLE } from './auth-errors';
+
+const ok = { data: { ok: true }, error: null };
+const failed = (status: number) => ({ data: null, error: { status } });
+
+describe('authRequest', () => {
+  it('passes successful data through', async () => {
+    expect(await authRequest(async () => ok)).toEqual({
+      data: { ok: true },
+      failure: null,
+    });
+  });
+
+  it('reports 429 as rate limited', async () => {
+    const { failure } = await authRequest(async () => failed(429));
+    expect(failure).toEqual({ kind: 'rate-limited', message: RATE_LIMITED });
+  });
+
+  it('reports 5xx and thrown network errors as unreachable', async () => {
+    for (const call of [
+      async () => failed(500),
+      async () => failed(503),
+      async () => {
+        throw new TypeError('Failed to fetch');
+      },
+    ]) {
+      const { failure } = await authRequest(call);
+      expect(failure).toEqual({ kind: 'unreachable', message: UNREACHABLE });
+    }
+  });
+
+  it('leaves other errors to the caller', async () => {
+    for (const status of [400, 401, 403]) {
+      const { failure } = await authRequest(async () => failed(status));
+      expect(failure).toEqual({ kind: 'rejected', message: null });
+    }
+  });
+
+  it("passes the server's error code through on a rejection", async () => {
+    const { failure } = await authRequest(async () => ({
+      data: null,
+      error: { status: 401, code: 'INVALID_TWO_FACTOR_COOKIE' },
+    }));
+    expect(failure).toEqual({
+      kind: 'rejected',
+      message: null,
+      code: 'INVALID_TWO_FACTOR_COOKIE',
+    });
+  });
+
+  it('reports a two-factor lockout as locked, not a 1-minute rate limit', async () => {
+    const { failure } = await authRequest(async () => ({
+      data: null,
+      error: { status: 429, code: 'ACCOUNT_TEMPORARILY_LOCKED' },
+    }));
+    expect(failure).toEqual({ kind: 'locked', message: LOCKED });
+    expect(LOCKED).toContain('15 minutes');
+  });
+  it("passes the server's field errors through on a rejection", async () => {
+    const { failure } = await authRequest(async () => ({
+      data: null,
+      error: {
+        status: 400,
+        code: 'INVALID_PROFILE',
+        fieldErrors: { name: ['Use 80 characters or fewer'] },
+      },
+    }));
+    expect(failure).toEqual({
+      kind: 'rejected',
+      message: null,
+      code: 'INVALID_PROFILE',
+      fieldErrors: { name: ['Use 80 characters or fewer'] },
+    });
+  });
+
+  it('ignores malformed field errors', async () => {
+    const { failure } = await authRequest(async () => ({
+      data: null,
+      error: { status: 400, fieldErrors: { name: 'not a list' } },
+    }));
+    expect(failure).toEqual({ kind: 'rejected', message: null });
+  });
+});

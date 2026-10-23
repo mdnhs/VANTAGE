@@ -1,5 +1,12 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
+import { ApiError } from '@/server/lib/errors';
 import { CACHE_TAGS } from '@/lib/cache/tags';
+import { MEDIA_TAG } from '@/lib/cache/media-tag';
+import { assertMediaExists, assertMediaExistsLocked } from '@/server/lib/media/assert-media';
+import { mediaIdsOf, prepareMediaWrite } from '@/server/lib/media/content-images';
+import { isAuthorOnly } from '@/lib/auth/content-access';
+import type { Actor } from '@/server/lib/auth/actor';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
 import { projectRepository } from '@/server/repositories/project-repository';
 import type {
   CreateProjectInput,
@@ -9,15 +16,11 @@ import type {
   UpdateProjectInput,
 } from '@/validations/project-schema';
 
+const MEDIA_PAIRS = [['beforeImageMediaId'], ['afterImageMediaId']] as const;
+
 const LIST_TAG = CACHE_TAGS.all('projects');
 const FEATURED_TAG = CACHE_TAGS.list('projects-featured');
-
-// listPublishedCached only shows published rows, and listFeaturedCached only shows
-// published + featured rows — a row that was never published (or never featured) can't be
-// in either cached list, so a mutation to it never needs to bust that tag.
-type ListedRow = { status: string; isFeatured: boolean } | null | undefined;
-const isListed = (row: ListedRow) => row?.status === 'published';
-const isFeaturedListed = (row: ListedRow) => isListed(row) && !!row?.isFeatured;
+const detailTag = (id: string) => CACHE_TAGS.detail('projects', id);
 
 async function listPublishedUncached() {
   return projectRepository.listPublished();
@@ -27,20 +30,44 @@ async function listFeaturedUncached() {
   return projectRepository.listFeatured();
 }
 
-// Every mutation below revalidates on demand, so the long 'days' window is only a backstop —
-// a shorter one just triggers background regenerations (ISR writes) without fresher content.
+// Public "Our Work" page reads this. Projects change more often than services/site
+// settings (new jobs finished regularly), so this profile is 'minutes' rather than
+// services'/settings' 'hours' — fresher without going all the way to per-request.
 async function listPublishedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(LIST_TAG);
-  cacheLife('days');
+  cacheLife('minutes');
   return listPublishedUncached();
 }
 
 async function listFeaturedCached() {
   'use cache';
+  cacheTag(MEDIA_TAG);
   cacheTag(FEATURED_TAG);
-  cacheLife('days');
+  cacheLife('minutes');
   return listFeaturedUncached();
+}
+
+// Internal callers (seeds, scripts, tests) pass this marker instead of a user: no ownership rules apply.
+export const SYSTEM_ACTOR = 'system' as const;
+type WriteActor = Actor | typeof SYSTEM_ACTOR;
+
+const authorOnlyActor = (actor: WriteActor): actor is Actor => actor !== SYSTEM_ACTOR && isAuthorOnly(actor.roles);
+
+// Authors write only their own drafts. Returns 'missing' when the row does not exist (the route
+// answers 404), or the repository guard that pins the write itself to the author's own draft.
+async function guardExisting(
+  actor: WriteActor,
+  id: string,
+  action: 'update' | 'gallery',
+  patch?: Record<string, unknown>,
+): Promise<'missing' | { ownerId: string } | undefined> {
+  if (!authorOnlyActor(actor)) return undefined;
+  const row = await projectRepository.byId(id);
+  if (!row) return 'missing';
+  assertContentWrite(actor, { type: 'project', action, row, patch });
+  return { ownerId: actor.userId };
 }
 
 export const projectService = {
@@ -60,47 +87,61 @@ export const projectService = {
     return projectRepository.bySlug(slug);
   },
 
-  async create(data: CreateProjectInput) {
-    const row = await projectRepository.create(data);
-    // A draft, unfeatured create can't appear in either cached list — nothing to bust.
+  async create(data: CreateProjectInput, actor: WriteActor) {
+    if (actor !== SYSTEM_ACTOR) assertContentWrite(actor, { type: 'project', action: 'create' });
+    const authorOnly = authorOnlyActor(actor);
+    const input = await prepareMediaWrite(
+      {
+        ...data,
+        ...(authorOnly ? { status: 'draft' as const, isFeatured: false, displayOrder: undefined } : {}),
+        ...(actor !== SYSTEM_ACTOR ? { createdBy: actor.userId } : {}),
+      },
+      MEDIA_PAIRS,
+    );
+    await assertMediaExists(input.galleryMediaIds ?? []);
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const row = await projectRepository.create(input, (tx) => assertMediaExistsLocked(tx, ids));
     // Second arg must match the `cacheLife` profile used in the cached reads above.
-    if (isListed(row)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
     return row;
   },
 
-  async update(id: string, data: UpdateProjectInput) {
-    const before = await projectRepository.byId(id);
-    const row = await projectRepository.update(id, data);
-    if (!row) return undefined;
-    // Bust a list if the row was in it before the edit, is in it after, or both — covers a
-    // content edit to an already-listed row and a status/featured change that adds or
-    // removes it.
-    if (isListed(before) || isListed(row)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(before) || isFeaturedListed(row)) revalidateTag(FEATURED_TAG, 'days');
+  async update(id: string, data: UpdateProjectInput, actor: WriteActor) {
+    const guard = await guardExisting(actor, id, data.galleryMediaIds !== undefined ? 'gallery' : 'update', data);
+    if (guard === 'missing') return undefined;
+    const input = await prepareMediaWrite(data, MEDIA_PAIRS);
+    await assertMediaExists(input.galleryMediaIds ?? []);
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const row = await projectRepository.update(id, input, guard, (tx) => assertMediaExistsLocked(tx, ids));
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
     return row;
   },
 
   async remove(id: string) {
-    const before = await projectRepository.byId(id);
     await projectRepository.remove(id);
-    if (isListed(before)) revalidateTag(LIST_TAG, 'days');
-    if (isFeaturedListed(before)) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
   },
 
-  async updateStatus(id: string, data: ProjectStatusInput) {
+  async updateStatus(id: string, data: ProjectStatusInput, actor: WriteActor) {
+    if ((await guardExisting(actor, id, 'update', data)) === 'missing') return undefined;
     const row = await projectRepository.updateStatus(id, data.status);
-    if (!row) return undefined;
-    // Status just changed, so LIST_TAG membership necessarily flipped either way. Featured
-    // status didn't change here, so only bust FEATURED_TAG if this row is (or was) featured.
-    revalidateTag(LIST_TAG, 'days');
-    if (row.isFeatured) revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
+    revalidateTag(detailTag(id), 'minutes');
     return row;
   },
 
-  async reorder(data: ReorderProjectsInput) {
+  async reorder(data: ReorderProjectsInput, actor: WriteActor) {
+    if (authorOnlyActor(actor)) {
+      throw ApiError.forbidden('Only an editor can publish, feature or reorder projects.');
+    }
     await projectRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'days');
-    revalidateTag(FEATURED_TAG, 'days');
+    revalidateTag(LIST_TAG, 'minutes');
+    revalidateTag(FEATURED_TAG, 'minutes');
   },
 };

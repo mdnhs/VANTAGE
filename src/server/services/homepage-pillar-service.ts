@@ -9,6 +9,7 @@ import type {
 } from '@/validations/homepage-pillar-schema';
 
 const LIST_TAG = CACHE_TAGS.all('homepage-pillars');
+const detailTag = (id: string) => CACHE_TAGS.detail('homepage-pillars', id);
 
 async function listEnabledUncached() {
   return homepagePillarRepository.listEnabled();
@@ -19,7 +20,7 @@ async function listEnabledUncached() {
 async function listEnabledCached() {
   'use cache';
   cacheTag(LIST_TAG);
-  cacheLife('days');
+  cacheLife('hours');
   return listEnabledUncached();
 }
 
@@ -38,23 +39,25 @@ export const homepagePillarService = {
   async create(data: CreateHomepagePillarInput) {
     const row = await homepagePillarRepository.create(data);
     // Second arg must match the `cacheLife` profile used in listEnabledCached above.
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
     return row;
   },
 
   async update(id: string, data: UpdateHomepagePillarInput) {
     const row = await homepagePillarRepository.update(id, data);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(detailTag(id), 'hours');
     return row;
   },
 
   async remove(id: string) {
     await homepagePillarRepository.remove(id);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
+    revalidateTag(detailTag(id), 'hours');
   },
 
   async reorder(data: ReorderHomepagePillarsInput) {
     await homepagePillarRepository.reorder(data.ids);
-    revalidateTag(LIST_TAG, 'days');
+    revalidateTag(LIST_TAG, 'hours');
   },
 };

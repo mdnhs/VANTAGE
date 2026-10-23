@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
+import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
+import { actorOf, can } from '@/server/middleware/auth';
+import { assertContentWrite } from '@/server/lib/auth/content-access';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { testimonialService } from '@/server/services/testimonial-service';
 import {
   createTestimonialSchema,
@@ -16,51 +19,42 @@ import {
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const testimonials = new Hono<AuthEnv>()
-  // Public read — unused by the marketing frontend today (it reads testimonialService
-  // directly), kept for external API consumers.
+export const testimonials = new Hono<AppEnv>()
+  // Public read — CDN-cached, no auth, no database hit once the edge has a copy.
   .get('/', async (c) => {
+    c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     const data = await testimonialService.listPublished();
     return ok(c, data);
   })
 
   .get('/featured', async (c) => {
+    c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     const data = await testimonialService.listFeatured();
     return ok(c, data);
   })
 
-  .get(
-    '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
-    zValidator('query', testimonialListQuerySchema),
-    async (c) => {
-      const { page, limit } = c.req.valid('query');
-      const { rows, total } = await testimonialService.listAdmin({ page, limit });
-      return ok(c, rows, { pagination: buildPagination(total, page, limit) });
-    },
-  )
+  .get('/admin/list', can({ content: ['read'] }), zValidator('query', testimonialListQuerySchema), async (c) => {
+    const { page, limit } = c.req.valid('query');
+    const { rows, total } = await testimonialService.listAdmin({ page, limit });
+    return ok(c, rows, { pagination: buildPagination(total, page, limit) });
+  })
 
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await testimonialService.byId(id);
-      if (!row) throw ApiError.notFound('Testimonial not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ content: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await testimonialService.byId(id);
+    if (!row) throw ApiError.notFound('Testimonial not found');
+    return ok(c, row);
+  })
 
   .post(
     '/',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
+    can({ content: ['create'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'testimonial.create', entityType: 'testimonial', summary: 'Testimonial created' }),
     zValidator('json', createTestimonialSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'create' });
       const row = await testimonialService.create(input);
       return ok(c, row, { status: 201 });
     },
@@ -68,11 +62,13 @@ export const testimonials = new Hono<AuthEnv>()
 
   .patch(
     '/reorder',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'testimonial.reorder', entityType: 'testimonial', summary: 'Testimonials reordered' }),
     zValidator('json', reorderTestimonialsSchema),
     async (c) => {
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'reorder' });
       await testimonialService.reorder(input);
       return ok(c, { success: true });
     },
@@ -80,13 +76,21 @@ export const testimonials = new Hono<AuthEnv>()
 
   .patch(
     '/:id/status',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'testimonial.update',
+      entityType: 'testimonial',
+      summary: 'Testimonial updated',
+      fields: ['status'],
+      load: testimonialService.byId,
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', testimonialStatusSchema),
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'update' });
       const row = await testimonialService.updateStatus(id, input);
       if (!row) throw ApiError.notFound('Testimonial not found');
       return ok(c, row);
@@ -95,13 +99,21 @@ export const testimonials = new Hono<AuthEnv>()
 
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
+    can({ content: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'testimonial.update',
+      entityType: 'testimonial',
+      summary: 'Testimonial updated',
+      load: testimonialService.byId,
+      redact: ['reviewText', 'customerName'],
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateTestimonialSchema),
     async (c) => {
       const { id } = c.req.valid('param');
       const input = c.req.valid('json');
+      assertContentWrite(actorOf(c), { type: 'testimonial', action: 'update' });
       const row = await testimonialService.update(id, input);
       if (!row) throw ApiError.notFound('Testimonial not found');
       return ok(c, row);
@@ -110,8 +122,14 @@ export const testimonials = new Hono<AuthEnv>()
 
   .delete(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.TESTIMONIALS_MANAGE),
+    can({ content: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'testimonial.delete',
+      entityType: 'testimonial',
+      summary: 'Testimonial deleted',
+      load: testimonialService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

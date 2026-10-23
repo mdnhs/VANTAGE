@@ -1,3 +1,4 @@
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,9 +13,11 @@ export function ProcessPanel({ initialData }: { initialData: { data: HomepagePro
         <p className='text-sm text-muted-foreground'>
           The numbered process-step cards shown on the homepage, in display order.
         </p>
-        <Link href={APP_ROUTES.content.homepageProcessSteps.create} className={cn(buttonVariants())}>
-          Add step
-        </Link>
+        <HideForAuthorOnly>
+          <Link href={APP_ROUTES.content.homepageProcessSteps.create} className={cn(buttonVariants())}>
+            Add step
+          </Link>
+        </HideForAuthorOnly>
       </div>
       <HomepageProcessStepTable initialData={initialData} />
     </div>

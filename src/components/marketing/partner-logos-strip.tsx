@@ -1,6 +1,7 @@
 import Image from 'next/image';
-import { cldUrl } from '@/lib/cloudinary/url';
+import { sizedSrc } from '@/lib/media/public-image';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
+import { SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/ui/landing-primitives';
 
 interface PartnerLogosStripProps {
   logos: PartnerLogoPublic[];
@@ -12,40 +13,43 @@ export function PartnerLogosStrip({ logos }: PartnerLogosStripProps) {
   if (logos.length === 0) return null;
 
   return (
-    <section className='container mx-auto bg-[#131313] px-4 py-10 sm:px-6 sm:py-14 lg:px-12'>
-      <div className='mx-auto flex max-w-[1152px] flex-col gap-6 sm:gap-8'>
-        <p className='text-center text-xs font-semibold tracking-[1.2px] text-neutral-400 uppercase'>
-          Trusted By Leading Insurance Providers
-        </p>
-        <div className='flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:gap-x-10 sm:gap-y-6'>
-          {logos.map((logo) => {
-            const image = (
-              <Image
-                src={cldUrl(logo.logoPublicId, { width: 320, height: 160, crop: 'fit' })}
-                alt={logo.companyName}
-                width={120}
-                height={60}
-                className='h-10 w-auto object-contain opacity-80 grayscale transition-[opacity,filter] duration-300 hover:opacity-100 hover:grayscale-0 sm:h-12'
-              />
-            );
+    <section className={SECTION_BG.base}>
+      <div className={`${SECTION_CONTAINER} gap-6 py-10 sm:gap-8 sm:py-14`}>
+        <div className='flex flex-col gap-6 border-t border-[#232328] pt-10 sm:gap-8'>
+          <p className='text-center font-site-body text-[11px] leading-normal tracking-[0.44px] text-[#737373] uppercase'>
+            Trusted By Leading Insurance Providers
+          </p>
+          <div className='flex flex-wrap items-center justify-center gap-x-8 gap-y-5 sm:gap-x-12 sm:gap-y-6'>
+            {logos.map((logo) => {
+              if (!logo.logo) return null;
+              const image = (
+                <Image
+                  src={sizedSrc(logo.logo, 'w_320,h_160,c_fit')}
+                  alt={logo.companyName}
+                  width={120}
+                  height={60}
+                  className='h-10 w-auto object-contain opacity-60 grayscale transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0 sm:h-12'
+                />
+              );
 
-            return logo.websiteUrl ? (
-              <a
-                key={logo.id}
-                href={logo.websiteUrl}
-                target='_blank'
-                rel='noopener noreferrer'
-                aria-label={logo.companyName}
-                className='shrink-0'
-              >
-                {image}
-              </a>
-            ) : (
-              <span key={logo.id} className='shrink-0'>
-                {image}
-              </span>
-            );
-          })}
+              return logo.websiteUrl ? (
+                <a
+                  key={logo.id}
+                  href={logo.websiteUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  aria-label={logo.companyName}
+                  className='group shrink-0 rounded-[8px] focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+                >
+                  {image}
+                </a>
+              ) : (
+                <span key={logo.id} className='group shrink-0'>
+                  {image}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>

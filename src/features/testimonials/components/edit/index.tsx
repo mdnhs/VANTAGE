@@ -1,5 +1,6 @@
 'use client';
 
+import { AuthorReadOnlyNotice, useAuthorOnly } from '@/components/admin/author-gate';
 import { useRouter } from 'next/navigation';
 import { TestimonialForm } from '../testimonial-form';
 import { useUpdateTestimonial } from '../../hooks/api/mutation/use-update-testimonial';
@@ -12,7 +13,10 @@ interface EditTestimonialFormProps {
 
 export function EditTestimonialForm({ testimonial }: EditTestimonialFormProps) {
   const router = useRouter();
+  const authorOnly = useAuthorOnly();
   const updateTestimonial = useUpdateTestimonial(testimonial.id);
+
+  if (authorOnly) return <AuthorReadOnlyNotice backHref={APP_ROUTES.content.testimonials.index} />;
 
   return (
     <TestimonialForm

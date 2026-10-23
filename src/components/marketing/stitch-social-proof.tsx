@@ -1,11 +1,10 @@
 import Image from 'next/image';
-import { Star } from 'lucide-react';
-import { cldUrl } from '@/lib/cloudinary/url';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
 import type { TestimonialPublic } from '@/features/testimonials/types';
 
 interface StitchSocialProofProps {
   testimonials: TestimonialPublic[];
+  // Kept for API compatibility; the current design has no insurer strip, so logos are not rendered.
   partnerLogos: PartnerLogoPublic[];
 }
 
@@ -18,34 +17,33 @@ interface ReviewCard {
   badge: string;
 }
 
-const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300'];
+const STAR_ICON = '/assets/landing/eb9fbcb6b25439979442168a65362f6aefd65c01.svg';
+const EYEBROW_DOT = '/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.svg';
 
-// Design content, rendered until insurers / featured testimonials are added in the CMS.
-const DEFAULT_INSURERS = ['ALLIANZ', 'AXA INSURANCE', 'ZURICH', 'FBD INSURANCE', 'AVIVA', 'LIBERTY'];
-
+// Design content, rendered until featured testimonials are added in the CMS.
 const DEFAULT_REVIEWS: ReviewCard[] = [
   {
     key: 'ciaran',
     name: "Ciaran O'Connor",
     rating: 5,
-    text: 'Someone ran into the driver door of my Mercedes E-Class in Dun Laoghaire. Vantage dealt directly with AXA, provided a free replacement car within 2 hours, and returned my car looking brand new. Flawless pearl match.',
-    meta: 'Dublin 4 • Mercedes E300de',
+    text: 'Someone ran into the driver door of my Mercedes E-Class in Dun Laoghaire. The team dealt directly with AXA, gave me a free replacement car within 2 hours and returned my car looking brand new. Flawless pearl match.',
+    meta: 'Dublin 4 · Mercedes E300de',
     badge: 'Verified Claim',
   },
   {
     key: 'siobhan',
     name: 'Siobhan Kelly',
     rating: 5,
-    text: 'Had our Porsche Macan resprayed on the front bumper and bonnet after stone chip road rash. The Blowtherm booth finish is identical to factory Stuttgart paint. Outstanding craftsmanship.',
-    meta: 'Malahide • Porsche Macan GTS',
+    text: 'Had our Porsche Macan resprayed on the front bumper and bonnet after stone-chip damage. The Blowtherm booth finish is identical to factory Stuttgart paint. Outstanding craftsmanship.',
+    meta: 'Malahide · Porsche Macan GTS',
     badge: 'Private Repair',
   },
   {
     key: 'declan',
     name: 'Declan Ryan',
     rating: 5,
-    text: 'The online quote system was genuinely seamless. Uploaded 3 photos of an ugly rear arch dent, got a quote in 40 minutes, dropped it off Tuesday morning, and collected it Thursday. Exceptional team.',
-    meta: 'Sandyford • Audi A6 Avant',
+    text: 'The online quote system was genuinely seamless. Uploaded 3 photos of an ugly rear-arch dent, got a quote in 40 minutes, dropped it off Tuesday morning and collected it Thursday. Exceptional team.',
+    meta: 'Sandyford · Audi A6 Avant',
     badge: 'Verified PDR',
   },
 ];
@@ -61,90 +59,70 @@ function toReviewCard(testimonial: TestimonialPublic): ReviewCard {
   };
 }
 
-// Insurer ribbon = CMS partner logos, cards = featured testimonials; design defaults fill empty halves.
-export function StitchSocialProof({ testimonials, partnerLogos }: StitchSocialProofProps) {
+// Cards = featured testimonials from the CMS; design defaults render when none exist.
+export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
   const reviews = testimonials.length > 0 ? testimonials.map(toReviewCard) : DEFAULT_REVIEWS;
 
   return (
-    <section id='insurance' className='container mx-auto px-4 py-16 sm:px-6 sm:py-24 lg:px-12'>
-      {/* Insurer Ribbon */}
-      <div className='intersect-once mb-12 border-b border-white/10 pb-12 motion-duration-700 sm:mb-16 sm:pb-16 intersect:motion-preset-fade'>
-        <div className='mb-6 text-center sm:mb-8'>
-          <span className='font-mono text-xs tracking-[0.2em] text-neutral-400 uppercase'>
-            Accepted By Ireland&apos;s Leading Motor Insurers
-          </span>
-        </div>
-        <div className='flex flex-wrap items-center justify-center gap-6 opacity-75 sm:gap-8 md:gap-14'>
-          {partnerLogos.length > 0
-            ? partnerLogos.map((logo) => {
-                const image = (
-                  <Image
-                    src={cldUrl(logo.logoPublicId, { width: 320, height: 160, crop: 'fit' })}
-                    alt={logo.companyName}
-                    width={120}
-                    height={60}
-                    className='h-10 w-auto object-contain grayscale transition-[filter] duration-300 hover:grayscale-0'
-                  />
-                );
-
-                return logo.websiteUrl ? (
-                  <a
-                    key={logo.id}
-                    href={logo.websiteUrl}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    aria-label={logo.companyName}
-                    className='shrink-0'
-                  >
-                    {image}
-                  </a>
-                ) : (
-                  <span key={logo.id} className='shrink-0'>
-                    {image}
-                  </span>
-                );
-              })
-            : DEFAULT_INSURERS.map((name) => (
-                <div
-                  key={name}
-                  className='font-[family-name:var(--font-manrope)] text-lg font-extrabold tracking-widest text-neutral-400 transition-colors hover:text-white'
-                >
-                  {name}
-                </div>
-              ))}
-        </div>
-      </div>
-
-      {/* Testimonial Cards */}
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-        {reviews.map((review, index) => (
-          <div
-            key={review.key}
-            className={`intersect-once flex flex-col justify-between rounded-lg border border-white/10 bg-[#141414] p-6 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]}`}
-          >
-            <div className='space-y-3'>
-              <div className='flex gap-0.5' aria-label={`${review.rating} out of 5 stars`}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Star
-                    key={n}
-                    className={`size-3.5 ${n <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-white/15'}`}
-                  />
-                ))}
-              </div>
-              <p className='text-base leading-6 text-neutral-300'>&ldquo;{review.text}&rdquo;</p>
-            </div>
-
-            <div className='mt-4 flex items-center justify-between border-t border-white/5 pt-4'>
-              <div>
-                <div className='text-sm font-semibold text-white'>{review.name}</div>
-                {review.meta && <div className='font-mono text-[11px] text-neutral-500'>{review.meta}</div>}
-              </div>
-              <span className='rounded border border-emerald-800/40 bg-emerald-950/60 px-2 py-0.5 font-mono text-[10px] text-emerald-400'>
-                {review.badge}
+    <section id='insurance' className='bg-[#16161a]'>
+      <div className='mx-auto flex max-w-[1200px] flex-col gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:gap-[72px] lg:py-[120px] xl:px-0'>
+        {/* Section Header */}
+        <div className='flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between'>
+          <div className='flex flex-col items-start gap-5'>
+            <div className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#232323] py-[7px] pr-4 pl-3.5'>
+              <Image src={EYEBROW_DOT} alt='' unoptimized width={6} height={6} className='block size-1.5 shrink-0' />
+              <span className='font-site-body text-[11px] leading-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
+                What Dublin Drivers Say
               </span>
             </div>
+            <h2 className='max-w-[499px] font-site-heading text-[34px] leading-[40px] font-extrabold tracking-[-0.68px] text-white uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
+              Trusted by <span className='text-brand'>180+ local drivers.</span>
+            </h2>
           </div>
-        ))}
+          <p className='max-w-[440px] font-site-body text-base leading-[26px] text-[#b5b5b5]'>
+            Rated 4.9 on Google for craftsmanship, communication and a hassle-free insurance process.
+          </p>
+        </div>
+
+        {/* Reviews */}
+        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+          {reviews.map((review) => (
+            <article
+              key={review.key}
+              className='flex flex-col justify-between rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-7 lg:min-h-[309px]'
+            >
+              <div className='flex flex-col gap-5 pb-2'>
+                <div className='flex gap-[3px]' role='img' aria-label={`${review.rating} out of 5 stars`}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <span key={n} className='flex size-3.5 shrink-0 items-center justify-center'>
+                      <Image
+                        src={STAR_ICON}
+                        unoptimized
+                        alt=''
+                        width={12.5434}
+                        height={12.5426}
+                        className={`block max-w-none ${n <= review.rating ? '' : 'opacity-20 grayscale'}`}
+                      />
+                    </span>
+                  ))}
+                </div>
+                <p className='font-site-body text-base leading-[26px] text-[#c6c6c6]'>{review.text}</p>
+              </div>
+
+              <div className='flex items-center justify-between gap-3 border-t border-[#2a2a30] pt-5'>
+                <div className='flex min-w-0 flex-col gap-[3px] font-site-body leading-normal'>
+                  <span className='truncate text-sm font-semibold text-white'>{review.name}</span>
+                  {review.meta && (
+                    <span className='truncate text-[10px] tracking-[0.4px] text-[#999] uppercase'>{review.meta}</span>
+                  )}
+                </div>
+                <span className='shrink-0 rounded-full border border-white/12 bg-white/6 px-2.5 py-[5px] font-site-body text-[10px] leading-normal tracking-[0.4px] whitespace-nowrap text-[#a1a1aa] uppercase'>
+                  {review.badge}
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );

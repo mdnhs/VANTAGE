@@ -1,3 +1,4 @@
+import { HideForAuthorOnly } from '@/components/admin/author-gate';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -10,9 +11,11 @@ export function TestimonialsPanel({ initialData }: { initialData: { data: Testim
     <div className='flex flex-col gap-4'>
       <div className='flex items-center justify-between'>
         <p className='text-sm text-muted-foreground'>Customer reviews shown on the homepage, in display order.</p>
-        <Link href={APP_ROUTES.content.testimonials.create} className={cn(buttonVariants())}>
-          Add testimonial
-        </Link>
+        <HideForAuthorOnly>
+          <Link href={APP_ROUTES.content.testimonials.create} className={cn(buttonVariants())}>
+            Add testimonial
+          </Link>
+        </HideForAuthorOnly>
       </div>
       <TestimonialTable initialData={initialData} />
     </div>

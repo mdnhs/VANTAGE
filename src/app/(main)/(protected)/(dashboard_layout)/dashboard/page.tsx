@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
-import { getSession } from '@/lib/permission/server-utils';
-import { analyticsService } from '@/server/services/analytics-service';
+import { requirePermission } from '@/server/lib/auth/session';
+import { permissionFor } from '@/lib/admin/route-permissions';
+import { getDashboard } from '@/server/services/dashboard-service';
 import { DashboardOverviewView } from '@/features/dashboard-overview/components/dashboard-overview-view';
+import type { DashboardDto } from '@/features/dashboard-overview/types';
 
 export const metadata: Metadata = {
   title: 'Operations Dashboard',
@@ -12,7 +14,17 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function DashboardPage() {
-  const [session, data] = await Promise.all([getSession(), analyticsService.getOverviewData()]);
+  const actor = await requirePermission(permissionFor('/dashboard'));
+  const renderedAt = new Date().toISOString();
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  let dashboard: DashboardDto | null = null;
+  try {
+    dashboard = await getDashboard(actor);
+  } catch (error) {
+    console.error('dashboard failed to load', error);
+  }
 
-  return <DashboardOverviewView adminName={session?.name} data={data} />;
+  return (
+    <DashboardOverviewView adminName={actor.name} renderedAt={renderedAt} siteUrl={siteUrl} dashboard={dashboard} />
+  );
 }

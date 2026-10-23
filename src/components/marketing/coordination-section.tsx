@@ -1,14 +1,24 @@
-import Image from 'next/image';
+import { CarFront, FileText, MessagesSquare, type LucideIcon } from 'lucide-react';
+import {
+  CARD,
+  SECTION_BG,
+  SECTION_CONTAINER,
+  SECTION_PADDING,
+  SectionHeader,
+} from '@/components/marketing/ui/landing-primitives';
 
-// Literal class names so Tailwind's content scanner can pick them up statically.
-const STAGGER_DELAY = ['motion-delay-0', 'motion-delay-150', 'motion-delay-300'];
+// Icons are fixed by position (no Figma equivalent, so lucide in the Figma white icon tile);
+// only the title/description text is CMS-driven.
+const ICONS: LucideIcon[] = [MessagesSquare, CarFront, FileText];
 
-// Icons are fixed by position; only the title/description text is CMS-driven.
-const ICONS = [
-  '/assets/marketing/icon-insurer-communication.svg',
-  '/assets/marketing/icon-courtesy-car.svg',
-  '/assets/marketing/icon-transparent-estimates.svg',
-];
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Last word of the CMS title becomes the red accent, matching the homepage headings.
+function splitAccent(title: string) {
+  const words = title.trim().split(/\s+/);
+  if (words.length < 2) return { head: title, accent: undefined };
+  return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
+}
 
 interface CoordinationSectionProps {
   title: string;
@@ -17,30 +27,39 @@ interface CoordinationSectionProps {
 }
 
 export function CoordinationSection({ title, subtext, features }: CoordinationSectionProps) {
-  return (
-    <section className='container mx-auto flex flex-col gap-10 bg-[#1c1b1b] px-4 py-16 sm:gap-16 sm:px-6 sm:py-20 lg:px-12 lg:py-[120px]'>
-      <div className='intersect-once flex max-w-[672px] flex-col gap-4 intersect:motion-preset-slide-up-sm'>
-        <h2 className='font-[family-name:var(--font-manrope)] text-2xl font-bold tracking-tight text-[#e5e2e1] uppercase sm:text-3xl lg:text-[40px] lg:leading-[48px]'>
-          {title}
-        </h2>
-        <p className='text-base leading-6 text-neutral-400'>{subtext}</p>
-      </div>
+  const { head, accent } = splitAccent(title);
 
-      <div className='grid grid-cols-1 gap-6 sm:grid-cols-3'>
-        {features.map((feature, index) => (
-          <div
-            key={feature.title}
-            className={`group intersect-once flex flex-col gap-6 rounded-xl bg-[#201f1f] p-6 shadow-md transition-colors duration-300 hover:bg-[#232221] sm:p-8 intersect:motion-preset-slide-up ${STAGGER_DELAY[index % STAGGER_DELAY.length]} ${index === 1 ? 'sm:-mt-8' : ''}`}
-          >
-            <div className='flex size-12 items-center justify-center rounded-full bg-[#2a2a2a] group-hover:motion-preset-pop'>
-              <Image src={ICONS[index % ICONS.length]} alt='' width={20} height={20} className='size-5' />
-            </div>
-            <h3 className='font-[family-name:var(--font-manrope)] text-xl font-semibold text-[#e5e2e1] uppercase sm:text-2xl'>
-              {feature.title}
-            </h3>
-            <p className='text-base leading-6 text-neutral-400'>{feature.description}</p>
-          </div>
-        ))}
+  return (
+    <section className={SECTION_BG.raised}>
+      <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} gap-12 lg:gap-16`}>
+        <SectionHeader eyebrow='Claims Concierge' title={head} accent={accent} intro={subtext} />
+
+        <div className='grid grid-cols-1 gap-5 md:grid-cols-3'>
+          {features.map((feature, index) => {
+            const Icon = ICONS[index % ICONS.length];
+            return (
+              <article
+                key={`${feature.title}-${index}`}
+                className={`group flex flex-col justify-between gap-10 p-7 transition-colors duration-300 hover:border-brand/60 sm:p-8 ${CARD}`}
+              >
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
+                    <Icon className='size-6 text-[#111113]' aria-hidden />
+                  </div>
+                  <span className='font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
+                    {pad(index + 1)}
+                  </span>
+                </div>
+                <div className='flex flex-col gap-3'>
+                  <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                    {feature.title}
+                  </h3>
+                  <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{feature.description}</p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { PRIMARY_ACTION } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import {
   Dialog,
@@ -29,7 +30,7 @@ import {
   UserCheck2,
 } from 'lucide-react';
 import { useSubmitQuoteRequest } from '../../hooks/api/mutation/use-submit-quote-request';
-import { useAdminUserList } from '@/features/admin-users/hooks/api/query/use-admin-user-list';
+import { useAssignees } from '../../hooks/api/query/use-assignees';
 import { PIPELINE_STATUSES, type QuoteSource, type PipelineStatus } from '../../types';
 import { STATUS_CONFIG } from '../quote-status-badge';
 
@@ -55,7 +56,7 @@ interface NewEnquiryDialogProps {
 export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: NewEnquiryDialogProps) {
   const [open, setOpen] = useState(false);
   const submitMutation = useSubmitQuoteRequest();
-  const { data: adminUsers } = useAdminUserList();
+  const { data: adminUsers } = useAssignees();
 
   // Form State
   const [source, setSource] = useState<QuoteSource>('phone_call');
@@ -65,7 +66,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [eircode, setEircode] = useState('');
-  const [assignedAdminId, setAssignedAdminId] = useState<string>('unassigned');
+  const [assignedUserId, setAssignedUserId] = useState<string>('unassigned');
   const [inspectionDate, setInspectionDate] = useState('');
   const [registration, setRegistration] = useState('');
   const [make, setMake] = useState('');
@@ -86,7 +87,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
     setAddress('');
     setCity('');
     setEircode('');
-    setAssignedAdminId('unassigned');
+    setAssignedUserId('unassigned');
     setInspectionDate('');
     setRegistration('');
     setMake('');
@@ -126,7 +127,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
         eircode: eircode.trim() ? eircode.trim().toUpperCase() : null,
         source,
         status,
-        assignedAdminId: assignedAdminId && assignedAdminId !== 'unassigned' ? assignedAdminId : null,
+        assignedUserId: assignedUserId && assignedUserId !== 'unassigned' ? assignedUserId : null,
         inspectionDate: inspectionDate ? new Date(inspectionDate).toISOString() : null,
         registration: registration.trim() ? registration.trim().toUpperCase() : null,
         make: make.trim() || null,
@@ -136,7 +137,6 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
         description: description.trim() || null,
         estimatedCost: estimatedCost ? parseFloat(estimatedCost) : null,
         adminNotes: adminNotes.trim() || null,
-        photoUrls: [],
       });
 
       resetForm();
@@ -163,7 +163,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
           trigger ? (
             (trigger as React.ReactElement)
           ) : (
-            <Button size='sm' className='gap-1.5 bg-red-600 text-white shadow-sm hover:bg-red-700'>
+            <Button className={PRIMARY_ACTION}>
               <Plus className='size-4' />
               <span>New Enquiry</span>
             </Button>
@@ -415,9 +415,9 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
                   Assigned Technician / Staff
                 </Label>
                 <Select
-                  value={assignedAdminId}
+                  value={assignedUserId}
                   onValueChange={(val) => {
-                    if (val) setAssignedAdminId(val);
+                    if (val) setAssignedUserId(val);
                   }}
                 >
                   <SelectTrigger id='lead-technician'>

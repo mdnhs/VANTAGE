@@ -1,68 +1,131 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
 import { ApiError } from '@/server/lib/errors';
 import { buildPagination, ok } from '@/server/lib/response';
 import { zValidator } from '@/server/lib/validator';
 import { rateLimit } from '@/server/middleware/rate-limit';
-import { requireAuth, requirePermission, type AuthEnv } from '@/server/middleware/auth';
-import { PERMISSIONS } from '@/lib/permission/permissions';
-import { uploadInquiryPhotos } from '@/server/lib/inquiry-photos';
+import type { AppEnv } from '@/server/api/types';
+import { auditRoute } from '@/server/middleware/audit-route';
+import { can } from '@/server/middleware/auth';
+import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
+import { classifySubmission } from '@/server/lib/enquiries/classify';
+import { storeEnquiryPhotos } from '@/server/lib/media/enquiry-photos';
+import { clientIp, queueLeadConversionAfterResponse } from '@/server/services/lead-conversion';
 import { quoteRequestService } from '@/server/services/quote-request-service';
 import {
   createQuoteRequestSchema,
+  publicQuoteRequestSchema,
   quoteRequestListQuerySchema,
   updateQuoteRequestSchema,
 } from '@/validations/quote-request-schema';
 
+// 4 photos of up to 20 MB as base64 data URLs, plus the form fields.
+const PUBLIC_BODY_LIMIT = bodyLimit({
+  maxSize: 110 * 1024 * 1024,
+  onError: () => {
+    throw ApiError.payloadTooLarge('Photos are too large');
+  },
+});
+
 const idParamSchema = z.object({ id: z.string().uuid() });
 
-export const quoteRequests = new Hono<AuthEnv>()
+export const quoteRequests = new Hono<AppEnv>()
   // Public submission endpoint for website visitors
-  .post('/', rateLimit(30, 60_000), zValidator('json', createQuoteRequestSchema), async (c) => {
-    const input = c.req.valid('json');
-    input.photoUrls = await uploadInquiryPhotos(input.photoUrls, 'vantage/quotes');
-    const row = await quoteRequestService.create(input);
-    return ok(c, row, { status: 201 });
+  .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicQuoteRequestSchema), async (c) => {
+    // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
+    const { photoUrls, eventId, sourcePath, website, stamp, ...fields } = c.req.valid('json');
+    const input = createQuoteRequestSchema.parse(fields);
+    // A bot gets the same 201 as a visitor, but its row is filed as spam: no photos stored,
+    // no email, no lead conversion.
+    const spamReason = classifySubmission({ website, stamp }) ?? undefined;
+    const photoMediaIds = spamReason ? [] : await storeEnquiryPhotos(photoUrls);
+    const row = await quoteRequestService.create(input, { photoMediaIds, spamReason });
+    if (row && !spamReason)
+      queueLeadConversionAfterResponse({
+        leadId: row.id,
+        eventId,
+        sourcePath,
+        email: row.email,
+        phone: row.phone ?? null,
+        cookieHeader: c.req.header('cookie'),
+        ip: clientIp(c.req.raw.headers),
+        userAgent: c.req.header('user-agent') ?? '',
+      });
+    if (!row) throw new Error('The quote request was not saved');
+    // Visitors never get the stored photo URLs back.
+    const { photos: _photos, ...echo } = row;
+    // A spam row answers exactly like a human one: no verdict leaks to the bot.
+    return ok(c, { ...echo, status: 'new', spamReason: null }, { status: 201 });
   })
 
-  // Admin list with pagination, search, and status filtering
-  .get(
-    '/admin/list',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
-    zValidator('query', quoteRequestListQuerySchema),
+  // Staff-entered enquiry (phone / walk-in): full admin schema.
+  .post(
+    '/admin',
+    can({ quote: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({ action: 'quote.create', entityType: 'quote', summary: 'Quote request created' }),
+    zValidator('json', createQuoteRequestSchema),
     async (c) => {
-      const query = c.req.valid('query');
-      const { rows, total } = await quoteRequestService.list(query);
-      return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
+      const row = await quoteRequestService.create(c.req.valid('json'), { notify: false });
+      return ok(c, row, { status: 201 });
     },
   )
 
+  // Admin list with pagination, search, and status filtering
+  .get('/admin/list', can({ quote: ['read'] }), zValidator('query', quoteRequestListQuerySchema), async (c) => {
+    const query = c.req.valid('query');
+    const { rows, total } = await quoteRequestService.list(query);
+    return ok(c, rows, { pagination: buildPagination(total, query.page, query.limit) });
+  })
+
   // Status count stats for dashboard badges/tabs
-  .get('/admin/stats', requireAuth, requirePermission(PERMISSIONS.QUOTES_MANAGE), async (c) => {
+  .get('/admin/stats', can({ quote: ['read'] }), async (c) => {
     const stats = await quoteRequestService.stats();
     return ok(c, stats);
   })
 
   // Get specific quote request details
-  .get(
-    '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
-    zValidator('param', idParamSchema),
-    async (c) => {
-      const { id } = c.req.valid('param');
-      const row = await quoteRequestService.byId(id);
-      if (!row) throw ApiError.notFound('Quote request not found');
-      return ok(c, row);
-    },
-  )
+  .get('/:id', can({ quote: ['read'] }), zValidator('param', idParamSchema), async (c) => {
+    const { id } = c.req.valid('param');
+    const row = await quoteRequestService.byId(id);
+    if (!row) throw ApiError.notFound('Quote request not found');
+    return ok(c, row);
+  })
 
   // Update status, notes, or estimated cost
   .patch(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
+    can({ quote: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'quote.update',
+      entityType: 'quote',
+      summary: 'Quote request updated',
+      load: quoteRequestService.byId,
+      fields: [
+        'name',
+        'email',
+        'phone',
+        'address',
+        'city',
+        'eircode',
+        'registration',
+        'description',
+        'status',
+        'assignedUserId',
+        'inspectionDate',
+        'estimatedCost',
+        'paymentStatus',
+        'paidAmount',
+        'paymentMethod',
+        'invoiceNumber',
+        'completedAt',
+        'adminNotes',
+        'spamReason',
+      ],
+      redact: ['adminNotes', 'name', 'email', 'phone', 'address', 'city', 'eircode', 'registration', 'description'],
+    }),
     zValidator('param', idParamSchema),
     zValidator('json', updateQuoteRequestSchema),
     async (c) => {
@@ -77,8 +140,14 @@ export const quoteRequests = new Hono<AuthEnv>()
   // Delete quote request
   .delete(
     '/:id',
-    requireAuth,
-    requirePermission(PERMISSIONS.QUOTES_MANAGE),
+    can({ quote: ['delete'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'quote.delete',
+      entityType: 'quote',
+      summary: 'Quote request deleted',
+      load: quoteRequestService.byId,
+    }),
     zValidator('param', idParamSchema),
     async (c) => {
       const { id } = c.req.valid('param');

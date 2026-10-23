@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 // Better Auth core tables (user/session/account/verification). Column shapes follow
 // Better Auth's Drizzle adapter contract — do not rename fields without updating
@@ -12,6 +12,13 @@ export const users = pgTable('users', {
   image: text('image'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  // Better Auth admin + twoFactor plugin fields. `user` = site customer (never admin).
+  role: text('role').notNull().default('user'),
+  banned: boolean('banned').notNull().default(false),
+  banReason: text('ban_reason'),
+  banExpires: timestamp('ban_expires', { withTimezone: true }),
+  twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+  notificationsSeenAt: timestamp('notifications_seen_at', { withTimezone: true }),
 });
 
 export const sessions = pgTable(
@@ -25,6 +32,7 @@ export const sessions = pgTable(
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
+    impersonatedBy: text('impersonated_by'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -64,6 +72,22 @@ export const verifications = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('verifications_identifier_idx').on(table.identifier)],
+);
+
+export const twoFactors = pgTable(
+  'two_factors',
+  {
+    id: text('id').primaryKey(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    verified: boolean('verified').default(true),
+    failedVerificationCount: integer('failed_verification_count').default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  },
+  (table) => [index('two_factors_secret_idx').on(table.secret), index('two_factors_user_id_idx').on(table.userId)],
 );
 
 export type User = typeof users.$inferSelect;

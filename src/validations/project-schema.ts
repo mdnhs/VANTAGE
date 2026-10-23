@@ -1,27 +1,37 @@
 import { z } from 'zod';
 
+import { legacyImageKey } from './legacy-image-key';
+
 // lowercase-kebab: letters/digits, hyphen-separated, no leading/trailing/double hyphens.
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const projectStatusValues = ['draft', 'published'] as const;
 
-export const createProjectSchema = z.object({
+const projectBase = z.object({
   title: z.string().min(1).max(160),
   slug: z.string().min(1).max(180).regex(slugPattern, 'Must be lowercase kebab-case (e.g. bmw-3-series-respray)'),
   vehicleModel: z.string().min(1).max(120),
   serviceCategory: z.string().min(1).max(80),
-  beforeImagePublicId: z.string().min(1).max(255),
-  afterImagePublicId: z.string().min(1).max(255),
+  beforeImageMediaId: z.string().uuid({ message: 'Choose a before image' }),
+  afterImageMediaId: z.string().uuid({ message: 'Choose an after image' }),
+  beforeImagePublicId: legacyImageKey('beforeImageMediaId'),
+  afterImagePublicId: legacyImageKey('afterImageMediaId'),
+  galleryImagePublicIds: legacyImageKey('galleryMediaIds'),
   description: z.string().min(1),
   completedAt: z.coerce.date().nullable().optional(),
-  isFeatured: z.boolean().default(false),
+  isFeatured: z.boolean().optional(),
   status: z.enum(projectStatusValues).optional(),
   displayOrder: z.number().int().optional(),
-  // Plain public_id array in the input DTO — the repository turns this into child rows.
-  galleryImagePublicIds: z.array(z.string().min(1).max(255)).max(20).optional(),
+  // Ordered media ids. When given they replace the whole gallery (legacy rows included);
+  // leaving it out keeps the gallery as it is.
+  galleryMediaIds: z.array(z.string().uuid()).max(10).optional(),
 });
 
-export const updateProjectSchema = createProjectSchema.partial();
+// Defaults apply on create only: a partial update must never reset a field it leaves out.
+export const createProjectSchema = projectBase.extend({ isFeatured: z.boolean().default(false) });
+
+// Leaving an image out keeps the current one (including a legacy one).
+export const updateProjectSchema = projectBase.partial();
 
 export const projectListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

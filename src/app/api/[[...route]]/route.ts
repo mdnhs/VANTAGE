@@ -1,7 +1,7 @@
 import { handle } from 'hono/vercel';
 import { api } from '@/server/api';
 
-// Node runtime is the default (Edge is opt-in), which is what the Neon serverless driver
+// Node runtime is the default (Edge is opt-in), which is what node-postgres (pg)
 // and crypto/auth libs need. With Cache Components enabled, route segment config exports
 // (runtime/dynamic) are not allowed here — Hono's use of the request object makes every
 // handler dynamic automatically.
