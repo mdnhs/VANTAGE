@@ -11,8 +11,16 @@ type Saved = { before: Setting | null; after: Setting };
 
 export const settingsRepository = {
   async get(key: string) {
-    const [row] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
-    return row ?? null;
+    try {
+      const [row] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+      return row ?? null;
+    } catch (error) {
+      console.warn(
+        `[settingsRepository.get] failed for ${key}, returning null:`,
+        error instanceof Error ? error.message : error,
+      );
+      return null;
+    }
   },
 
   // Optimistic save: `version` must match the stored one (0 = key absent), else 409

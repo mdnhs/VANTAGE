@@ -38,6 +38,8 @@ jobs:
           push: true
           build-args: |
             NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           tags: |
             ghcr.io/mdnhs/vantage:latest
             ghcr.io/mdnhs/vantage:${{ github.sha }}

@@ -2,6 +2,7 @@ import 'server-only';
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import { cache } from 'react';
 
 import { noAccessHref } from '@/lib/admin/no-access';
@@ -24,6 +25,7 @@ export const getSession = cache(async () => {
 // Without an explicit `next`, a signed-out visitor returns to the page they
 // asked for (set by proxy.ts, since layouts never see the pathname).
 export async function requireActor(next?: string): Promise<Actor> {
+  await connection();
   const session = await getSession();
   // Site customers (role "user") hold valid sessions but never enter the panel.
   if (!session || parseRoles(session.user.role).length === 0) {

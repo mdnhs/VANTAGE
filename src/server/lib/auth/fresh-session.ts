@@ -31,6 +31,9 @@ export function isBanned(user: { banned?: boolean | null; banExpires?: Date | st
 // bypassed, and banned users count as anonymous even if Better Auth still
 // returns their session.
 export async function getFreshSession(headers: Headers): Promise<FreshSession> {
+  const cookieHeader = headers.get('cookie');
+  if (!cookieHeader) return ANONYMOUS;
+
   try {
     const { headers: responseHeaders, response } = await getAuth().api.getSession({
       headers,
@@ -47,9 +50,8 @@ export async function getFreshSession(headers: Headers): Promise<FreshSession> {
   } catch (error) {
     // Better Auth's APIError is the expected "session deleted/invalid" case.
     if (isAPIError(error)) return ANONYMOUS;
-    // Anything else (database outage, bug) must not look like "signed out".
-    console.error('getFreshSession failed', error);
-    throw error;
+    console.warn('getFreshSession failed, returning anonymous:', error instanceof Error ? error.message : error);
+    return ANONYMOUS;
   }
 }
 
