@@ -1,77 +1,79 @@
-import {
-  DM_Sans,
-  Geist,
-  Geist_Mono,
-  Inter,
-  Manrope,
-  Montserrat,
-  Outfit,
-  Plus_Jakarta_Sans,
-  Sora,
-  Space_Grotesk,
-} from 'next/font/google';
+import localFont from 'next/font/local';
 
-export const geistSans = Geist({
+// Fonts are self-hosted (latin variable woff2 in src/fonts) so builds never depend on reaching
+// Google Fonts — a flaky connection there fails the whole build.
+
+export const geistSans = localFont({
+  src: '../fonts/geist.woff2',
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  weight: '100 900',
 });
 
-export const geistMono = Geist_Mono({
+export const geistMono = localFont({
+  src: '../fonts/geist-mono.woff2',
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  weight: '100 900',
 });
 
-export const manrope = Manrope({
+export const manrope = localFont({
+  src: '../fonts/manrope.woff2',
   variable: '--font-manrope',
-  subsets: ['latin'],
+  weight: '200 800',
 });
 
-export const inter = Inter({
+export const inter = localFont({
+  src: '../fonts/inter.woff2',
   variable: '--font-inter',
-  subsets: ['latin'],
+  weight: '100 900',
 });
 
 // Admin shell font (applied via admin.css). Not preloaded so public pages never download it.
-export const jakarta = Plus_Jakarta_Sans({
+export const jakarta = localFont({
+  src: '../fonts/plus-jakarta-sans.woff2',
   variable: '--font-jakarta',
-  subsets: ['latin'],
+  weight: '200 800',
   preload: false,
 });
 
 // Curated alternatives for the public site's heading/body slots (Appearance > Site). Declared at
 // build time so there is no runtime Google Fonts fetch; not preloaded, so a font only downloads
 // when the published theme selects it. adjustFontFallback stays on (metric-matched fallback).
-export const montserrat = Montserrat({
+export const montserrat = localFont({
+  src: '../fonts/montserrat.woff2',
   variable: '--font-montserrat',
-  subsets: ['latin'],
+  weight: '100 900',
   display: 'swap',
   preload: false,
 });
 
-export const dmSans = DM_Sans({
+export const dmSans = localFont({
+  src: '../fonts/dm-sans.woff2',
   variable: '--font-dm-sans',
-  subsets: ['latin'],
+  weight: '100 1000',
   display: 'swap',
   preload: false,
 });
 
-export const spaceGrotesk = Space_Grotesk({
+export const spaceGrotesk = localFont({
+  src: '../fonts/space-grotesk.woff2',
   variable: '--font-space-grotesk',
-  subsets: ['latin'],
+  weight: '300 700',
   display: 'swap',
   preload: false,
 });
 
-export const outfit = Outfit({
+export const outfit = localFont({
+  src: '../fonts/outfit.woff2',
   variable: '--font-outfit',
-  subsets: ['latin'],
+  weight: '100 900',
   display: 'swap',
   preload: false,
 });
 
-export const sora = Sora({
+export const sora = localFont({
+  src: '../fonts/sora.woff2',
   variable: '--font-sora',
-  subsets: ['latin'],
+  weight: '100 800',
   display: 'swap',
   preload: false,
 });
