@@ -157,6 +157,15 @@ describe('rootMetadata', () => {
     expect(m.twitter).toMatchObject({ site: '@v', images: [image.src] });
   });
 
+  it('uses the uploaded icon as the favicon and none when there is no icon', () => {
+    const icon = { ...image, src: 'https://media.x.ie/fav.png', mimeType: 'image/png' };
+    expect(rootMetadata({ ...base, icon }).icons).toEqual({
+      icon: [{ url: icon.src, type: 'image/png' }],
+      apple: [{ url: icon.src }],
+    });
+    expect(rootMetadata(base).icons).toBeUndefined();
+  });
+
   it('noindex sets plain robots', () => {
     const seo = defaults();
     seo.robots = 'noindex';

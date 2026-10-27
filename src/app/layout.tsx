@@ -21,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     siteName: settings.businessName,
     hoursSummary: formatOpeningHoursSummary(settings.openingHours),
     defaultOgImage,
+    icon: settings.favicon ?? settings.logo,
   });
 }
 

@@ -92,6 +92,8 @@ export type RootMetadataInput = {
   siteName: string;
   hoursSummary: string;
   defaultOgImage: PublicImage | null;
+  // The uploaded favicon, else the logo; with neither, the browser tab shows no icon.
+  icon?: PublicImage | null;
 };
 
 // The site-root metadata: fallbacks every page overrides per field.
@@ -113,6 +115,9 @@ export function rootMetadata(i: RootMetadataInput): Metadata {
     title: { default: title, template: effectiveTemplate({ titleTemplate: seo.titleTemplate, siteName }) },
     description,
     applicationName: siteName,
+    ...(i.icon
+      ? { icons: { icon: [{ url: i.icon.src, type: i.icon.mimeType ?? undefined }], apple: [{ url: i.icon.src }] } }
+      : {}),
     generator: 'Next.js',
     referrer: 'origin-when-cross-origin',
     formatDetection: { email: false, address: false, telephone: false },
