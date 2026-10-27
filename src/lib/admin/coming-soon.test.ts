@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
@@ -34,8 +34,8 @@ describe('comingSoonLink', () => {
 
 describe('comingSoonParams', () => {
   const keys = comingSoonParams().map((p) => [p.section, ...p.rest].join('/'));
-  it('lists the placeholder destinations', () => {
-    expect(keys).toEqual(['help']);
+  it('lists no placeholder destinations (every sidebar link has a route)', () => {
+    expect(keys).toEqual([]);
   });
   it('treats the SEO overview as a real route', () => {
     expect(keys).not.toContain('seo');
@@ -99,15 +99,6 @@ describe('comingSoonParams', () => {
       .map((segs) => ['/dashboard', ...segs].join('/'));
     const missing = realPaths.filter((href) => href !== '/dashboard' && navHrefs.has(href) && !REAL_ROUTES.has(href));
     expect(missing).toEqual([]);
-  });
-
-  it('keeps the catch-all page calling guardComingSoon', () => {
-    const source = readFileSync(
-      path.join(APP_DIR, '(main)/(protected)/(dashboard_layout)/dashboard/[section]/[[...rest]]/page.tsx'),
-      'utf8',
-    );
-    expect(source).toMatch(/import\s*\{[^}]*\bguardComingSoon\b[^}]*\}\s*from\s*'@\/lib\/admin\/coming-soon'/);
-    expect(source).toMatch(/await\s+guardComingSoon\(/);
   });
 });
 
