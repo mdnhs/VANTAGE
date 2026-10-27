@@ -40,6 +40,7 @@ jobs:
             NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
             NEXT_PUBLIC_API_PREFIX=/api
             NEXT_PUBLIC_API_VERSION=/v1
+            MEDIA_PUBLIC_URL=https://pub-a7f10d56b2724809900a4af33f0a310c.r2.dev
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           tags: |
