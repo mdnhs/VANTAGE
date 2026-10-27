@@ -31,14 +31,22 @@ async function loadSorted(ids: string[]): Promise<Record<string, PublicImage>> {
   cacheTag(MEDIA_TAG);
   cacheLife('max');
   if (ids.length === 0) return {};
+  const rows = await db.select().from(media).where(inArray(media.id, ids));
+  const out: Record<string, PublicImage> = {};
+  for (const row of rows) {
+    const image = toPublicImage(row);
+    if (image) out[row.id] = image;
+  }
+  return out;
+}
+
+// Live media rows by id as PublicImages. Ids are sorted and deduped first so
+// equal sets share one cache entry; malformed ids (a bad value in settings JSON)
+// are dropped so they can never make the query throw. A failed query returns an
+// empty map outside the cache, so the fallback never outlives the outage.
+export async function loadPublicImages(ids: string[]): Promise<Record<string, PublicImage>> {
   try {
-    const rows = await db.select().from(media).where(inArray(media.id, ids));
-    const out: Record<string, PublicImage> = {};
-    for (const row of rows) {
-      const image = toPublicImage(row);
-      if (image) out[row.id] = image;
-    }
-    return out;
+    return await loadSorted([...new Set(ids.filter(isMediaId).map((id) => id.toLowerCase()))].sort());
   } catch (error) {
     console.warn(
       '[loadSorted] db query failed, returning empty image map:',
@@ -46,11 +54,4 @@ async function loadSorted(ids: string[]): Promise<Record<string, PublicImage>> {
     );
     return {};
   }
-}
-
-// Live media rows by id as PublicImages. Ids are sorted and deduped first so
-// equal sets share one cache entry; malformed ids (a bad value in settings JSON)
-// are dropped so they can never make the query throw.
-export async function loadPublicImages(ids: string[]): Promise<Record<string, PublicImage>> {
-  return loadSorted([...new Set(ids.filter(isMediaId).map((id) => id.toLowerCase()))].sort());
 }
