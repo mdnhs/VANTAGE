@@ -177,10 +177,7 @@ export function HelpDocs({
         <nav
           id='help-outline'
           aria-label='Help outline'
-          className={cn(
-            'mt-3 flex-col gap-5 lg:sticky lg:top-4 lg:mt-0 lg:flex lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto',
-            navOpen ? 'flex' : 'hidden',
-          )}
+          className={cn('mt-3 flex-col gap-5 lg:mt-0 lg:flex', navOpen ? 'flex' : 'hidden')}
         >
           <div className='relative'>
             <Search
