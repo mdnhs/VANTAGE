@@ -6,6 +6,7 @@ import { ADMIN_PATH_HEADER } from '@/lib/auth/admin-path';
 import { safeNext } from '@/lib/auth/safe-next';
 import { internalOrigin } from '@/lib/internal-origin';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import { appHostFrom, bareHost, canonicalHostRedirect, type PreferredHost } from '@/lib/seo/canonical-host';
 import { HIT_HEADER, hitToken } from '@/lib/seo/hit-token';
 import { LIVE_PATHS, isReservedPath } from '@/lib/seo/public-pages';
 
@@ -73,6 +74,56 @@ async function resolve(pathname: string, countHit: boolean): Promise<Resolution 
   }
 }
 
+// The admin's preferred address (SEO > Redirects), kept for a short while so a request does not
+// pay for a lookup each time; a change takes effect within PREFERRED_HOST_TTL_MS.
+export const PREFERRED_HOST_TTL_MS = 30_000;
+let preferredCache: { value: PreferredHost; expires: number } | null = null;
+
+export const resetPreferredHostCache = () => {
+  preferredCache = null;
+};
+
+async function preferredHost(): Promise<PreferredHost> {
+  const now = Date.now();
+  if (preferredCache && preferredCache.expires > now) return preferredCache.value;
+  let value: PreferredHost = 'off';
+  try {
+    const res = await fetch(new URL('/api/v1/resolve/host', internalOrigin()), {
+      cache: 'no-store',
+      redirect: 'manual',
+      signal: AbortSignal.timeout(REDIRECT_TIMEOUT_MS),
+    });
+    const body = res.status === 200 ? ((await res.json()) as { preferred?: unknown }) : null;
+    if (body?.preferred === 'apex' || body?.preferred === 'www') value = body.preferred;
+  } catch {
+    // Fails open: an unreachable resolver means no redirect, and the next request tries again.
+    return 'off';
+  }
+  preferredCache = { value, expires: now + PREFERRED_HOST_TTL_MS };
+  return value;
+}
+
+// One address per page: http/https and www/non-www variants 301 to the chosen one. Only this
+// site's own hosts are considered (see appHostFrom), and any doubt lets the request through.
+async function canonicalHost(request: NextRequest) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null;
+  const appHost = appHostFrom(process.env.NEXT_PUBLIC_APP_URL);
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (!appHost || !host || bareHost(host.split(',')[0]!.trim().replace(/:\d+$/, '')) !== appHost) return null;
+  const target = canonicalHostRedirect({
+    host,
+    proto: request.headers.get('x-forwarded-proto'),
+    preferred: await preferredHost(),
+    appHost,
+    pathAndSearch: `${request.nextUrl.pathname}${request.nextUrl.search}`,
+  });
+  if (!target) return null;
+  const response = NextResponse.redirect(target, 301);
+  // Not cacheable: a browser holding "www -> bare" after the admin flips the choice would loop.
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+}
+
 function redirectResponse(request: NextRequest, destination: unknown, statusCode: unknown) {
   if (!isSitePath(destination)) return null;
   if (!REDIRECT_STATUSES.includes(statusCode as number)) return null;
@@ -107,6 +158,8 @@ async function publicRoute(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  const wrongHost = await canonicalHost(request);
+  if (wrongHost) return wrongHost;
   const { pathname, search } = request.nextUrl;
   const signedIn = hasSessionCookie(request);
 

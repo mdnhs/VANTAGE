@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { hitToken } from '@/lib/seo/hit-token';
 
-import { config, proxy } from './proxy';
+import { config, proxy, resetPreferredHostCache } from './proxy';
 
 const req = (url: string, init?: { cookie?: string; headers?: Record<string, string> }) =>
   new NextRequest(`http://localhost:3000${url}`, {
@@ -235,5 +235,61 @@ describe('proxy matcher', () => {
       '/og',
     ])
       expect(matcher.test(p)).toBe(false);
+  });
+});
+
+describe('proxy: preferred address', () => {
+  const fetchMock = vi.fn();
+  const preferred = (value: string) =>
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ preferred: value }), { status: 200 }));
+  const visit = (host: string, proto = 'https', path = '/about?x=1') =>
+    proxy(new NextRequest(`http://localhost:3000${path}`, { headers: { host, 'x-forwarded-proto': proto } }));
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    resetPreferredHostCache();
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://autopaintshop.ie');
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it('301s www and http to the chosen address, keeping path and query', async () => {
+    preferred('apex');
+    const res = await visit('www.autopaintshop.ie');
+    expect(res.status).toBe(301);
+    expect(res.headers.get('location')).toBe('https://autopaintshop.ie/about?x=1');
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect((await visit('autopaintshop.ie', 'http')).headers.get('location')).toBe(
+      'https://autopaintshop.ie/about?x=1',
+    );
+  });
+
+  it('sends the bare host to www when www is chosen', async () => {
+    preferred('www');
+    expect((await visit('autopaintshop.ie')).headers.get('location')).toBe('https://www.autopaintshop.ie/about?x=1');
+  });
+
+  it('does nothing when off, already right, unreachable, or for another host', async () => {
+    preferred('off');
+    expect((await visit('www.autopaintshop.ie')).status).not.toBe(301);
+    resetPreferredHostCache();
+    preferred('apex');
+    expect((await visit('autopaintshop.ie')).status).not.toBe(301);
+    resetPreferredHostCache();
+    fetchMock.mockRejectedValue(new Error('down'));
+    expect((await visit('www.autopaintshop.ie')).status).not.toBe(301);
+    fetchMock.mockClear();
+    expect((await visit('localhost:3000', 'http')).status).not.toBe(301);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('looks the choice up once for a burst of requests', async () => {
+    preferred('apex');
+    await visit('autopaintshop.ie');
+    await visit('autopaintshop.ie');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

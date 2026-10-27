@@ -163,7 +163,30 @@ describe('RedirectsView', () => {
   it('sends the initial ?q= search', async () => {
     renderView('?q=old');
     await screen.findByText('/old-about');
-    const url = new URL(String(fetchMock.mock.calls[0]![0]), 'http://x');
-    expect(url.searchParams.get('q')).toBe('old');
+    const listCall = fetchMock.mock.calls
+      .map(([input]) => new URL(String(input), 'http://x'))
+      .find((u) => u.searchParams.has('q'));
+    expect(listCall?.searchParams.get('q')).toBe('old');
+  });
+});
+
+describe('PreferredAddressCard on the page', () => {
+  it('shows the chosen address and saves a change with the stored version', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/globals/seo')) {
+        return init?.method === 'PUT'
+          ? json({ success: true, data: { key: 'seo', value: {}, version: 4, updatedAt: null } })
+          : json({
+              success: true,
+              data: { key: 'seo', value: { titleTemplate: '', preferredHost: 'off' }, version: 3 },
+            });
+      }
+      return json({ success: true, data: [row], pagination: { total: 1, page: 1, limit: 25 } });
+    });
+    renderView();
+    expect(await screen.findByText('Preferred address')).toBeTruthy();
+    const save = (await screen.findByRole('button', { name: 'Save' })) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
   });
 });

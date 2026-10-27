@@ -365,6 +365,8 @@ export const SeoGlobal = z.object({
   defaultOgImage: image(),
   twitterHandle: s(50),
   robots: z.enum(['index', 'noindex']).default('index'),
+  // Which of the four addresses (http/https, with/without www) is the real one; the others 301 to it.
+  preferredHost: z.enum(['off', 'apex', 'www']).default('off'),
   // Site-ownership codes: the code only, never the whole <meta> tag.
   verification: z
     .object({

@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { ConfirmDialog } from '@/components/admin/confirm-dialog';
 
 import { REDIRECTS_PAGE_SIZE, useDeleteRedirect, useRedirects, useUpdateRedirect } from '../hooks/use-redirects';
+import { PreferredAddressCard } from './preferred-address-card';
 import { RedirectDialog, STATUS_LABELS, type Editing } from './redirect-dialog';
 
 const params = {
@@ -109,6 +110,7 @@ export function RedirectsView() {
           ) : null
         }
       />
+      <PreferredAddressCard />
       <Input
         type='search'
         aria-label='Search redirects'

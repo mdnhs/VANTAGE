@@ -5,6 +5,7 @@ import { HIT_HEADER, isHitToken } from '@/lib/seo/hit-token';
 import { resolvePath } from '@/lib/seo/route-resolution';
 import type { AppEnv } from '@/server/api/types';
 import { zValidator } from '@/server/lib/validator';
+import { getSetting } from '@/server/queries/get-setting';
 import { getRedirectTable } from '@/server/queries/get-redirect-table';
 import { recordHit } from '@/server/services/redirect-service';
 
@@ -16,10 +17,8 @@ const hitSecret = () => {
 
 // Public and read-only: answers only what visiting the URL would reveal. proxy.ts calls it
 // over loopback. Returns the bare Resolution (not the ok() envelope) because the proxy parses it.
-export const resolve = new Hono<AppEnv>().get(
-  '/',
-  zValidator('query', z.object({ path: z.string().startsWith('/').max(512) })),
-  async (c) => {
+export const resolve = new Hono<AppEnv>()
+  .get('/', zValidator('query', z.object({ path: z.string().startsWith('/').max(512) })), async (c) => {
     const { path } = c.req.valid('query');
     const result = resolvePath(await getRedirectTable(), path);
     // Only the proxy's signed, non-prefetch GET counts as a visit.
@@ -33,5 +32,10 @@ export const resolve = new Hono<AppEnv>().get(
     }
     c.header('Cache-Control', 'no-store');
     return c.json(result);
-  },
-);
+  })
+  // Which address the site prefers (see lib/seo/canonical-host). The proxy caches this briefly.
+  .get('/host', async (c) => {
+    const { preferredHost } = await getSetting('seo');
+    c.header('Cache-Control', 'no-store');
+    return c.json({ preferred: preferredHost });
+  });
