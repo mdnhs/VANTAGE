@@ -37,6 +37,7 @@ jobs:
           context: .
           push: true
           build-args: |
+            SITE_ENV=production
             NEXT_PUBLIC_APP_URL=https://autopaintshop.ie
             NEXT_PUBLIC_API_PREFIX=/api
             NEXT_PUBLIC_API_VERSION=/v1
