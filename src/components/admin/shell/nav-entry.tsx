@@ -12,7 +12,7 @@ import { NAV_ICONS } from './nav-icons';
 // brand icon. In the icon rail the label turns sr-only: out of the layout,
 // still the link's name.
 export const NAV_BUTTON =
-  'h-10 gap-3 rounded-xl px-3 text-[15px] group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:sr-only text-muted-foreground hover:bg-sidebar-accent/60 data-active:bg-transparent data-active:font-semibold data-active:text-foreground [&_svg]:size-5 data-active:[&_svg]:fill-primary/15 data-active:[&_svg]:text-primary';
+  'h-9 gap-3 rounded-xl px-3 text-sm group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>span]:sr-only text-muted-foreground hover:bg-sidebar-accent/60 data-active:bg-transparent data-active:font-semibold data-active:text-foreground [&_svg]:size-5 data-active:[&_svg]:fill-primary/15 data-active:[&_svg]:text-primary';
 
 export function NavEntry({
   item,

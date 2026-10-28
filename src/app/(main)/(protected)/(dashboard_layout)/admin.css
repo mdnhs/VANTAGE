@@ -110,6 +110,12 @@
   --hatch: #7f1d1d;
 }
 
+/* Compact admin: Tailwind sizes text, spacing, row heights and icons in rem, so the whole
+   panel tightens from this one value. A percentage keeps the visitor's browser text size. */
+:root:has([data-admin-root]) {
+  font-size: 93.75%;
+}
+
 /* globals.css inlines var(--font-inter) into font-sans, so the admin font is applied
    directly (Plus Jakarta Sans via the jakarta font variable). */
 :root:has([data-admin-root]),

@@ -2,9 +2,9 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 // Page title row with the primary/secondary button pair.
-export const PRIMARY_ACTION = 'h-12 gap-2 rounded-xl px-5 text-[15px] font-semibold';
+export const PRIMARY_ACTION = 'h-10 gap-2 rounded-xl px-4 text-sm font-semibold';
 export const SECONDARY_ACTION =
-  'h-12 gap-2 rounded-xl border-primary px-5 text-[15px] font-semibold text-primary hover:bg-accent hover:text-accent-foreground';
+  'h-10 gap-2 rounded-xl border-primary px-4 text-sm font-semibold text-primary hover:bg-accent hover:text-accent-foreground';
 // A form's own submit button, and anything sitting beside one.
 export const FORM_ACTION = 'h-11 rounded-xl px-5 font-semibold';
 
@@ -37,7 +37,7 @@ export function PageHeader({
         <h1 className='text-title text-balance' data-testid={titleTestId}>
           {title}
         </h1>
-        {description ? <p className='text-[15px] text-muted-foreground'>{description}</p> : null}
+        {description ? <p className='text-sm text-muted-foreground'>{description}</p> : null}
       </div>
       {actions ? <div className='flex flex-wrap gap-3'>{actions}</div> : null}
     </header>

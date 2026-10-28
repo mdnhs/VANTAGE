@@ -63,14 +63,14 @@
 /* Admin shell utilities and theme aliases (colour values live in the dashboard's admin.css,
    scoped to :root:has([data-admin-root])). New names only: the public site is unaffected. */
 @theme {
-  --text-title: 2.25rem;
+  --text-title: 1.75rem;
   --text-title--line-height: 1.1;
   --text-title--letter-spacing: -0.025em;
   --text-title--font-weight: 600;
-  --text-card-title: 1.125rem;
+  --text-card-title: 1.0625rem;
   --text-card-title--line-height: 1.35;
   --text-card-title--font-weight: 600;
-  --text-kpi: 2.75rem;
+  --text-kpi: 2.25rem;
   --text-kpi--line-height: 1;
   --text-kpi--letter-spacing: -0.03em;
   --text-kpi--font-weight: 600;

@@ -40,7 +40,7 @@ export function KpiCard({
         />
       ) : null}
       <div className='flex items-start justify-between gap-3'>
-        <h3 className='text-[15px] leading-snug font-semibold'>{label}</h3>
+        <h3 className='text-sm leading-snug font-semibold'>{label}</h3>
         {href ? (
           <Link
             href={href}

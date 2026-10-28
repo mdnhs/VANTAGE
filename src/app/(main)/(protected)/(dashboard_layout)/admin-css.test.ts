@@ -93,6 +93,10 @@ describe('admin.css', () => {
     expect(css).not.toContain('data-theme="admin"');
   });
 
+  it('shrinks the admin from the root font size, scoped to the admin marker', () => {
+    expect(css).toMatch(new RegExp(`${escape(SCOPE)}\\s*\\{\\s*font-size:\\s*93\\.75%;\\s*\\}`));
+  });
+
   it('does not restyle the public site (no unscoped * or body rules)', () => {
     expect(css).not.toMatch(/^\s*body\s*\{/m);
     expect(css).not.toMatch(/@layer base\s*\{[^]*?\n\s*\*\s*\{/);
