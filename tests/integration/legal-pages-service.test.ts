@@ -1,6 +1,8 @@
 import { eq, sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { REDIRECTS_TAG } from '@/lib/cache/redirects-tag';
 import { db } from '@/server/db';
 import { legalPages, redirects } from '@/server/db/schema';
 import type { Actor } from '@/server/lib/auth/actor';
@@ -37,6 +39,7 @@ const errorOf = async (promise: Promise<unknown>) => {
 
 beforeEach(async () => {
   await db.execute(sql`truncate table legal_pages, redirects cascade`);
+  vi.mocked(revalidateTag).mockClear();
 });
 
 describe('publishing', () => {
@@ -74,6 +77,21 @@ describe('publishing', () => {
     expect((await legalPageService.listPublishedLinks()).map((l) => l.slug)).toEqual(['terms', 'privacy']);
   });
 
+  it('leaves publishedAt alone when the saved content only differs in key order', async () => {
+    const row = await page('privacy', { status: 'published' });
+    const reordered = {
+      content: [{ content: [{ text: 'v1', type: 'text' }], type: 'paragraph' }],
+      type: 'doc',
+    } as unknown as TiptapDoc;
+    const saved = await legalPageService.update(actor, row!.id, {
+      title: 'Privacy Policy',
+      slug: 'privacy',
+      content: reordered,
+      status: 'published',
+    });
+    expect(saved?.publishedAt).toEqual(row!.publishedAt);
+  });
+
   it('leaves publishedAt alone on a slug-only rename', async () => {
     const row = await page('privacy', { status: 'published' });
     const saved = await legalPageService.update(actor, row!.id, { slug: 'privacy-policy' });
@@ -100,6 +118,30 @@ describe('renaming', () => {
     await legalPageService.update(actor, row!.id, { slug: 'privacy' });
     expect(await redirectFrom('/privacy')).toBeUndefined();
     expect(await redirectFrom('/privacy-policy')).toMatchObject({ destination: '/privacy' });
+  });
+});
+
+describe('redirect cache', () => {
+  it('expires the redirect table when a rename removes a stale redirect', async () => {
+    const row = await page('privacy', { status: 'published' });
+    await legalPageService.update(actor, row!.id, { slug: 'privacy-policy' });
+    await legalPageService.update(actor, row!.id, { status: 'draft' });
+    vi.mocked(revalidateTag).mockClear();
+    await legalPageService.update(actor, row!.id, { slug: 'privacy' });
+    expect(await redirectFrom('/privacy')).toBeUndefined();
+    expect(revalidateTag).toHaveBeenCalledWith(REDIRECTS_TAG, { expire: 0 });
+  });
+});
+
+describe('public lookup', () => {
+  it('answers an unknown slug without querying the page table', async () => {
+    await page('privacy', { status: 'published' });
+    const lookup = vi.spyOn(legalPageRepository, 'publishedBySlug');
+    expect(await legalPageService.getPublishedBySlug('wp-admin')).toBeNull();
+    expect(await legalPageService.getPublishedBySlug('.env')).toBeNull();
+    expect(lookup).not.toHaveBeenCalled();
+    expect((await legalPageService.getPublishedBySlug('privacy'))?.slug).toBe('privacy');
+    lookup.mockRestore();
   });
 });
 

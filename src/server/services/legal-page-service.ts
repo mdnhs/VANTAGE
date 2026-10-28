@@ -10,7 +10,7 @@ import { redirects } from '@/server/db/schema';
 import type { Actor } from '@/server/lib/auth/actor';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
 import { legalPageRepository } from '@/server/repositories/legal-page-repository';
-import { createRedirect } from '@/server/services/redirect-service';
+import { createRedirect, lockRedirects } from '@/server/services/redirect-service';
 import type {
   CreateLegalPageInput,
   LegalPageListQuery,
@@ -27,9 +27,9 @@ const slugError = (message: string, status = 422) =>
   });
 
 // The page lives at the site root, so its address must not belong to the app or another page.
-// `pageSlug` is the page's current slug: a redirect from the new address back to this page is
-// the one left by an earlier rename, and is replaced rather than refused.
-async function assertSlugAvailable(tx: DbLike, slug: string, page?: { id: string; slug: string }) {
+// A redirect from the new address back to this page is the one left by an earlier rename: it is
+// removed rather than refused, and the result says so (the redirect table must then expire).
+async function assertSlugAvailable(tx: DbLike, slug: string, page?: { id: string; slug: string }): Promise<boolean> {
   const path = `/${slug}`;
   if (isReservedPath(path) || LIVE_PATHS.has(path)) throw slugError(`${path} is already used by the site`);
   if (await legalPageRepository.slugTaken(slug, page?.id, tx)) throw slugError('Another legal page uses this address');
@@ -38,13 +38,29 @@ async function assertSlugAvailable(tx: DbLike, slug: string, page?: { id: string
     .from(redirects)
     .where(eq(redirects.sourcePath, path))
     .limit(1);
-  if (!redirect) return;
+  if (!redirect) return false;
   if (page && redirect.destination === `/${page.slug}`) {
+    await lockRedirects(tx);
     await tx.delete(redirects).where(eq(redirects.id, redirect.id));
-    return;
+    return true;
   }
   throw slugError(`A redirect from ${path} already exists — remove it in SEO → Redirects first`, 409);
 }
+
+// jsonb stores object keys in its own order, so a re-saved, unchanged document must not
+// compare as edited (that would move the public "Last updated" date).
+const canonical = (value: unknown): unknown =>
+  Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(
+          Object.entries(value)
+            .filter(([, v]) => v !== undefined)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => [k, canonical(v)]),
+        )
+      : value;
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
 function expire(...slugs: string[]) {
   // Second arg must match the `cacheLife` profile used by the cached reads below.
@@ -78,17 +94,24 @@ async function listPublishedForSitemapCached() {
   return legalPageRepository.listPublished();
 }
 
-async function getPublishedBySlugCached(slug: string) {
+async function getPageBySlugCached(slug: string) {
   'use cache';
   cacheTag(LIST_TAG, slugTag(slug));
   cacheLife('hours');
   return (await legalPageRepository.publishedBySlug(slug)) ?? null;
 }
 
+// Any path a visitor or bot types lands here: only a slug in the (one, cached) published list
+// costs a lookup, so unknown paths never reach the database or add cache entries.
+async function getPublishedBySlug(slug: string) {
+  const published = await listPublishedLinksCached();
+  return published.some((page) => page.slug === slug) ? getPageBySlugCached(slug) : null;
+}
+
 export const legalPageService = {
   listPublishedLinks,
   listPublishedForSitemap: listPublishedForSitemapCached,
-  getPublishedBySlug: getPublishedBySlugCached,
+  getPublishedBySlug,
 
   // Uncached: the admin table always shows fresh data, drafts included.
   async listAdmin(params: Pick<LegalPageListQuery, 'page' | 'limit'>) {
@@ -117,12 +140,12 @@ export const legalPageService = {
       const before = await legalPageRepository.byId(id, tx);
       if (!before) return undefined;
       const renamed = input.slug !== undefined && input.slug !== before.slug;
-      if (renamed) await assertSlugAvailable(tx, input.slug!, before);
+      const removedRedirect = renamed ? await assertSlugAvailable(tx, input.slug!, before) : false;
 
       const status = input.status ?? before.status;
       const edited =
         (input.title !== undefined && input.title !== before.title) ||
-        (input.content !== undefined && JSON.stringify(input.content) !== JSON.stringify(before.content));
+        (input.content !== undefined && !sameJson(input.content, before.content));
       const publishing = status === 'published' && before.status !== 'published';
       const stamp = publishing || (status === 'published' && edited) ? { publishedAt: new Date() } : {};
 
@@ -137,7 +160,7 @@ export const legalPageService = {
           createdBy: actor.userId,
         });
       }
-      return { before, redirected: renamed && before.status === 'published' };
+      return { before, redirected: removedRedirect || (renamed && before.status === 'published') };
     });
     if (!result) return undefined;
     expire(result.before.slug, ...(input.slug ? [input.slug] : []));
