@@ -94,6 +94,16 @@ async function listPublishedForSitemapCached() {
   return legalPageRepository.listPublished();
 }
 
+// The proxy's view of which root addresses exist. Null on a failed read, so it fails open.
+async function publishedSlugs(): Promise<ReadonlySet<string> | null> {
+  try {
+    return new Set((await listPublishedLinksCached()).map((page) => page.slug));
+  } catch (error) {
+    console.warn('[legalPageService] listing published slugs failed:', error);
+    return null;
+  }
+}
+
 async function getPageBySlugCached(slug: string) {
   'use cache';
   cacheTag(LIST_TAG, slugTag(slug));
@@ -112,6 +122,7 @@ export const legalPageService = {
   listPublishedLinks,
   listPublishedForSitemap: listPublishedForSitemapCached,
   getPublishedBySlug,
+  publishedSlugs,
 
   // Uncached: the admin table always shows fresh data, drafts included.
   async listAdmin(params: Pick<LegalPageListQuery, 'page' | 'limit'>) {

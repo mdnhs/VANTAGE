@@ -81,6 +81,13 @@ describe('proxy: redirect enforcement', () => {
     vi.useRealTimers();
   });
 
+  it('answers a missing address with the not-found page, not a soft 404', async () => {
+    answer({ kind: 'missing' });
+    const res = await proxy(req('/nope-xyz'));
+    expect(res.headers.get('location')).toBeNull();
+    expect(new URL(res.headers.get('x-middleware-rewrite')!).pathname).toBe('/_missing/page');
+  });
+
   it('lets live and reserved paths through without calling the resolver', async () => {
     for (const path of ['/', '/services', '/api/v1/x', '/robots.txt', '/og/a', '/assets/x.jpg']) {
       const res = await proxy(req(path));
