@@ -12,6 +12,7 @@ interface InsuranceHeroProps {
 export function InsuranceHero({ eyebrow, line1, line2, line3, subtext }: InsuranceHeroProps) {
   return (
     <PageHero
+      page='insurance'
       eyebrow={eyebrow}
       lines={[line1, line2, line3]}
       subtext={subtext}

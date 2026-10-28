@@ -139,6 +139,13 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'hero.line1': { label: 'Headline line 1' },
     'hero.accent': { label: 'Headline accent line' },
     'hero.subtext': { label: 'Description' },
+    faq: { label: 'FAQ', description: 'Shown below the services list. Remove every question to hide the section.' },
+    'faq.eyebrow': { label: 'Eyebrow text' },
+    'faq.title': { label: 'Headline' },
+    'faq.accent': { label: 'Headline accent' },
+    'faq.items': { label: 'Questions' },
+    'faq.items.$.question': { label: 'Question' },
+    'faq.items.$.answer': { label: 'Answer' },
   },
   'page.our-work': {
     hero: { label: 'Hero' },

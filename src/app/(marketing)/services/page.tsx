@@ -3,6 +3,7 @@ import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { sizedSrc } from '@/lib/media/public-image';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
+import { ServicesFaq } from '@/components/marketing/services-faq';
 import {
   SECTION_BG,
   SECTION_CONTAINER,
@@ -10,6 +11,7 @@ import {
   SectionHeader,
 } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
+import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
@@ -21,7 +23,11 @@ const FALLBACK_IMAGE = '/assets/marketing/service-crash-repair.jpg';
 
 // Content is CMS-driven (Dashboard → Services) — order and enabled state come from there.
 export default async function ServicesPage() {
-  const [services, settings] = await Promise.all([serviceService.listPublished(), siteSettingsService.getPublic()]);
+  const [services, settings, page] = await Promise.all([
+    serviceService.listPublished(),
+    siteSettingsService.getPublic(),
+    getSetting('page.services'),
+  ]);
 
   return (
     <main className='flex flex-col'>
@@ -66,6 +72,7 @@ export default async function ServicesPage() {
           </div>
         </section>
       )}
+      <ServicesFaq faq={page.faq} />
       <PageAnimations />
     </main>
   );

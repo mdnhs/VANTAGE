@@ -10,6 +10,7 @@ interface ServicesHeroProps {
 export function ServicesHero({ eyebrow, headlineLine1, headlineAccent, subtext }: ServicesHeroProps) {
   return (
     <PageHero
+      page='services'
       eyebrow={eyebrow}
       lines={[headlineLine1, headlineAccent]}
       subtext={subtext}

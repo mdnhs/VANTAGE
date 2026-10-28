@@ -439,6 +439,32 @@ export const ServicesPageGlobal = z.object({
     subtext:
       'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
   }),
+  faq: z
+    .object({
+      eyebrow: s(100, 'Good to Know'),
+      title: s(160, 'Frequently Asked'),
+      accent: s(100, 'Questions.'),
+      items: z
+        .array(z.object({ question: s(200), answer: s(1000) }))
+        .max(20)
+        .default([
+          {
+            question: 'Can you deal with my insurance company directly?',
+            answer:
+              'Yes. We speak directly with your insurer, loss adjusters and assessors, and handle the claim paperwork so you do not have to.',
+          },
+          {
+            question: 'Will I have a car while mine is being repaired?',
+            answer: 'We can arrange a courtesy car for you while your vehicle is in the workshop.',
+          },
+          {
+            question: 'How do I get an estimate?',
+            answer:
+              'Request a free quote online with your vehicle details and a few photos, or call in to the workshop for an inspection. Estimates come with a clear breakdown of parts, labour and paint.',
+          },
+        ]),
+    })
+    .prefault({}),
 });
 
 export const OurWorkPageGlobal = z.object({

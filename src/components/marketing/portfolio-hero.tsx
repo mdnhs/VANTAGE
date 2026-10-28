@@ -9,5 +9,5 @@ interface PortfolioHeroProps {
 
 // CMS-driven hero copy (Site Settings → Our Work) rendered through the shared landing PageHero.
 export function PortfolioHero({ eyebrow, headlineLine1, headlineAccent, subtext }: PortfolioHeroProps) {
-  return <PageHero eyebrow={eyebrow} lines={[headlineLine1, headlineAccent]} subtext={subtext} />;
+  return <PageHero page='our-work' eyebrow={eyebrow} lines={[headlineLine1, headlineAccent]} subtext={subtext} />;
 }

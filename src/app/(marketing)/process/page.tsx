@@ -31,7 +31,7 @@ export default async function ProcessPage() {
   return (
     <main className='flex flex-col'>
       <PageJsonLd id='process' />
-      <PageHero eyebrow={content.eyebrow} lines={toHeroLines(title)} subtext={content.subtext}>
+      <PageHero page='process' eyebrow={content.eyebrow} lines={toHeroLines(title)} subtext={content.subtext}>
         <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
         <ButtonLink href='/services' variant='secondary'>
           Our services

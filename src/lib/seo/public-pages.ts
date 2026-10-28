@@ -39,10 +39,11 @@ export type PublicPage = {
   // page's own components plus the closing CTA band the marketing layout renders after it
   // (StitchCta -> "/#estimator"); the header and footer are excluded. Hrefs are resolved against
   // the page's own path, so "#estimator" on the home page and "/#estimator" are one link.
-  // Per page: home /our-work, /#estimator, /#work (3); services /get-a-quote, /process,
-  // /#estimator (3); our-work /#estimator (1); insurance /get-a-quote, /#estimator (2);
-  // about /#estimator (1); process /get-a-quote, /services, /#estimator (3);
-  // contact /#estimator (1); get-a-quote /#estimator (1).
+  // Every page but home also links "/" from its PageHero breadcrumb.
+  // Per page: home /our-work, /#estimator, /#work (3); services /, /get-a-quote, /process,
+  // /#estimator (4); our-work /, /#estimator (2); insurance /, /get-a-quote, /#estimator (3);
+  // about /, /#estimator (2); process /, /get-a-quote, /services, /#estimator (4);
+  // contact /, /#estimator (2); get-a-quote /, /#estimator (2).
   codeLinks: number;
 };
 
@@ -70,7 +71,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.services',
     hasH1: true,
-    codeLinks: 3,
+    codeLinks: 4,
   },
   'our-work': {
     id: 'our-work',
@@ -83,7 +84,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.our-work',
     hasH1: true,
-    codeLinks: 1,
+    codeLinks: 2,
   },
   insurance: {
     id: 'insurance',
@@ -96,7 +97,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.insurance',
     hasH1: true,
-    codeLinks: 2,
+    codeLinks: 3,
   },
   about: {
     id: 'about',
@@ -109,7 +110,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.about',
     hasH1: true,
-    codeLinks: 1,
+    codeLinks: 2,
   },
   process: {
     id: 'process',
@@ -122,7 +123,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.process',
     hasH1: true,
-    codeLinks: 3,
+    codeLinks: 4,
   },
   contact: {
     id: 'contact',
@@ -135,7 +136,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: false,
     pageKey: null,
     hasH1: true,
-    codeLinks: 1,
+    codeLinks: 2,
   },
   'get-a-quote': {
     id: 'get-a-quote',
@@ -148,7 +149,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: false,
     pageKey: null,
     hasH1: true,
-    codeLinks: 1,
+    codeLinks: 2,
   },
 };
 

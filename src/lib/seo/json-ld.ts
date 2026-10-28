@@ -1,4 +1,4 @@
-import type { BreadcrumbList, Graph, LocalBusiness, Thing, WebSite } from 'schema-dts';
+import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Thing, WebSite } from 'schema-dts';
 
 import type { GlobalValue } from '@/lib/content/globals';
 
@@ -77,6 +77,18 @@ export function breadcrumbNode(origin: string, trail: { name: string; path: stri
       position: i + 1,
       name: step.name,
       item: abs(origin, step.path),
+    })),
+  };
+}
+
+// Mirrors a visible FAQ section; Google ignores FAQ markup whose answers are not on the page.
+export function faqNode(items: { question: string; answer: string }[]): FAQPage {
+  return {
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
     })),
   };
 }

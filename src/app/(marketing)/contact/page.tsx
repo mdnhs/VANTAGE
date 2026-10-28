@@ -19,6 +19,7 @@ export default async function ContactPage() {
     <main className='grow'>
       <PageJsonLd id='contact' />
       <PageHero
+        page='contact'
         eyebrow='Visit · Call · Message'
         lines={['Get in', 'touch.']}
         subtext='We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.'

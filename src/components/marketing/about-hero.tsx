@@ -15,6 +15,7 @@ interface AboutHeroProps {
 export function AboutHero({ eyebrow, line1, accent1, line2, accent2, image }: AboutHeroProps) {
   return (
     <PageHero
+      page='about'
       eyebrow={eyebrow}
       lines={[`${line1} ${accent1}.`, `${line2} ${accent2}.`]}
       imageSrc={image ? sizedSrc(image, 'w_1920') : ABOUT_FALLBACK_IMAGES.hero}
