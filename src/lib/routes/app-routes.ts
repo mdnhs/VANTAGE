@@ -20,6 +20,11 @@ export const APP_ROUTES = {
       create: '/dashboard/services/create',
       edit: (id: string) => `/dashboard/services/${id}/edit`,
     },
+    legalPages: {
+      index: '/dashboard/legal-pages',
+      create: '/dashboard/legal-pages/create',
+      edit: (id: string) => `/dashboard/legal-pages/${id}/edit`,
+    },
     projects: {
       index: '/dashboard/projects',
       create: '/dashboard/projects/create',

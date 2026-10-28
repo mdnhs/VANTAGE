@@ -13,6 +13,7 @@ export function comingSoonLink(section: string, rest: readonly string[] = []): N
 export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/home-page',
   '/dashboard/services',
+  '/dashboard/legal-pages',
   '/dashboard/projects',
   '/dashboard/insurance',
   '/dashboard/about',

@@ -21,6 +21,7 @@ import { permissionFor } from './route-permissions';
 const ALL_WEBSITE = [
   'website-home',
   'website-services',
+  'website-legal-pages',
   'website-work',
   'website-insurance',
   'website-about',
