@@ -204,6 +204,13 @@
       "when": 1792690065026,
       "tag": "0028_far_hairball",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793208367835,
+      "tag": "0029_legal_pages",
+      "breakpoints": true
     }
   ]
 }
