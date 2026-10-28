@@ -34,6 +34,8 @@ type ServiceFeatureBlockProps = {
   iconSrc?: string | null;
   imagePosition?: string;
   startingPrice?: number | null;
+  /** The service's own /services/<slug> page. */
+  href: string;
 };
 
 // One service row on /services: photo card + copy card, alternating sides on desktop.
@@ -47,6 +49,7 @@ export function ServiceFeatureBlock({
   iconSrc,
   imagePosition,
   startingPrice,
+  href,
 }: ServiceFeatureBlockProps) {
   const icon = FIGMA_ICONS[index % FIGMA_ICONS.length];
   const number = String(index + 1).padStart(2, '0');
@@ -120,9 +123,14 @@ export function ServiceFeatureBlock({
           </ul>
         )}
 
-        <ButtonLink href='/get-a-quote' className='mt-auto w-full sm:w-auto'>
-          Get a quote
-        </ButtonLink>
+        <div className='mt-auto flex w-full flex-col gap-3 sm:w-auto sm:flex-row'>
+          <ButtonLink href={href} variant='secondary' className='w-full sm:w-auto'>
+            Learn more
+          </ButtonLink>
+          <ButtonLink href='/get-a-quote' className='w-full sm:w-auto'>
+            Get a quote
+          </ButtonLink>
+        </div>
       </div>
     </article>
   );

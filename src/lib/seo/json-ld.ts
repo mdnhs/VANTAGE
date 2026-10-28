@@ -1,4 +1,4 @@
-import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Thing, WebSite } from 'schema-dts';
+import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Service, Thing, WebSite } from 'schema-dts';
 
 import type { GlobalValue } from '@/lib/content/globals';
 
@@ -90,5 +90,24 @@ export function faqNode(items: { question: string; answer: string }[]): FAQPage 
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },
     })),
+  };
+}
+
+// One service detail page, offered by the business node on the home page.
+export function serviceNode(i: {
+  origin: string;
+  path: string;
+  name: string;
+  description: string;
+  imageUrl?: string | null;
+}): Service {
+  return {
+    '@type': 'Service',
+    '@id': `${abs(i.origin, i.path)}#service`,
+    name: i.name,
+    description: i.description,
+    url: abs(i.origin, i.path),
+    ...(i.imageUrl ? { image: i.imageUrl } : {}),
+    provider: { '@id': `${i.origin}/#organization` },
   };
 }

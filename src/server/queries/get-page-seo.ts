@@ -17,6 +17,7 @@ import { settingsRepository } from '@/server/repositories/settings-repository';
 import { loadPublicImages } from '@/server/lib/media/resolve';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { getSetting } from '@/server/queries/get-setting';
+import { serviceService } from '@/server/services/service-service';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // A stored image ref as a PublicImage: a live media row only. Cloudinary refs return null.
@@ -108,8 +109,14 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
       };
     }),
   );
-  return (
-    pages
+  const serviceDetails = (await serviceService.listPublishedForSitemap()).map(({ slug, updatedAt }): SitemapEntry => ({
+    path: `/services/${slug}`,
+    changeFrequency: 'monthly',
+    priority: 0.5,
+    lastModified: updatedAt,
+  }));
+  return [
+    ...pages
       // A page whose canonical points elsewhere is not listed under its own address.
       .filter(({ page, seo }) => !seo.noindex && isSelfCanonical(seo.canonical, page.path))
       .map(({ page, lastModified }) => ({
@@ -117,6 +124,7 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
         changeFrequency: page.id === 'home' ? 'weekly' : 'monthly',
         priority: page.id === 'home' ? 1 : 0.6,
         ...(lastModified ? { lastModified } : {}),
-      }))
-  );
+      })),
+    ...serviceDetails,
+  ];
 }

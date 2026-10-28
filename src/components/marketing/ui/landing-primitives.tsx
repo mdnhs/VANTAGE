@@ -139,23 +139,42 @@ interface PageHeroProps {
   imageAlt?: string;
   /** Renders a Home › page breadcrumb above the copy, matching PageJsonLd's BreadcrumbList. */
   page?: Exclude<PublicPageId, 'home'>;
+  /** A child of `page` (e.g. one service): the page becomes a link and this is the last crumb. */
+  current?: string;
   children?: ReactNode;
 }
 
-function HeroBreadcrumb({ page }: { page: Exclude<PublicPageId, 'home'> }) {
+const CRUMB_LINK = 'transition-colors hover:text-white';
+
+function HeroBreadcrumb({ page, current }: { page: Exclude<PublicPageId, 'home'>; current?: string }) {
+  const { title, path } = PUBLIC_PAGES[page];
   return (
     <Breadcrumb className='mb-6 lg:mb-8'>
       <BreadcrumbList className='font-site-body text-[13px] tracking-[0.04em] text-[#8a8a93] uppercase'>
         <BreadcrumbItem>
           {/* Plain Link, not BreadcrumbLink: its useRender hook can't run in this server component */}
-          <Link href='/' className='transition-colors hover:text-white'>
+          <Link href='/' className={CRUMB_LINK}>
             Home
           </Link>
         </BreadcrumbItem>
         <BreadcrumbSeparator className='text-[#52525b]' />
         <BreadcrumbItem>
-          <BreadcrumbPage className='text-[#d4d4d4]'>{PUBLIC_PAGES[page].title}</BreadcrumbPage>
+          {current ? (
+            <Link href={path} className={CRUMB_LINK}>
+              {title}
+            </Link>
+          ) : (
+            <BreadcrumbPage className='text-[#d4d4d4]'>{title}</BreadcrumbPage>
+          )}
         </BreadcrumbItem>
+        {current && (
+          <>
+            <BreadcrumbSeparator className='text-[#52525b]' />
+            <BreadcrumbItem>
+              <BreadcrumbPage className='text-[#d4d4d4]'>{current}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   );
@@ -163,7 +182,7 @@ function HeroBreadcrumb({ page }: { page: Exclude<PublicPageId, 'home'> }) {
 
 // Inner-page version of the homepage hero (131:23): same shade + fade-to-page treatment and
 // type scale, shorter. `data-hero-copy` is the hook PageAnimations uses for the intro timeline.
-export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', page, children }: PageHeroProps) {
+export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', page, current, children }: PageHeroProps) {
   const accentIndex = lines.length - 1;
   return (
     <section className='relative w-full overflow-hidden bg-[#111113]'>
@@ -176,7 +195,7 @@ export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', pag
       )}
       <div className='relative z-10 mx-auto flex w-full max-w-[1200px] flex-col px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-[120px] lg:pb-[100px] xl:px-0'>
         {/* Outside data-hero-copy: PageAnimations reads that block's children as [eyebrow, heading, ...] */}
-        {page && <HeroBreadcrumb page={page} />}
+        {page && <HeroBreadcrumb page={page} current={current} />}
         <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-6 lg:gap-8'>
           <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
           <h1 className='font-site-heading text-[40px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>

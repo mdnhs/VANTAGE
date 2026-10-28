@@ -1,4 +1,4 @@
-import { asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { db, type DbLike } from '@/server/db';
 import { services } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
@@ -64,6 +64,23 @@ export const serviceRepository = {
   async bySlug(slug: string) {
     const row = await db.query.services.findFirst({ where: eq(services.slug, slug), with: withMedia });
     return row ? present(row) : undefined;
+  },
+
+  // The public /services/<slug> page: a disabled service is not found.
+  async publishedBySlug(slug: string) {
+    const row = await db.query.services.findFirst({
+      where: and(eq(services.slug, slug), eq(services.isEnabled, true)),
+      with: withMedia,
+    });
+    return row ? present(row) : undefined;
+  },
+
+  async listPublishedForSitemap() {
+    return db
+      .select({ slug: services.slug, updatedAt: services.updatedAt })
+      .from(services)
+      .where(eq(services.isEnabled, true))
+      .orderBy(asc(services.displayOrder));
   },
 
   // Write-only halves of create/update: the caller's transaction re-checks media first.

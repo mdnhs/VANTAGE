@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { parseGlobal } from '@/lib/content/globals';
 
-import { breadcrumbNode, businessNode, graph, scriptJson, websiteNode } from './json-ld';
+import { breadcrumbNode, businessNode, graph, scriptJson, serviceNode, websiteNode } from './json-ld';
 
 const origin = 'https://x.ie';
 const site = () => parseGlobal('site', {});
@@ -87,5 +87,31 @@ describe('breadcrumbNode', () => {
 describe('graph', () => {
   it('wraps nodes in a schema.org graph', () => {
     expect(graph([breadcrumbNode(origin, [])])).toMatchObject({ '@context': 'https://schema.org', '@graph': [{}] });
+  });
+});
+
+describe('serviceNode', () => {
+  it('describes the service at its own address, provided by the business', () => {
+    const node = serviceNode({
+      origin,
+      path: '/services/crash-repair',
+      name: 'Crash Repair',
+      description: 'Structural repairs.',
+      imageUrl: 'https://cdn.x.ie/a.jpg',
+    });
+    expect(node).toEqual({
+      '@type': 'Service',
+      '@id': 'https://x.ie/services/crash-repair#service',
+      name: 'Crash Repair',
+      description: 'Structural repairs.',
+      url: 'https://x.ie/services/crash-repair',
+      image: 'https://cdn.x.ie/a.jpg',
+      provider: { '@id': 'https://x.ie/#organization' },
+    });
+  });
+
+  it('leaves the image out when the service has none', () => {
+    const node = serviceNode({ origin, path: '/services/a', name: 'A', description: 'B', imageUrl: null });
+    expect(node).not.toHaveProperty('image');
   });
 });

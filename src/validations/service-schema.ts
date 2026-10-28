@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { legacyImageKey } from './legacy-image-key';
+import { tiptapDocSchema } from './legal-page-schema';
 
 // lowercase-kebab: letters/digits, hyphen-separated, no leading/trailing/double hyphens.
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -15,6 +16,7 @@ export const createServiceSchema = z.object({
   imageMediaId: z.string().uuid().nullable().optional(),
   checklist: z.array(z.string().min(1).max(160)).max(10).optional(),
   startingPrice: z.number().int().nonnegative().nullable().optional(),
+  content: tiptapDocSchema.nullable().optional(),
   displayOrder: z.number().int().optional(),
   isEnabled: z.boolean().optional(),
 });

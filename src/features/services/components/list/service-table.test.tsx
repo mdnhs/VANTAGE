@@ -63,6 +63,7 @@ const mockService: Service = {
   imageMediaId: null,
   checklist: ['Chassis alignment', 'Panel beating'],
   startingPrice: 250,
+  content: null,
   displayOrder: 1,
   isEnabled: true,
   createdAt: new Date(),

@@ -1,4 +1,5 @@
-import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import type { TiptapDoc } from '@/validations/legal-page-schema';
 import { media } from './media';
 
 // Money convention: site-settings has no money fields to establish a precedent, so this
@@ -18,6 +19,8 @@ export const services = pgTable(
     imageMediaId: uuid('image_media_id').references(() => media.id, { onDelete: 'restrict' }),
     checklist: text('checklist').array().notNull().default([]),
     startingPrice: integer('starting_price'),
+    // Rich-text body of the /services/<slug> detail page (Tiptap JSON); null shows no body.
+    content: jsonb('content').$type<TiptapDoc>(),
     displayOrder: integer('display_order').notNull().default(0),
     isEnabled: boolean('is_enabled').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -29,8 +29,22 @@ async function listPublishedCached() {
   return listPublishedUncached();
 }
 
+// Tagged with the list tag: every mutation (including a slug rename) expires it.
+async function getPublishedBySlugCached(slug: string) {
+  'use cache';
+  cacheTag(MEDIA_TAG);
+  cacheTag(LIST_TAG);
+  cacheLife('hours');
+  return (await serviceRepository.publishedBySlug(slug)) ?? null;
+}
+
 export const serviceService = {
   listPublished: listPublishedCached,
+  getPublishedBySlug: getPublishedBySlugCached,
+
+  listPublishedForSitemap() {
+    return serviceRepository.listPublishedForSitemap();
+  },
 
   // Uncached: admin table always shows fresh data, including disabled rows.
   async listAdmin(params: Pick<ServiceListQuery, 'page' | 'limit'>) {

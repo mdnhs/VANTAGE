@@ -3,14 +3,16 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { RichTextEditor } from '@/components/admin/rich-text-editor';
 import { MediaField } from '@/features/media/components/media-field';
 import { slotPatch, slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
+import type { TiptapDoc } from '@/validations/legal-page-schema';
 import type { Service } from '../types';
 
 function slugify(value: string): string {
@@ -21,6 +23,12 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+function hasText(doc: TiptapDoc | null): doc is TiptapDoc {
+  const walk = (nodes: TiptapDoc['content']): boolean =>
+    nodes.some((n) => Boolean(n.text?.trim()) || n.type === 'horizontalRule' || walk(n.content ?? []));
+  return Boolean(doc && walk(doc.content));
+}
+
 interface FormState {
   name: string;
   slug: string;
@@ -28,6 +36,7 @@ interface FormState {
   iconMediaId: Slot;
   imageMediaId: Slot;
   checklist: string;
+  content: TiptapDoc | null;
   isEnabled: boolean;
 }
 
@@ -39,6 +48,7 @@ function toFormState(data: Service | null): FormState {
     iconMediaId: undefined,
     imageMediaId: undefined,
     checklist: (data?.checklist ?? []).join('\n'),
+    content: data?.content ?? null,
     isEnabled: data?.isEnabled ?? true,
   };
 }
@@ -52,6 +62,7 @@ interface ServiceFormProps {
     iconMediaId?: string | null;
     imageMediaId?: string | null;
     checklist: string[];
+    content: TiptapDoc | null;
     isEnabled: boolean;
   }) => Promise<unknown>;
   isSubmitting: boolean;
@@ -95,6 +106,8 @@ export function ServiceForm({
         .split('\n')
         .map((line) => line.trim())
         .filter(Boolean),
+      // An editor cleared to a single empty paragraph saves as "no body".
+      content: hasText(form.content) ? form.content : null,
       isEnabled: form.isEnabled,
     });
   };
@@ -170,6 +183,23 @@ export function ServiceForm({
               onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Detail page</CardTitle>
+          <CardDescription>
+            The body of this service&apos;s own page{form.slug ? ` (/services/${form.slug})` : ''}, shown under the
+            image. The name, description, checklist and image above appear there too.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RichTextEditor
+            initialContent={form.content}
+            onChange={(doc) => setField('content', doc)}
+            ariaLabel='Detail page content'
+          />
         </CardContent>
       </Card>
 
