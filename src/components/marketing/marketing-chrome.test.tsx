@@ -30,6 +30,10 @@ vi.mock('@/server/services/site-settings-service', () => ({
     }),
   },
 }));
+const legalLinks = vi.hoisted(() => ({ list: [] as { title: string; slug: string }[] }));
+vi.mock('@/server/services/legal-page-service', () => ({
+  legalPageService: { listPublishedLinks: async () => legalLinks.list },
+}));
 vi.mock('@/server/queries/get-setting', () => ({
   getSetting: async () => ({
     blurb: '',
@@ -279,5 +283,40 @@ describe('MarketingFooter cookie settings slot', () => {
     const row = legalRow(container);
     expect(row.lastElementChild?.textContent).toBe('Cookie settings');
     expect(row.querySelectorAll('a')).toHaveLength(1);
+  });
+});
+
+describe('MarketingFooter legal pages', () => {
+  afterEach(() => {
+    legalLinks.list = [];
+  });
+
+  const legalHrefs = (container: HTMLElement) =>
+    [...container.querySelector('a[href="/privacy"]')!.parentElement!.querySelectorAll('a')].map((a) => [
+      a.textContent,
+      a.getAttribute('href'),
+    ]);
+
+  it('lists published legal pages after the manual links, before the cookie slot', async () => {
+    legalLinks.list = [
+      { title: 'Terms of Service', slug: 'terms' },
+      { title: 'Cookie Policy', slug: 'cookie-policy' },
+    ];
+    const { container } = render(await MarketingFooter({ cookieSettings: <button>Cookie settings</button> }));
+    expect(legalHrefs(container)).toEqual([
+      ['Privacy', '/privacy'],
+      ['Terms of Service', '/terms'],
+      ['Cookie Policy', '/cookie-policy'],
+    ]);
+    expect(container.querySelector('a[href="/privacy"]')!.parentElement!.lastElementChild?.textContent).toBe(
+      'Cookie settings',
+    );
+  });
+
+  it('shows a page once when a manual link already points at it', async () => {
+    legalLinks.list = [{ title: 'Privacy Policy', slug: 'privacy' }];
+    const { container } = render(await MarketingFooter({}));
+    expect(container.querySelectorAll('a[href="/privacy"]')).toHaveLength(1);
+    expect(container.querySelector('a[href="/privacy"]')!.textContent).toBe('Privacy Policy');
   });
 });

@@ -4,6 +4,7 @@ import { sizedSrc } from '@/lib/media/public-image';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import { getSetting } from '@/server/queries/get-setting';
+import { legalPageService } from '@/server/services/legal-page-service';
 
 // Figma 131:674 assets
 const FALLBACK_LOGO = '/assets/landing/27e96966dcba4218e85dc86d5723b210f88c7f2d.png';
@@ -45,7 +46,18 @@ function ContactIcon({
 // on every marketing page, so this is a repeated call to a `'use cache'`-wrapped function:
 // Next.js dedupes identical cache-key reads within the same render, so it costs nothing extra.
 export async function MarketingFooter({ cookieSettings }: { cookieSettings?: React.ReactNode }) {
-  const [settings, footer] = await Promise.all([siteSettingsService.getPublic(), getSetting('footer')]);
+  const [settings, footer, legalPages] = await Promise.all([
+    siteSettingsService.getPublic(),
+    getSetting('footer'),
+    legalPageService.listPublishedLinks(),
+  ]);
+  // Manual links first, then every published legal page (Dashboard → Legal pages); a manual
+  // link to a legal page's address gives way to the page so it is listed once.
+  const legalPaths = new Set(legalPages.map((page) => `/${page.slug}`));
+  const legalLinks = [
+    ...footer.legalLinks.filter((link) => link.label && link.href && !legalPaths.has(link.href)),
+    ...legalPages.map((page) => ({ label: page.title, href: `/${page.slug}` })),
+  ];
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
 
@@ -157,13 +169,11 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
             © 2026 {footer.copyrightName || settings.businessName}. {footer.legalNote}
           </span>
           <div className='flex flex-wrap gap-x-[28px] gap-y-2'>
-            {footer.legalLinks
-              .filter((link) => link.label && link.href)
-              .map((link) => (
-                <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
-                  {link.label}
-                </Link>
-              ))}
+            {legalLinks.map((link) => (
+              <Link key={`${link.label}-${link.href}`} href={link.href} className={linkClass}>
+                {link.label}
+              </Link>
+            ))}
             {cookieSettings}
           </div>
         </div>

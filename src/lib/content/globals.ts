@@ -159,11 +159,8 @@ export const FooterGlobal = z.object({
   legalLinks: z
     .array(Link)
     .max(6)
-    .default([
-      { label: 'Privacy Policy', href: '#privacy' },
-      { label: 'Terms of Service', href: '#terms' },
-      { label: 'Login', href: '/login' },
-    ]),
+    // Legal pages themselves are listed from Dashboard → Legal pages, after these.
+    .default([{ label: 'Login', href: '/login' }]),
   // Blank prints the site name, exactly as the footer did before this was editable.
   copyrightName: s(80),
   // Printed after the copyright name.

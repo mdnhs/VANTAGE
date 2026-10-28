@@ -211,6 +211,13 @@
       "when": 1793208367835,
       "tag": "0029_legal_pages",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793209431994,
+      "tag": "0030_drop_placeholder_legal_links",
+      "breakpoints": true
     }
   ]
 }
