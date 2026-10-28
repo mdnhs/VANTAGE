@@ -52,13 +52,23 @@ function expire(...slugs: string[]) {
   for (const slug of slugs) revalidateTag(slugTag(slug), 'hours');
 }
 
-// Throws on a database failure rather than answering "no pages", so the miss is never cached.
 async function listPublishedLinksCached() {
   'use cache';
   cacheTag(LIST_TAG);
   cacheLife('hours');
   const rows = await legalPageRepository.listPublished();
   return rows.map(({ title, slug }) => ({ title, slug }));
+}
+
+// Footer links: a failed DB read renders no legal links, but outside the cache — caught inside,
+// the empty fallback would be cached and outlive the outage (and break the build's prerender).
+async function listPublishedLinks() {
+  try {
+    return await listPublishedLinksCached();
+  } catch (error) {
+    console.warn('[legalPageService] listing published pages failed, rendering none:', error);
+    return [];
+  }
 }
 
 async function listPublishedForSitemapCached() {
@@ -76,7 +86,7 @@ async function getPublishedBySlugCached(slug: string) {
 }
 
 export const legalPageService = {
-  listPublishedLinks: listPublishedLinksCached,
+  listPublishedLinks,
   listPublishedForSitemap: listPublishedForSitemapCached,
   getPublishedBySlug: getPublishedBySlugCached,
 

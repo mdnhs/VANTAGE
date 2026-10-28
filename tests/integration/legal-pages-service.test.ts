@@ -124,9 +124,14 @@ describe('slug rules', () => {
 });
 
 describe('failures', () => {
-  it('propagates a read failure instead of answering with no pages', async () => {
+  it('renders no footer links on a read failure, outside the cache, and recovers', async () => {
+    await page('privacy', { status: 'published' });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(legalPageRepository, 'listPublished').mockRejectedValueOnce(new Error('db down'));
-    await expect(legalPageService.listPublishedLinks()).rejects.toThrow('db down');
+    expect(await legalPageService.listPublishedLinks()).toEqual([]);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(await legalPageService.listPublishedLinks()).toEqual([{ title: 'Privacy Policy', slug: 'privacy' }]);
+    warn.mockRestore();
   });
 });
 
