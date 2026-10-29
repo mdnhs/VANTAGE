@@ -1,11 +1,12 @@
 'use client';
 
-import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { MoonIcon, SunIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { switchTheme } from '@/lib/theme/switch-theme';
 
 const subscribe = () => () => {};
 
@@ -17,14 +18,14 @@ export function ThemePreference() {
     () => true,
     () => false,
   );
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   if (!mounted) return <Skeleton className='h-9 w-64' />;
   return (
     <ToggleGroup
       aria-label='Theme'
-      value={[theme ?? 'system']}
+      value={[resolvedTheme === 'dark' ? 'dark' : 'light']}
       onValueChange={(value) => {
-        if (value[0]) setTheme(String(value[0]));
+        if (value[0]) switchTheme(setTheme, String(value[0]));
       }}
       variant='outline'
     >
@@ -33,9 +34,6 @@ export function ThemePreference() {
       </ToggleGroupItem>
       <ToggleGroupItem value='dark'>
         <MoonIcon aria-hidden /> Dark
-      </ToggleGroupItem>
-      <ToggleGroupItem value='system'>
-        <MonitorIcon aria-hidden /> System
       </ToggleGroupItem>
     </ToggleGroup>
   );

@@ -29,10 +29,6 @@ export function NavEntry({
   const active = isActivePath(pathname, item);
   return (
     <SidebarMenuItem>
-      {/* The 4px active bar on the panel's left edge (the group's p-2 away). */}
-      {active ? (
-        <span aria-hidden className='absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary' />
-      ) : null}
       <SidebarMenuButton
         size='lg'
         isActive={active}

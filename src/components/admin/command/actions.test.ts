@@ -9,8 +9,8 @@ const visible = (q: string) =>
     .map((a) => a.id);
 
 describe('buildActions', () => {
-  it('offers three themes, open site and sign out', () => {
-    expect(visible('')).toEqual(['theme-light', 'theme-dark', 'theme-system', 'open-site', 'sign-out']);
+  it('offers light and dark themes, open site and sign out', () => {
+    expect(visible('')).toEqual(['theme-light', 'theme-dark', 'open-site', 'sign-out']);
   });
 
   it('filters by label or keyword, ignoring case and diacritics', () => {
