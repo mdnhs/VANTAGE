@@ -23,8 +23,22 @@ export const settingsRepository = {
     }
   },
 
+  // A draft is not a publish: no version bump, no revision, no updatedAt (the sitemap dates
+  // pages by it). The first draft of a never-saved key stores the defaults as its live value,
+  // with version 0 so the next real save still starts from "absent".
+  async saveDraft(key: string, draft: unknown, defaults: unknown, actorId: string | null) {
+    await db
+      .insert(settings)
+      .values({ key, value: defaults, draft, version: 0, updatedBy: actorId })
+      .onConflictDoUpdate({ target: settings.key, set: { draft } });
+  },
+
+  async clearDraft(key: string) {
+    await db.update(settings).set({ draft: null }).where(eq(settings.key, key));
+  },
+
   // Optimistic save: `version` must match the stored one (0 = key absent), else 409
-  // carrying who holds the newer version. Every save writes a revision holding the
+  // carrying who holds the newer version. A save publishes, so it clears any draft. Every save writes a revision holding the
   // NEW value and version; `onSaved` runs in the same transaction (e.g. to audit).
   async save(
     key: string,
@@ -42,7 +56,13 @@ export const settingsRepository = {
       if (before) {
         const [updated] = await tx
           .update(settings)
-          .set({ value: input.value, version: before.version + 1, updatedBy: actorId, updatedAt: new Date() })
+          .set({
+            value: input.value,
+            draft: null,
+            version: before.version + 1,
+            updatedBy: actorId,
+            updatedAt: new Date(),
+          })
           .where(eq(settings.key, key))
           .returning();
         after = updated!;

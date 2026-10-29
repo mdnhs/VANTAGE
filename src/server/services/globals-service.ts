@@ -4,7 +4,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { redactForAudit } from '@/lib/audit/redact-for-audit';
 import { topLevelDiff } from '@/lib/audit/top-level-diff';
-import type { EditableGlobalKey } from '@/lib/content/global-access';
+import { isPreviewableGlobal, type EditableGlobalKey } from '@/lib/content/global-access';
 import { GLOBALS, parseGlobal } from '@/lib/content/globals';
 import { collectMediaIds, mapRefs } from '@/lib/content/image-ref';
 import { db } from '@/server/db';
@@ -35,7 +35,36 @@ export async function getGlobal<K extends EditableGlobalKey>(key: K) {
     version: row?.version ?? 0,
     updatedAt: row?.updatedAt ?? null,
     updatedBy: await userName(db, row?.updatedBy ?? null),
+    // Unpublished edits of website page copy; null when there are none.
+    draft: isPreviewableGlobal(key) && row?.draft != null ? parseGlobal(key, row.draft) : null,
   };
+}
+
+function assertPreviewable(key: EditableGlobalKey) {
+  if (!isPreviewableGlobal(key)) throw ApiError.notFound('Only website page copy has drafts');
+}
+
+// Draft saves are not audited, write no revision and expire nothing: only draft-mode
+// renders (the admin preview) read them, and those bypass the cache.
+export async function saveGlobalDraft(actor: Actor, key: EditableGlobalKey, input: { draft: unknown }) {
+  assertPreviewable(key);
+  const parsed = GLOBALS[key].safeParse(input.draft);
+  if (!parsed.success) throw invalid(parsed.error);
+  await assertMediaExists(collectMediaIds(parsed.data));
+  await settingsRepository.saveDraft(key, parsed.data, parseGlobal(key, undefined), actor.userId);
+  return { key, draft: parsed.data };
+}
+
+export async function discardGlobalDraft(actor: Actor, key: EditableGlobalKey) {
+  assertPreviewable(key);
+  await settingsRepository.clearDraft(key);
+  await audit(actor, {
+    action: 'globals.discard_draft',
+    entityType: 'setting',
+    entityId: key,
+    summary: `Discarded the ${key} draft`,
+  });
+  return { key, draft: null };
 }
 
 // Globals go live on save: validate, version-guard (409 on a stale version),

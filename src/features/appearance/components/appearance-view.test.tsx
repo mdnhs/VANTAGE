@@ -23,7 +23,7 @@ vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'light' }) }))
 // happy-dom cannot load or reload a frame.
 const nav = vi.hoisted(() => ({ refresh: vi.fn(), keys: [] as (number | null)[] }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: nav.refresh }) }));
-vi.mock('./site-preview-pane', () => ({
+vi.mock('@/components/admin/site-preview-pane', () => ({
   SitePreviewPane: ({ refreshKey }: { refreshKey: number | null }) => {
     nav.keys.push(refreshKey);
     return null;

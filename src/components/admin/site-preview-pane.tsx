@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
-import { previewHref } from '../services/api';
+import { previewHref } from '@/lib/routes/preview-href';
 
 const DEVICES = { desktop: 1440, tablet: 834, phone: 390 } as const;
 type Device = keyof typeof DEVICES;

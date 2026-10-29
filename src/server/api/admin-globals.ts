@@ -11,12 +11,20 @@ import { actorOf, can } from '@/server/middleware/auth';
 import { rateLimit } from '@/server/middleware/rate-limit';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { sendTestEmail } from '@/server/services/enquiry-notify';
-import { getGlobal, globalRevisions, restoreGlobal, saveGlobal } from '@/server/services/globals-service';
+import {
+  discardGlobalDraft,
+  getGlobal,
+  globalRevisions,
+  restoreGlobal,
+  saveGlobal,
+  saveGlobalDraft,
+} from '@/server/services/globals-service';
 
 const KeyParam = z.object({ key: z.enum(EDITABLE_GLOBAL_KEYS) });
 const RevisionParam = KeyParam.extend({ rev: z.uuid() });
 const SaveInput = z.object({ version: z.number().int().min(0), value: z.unknown() });
 const VersionInput = z.object({ version: z.number().int().min(0) });
+const DraftInput = z.object({ draft: z.unknown() });
 
 // The permission depends on the key, so the guard runs once the key is known.
 // Unknown keys are a 404 before any permission check.
@@ -48,6 +56,24 @@ export const adminGlobals = new Hono<AppEnv>()
     zValidator('param', KeyParam),
     zValidator('json', SaveInput),
     async (c) => ok(c, await saveGlobal(actorOf(c), c.req.valid('param').key, c.req.valid('json'))),
+  )
+
+  // Website page copy only (404 otherwise): the editor's live preview reads this draft.
+  .put(
+    '/:key/draft',
+    canGlobal('update'),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    zValidator('param', KeyParam),
+    zValidator('json', DraftInput),
+    async (c) => ok(c, await saveGlobalDraft(actorOf(c), c.req.valid('param').key, c.req.valid('json'))),
+  )
+
+  .delete(
+    '/:key/draft',
+    canGlobal('update'),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    zValidator('param', KeyParam),
+    async (c) => ok(c, await discardGlobalDraft(actorOf(c), c.req.valid('param').key)),
   )
 
   .get('/:key/revisions', canGlobal('read'), zValidator('param', KeyParam), async (c) =>

@@ -23,7 +23,7 @@ export default async function AboutPageContentPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='About page'
-        description='Page copy (changes go live as soon as you save), plus how the page appears in search results and when shared.'
+        description='Page copy (edits show in a live preview and go live when you publish), plus how the page appears in search results and when shared.'
       />
       <PageTabs
         tabs={[

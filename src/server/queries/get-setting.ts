@@ -1,6 +1,8 @@
 import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
+import { draftMode } from 'next/headers';
+import { isPreviewableGlobal } from '@/lib/content/global-access';
 import { parseGlobal, type GlobalValue, type PublicGlobalKey } from '@/lib/content/globals';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { settingsRepository } from '@/server/repositories/settings-repository';
@@ -27,5 +29,8 @@ async function readSetting<K extends PublicGlobalKey>(key: K): Promise<GlobalVal
   cacheTag(settingTag(key));
   cacheLife('max');
   const row = await settingsRepository.get(key);
-  return parseGlobal(key, row?.value);
+  // The admin live preview (draft mode, behind GET /preview) shows unpublished page copy;
+  // draft-mode requests bypass this cache, so a draft never reaches the shared entry.
+  const preview = isPreviewableGlobal(key) && (await draftMode()).isEnabled;
+  return parseGlobal(key, preview && row?.draft != null ? row.draft : row?.value);
 }

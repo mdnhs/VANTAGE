@@ -369,3 +369,63 @@ describe('POST /admin/globals/:key/revisions/:rev/restore', () => {
     });
   });
 });
+
+describe('page drafts', () => {
+  const putDraft = (cookie: string, key: string, draft: unknown) =>
+    call(`/admin/globals/${key}/draft`, cookie, { method: 'PUT', body: { draft } });
+  const discard = (cookie: string, key: string) => call(`/admin/globals/${key}/draft`, cookie, { method: 'DELETE' });
+  const services = (eyebrow: string) => {
+    const value = parseGlobal('page.services', {});
+    return { ...value, hero: { ...value.hero, eyebrow } };
+  };
+  const row = async (key: string) => (await db.select().from(settings).where(eq(settings.key, key)))[0];
+
+  it('stores a draft without touching the published value, version or revisions', async () => {
+    const res = await putDraft(cookies.owner, 'page.services', services('Draft badge'));
+    expect(res.status).toBe(200);
+    const stored = await row('page.services');
+    expect((stored!.draft as { hero: { eyebrow: string } }).hero.eyebrow).toBe('Draft badge');
+    expect(stored!.value).toEqual(parseGlobal('page.services', undefined));
+    expect(stored!.version).toBe(0);
+    expect(await db.select().from(revisions)).toHaveLength(0);
+    expect(revalidateTag).not.toHaveBeenCalled();
+
+    const doc = await json(await call('/admin/globals/page.services', cookies.owner));
+    expect(doc.data.version).toBe(0);
+    expect((doc.data as unknown as { draft: { hero: { eyebrow: string } } }).draft.hero.eyebrow).toBe('Draft badge');
+  });
+
+  it('publishing through the normal save clears the draft', async () => {
+    await putDraft(cookies.owner, 'page.services', services('Draft badge'));
+    expect((await put(cookies.owner, 'page.services', { version: 0, value: services('Live badge') })).status).toBe(200);
+    const stored = await row('page.services');
+    expect(stored!.draft).toBeNull();
+    expect((stored!.value as { hero: { eyebrow: string } }).hero.eyebrow).toBe('Live badge');
+    expect(stored!.version).toBe(1);
+  });
+
+  it('discards a draft and keeps the published value', async () => {
+    await put(cookies.owner, 'page.services', { version: 0, value: services('Live badge') });
+    await putDraft(cookies.owner, 'page.services', services('Draft badge'));
+    expect((await discard(cookies.owner, 'page.services')).status).toBe(200);
+    const stored = await row('page.services');
+    expect(stored!.draft).toBeNull();
+    expect((stored!.value as { hero: { eyebrow: string } }).hero.eyebrow).toBe('Live badge');
+    expect(stored!.version).toBe(1);
+  });
+
+  it('validates the draft like a save', async () => {
+    const res = await putDraft(cookies.owner, 'page.services', { hero: { eyebrow: 'x'.repeat(500) } });
+    expect(res.status).toBe(422);
+    expect(await row('page.services')).toBeUndefined();
+  });
+
+  it('only page copy has drafts', async () => {
+    expect((await putDraft(cookies.owner, 'contact', parseGlobal('contact', {}))).status).toBe(404);
+  });
+
+  it.each(ROLE_NAMES)('%s: drafts need page update', async (role) => {
+    const allowed = hasPermission([role], GLOBAL_ACCESS['page.services'].update);
+    expect((await putDraft(cookies[role], 'page.services', services('x'))).status).toBe(allowed ? 200 : 403);
+  });
+});

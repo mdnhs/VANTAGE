@@ -8,13 +8,14 @@ import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
 import { SchemaForm } from '@/components/admin/schema-form/schema-form';
 import { Button } from '@/components/ui/button';
 import { useActor, useCan } from '@/contexts/actor-provider';
-import { GLOBAL_ACCESS, GLOBAL_LABELS, type EditableGlobalKey } from '@/lib/content/global-access';
+import { GLOBAL_ACCESS, GLOBAL_LABELS, isPreviewableGlobal, type EditableGlobalKey } from '@/lib/content/global-access';
 import { GLOBALS } from '@/lib/content/globals';
 
 import { GLOBAL_FIELD_UI } from '../global-ui';
 import { useSaveGlobal } from '../hooks/api/mutation/use-save-global';
 import { useGlobal } from '../hooks/api/query/use-global';
 import { CONFLICT_MESSAGE } from '../lib/submit-result';
+import { DraftGlobalForm } from './draft-global-form';
 import { GlobalHistory } from './global-history';
 
 // Globals go live on save, guarded by version. The form is keyed by version so
@@ -50,6 +51,10 @@ export function GlobalForm({
     );
   }
   if (!doc.data) return <CardSkeleton />;
+  // Website page copy edits as a draft beside a live preview, and goes live on Publish.
+  if (isPreviewableGlobal(settingKey)) {
+    return <DraftGlobalForm settingKey={settingKey} doc={doc.data} canUpdate={canUpdate} />;
+  }
   const { version, value } = doc.data;
 
   return (

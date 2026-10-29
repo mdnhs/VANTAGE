@@ -28,6 +28,19 @@ export const EDITABLE_GLOBAL_KEYS = [
 ] as const satisfies readonly GlobalKey[];
 export type EditableGlobalKey = (typeof EDITABLE_GLOBAL_KEYS)[number];
 
+// Website page copy: saved as a draft while editing, previewed live, published on Save.
+export const PREVIEWABLE_GLOBAL_KEYS = [
+  'page.home',
+  'page.services',
+  'page.our-work',
+  'page.insurance',
+  'page.about',
+  'page.process',
+] as const satisfies readonly EditableGlobalKey[];
+export type PreviewableGlobalKey = (typeof PREVIEWABLE_GLOBAL_KEYS)[number];
+export const isPreviewableGlobal = (key: string): key is PreviewableGlobalKey =>
+  (PREVIEWABLE_GLOBAL_KEYS as readonly string[]).includes(key);
+
 type Access = { read: Permissions; update: Permissions };
 const settingsAccess = {
   read: { settings: ['read'] },

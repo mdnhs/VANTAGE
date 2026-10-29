@@ -24,7 +24,7 @@ export default async function ProcessPageContentPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Process page'
-        description='Header copy (changes go live as soon as you save) and steps shown on the public process page. The steps are shared with the homepage.'
+        description='Header copy (edits show in a live preview and go live when you publish) and steps shown on the public process page. The steps are shared with the homepage.'
       />
       <PageTabs
         tabs={[

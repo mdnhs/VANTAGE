@@ -26,7 +26,7 @@ export default async function ProjectsListPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Our work page'
-        description='Hero copy (changes go live as soon as you save) and the before/after projects shown on the Our Work page.'
+        description='Hero copy (edits show in a live preview and go live when you publish) and the before/after projects shown on the Our Work page.'
         actions={
           <Link href={APP_ROUTES.content.projects.create} className={LINK_PRIMARY}>
             Add project

@@ -23,7 +23,7 @@ export default async function InsurancePageContentPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Insurance page'
-        description='Hero, steps and disclaimer copy (changes go live as soon as you save), plus how the page appears in search results and when shared.'
+        description='Hero, steps and disclaimer copy (edits show in a live preview and go live when you publish), plus how the page appears in search results and when shared.'
       />
       <PageTabs
         tabs={[

@@ -31,7 +31,7 @@ export default async function HomePageContentPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Home page'
-        description='Page copy & media (changes go live as soon as you save), feature pillars, catalog items, process steps, testimonials and partner logos shown on the homepage.'
+        description='Page copy & media (edits show in a live preview and go live when you publish), feature pillars, catalog items, process steps, testimonials and partner logos shown on the homepage.'
       />
       <HomePageTabs
         pillars={{ data: pillars.rows, total: pillars.total }}

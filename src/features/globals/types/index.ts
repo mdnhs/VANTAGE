@@ -6,6 +6,8 @@ export type GlobalDoc = {
   version: number;
   updatedAt: string | null;
   updatedBy: string | null;
+  // Unpublished website page copy (page.* keys only); null when there is none.
+  draft?: unknown;
 };
 
 export type SavedGlobal = { key: EditableGlobalKey; value: unknown; version: number; updatedAt: string | null };

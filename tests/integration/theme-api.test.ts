@@ -2,7 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
+import { hasPermission, ROLE_NAMES, type RoleName } from '@/lib/auth/permissions';
 import { DEFAULT_THEME } from '@/lib/theme/schema';
 import { db } from '@/server/db';
 import { VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
@@ -260,9 +260,11 @@ describe('/preview', () => {
     expect(res.status).toBe(307);
   });
 
-  it('refuses roles without appearance.read', async () => {
-    expect((await call('/preview?path=/', cookies.editor)).status).toBe(403);
-    expect(draftState.enable).not.toHaveBeenCalled();
+  // Appearance previews theme drafts; the website page editors preview copy drafts.
+  it.each(ROLE_NAMES)('%s: needs appearance.read or page.read', async (role) => {
+    const allowed = hasPermission([role], { appearance: ['read'] }) || hasPermission([role], { page: ['read'] });
+    expect((await call('/preview?path=/', cookies[role])).status).toBe(allowed ? 307 : 403);
+    if (!allowed) expect(draftState.enable).not.toHaveBeenCalled();
   });
 
   it('refuses an off-site path', async () => {

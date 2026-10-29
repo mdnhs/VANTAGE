@@ -37,7 +37,7 @@ import { BrandAssets } from './brand-assets';
 import { ContrastPanel } from './contrast-panel';
 import { ResetDialog } from './reset-dialog';
 import { SiteControls } from './site-controls';
-import { SitePreviewPane } from './site-preview-pane';
+import { SitePreviewPane } from '@/components/admin/site-preview-pane';
 import { ThemeHistory } from './theme-history';
 
 const BLOCKED = 'Publishing is blocked until every pair passes.';

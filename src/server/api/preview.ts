@@ -6,8 +6,9 @@ import { PreviewPath } from '@/lib/theme/preview-path';
 import type { AppEnv } from '@/server/api/types';
 import { zValidator } from '@/server/lib/validator';
 import { ApiError } from '@/server/lib/errors';
-import { can } from '@/server/middleware/auth';
+import { canAny } from '@/server/middleware/auth';
 
+// Appearance (theme drafts) and the website page editors (copy drafts) both preview here.
 // Entering preview switches draft mode on, so a request another site triggered is refused.
 // 'none' (typed URL, new tab) is the user's own doing; browsers that send no header pass.
 const OWN_REQUEST = new Set(['same-origin', 'same-site', 'none']);
@@ -17,7 +18,7 @@ const OWN_REQUEST = new Set(['same-origin', 'same-site', 'none']);
 export const preview = new Hono<AppEnv>()
   .get(
     '/',
-    can({ appearance: ['read'] }),
+    canAny({ appearance: ['read'] }, { page: ['read'] }),
     zValidator('query', z.object({ path: PreviewPath.default('/') })),
     async (c) => {
       const site = c.req.header('sec-fetch-site');

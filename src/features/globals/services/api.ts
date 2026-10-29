@@ -36,7 +36,7 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
   return body.data as T;
 }
 
-const send = (path: string, method: 'GET' | 'PUT' | 'POST', json?: unknown) =>
+const send = (path: string, method: 'GET' | 'PUT' | 'POST' | 'DELETE', json?: unknown) =>
   fetch(`${baseUrl()}${path}`, {
     method,
     credentials: 'include',
@@ -49,6 +49,22 @@ export async function fetchGlobal(key: EditableGlobalKey): Promise<GlobalDoc> {
 
 export async function saveGlobal(key: EditableGlobalKey, input: { version: number; value: unknown }) {
   return parseOrThrow<SavedGlobal>(await send(API_ROUTES.globals.detail(key), 'PUT', input));
+}
+
+// Website page copy only: the draft the live preview shows, published by saveGlobal.
+export async function saveGlobalDraft(key: EditableGlobalKey, draft: unknown, options?: { keepalive?: boolean }) {
+  const res = await fetch(`${baseUrl()}${API_ROUTES.globals.draft(key)}`, {
+    method: 'PUT',
+    credentials: 'include',
+    keepalive: options?.keepalive,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ draft }),
+  });
+  return parseOrThrow<{ key: EditableGlobalKey }>(res);
+}
+
+export async function discardGlobalDraft(key: EditableGlobalKey) {
+  return parseOrThrow<{ key: EditableGlobalKey }>(await send(API_ROUTES.globals.draft(key), 'DELETE'));
 }
 
 export async function fetchGlobalRevisions(key: EditableGlobalKey): Promise<GlobalRevisions> {

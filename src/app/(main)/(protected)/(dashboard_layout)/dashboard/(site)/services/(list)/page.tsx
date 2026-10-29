@@ -27,7 +27,7 @@ export default async function ServicesListPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Services page'
-        description='Hero copy (changes go live as soon as you save) and the service blocks shown on the public services page.'
+        description='Hero copy (edits show in a live preview and go live when you publish) and the service blocks shown on the public services page.'
         actions={
           <HideForAuthorOnly>
             <Link href={APP_ROUTES.content.services.create} className={LINK_PRIMARY}>
