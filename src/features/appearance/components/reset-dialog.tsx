@@ -45,7 +45,7 @@ export function ResetDialog({
         <DialogHeader>
           <DialogTitle>Reset to preset</DialogTitle>
           <DialogDescription>
-            Replaces the draft colours. The site always goes back to the VANTAGE default; the preset applies to the
+            Replaces the draft colours. The site always goes back to its default colours; the preset applies to the
             admin. Corner radius and default mode stay. Nothing goes live until you publish.
           </DialogDescription>
         </DialogHeader>

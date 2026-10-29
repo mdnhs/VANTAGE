@@ -8,61 +8,61 @@ import { pageMetadata } from './metadata';
 import { PUBLIC_PAGE_IDS, type PublicPageId } from './public-pages';
 import { robotsFor, siteEnvFrom } from './robots';
 
-// With no SEO rows saved the public output must equal what the pages' own `metadata` produced
-// before Phase 6 (title through the "%s | <site name>" template, home absolute).
+// With no SEO rows saved the public output is the registry defaults (title through the
+// "%s | <site name>" template, home absolute). Pinned so a default copy change is deliberate.
 const SITE = 'Vantage Autobody';
 const TODAY: Record<PublicPageId, { title: string; description: string; canonical: string }> = {
   home: {
-    title: `${SITE} — Precision Crash Repair & Restoration Dublin`,
+    title: `${SITE} — Crash Repair & Car Restoration in Dublin`,
     description:
-      'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.',
+      'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Insurer approved, with free quotes.',
     canonical: '/',
   },
   services: {
-    title: `Services | ${SITE}`,
+    title: `Car Body Repair Services in Dublin | ${SITE}`,
     description:
-      'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
+      'Collision repair, resprays, laser chassis alignment and restoration in Dublin, using OEM-approved methods. Get a free, no-obligation quote.',
     canonical: '/services',
   },
   'our-work': {
-    title: `Our Work | ${SITE}`,
+    title: `Crash Repair Before & After Gallery | ${SITE}`,
     description:
-      'Explore a curated selection of our most challenging and rewarding restoration projects. Precision engineering meets master craftsmanship.',
+      'Before and after photos of our crash repairs, resprays and restorations in Dublin: factory panel gaps and colour matches you cannot tell apart.',
     canonical: '/our-work',
   },
   insurance: {
-    title: `Insurance Support | ${SITE}`,
+    title: `Insurance Claim Car Repairs in Dublin | ${SITE}`,
     description:
-      'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
+      'Accident repairs coordinated with your insurer: we deal with the assessors and the paperwork, and repair your car to factory standard in Dublin.',
     canonical: '/insurance',
   },
   about: {
-    title: `About | ${SITE}`,
+    title: `About Our Dublin Body Shop | ${SITE}`,
     description:
-      "Founded in 1998, Vantage Autobody has evolved into Ireland's premier high-end collision and repair facility.",
+      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and insurer-approved repairs.',
     canonical: '/about',
   },
   process: {
-    title: `Our Process | ${SITE}`,
+    title: `Our Car Body Repair Process | ${SITE}`,
     description:
-      'From initial digital triage to strict multi-point handoff inspection, the Vantage repair standard is transparently logged every time.',
+      'From digital triage to a multi-point handoff inspection, every step of your car body repair is logged and shared with you. See how we work.',
     canonical: '/process',
   },
   contact: {
-    title: `Contact | ${SITE}`,
+    title: `Contact Our Dublin Body Shop | ${SITE}`,
     description:
-      'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
+      'Call, message or visit our Dublin body shop. Book an inspection for a precise repair estimate, or ask our technicians a question.',
     canonical: '/contact',
   },
   'get-a-quote': {
-    title: `Get a Free Quote | ${SITE}`,
+    title: `Get a Free Car Repair Quote | ${SITE}`,
     description:
-      'Precision assessment starts here. Provide your vehicle details and images for an accurate, no-obligation estimate from our master technicians.',
+      'Send your vehicle details and photos for an accurate, no-obligation car body repair quote from our Dublin technicians.',
     canonical: '/get-a-quote',
   },
 };
 
-describe('default (no SEO rows) output equals today', () => {
+describe('default (no SEO rows) output', () => {
   it.each(PUBLIC_PAGE_IDS)('%s: title, description, canonical, robots', (id) => {
     const m = pageMetadata({
       id,

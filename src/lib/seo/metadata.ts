@@ -8,7 +8,7 @@ import { HOME_DESCRIPTION, PUBLIC_PAGES, type PublicPageId } from './public-page
 import { documentTitle, effectiveTemplate } from './title';
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
-// The generated "Vantage" share card (src/app/og/route.tsx).
+// The generated site-name share card (src/app/og/route.tsx).
 export const GENERATED_OG = '/og';
 // The per-page card (src/app/og/[page]/route.tsx), used when a page has no share image.
 export const pageOgPath = (id: PublicPageId): string => `/og/${id}`;
@@ -154,5 +154,79 @@ export function rootMetadata(i: RootMetadataInput): Metadata {
             follow: true,
             googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
           },
+  };
+}
+
+// The search and sharing fields stored on a content row (services, projects, legal pages).
+export type RowSeo = {
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  canonical: string | null;
+  noindex: boolean;
+};
+
+export type DetailSeoInput = {
+  path: string;
+  seo: RowSeo;
+  // What the page shows when the SEO fields are blank: its name and summary.
+  fallbackTitle: string;
+  fallbackDescription: string;
+  defaults: GlobalValue<'seo'>;
+  siteName: string;
+  // The row's share image, else its photo, else the site default; null -> the generated card.
+  image: PublicImage | null;
+};
+
+const clip = (v: string) => (v.length > 160 ? `${v.slice(0, 157).trimEnd()}…` : v);
+
+// A page served from a content row, with the same fallbacks as the SEO tab of a public page:
+// title through the site template, own address as canonical unless one is set, social fields
+// falling back to the search ones.
+export function detailPageMetadata(i: DetailSeoInput): Metadata {
+  const title = effectiveTemplate({ titleTemplate: i.defaults.titleTemplate, siteName: i.siteName }).replace(
+    '%s',
+    () => blank(i.seo.seoTitle) ?? i.fallbackTitle,
+  );
+  const description = clip(blank(i.seo.seoDescription) ?? i.fallbackDescription);
+  const canonical = blank(i.seo.canonical) ?? i.path;
+  const ogTitle = blank(i.seo.ogTitle) ?? title;
+  const ogDescription = blank(i.seo.ogDescription) ?? description;
+  const image = i.image
+    ? {
+        url: i.image.src,
+        width: i.image.width ?? undefined,
+        height: i.image.height ?? undefined,
+        alt: i.image.alt || ogTitle,
+      }
+    : { url: GENERATED_OG, ...OG_SIZE, alt: i.siteName };
+  const robots =
+    i.defaults.robots === 'noindex'
+      ? { index: false, follow: false }
+      : i.seo.noindex
+        ? { index: false, follow: true }
+        : undefined;
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      siteName: i.siteName,
+      locale: LOCALE,
+      url: canonical,
+      title: ogTitle,
+      description: ogDescription,
+      images: [image],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: blank(i.defaults.twitterHandle) ?? undefined,
+      title: ogTitle,
+      description: ogDescription,
+      images: [image.url],
+    },
+    ...(robots ? { robots } : {}),
   };
 }

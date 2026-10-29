@@ -53,9 +53,9 @@ describe('globals schemas', () => {
 
 describe('defaults equal today’s public copy', () => {
   it('site / contact / navigation / footer', () => {
-    expect(parseGlobal('site', {})).toMatchObject({ name: 'Vantage Autobody', logo: null, favicon: null, social: [] });
+    expect(parseGlobal('site', {})).toMatchObject({ name: '', logo: null, favicon: null, social: [] });
     expect(parseGlobal('contact', {})).toMatchObject({
-      email: 'info@vantageautobody.ie',
+      email: '',
       phone: { display: '+353 1 234 5678', e164: '+35312345678' },
       address: { lines: ['Unit 4, Industrial Estate, Dublin Road, Ireland'] },
       hours: { summary: 'Mon–Fri: 8:00 – 18:00' },

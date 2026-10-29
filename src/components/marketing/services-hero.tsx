@@ -15,7 +15,7 @@ export function ServicesHero({ eyebrow, headlineLine1, headlineAccent, subtext }
       lines={[headlineLine1, headlineAccent]}
       subtext={subtext}
       imageSrc='/assets/marketing/services-hero.jpg'
-      imageAlt='Vantage Autobody workshop'
+      imageAlt='Car body repair workshop in Dublin'
     >
       <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
       <ButtonLink href='/process' variant='secondary'>

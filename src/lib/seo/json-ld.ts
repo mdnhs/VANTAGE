@@ -1,6 +1,7 @@
-import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Service, Thing, WebSite } from 'schema-dts';
+import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Person, Service, Thing, WebSite } from 'schema-dts';
 
 import type { GlobalValue } from '@/lib/content/globals';
+import { siteNameFrom } from '@/lib/content/site-name';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 const abs = (origin: string, path: string) => (path === '/' ? origin : `${origin}${path}`);
@@ -18,7 +19,7 @@ export function websiteNode({ origin, siteName }: { origin: string; siteName: st
   return {
     '@type': 'WebSite',
     '@id': `${origin}/#website`,
-    name: siteName,
+    name: siteNameFrom(siteName),
     url: origin,
     inLanguage: 'en-IE',
     publisher: { '@id': `${origin}/#organization` },
@@ -37,7 +38,7 @@ export function businessNode(i: {
   return {
     '@type': i.seo.business.type,
     '@id': `${i.origin}/#organization`,
-    name: i.site.name,
+    name: siteNameFrom(i.site.name),
     ...(i.site.legalName ? { legalName: i.site.legalName } : {}),
     url: i.origin,
     ...(i.logoUrl ? { logo: i.logoUrl } : {}),
@@ -93,21 +94,45 @@ export function faqNode(items: { question: string; answer: string }[]): FAQPage 
   };
 }
 
-// One service detail page, offered by the business node on the home page.
+// The team shown on the About page, each tied to the business node by its @id.
+export function teamNodes(origin: string, members: { name: string; role: string }[]): Person[] {
+  return members
+    .filter((m) => m.name.trim())
+    .map((m) => ({
+      '@type': 'Person',
+      name: m.name,
+      ...(m.role.trim() ? { jobTitle: m.role } : {}),
+      worksFor: { '@id': `${origin}/#organization` },
+    }));
+}
+
+// One service on its own page, offered by the business; a starting price becomes a minimum-price offer.
 export function serviceNode(i: {
   origin: string;
   path: string;
   name: string;
   description: string;
-  imageUrl?: string | null;
+  image?: string | null;
+  areaServed?: string | null;
+  startingPrice?: number | null;
 }): Service {
+  const url = abs(i.origin, i.path);
   return {
     '@type': 'Service',
-    '@id': `${abs(i.origin, i.path)}#service`,
+    '@id': `${url}#service`,
     name: i.name,
     description: i.description,
-    url: abs(i.origin, i.path),
-    ...(i.imageUrl ? { image: i.imageUrl } : {}),
+    url,
     provider: { '@id': `${i.origin}/#organization` },
+    ...(i.image ? { image: i.image } : {}),
+    ...(i.areaServed ? { areaServed: { '@type': 'City', name: i.areaServed } } : {}),
+    ...(i.startingPrice != null
+      ? {
+          offers: {
+            '@type': 'Offer',
+            priceSpecification: { '@type': 'PriceSpecification', minPrice: i.startingPrice, priceCurrency: 'EUR' },
+          },
+        }
+      : {}),
   };
 }

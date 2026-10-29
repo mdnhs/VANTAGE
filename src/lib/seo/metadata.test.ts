@@ -4,7 +4,7 @@ import { parseGlobal } from '@/lib/content/globals';
 import { seoPageKey } from '@/lib/content/globals-seo';
 import type { PublicImage } from '@/lib/media/public-image';
 
-import { pageDescription, pageMetadata, rootMetadata } from './metadata';
+import { detailPageMetadata, pageDescription, pageMetadata, rootMetadata } from './metadata';
 import { HOME_DESCRIPTION, PUBLIC_PAGE_IDS, PUBLIC_PAGES, type PublicPageId } from './public-pages';
 
 const defaults = () => parseGlobal('seo', {});
@@ -44,7 +44,7 @@ describe('pageMetadata default state', () => {
 
   it('home title and description', () => {
     const m = pageMetadata(input('home'));
-    expect(m.title).toEqual({ absolute: 'Vantage Autobody — Precision Crash Repair & Restoration Dublin' });
+    expect(m.title).toEqual({ absolute: 'Vantage Autobody — Crash Repair & Car Restoration in Dublin' });
     expect(m.description).toBe(HOME_DESCRIPTION);
   });
 });
@@ -177,5 +177,59 @@ describe('rootMetadata', () => {
     seo.verification = { google: 'abc', bing: 'def' };
     expect(rootMetadata({ ...base, seo }).verification).toEqual({ google: 'abc', other: { 'msvalidate.01': 'def' } });
     expect(rootMetadata(base).verification).toBeUndefined();
+  });
+});
+
+describe('detailPageMetadata', () => {
+  const defaults = parseGlobal('seo', undefined);
+  const blankSeo = {
+    seoTitle: null,
+    seoDescription: null,
+    ogTitle: null,
+    ogDescription: null,
+    canonical: null,
+    noindex: false,
+  };
+  const base = {
+    path: '/services/respray',
+    fallbackTitle: 'Respray in Dublin',
+    fallbackDescription: 'A full respray.',
+    defaults,
+    siteName: 'Auto Paint Shop',
+    image: null,
+  };
+
+  it('falls back to the row name and text, its own address and the generated card', () => {
+    const m = detailPageMetadata({ ...base, seo: blankSeo });
+    expect(m.title).toEqual({ absolute: 'Respray in Dublin | Auto Paint Shop' });
+    expect(m.description).toBe('A full respray.');
+    expect(m.alternates?.canonical).toBe('/services/respray');
+    expect(m.openGraph).toMatchObject({ url: '/services/respray', title: 'Respray in Dublin | Auto Paint Shop' });
+    expect(m.robots).toBeUndefined();
+  });
+
+  it('uses the saved search and social fields, canonical and noindex', () => {
+    const m = detailPageMetadata({
+      ...base,
+      seo: {
+        seoTitle: 'Car respray Dublin',
+        seoDescription: 'Respray from €400.',
+        ogTitle: 'Share title',
+        ogDescription: 'Share text',
+        canonical: '/services',
+        noindex: true,
+      },
+    });
+    expect(m.title).toEqual({ absolute: 'Car respray Dublin | Auto Paint Shop' });
+    expect(m.description).toBe('Respray from €400.');
+    expect(m.alternates?.canonical).toBe('/services');
+    expect(m.openGraph).toMatchObject({ url: '/services', title: 'Share title', description: 'Share text' });
+    expect(m.twitter).toMatchObject({ title: 'Share title', description: 'Share text' });
+    expect(m.robots).toEqual({ index: false, follow: true });
+  });
+
+  it('a site switched to noindex wins over the row', () => {
+    const m = detailPageMetadata({ ...base, seo: blankSeo, defaults: { ...defaults, robots: 'noindex' } });
+    expect(m.robots).toEqual({ index: false, follow: false });
   });
 });

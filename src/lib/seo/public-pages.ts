@@ -1,9 +1,9 @@
 // The eight public pages are code routes, not CMS rows, so this registry is the one list the
 // SEO area (overview, per-page tab, checks, sitemap, proxy) works from. Isomorphic: no server imports.
-// Titles and descriptions equal each page's metadata before Phase 6 (default-parity.test.ts pins them).
+// Default titles and descriptions are keyword- and location-led and brand-neutral (default-parity.test.ts pins them).
 
 export const HOME_DESCRIPTION =
-  'Ireland’s premier automotive crash repair, precision chassis reconstruction, laser alignment, and high-end vehicle restoration center in Dublin. OEM certified and insurer approved.';
+  'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Insurer approved, with free quotes.';
 
 export const PUBLIC_PAGE_IDS = [
   'home',
@@ -24,8 +24,10 @@ export type PublicPage = {
   id: PublicPageId;
   path: string;
   label: string;
-  // Today's `<title>` (before the site template) and meta description.
+  // The default `<title>` (before the site template) and meta description; the SEO tab overrides both.
   title: string;
+  // The page's short name in breadcrumbs.
+  crumb: string;
   description: string;
   // Where the page's copy is edited; with `editorTab` the SEO tab lives there (`?tab=seo`),
   // otherwise `editorHref` is the standalone /dashboard/seo/pages/<id> screen.
@@ -52,7 +54,8 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'home',
     path: '/',
     label: 'Home page',
-    title: 'Precision Crash Repair & Restoration Dublin',
+    title: 'Crash Repair & Car Restoration in Dublin',
+    crumb: 'Home',
     description: HOME_DESCRIPTION,
     editorHref: '/dashboard/home-page',
     editorTab: true,
@@ -64,9 +67,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'services',
     path: '/services',
     label: 'Services page',
-    title: 'Services',
+    title: 'Car Body Repair Services in Dublin',
+    crumb: 'Services',
     description:
-      'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
+      'Collision repair, resprays, laser chassis alignment and restoration in Dublin, using OEM-approved methods. Get a free, no-obligation quote.',
     editorHref: '/dashboard/services',
     editorTab: true,
     pageKey: 'page.services',
@@ -77,9 +81,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'our-work',
     path: '/our-work',
     label: 'Our work page',
-    title: 'Our Work',
+    title: 'Crash Repair Before & After Gallery',
+    crumb: 'Our Work',
     description:
-      'Explore a curated selection of our most challenging and rewarding restoration projects. Precision engineering meets master craftsmanship.',
+      'Before and after photos of our crash repairs, resprays and restorations in Dublin: factory panel gaps and colour matches you cannot tell apart.',
     editorHref: '/dashboard/projects',
     editorTab: true,
     pageKey: 'page.our-work',
@@ -90,9 +95,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'insurance',
     path: '/insurance',
     label: 'Insurance page',
-    title: 'Insurance Support',
+    title: 'Insurance Claim Car Repairs in Dublin',
+    crumb: 'Insurance',
     description:
-      'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
+      'Accident repairs coordinated with your insurer: we deal with the assessors and the paperwork, and repair your car to factory standard in Dublin.',
     editorHref: '/dashboard/insurance',
     editorTab: true,
     pageKey: 'page.insurance',
@@ -103,9 +109,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'about',
     path: '/about',
     label: 'About page',
-    title: 'About',
+    title: 'About Our Dublin Body Shop',
+    crumb: 'About',
     description:
-      "Founded in 1998, Vantage Autobody has evolved into Ireland's premier high-end collision and repair facility.",
+      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and insurer-approved repairs.',
     editorHref: '/dashboard/about',
     editorTab: true,
     pageKey: 'page.about',
@@ -116,9 +123,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'process',
     path: '/process',
     label: 'Process page',
-    title: 'Our Process',
+    title: 'Our Car Body Repair Process',
+    crumb: 'Our Process',
     description:
-      'From initial digital triage to strict multi-point handoff inspection, the Vantage repair standard is transparently logged every time.',
+      'From digital triage to a multi-point handoff inspection, every step of your car body repair is logged and shared with you. See how we work.',
     editorHref: '/dashboard/process-page',
     editorTab: true,
     pageKey: 'page.process',
@@ -129,9 +137,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'contact',
     path: '/contact',
     label: 'Contact page',
-    title: 'Contact',
+    title: 'Contact Our Dublin Body Shop',
+    crumb: 'Contact',
     description:
-      'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
+      'Call, message or visit our Dublin body shop. Book an inspection for a precise repair estimate, or ask our technicians a question.',
     editorHref: '/dashboard/seo/pages/contact',
     editorTab: false,
     pageKey: null,
@@ -142,9 +151,10 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     id: 'get-a-quote',
     path: '/get-a-quote',
     label: 'Get a quote page',
-    title: 'Get a Free Quote',
+    title: 'Get a Free Car Repair Quote',
+    crumb: 'Get a Quote',
     description:
-      'Precision assessment starts here. Provide your vehicle details and images for an accurate, no-obligation estimate from our master technicians.',
+      'Send your vehicle details and photos for an accurate, no-obligation car body repair quote from our Dublin technicians.',
     editorHref: '/dashboard/seo/pages/get-a-quote',
     editorTab: false,
     pageKey: null,
@@ -167,6 +177,7 @@ export const RESERVED_PREFIXES = [
   '/assets',
   '/fonts',
   '/og',
+  '/brand',
   '/opengraph-image',
   '/twitter-image',
   '/login',

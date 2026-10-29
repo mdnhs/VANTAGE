@@ -8,6 +8,7 @@ import { TwoFactorSetup } from '@/features/auth/components/two-factor-setup';
 import { isAdminRole } from '@/lib/auth/permissions';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import { requireActor } from '@/server/lib/auth/session';
+import { siteSettingsService } from '@/server/services/site-settings-service';
 
 export const metadata: Metadata = {
   title: 'Set up two-factor',
@@ -49,7 +50,7 @@ async function Gate() {
             : 'Two-factor authentication is recommended: a code from your phone keeps your account safe even if your password leaks.'
         }
       />
-      <TwoFactorSetup />
+      <TwoFactorSetup issuer={(await siteSettingsService.getPublic()).businessName} />
       <p className='text-sm text-muted-foreground'>
         Not a good time?{' '}
         <Link

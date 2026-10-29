@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag, revalidateTag } from 'next/cache';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
-import { mediaIdsOf, prepareMediaWrite, writeWithMedia } from '@/server/lib/media/content-images';
+import { mediaIdsOf, prepareMediaWrite, prepareShareImage, writeWithMedia } from '@/server/lib/media/content-images';
 import { serviceRepository } from '@/server/repositories/service-repository';
 import type {
   CreateServiceInput,
@@ -42,10 +42,6 @@ export const serviceService = {
   listPublished: listPublishedCached,
   getPublishedBySlug: getPublishedBySlugCached,
 
-  listPublishedForSitemap() {
-    return serviceRepository.listPublishedForSitemap();
-  },
-
   // Uncached: admin table always shows fresh data, including disabled rows.
   async listAdmin(params: Pick<ServiceListQuery, 'page' | 'limit'>) {
     return serviceRepository.list(params);
@@ -57,7 +53,8 @@ export const serviceService = {
 
   async create(data: CreateServiceInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const id = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => serviceRepository.insert(input, tx));
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(await prepareShareImage(input.ogImageMediaId))];
+    const id = await writeWithMedia(ids, (tx) => serviceRepository.insert(input, tx));
     const row = await serviceRepository.byId(id);
     // Second arg must match the `cacheLife` profile used in listPublishedCached above.
     revalidateTag(LIST_TAG, 'hours');
@@ -66,7 +63,8 @@ export const serviceService = {
 
   async update(id: string, data: UpdateServiceInput) {
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
-    const saved = await writeWithMedia(mediaIdsOf(input, MEDIA_PAIRS), (tx) => serviceRepository.patch(id, input, tx));
+    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(await prepareShareImage(input.ogImageMediaId))];
+    const saved = await writeWithMedia(ids, (tx) => serviceRepository.patch(id, input, tx));
     const row = saved ? await serviceRepository.byId(id) : undefined;
     revalidateTag(LIST_TAG, 'hours');
     revalidateTag(detailTag(id), 'hours');

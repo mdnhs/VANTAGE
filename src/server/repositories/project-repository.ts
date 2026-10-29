@@ -20,6 +20,7 @@ async function replaceGalleryImages(tx: Tx, projectId: string, mediaIds: string[
 const withMedia = {
   beforeImageMedia: true as const,
   afterImageMedia: true as const,
+  ogImageMedia: true as const,
   galleryImages: { orderBy: [asc(projectGalleryImages.displayOrder)], with: { media: true as const } },
 };
 
@@ -34,16 +35,23 @@ type WithoutLegacy<T> = {
 };
 
 export type PresentedProject = WithoutLegacy<
-  Omit<ProjectWithMedia, 'beforeImageMedia' | 'afterImageMedia' | 'galleryImages'>
+  Omit<ProjectWithMedia, 'beforeImageMedia' | 'afterImageMedia' | 'ogImageMedia' | 'galleryImages'>
 > & {
   beforeImage: PublicImage | null;
   afterImage: PublicImage | null;
+  ogImage: PublicImage | null;
   galleryImages: WithoutLegacy<ProjectWithMedia['galleryImages'][number]>[];
   gallery: PublicImage[];
 };
 
 // Rows carry the *MediaId columns, the raw gallery rows and the resolved PublicImages.
-function present({ beforeImageMedia, afterImageMedia, galleryImages, ...row }: ProjectWithMedia): PresentedProject {
+function present({
+  beforeImageMedia,
+  afterImageMedia,
+  ogImageMedia,
+  galleryImages,
+  ...row
+}: ProjectWithMedia): PresentedProject {
   const out = { ...row } as Record<string, unknown>;
   delete out[`beforeImage${'Public'}${'Id'}`];
   delete out[`afterImage${'Public'}${'Id'}`];
@@ -51,6 +59,7 @@ function present({ beforeImageMedia, afterImageMedia, galleryImages, ...row }: P
     ...out,
     beforeImage: contentImage(beforeImageMedia),
     afterImage: contentImage(afterImageMedia),
+    ogImage: contentImage(ogImageMedia),
     galleryImages: galleryImages.map(({ media: _media, ...image }) => {
       const imgOut = { ...image } as Record<string, unknown>;
       delete imgOut[`image${'Public'}${'Id'}`];

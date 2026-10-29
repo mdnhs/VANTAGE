@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { enquiryReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -36,6 +37,7 @@ function formatDate(date: string | Date): string {
 }
 
 export function ContactDetailView({ message: initialMessage }: ContactDetailViewProps) {
+  const siteName = useSiteName();
   const [status, setStatus] = useState<ContactStatus>(initialMessage.status as ContactStatus);
   const [adminNotes, setAdminNotes] = useState<string>(initialMessage.adminNotes ?? '');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -116,7 +118,7 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
 
             {initialMessage.email && (
               <a
-                href={`mailto:${initialMessage.email}?subject=Re: Your enquiry with Vantage Bodyworks`}
+                href={replyMailto(initialMessage.email, enquiryReplySubject(siteName))}
                 className={cn(
                   buttonVariants({ variant: 'outline', size: 'sm' }),
                   'gap-1.5 text-xs font-semibold text-purple-500 hover:bg-purple-500/10 hover:text-purple-400',

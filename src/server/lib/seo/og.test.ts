@@ -24,7 +24,7 @@ describe('ogSubjectFor', () => {
     seo['seo.page.about'] = { ogTitle: '  ', title: 'SEO title' };
     expect((await ogSubjectFor('about')).title).toBe('SEO title');
     delete seo['seo.page.about'];
-    expect((await ogSubjectFor('about')).title).toBe('About');
+    expect((await ogSubjectFor('about')).title).toBe('About Our Dublin Body Shop');
   });
 
   it('home falls back to the site name and every card uses the home title as eyebrow', async () => {
@@ -37,7 +37,7 @@ describe('ogSubjectFor', () => {
     seo['seo.page.about'] = { ogTitle: 'Fast \u{1F697} repairs \u2764\uFE0F today', title: '' };
     expect((await ogSubjectFor('about')).title).toBe('Fast repairs today');
     seo['seo.page.about'] = { ogTitle: '\u{1F697}', title: '' };
-    expect((await ogSubjectFor('about')).title).toBe('About');
+    expect((await ogSubjectFor('about')).title).toBe('About Our Dublin Body Shop');
   });
 
   it('cuts a long title to 90 characters with an ellipsis', async () => {

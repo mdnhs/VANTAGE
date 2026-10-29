@@ -40,7 +40,7 @@ const firstImage = (m: Awaited<ReturnType<typeof getPageMetadata>>) => (m.openGr
 describe('public page SEO', () => {
   it('defaults to today with no rows saved', async () => {
     const m = await getPageMetadata('services');
-    expect(m.title).toEqual({ absolute: 'Services | Vantage Autobody' });
+    expect(m.title).toEqual({ absolute: 'Car Body Repair Services in Dublin | localhost' });
     expect(m.alternates?.canonical).toBe('/services');
     expect(firstImage(m).url).toBe('/og/services');
     expect(m.robots).toBeUndefined();
@@ -50,7 +50,7 @@ describe('public page SEO', () => {
     const res = await put('seo.page.services', { title: 'Body repairs Dublin', noindex: true });
     expect(res.status).toBe(200);
     const m = await getPageMetadata('services');
-    expect(m.title).toEqual({ absolute: 'Body repairs Dublin | Vantage Autobody' });
+    expect(m.title).toEqual({ absolute: 'Body repairs Dublin | localhost' });
     expect(m.robots).toEqual({ index: false, follow: true });
     expect(vi.mocked(revalidateTag).mock.calls).toEqual([['settings:seo.page.services', { expire: 0 }]]);
   });
@@ -154,6 +154,6 @@ describe('public page SEO', () => {
       metaDescription: 'Legacy Meta Description',
     });
     const m = await getPageMetadata('services');
-    expect(m.title).toEqual({ absolute: 'Services | Vantage Autobody' });
+    expect(m.title).toEqual({ absolute: 'Car Body Repair Services in Dublin | localhost' });
   });
 });

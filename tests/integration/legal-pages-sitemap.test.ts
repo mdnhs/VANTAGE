@@ -30,6 +30,19 @@ describe('legal pages in the sitemap', () => {
     expect(entry).toMatchObject({ changeFrequency: 'yearly', priority: 0.3, lastModified: publishedAt });
   });
 
+  it('leaves out a page set noindex or pointing its canonical elsewhere', async () => {
+    const published = { content, status: 'published' as const, publishedAt: new Date() };
+    await db.insert(legalPages).values([
+      { ...published, title: 'Hidden', slug: 'hidden', noindex: true },
+      { ...published, title: 'Moved', slug: 'moved', canonical: '/privacy-policy' },
+      { ...published, title: 'Own', slug: 'own', canonical: '/own' },
+    ]);
+    const paths = (await getSitemapEntries()).map((e) => e.path);
+    expect(paths).toContain('/own');
+    expect(paths).not.toContain('/hidden');
+    expect(paths).not.toContain('/moved');
+  });
+
   it('leaves drafts out', async () => {
     await db.insert(legalPages).values({ title: 'Terms', slug: 'terms', content });
     expect((await getSitemapEntries()).map((e) => e.path)).not.toContain('/terms');

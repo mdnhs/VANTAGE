@@ -47,18 +47,30 @@ export function LottieLogo({
     setMounted(true);
   }, []);
 
-  const source = useMemo(() => {
-    if (!data) return null;
-    const parsed = parseLottieJson(data);
-    if (parsed) return parsed;
-    if (typeof data === 'string') {
-      const trimmed = data.trim();
-      if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
-        return trimmed;
-      }
-    }
-    return null;
-  }, [data]);
+  const inline = useMemo(() => (data ? parseLottieJson(data) : null), [data]);
+  const url = useMemo(() => {
+    if (inline || typeof data !== 'string') return null;
+    const trimmed = data.trim();
+    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/') ? trimmed : null;
+  }, [data, inline]);
+  // A URL (the site's /brand/logo.json) is fetched after mount, so the document never rides in the page HTML.
+  const [fetched, setFetched] = useState<{ url: string; doc: object } | null>(null);
+
+  useEffect(() => {
+    if (!url) return;
+    let live = true;
+    fetch(url)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((doc: unknown) => {
+        if (live && doc && typeof doc === 'object') setFetched({ url, doc });
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [url]);
+
+  const source = inline ?? (fetched && fetched.url === url ? fetched.doc : null);
 
   if (!mounted || !source) {
     return <>{fallback}</>;

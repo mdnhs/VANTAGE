@@ -9,6 +9,7 @@ import { CACHE_TAGS } from '@/lib/cache/tags';
 import type { ImageRef } from '@/lib/content/image-ref';
 import { seoPageKey } from '@/lib/content/globals-seo';
 import type { PublicImage } from '@/lib/media/public-image';
+import { projectPath, servicePath } from '@/lib/seo/detail-paths';
 import { pageMetadata } from '@/lib/seo/metadata';
 import { PUBLIC_PAGE_LIST, type PublicPageId } from '@/lib/seo/public-pages';
 import { db } from '@/server/db';
@@ -18,7 +19,6 @@ import { loadPublicImages } from '@/server/lib/media/resolve';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { getSetting } from '@/server/queries/get-setting';
 import { legalPageService } from '@/server/services/legal-page-service';
-import { serviceService } from '@/server/services/service-service';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // A stored image ref as a PublicImage: a live media row only. Cloudinary refs return null.
@@ -92,6 +92,22 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
     .select({ at: max(projects.updatedAt) })
     .from(projects)
     .where(eq(projects.status, 'published'));
+  // Each service and published project has its own page (/services/<slug>, /our-work/<slug>).
+  const [serviceRows, projectRows] = await Promise.all([
+    db
+      .select({ slug: services.slug, at: services.updatedAt, noindex: services.noindex, canonical: services.canonical })
+      .from(services)
+      .where(eq(services.isEnabled, true)),
+    db
+      .select({ slug: projects.slug, at: projects.updatedAt, noindex: projects.noindex, canonical: projects.canonical })
+      .from(projects)
+      .where(eq(projects.status, 'published')),
+  ]);
+  // A row page set noindex, or pointing its canonical elsewhere, is not listed under its own address.
+  const indexable =
+    <T extends { noindex: boolean; canonical: string | null }>(path: (row: T) => string) =>
+    (row: T) =>
+      !row.noindex && isSelfCanonical(row.canonical ?? '', path(row));
   const pages = await Promise.all(
     PUBLIC_PAGE_LIST.map(async (page) => {
       const [seoRow, copyRow] = await Promise.all([
@@ -110,18 +126,16 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
       };
     }),
   );
-  const serviceDetails = (await serviceService.listPublishedForSitemap()).map(({ slug, updatedAt }): SitemapEntry => ({
-    path: `/services/${slug}`,
-    changeFrequency: 'monthly',
-    priority: 0.5,
-    lastModified: updatedAt,
-  }));
-  const legal = (await legalPageService.listPublishedForSitemap()).map(({ slug, publishedAt }): SitemapEntry => ({
-    path: `/${slug}`,
-    changeFrequency: 'yearly',
-    priority: 0.3,
-    ...(publishedAt ? { lastModified: publishedAt } : {}),
-  }));
+  // Detail pages are listed only while their parent page is.
+  const listed = (path: string) => pages.some(({ page, seo }) => page.path === path && !seo.noindex);
+  const legal = (await legalPageService.listPublishedForSitemap())
+    .filter(indexable((p) => `/${p.slug}`))
+    .map(({ slug, publishedAt }): SitemapEntry => ({
+      path: `/${slug}`,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+      ...(publishedAt ? { lastModified: publishedAt } : {}),
+    }));
   return [
     ...pages
       // A page whose canonical points elsewhere is not listed under its own address.
@@ -132,7 +146,22 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
         priority: page.id === 'home' ? 1 : 0.6,
         ...(lastModified ? { lastModified } : {}),
       })),
-    ...serviceDetails,
+    ...(listed('/services')
+      ? serviceRows.filter(indexable((r) => servicePath(r.slug))).map(({ slug, at }): SitemapEntry => ({
+          path: servicePath(slug),
+          changeFrequency: 'monthly',
+          priority: 0.7,
+          lastModified: at,
+        }))
+      : []),
+    ...(listed('/our-work')
+      ? projectRows.filter(indexable((r) => projectPath(r.slug))).map(({ slug, at }): SitemapEntry => ({
+          path: projectPath(slug),
+          changeFrequency: 'yearly',
+          priority: 0.5,
+          lastModified: at,
+        }))
+      : []),
     ...legal,
   ];
 }

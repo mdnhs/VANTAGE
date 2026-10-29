@@ -4,6 +4,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { admin, twoFactor } from 'better-auth/plugins';
 
+import { siteNameFrom } from '@/lib/content/site-name';
 import { serverEnv } from '@/lib/env';
 import { ac, roles } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
@@ -35,7 +36,8 @@ export function buildAuth() {
     ),
   );
   return betterAuth({
-    appName: 'VANTAGE Admin',
+    // The site's domain; the authenticator label itself comes from Site settings (TwoFactorSetup's issuer).
+    appName: siteNameFrom(null),
     baseURL: appUrl,
     secret: env.AUTH_SECRET,
     trustedOrigins,
@@ -127,7 +129,6 @@ export function buildAuth() {
         impersonationSessionDuration: VIEW_AS_SECONDS,
       }),
       twoFactor({
-        issuer: 'VANTAGE Admin',
         // Spelled out: the sign-in screen's LOCKED copy promises exactly this.
         accountLockout: { enabled: true, maxFailedAttempts: 10, durationSeconds: 15 * 60 },
       }),

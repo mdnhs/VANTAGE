@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { legacyImageKey } from './legacy-image-key';
+import { seoFieldsSchema } from './seo-fields';
 
 // lowercase-kebab: letters/digits, hyphen-separated, no leading/trailing/double hyphens.
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -19,6 +20,8 @@ const projectBase = z.object({
   galleryImagePublicIds: legacyImageKey('galleryMediaIds'),
   description: z.string().min(1),
   completedAt: z.coerce.date().nullable().optional(),
+  // Search and sharing fields of the project's own page.
+  ...seoFieldsSchema.shape,
   isFeatured: z.boolean().optional(),
   status: z.enum(projectStatusValues).optional(),
   displayOrder: z.number().int().optional(),

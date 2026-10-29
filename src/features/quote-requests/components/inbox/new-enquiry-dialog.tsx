@@ -115,7 +115,7 @@ export function NewEnquiryDialog({ onCreated, trigger, defaultStatus = 'new' }: 
     }
 
     // Since DB email column is NOT NULL, provide fallback if walk-in/phone has no email
-    const cleanEmail = email.trim() ? email.trim() : `walkin-${Date.now().toString(36)}@customer.vantage`;
+    const cleanEmail = email.trim() ? email.trim() : `walkin-${Date.now().toString(36)}@walk-in.invalid`;
 
     try {
       const created = await submitMutation.mutateAsync({

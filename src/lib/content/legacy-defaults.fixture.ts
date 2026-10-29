@@ -4,7 +4,7 @@ import type { AboutContent } from '@/features/about-page/content';
 import type { InsuranceContent } from '@/features/insurance-page/content';
 
 export const ABOUT_DEFAULTS: AboutContent = {
-  heroEyebrow: 'About Vantage Autobody',
+  heroEyebrow: 'About Us',
   heroLine1: 'Built on',
   heroAccent1: 'Craft',
   heroLine2: 'Driven by',
@@ -12,7 +12,7 @@ export const ABOUT_DEFAULTS: AboutContent = {
   heroImagePublicId: null,
   heritageTitle: 'Our Heritage',
   heritageText:
-    "Founded in 1998, Vantage Autobody began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
+    "Founded in 1998, we began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
   heritageStat1Value: '1998',
   heritageStat1Label: 'Est.',
   heritageStat2Value: '25+',
@@ -93,20 +93,20 @@ export const INSURANCE_DEFAULTS: InsuranceContent = {
   ctaSubtext:
     "Connect with our claims team. We'll outline your options in five minutes and set the gears in motion immediately.",
   disclaimer:
-    "Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms. Vantage Autobody operates independently and is legally entitled to repair vehicles insured by all major providers under the 'Right to Choose' directive. Terms and conditions apply.",
+    "Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms. We operate independently and are legally entitled to repair vehicles insured by all major providers under the 'Right to Choose' directive. Terms and conditions apply.",
 };
 
 export const PROCESS_PAGE_DEFAULTS = {
   eyebrow: 'Predictable & Certified Workflow',
-  title: 'The {count}-Step Vantage Standard',
+  title: 'Our {count}-Step Car Repair Process',
   subtext: 'From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.',
 };
 
 export const LEGACY_FALLBACK_SETTINGS = {
-  businessName: 'Vantage Autobody',
+  businessName: '',
   phone: '+353 1 234 5678',
   emergencyPhone: null,
-  email: 'info@vantageautobody.ie',
+  email: '',
   address: 'Unit 4, Industrial Estate, Dublin Road, Ireland',
   openingHours: 'Mon–Fri: 8:00 – 18:00',
   googleMapsUrl: null,

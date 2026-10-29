@@ -36,7 +36,7 @@ export function StandardsSection({ eyebrow, title, image, items }: StandardsSect
         <div className='relative h-[260px] w-full overflow-hidden rounded-[20px] border border-[#2a2a30] bg-black sm:h-[380px] lg:h-[600px]'>
           <Image
             src={image ? sizedSrc(image, 'w_1200') : ABOUT_FALLBACK_IMAGES.standards}
-            alt='Vantage Autobody facility'
+            alt='Car body repair facility in Dublin'
             fill
             sizes='(min-width: 1024px) 560px, 100vw'
             className='object-cover'

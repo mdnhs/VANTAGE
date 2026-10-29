@@ -9,6 +9,8 @@ import { db, type DbLike } from '@/server/db';
 import { redirects } from '@/server/db/schema';
 import type { Actor } from '@/server/lib/auth/actor';
 import { ApiError, ERROR_CODES } from '@/server/lib/errors';
+import { assertMediaExistsLocked } from '@/server/lib/media/assert-media';
+import { prepareShareImage } from '@/server/lib/media/content-images';
 import { legalPageRepository } from '@/server/repositories/legal-page-repository';
 import { createRedirect, lockRedirects } from '@/server/services/redirect-service';
 import type {
@@ -134,7 +136,9 @@ export const legalPageService = {
   },
 
   async create(_actor: Actor, input: CreateLegalPageInput) {
+    const shareIds = await prepareShareImage(input.ogImageMediaId);
     const id = await db.transaction(async (tx) => {
+      await assertMediaExistsLocked(tx, shareIds);
       await assertSlugAvailable(tx, input.slug);
       const status = input.status ?? 'draft';
       return legalPageRepository.insert(
@@ -147,7 +151,9 @@ export const legalPageService = {
   },
 
   async update(actor: Actor, id: string, input: UpdateLegalPageInput) {
+    const shareIds = await prepareShareImage(input.ogImageMediaId);
     const result = await db.transaction(async (tx) => {
+      await assertMediaExistsLocked(tx, shareIds);
       const before = await legalPageRepository.byId(id, tx);
       if (!before) return undefined;
       const renamed = input.slug !== undefined && input.slug !== before.slug;

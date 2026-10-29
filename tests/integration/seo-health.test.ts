@@ -51,16 +51,21 @@ describe('computeSeoHealth', () => {
     expect(h.entities).toBe(8);
     expect(h.total).toBe(64);
     expect(h.alt).toEqual({ images: 0, described: 0, decorative: 0, missing: 0 });
-    const title = forPage(h, 'services').find((i) => i.check === 'title-length');
+    // The built-in titles and descriptions pass every check.
+    expect(h.issues).toEqual([]);
+    await put('seo.page.services', { title: 'Repairs' });
+    const title = forPage(await computeSeoHealth(), 'services').find((i) => i.check === 'title-length');
     expect(title).toMatchObject({
-      message: 'Title is 27 characters (aim for 30–60)',
+      message: 'Title is 19 characters (aim for 30–60)',
       fixHref: '/dashboard/services?tab=seo',
       title: 'Services page',
       path: '/services',
     });
-    expect(forPage(h, 'contact').every((i) => i.fixHref === '/dashboard/seo/pages/contact')).toBe(true);
-    expect(forPage(h, 'contact').length).toBeGreaterThan(0);
-    expect(h.score).toBe(Math.round((h.passed / h.total) * 100));
+    expect(h.score).toBe(100);
+    await put('seo.page.contact', { title: 'Hi' });
+    const contact = forPage(await computeSeoHealth(), 'contact');
+    expect(contact.length).toBeGreaterThan(0);
+    expect(contact.every((i) => i.fixHref === '/dashboard/seo/pages/contact')).toBe(true);
   });
 
   it('counts a page image without alt text, and clears it when decorative', async () => {
@@ -115,11 +120,10 @@ describe('computeSeoHealth', () => {
   it('grades the description that ships for home', async () => {
     const home = (h: Awaited<ReturnType<typeof computeSeoHealth>>) =>
       forPage(h, 'home').find((i) => i.check === 'description');
-    expect(home(await computeSeoHealth())?.message).toBe('Description is 180 characters (aim for 70–160)');
-    await put('seo', {
-      defaultDescription: 'A good site description for the Dublin body shop, comfortably inside the range.',
-    });
     expect(home(await computeSeoHealth())).toBeUndefined();
+    // Home falls back to the site default description, so that is what gets graded.
+    await put('seo', { defaultDescription: 'x'.repeat(180) });
+    expect(home(await computeSeoHealth())?.message).toBe('Description is 180 characters (aim for 70–160)');
   });
 
   it('fails a share image whose size is unknown', async () => {
@@ -134,8 +138,8 @@ describe('computeSeoHealth', () => {
     const derived = `${pub.businessName} — ${formatOpeningHoursSummary(pub.openingHours)}`;
     await put('seo', { defaultDescription: derived });
     const msg = forPage(await computeSeoHealth(), 'home').find((i) => i.check === 'description')?.message;
-    // Both the shipped page and SEO health read the stored defaultDescription directly (40 characters).
-    expect(msg).toBe('Description is 40 characters (aim for 70–160)');
+    // Both the shipped page and SEO health read the stored defaultDescription directly (33 characters).
+    expect(msg).toBe('Description is 33 characters (aim for 70–160)');
   });
 
   it('flags noindex', async () => {

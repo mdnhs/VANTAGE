@@ -8,6 +8,7 @@ import { useNewEnquiriesCount } from '@/features/enquiries/hooks/use-new-enquiri
 import { AppSidebar } from './app-sidebar';
 import type { Brand } from './brand-mark';
 import { SectionRail } from './section-rail';
+import { SiteNameProvider } from './site-name-context';
 import { Topbar } from './topbar';
 
 // Floating panels on the canvas with 16px gutters: a 288px sidebar panel
@@ -25,34 +26,36 @@ export function AdminShell({
 }) {
   const newEnquiries = useNewEnquiriesCount();
   return (
-    <TooltipProvider>
-      <CommandPaletteProvider>
-        <SidebarProvider defaultOpen={defaultOpen} style={{ '--sidebar-width': '20rem' } as React.CSSProperties}>
-          <a
-            href='#main'
-            className='sr-only z-50 rounded-xl bg-card px-4 py-2 text-sm font-semibold shadow-lg focus:not-sr-only focus:fixed focus:top-4 focus:left-4'
-          >
-            Skip to content
-          </a>
-          <AppSidebar siteUrl={siteUrl} brand={brand} badges={{ 'new-leads': newEnquiries }} />
-          {/* The content panel scrolls inside its own rounded corners, below a
+    <SiteNameProvider value={brand.name}>
+      <TooltipProvider>
+        <CommandPaletteProvider>
+          <SidebarProvider defaultOpen={defaultOpen} style={{ '--sidebar-width': '20rem' } as React.CSSProperties}>
+            <a
+              href='#main'
+              className='sr-only z-50 rounded-xl bg-card px-4 py-2 text-sm font-semibold shadow-lg focus:not-sr-only focus:fixed focus:top-4 focus:left-4'
+            >
+              Skip to content
+            </a>
+            <AppSidebar siteUrl={siteUrl} brand={brand} badges={{ 'new-leads': newEnquiries }} />
+            {/* The content panel scrolls inside its own rounded corners, below a
             still topbar. --content-h is its visible height (the svh less the
             gutters, the 72px topbar and the gap) for sticky panes inside.
             `relative` makes it the containing block for absolute children
             (sr-only labels, popovers), so they clip and scroll with it
             instead of stretching the document into a second scrollbar. */}
-          <div className='flex h-svh min-w-0 flex-1 flex-col gap-4 p-3 [--content-h:calc(100svh-112px)] sm:p-4 sm:[--content-h:calc(100svh-120px)] lg:pl-0'>
-            <Topbar siteUrl={siteUrl} />
-            <main
-              id='main'
-              tabIndex={-1}
-              className='relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-card bg-sidebar p-4 pb-20 outline-none [--main-pad:2rem] sm:p-6 sm:pb-6 sm:[--main-pad:3rem] lg:p-8 lg:pb-8 lg:[--main-pad:4rem]'
-            >
-              <SectionRail>{children}</SectionRail>
-            </main>
-          </div>
-        </SidebarProvider>
-      </CommandPaletteProvider>
-    </TooltipProvider>
+            <div className='flex h-svh min-w-0 flex-1 flex-col gap-4 p-3 [--content-h:calc(100svh-112px)] sm:p-4 sm:[--content-h:calc(100svh-120px)] lg:pl-0'>
+              <Topbar siteUrl={siteUrl} />
+              <main
+                id='main'
+                tabIndex={-1}
+                className='relative min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-card bg-sidebar p-4 pb-20 outline-none [--main-pad:2rem] sm:p-6 sm:pb-6 sm:[--main-pad:3rem] lg:p-8 lg:pb-8 lg:[--main-pad:4rem]'
+              >
+                <SectionRail>{children}</SectionRail>
+              </main>
+            </div>
+          </SidebarProvider>
+        </CommandPaletteProvider>
+      </TooltipProvider>
+    </SiteNameProvider>
   );
 }

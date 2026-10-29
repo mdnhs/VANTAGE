@@ -16,7 +16,13 @@ export const legalPageRepository = {
   // Footer links: published only, title + slug, in display order.
   async listPublished() {
     return db
-      .select({ title: legalPages.title, slug: legalPages.slug, publishedAt: legalPages.publishedAt })
+      .select({
+        title: legalPages.title,
+        slug: legalPages.slug,
+        publishedAt: legalPages.publishedAt,
+        noindex: legalPages.noindex,
+        canonical: legalPages.canonical,
+      })
       .from(legalPages)
       .where(eq(legalPages.status, 'published'))
       .orderBy(asc(legalPages.displayOrder));

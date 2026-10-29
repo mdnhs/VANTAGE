@@ -140,7 +140,7 @@ export function TwoFactorCard() {
                 <a
                   className={buttonVariants({ variant: 'outline' })}
                   href={`data:text/plain;charset=utf-8,${encodeURIComponent(text)}`}
-                  download='vantage-backup-codes.txt'
+                  download='backup-codes.txt'
                 >
                   <DownloadIcon data-icon='inline-start' /> Download
                 </a>

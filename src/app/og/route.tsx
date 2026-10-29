@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from 'next/cache';
 import { ImageResponse } from 'next/og';
 
+import { siteNameFrom } from '@/lib/content/site-name';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
@@ -14,7 +15,7 @@ async function siteName() {
   try {
     return (await siteSettingsService.getPublic()).businessName;
   } catch {
-    return 'VANTAGE';
+    return siteNameFrom(null);
   }
 }
 

@@ -4,11 +4,20 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { sizedSrc } from '@/lib/media/public-image';
+import { projectPath } from '@/lib/seo/detail-paths';
 import type { ProjectPublic } from '@/features/projects/types';
 
 type FeaturedProject = Pick<
   ProjectPublic,
-  'id' | 'title' | 'vehicleModel' | 'serviceCategory' | 'beforeImage' | 'afterImage' | 'description' | 'completedAt'
+  | 'id'
+  | 'slug'
+  | 'title'
+  | 'vehicleModel'
+  | 'serviceCategory'
+  | 'beforeImage'
+  | 'afterImage'
+  | 'description'
+  | 'completedAt'
 >;
 
 interface StitchCaseStudiesProps {
@@ -118,7 +127,9 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                       {project.serviceCategory}
                     </span>
                     <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
-                      {project.title}
+                      <Link href={projectPath(project.slug)} className='transition-colors hover:text-brand'>
+                        {project.title}
+                      </Link>
                     </h3>
                     <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{project.description}</p>
                   </div>

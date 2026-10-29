@@ -28,11 +28,18 @@ describe('PageJsonLd', () => {
   });
 
   it('other pages render a two-step breadcrumb', async () => {
-    const graph = JSON.parse((await scripts('about'))[0]!) as {
+    const graph = JSON.parse((await scripts('process'))[0]!) as {
       '@graph': { '@type': string; itemListElement: unknown[] }[];
     };
     expect(graph['@graph'].map((n) => n['@type'])).toEqual(['BreadcrumbList']);
     expect(graph['@graph'][0]!.itemListElement).toHaveLength(2);
+  });
+
+  it('contact adds the business and about adds the team', async () => {
+    const types = async (id: 'contact' | 'about') =>
+      (JSON.parse((await scripts(id))[0]!) as { '@graph': { '@type': string }[] })['@graph'].map((n) => n['@type']);
+    expect(await types('contact')).toEqual(['BreadcrumbList', 'AutoBodyShop']);
+    expect((await types('about')).filter((t) => t === 'Person').length).toBeGreaterThan(0);
   });
 
   it('escapes a script-closing site name', async () => {

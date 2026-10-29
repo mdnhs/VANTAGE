@@ -21,7 +21,8 @@ type Step = 'password' | 'scan' | 'codes';
 
 const STEPS: Step[] = ['password', 'scan', 'codes'];
 
-export function TwoFactorSetup() {
+// `issuer` is the business name from Site settings: the label the authenticator app shows.
+export function TwoFactorSetup({ issuer }: { issuer: string }) {
   // Hidden auth routes stay in the DOM (Activity), so ids must be unique.
   const uid = useId();
   const router = useRouter();
@@ -51,7 +52,7 @@ export function TwoFactorSetup() {
     const current = begin();
     setPending(true);
     setError(null);
-    const { data, failure } = await authRequest(() => authClient.twoFactor.enable({ password }));
+    const { data, failure } = await authRequest(() => authClient.twoFactor.enable({ password, issuer }));
     if (!current()) return;
     if (failure || data?.method !== 'totp') {
       setPending(false);

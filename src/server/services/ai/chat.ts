@@ -28,6 +28,7 @@ import { buildSystemPrompt, firstNameOf } from './prompt';
 import { getModel } from './provider';
 import { decryptApiKey, readAiSettings, roleAllowed, type AiStored } from './settings';
 import { buildTools } from './tools';
+import { siteNameFrom } from '@/lib/content/site-name';
 
 export const MAX_STEPS = 5;
 
@@ -124,7 +125,7 @@ export async function startChat(actor: Actor, input: ChatInput, signal?: AbortSi
   const result = streamText({
     model,
     instructions: buildSystemPrompt({
-      siteName: site.name,
+      siteName: siteNameFrom(site.name),
       firstName: firstNameOf(actor.name),
       roles: actor.roles,
       today: today(),

@@ -55,7 +55,7 @@ async function Brand() {
   const settings = await siteSettingsService.getPublic();
   return (
     <AuthBrand
-      businessName={settings.businessName?.trim() || 'Vantage Admin'}
+      businessName={settings.businessName}
       logo={settings.logo}
       logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
       logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}

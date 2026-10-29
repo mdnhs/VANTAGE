@@ -17,6 +17,8 @@ import { renderLegalHtml } from '@/lib/legal-pages/render';
 import { sizedSrc } from '@/lib/media/public-image';
 import { breadcrumbNode, graph, serviceNode } from '@/lib/seo/json-ld';
 import { PUBLIC_PAGES } from '@/lib/seo/public-pages';
+import { serviceMetadata } from '@/server/queries/get-detail-pages';
+import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
 
 // One service's detail page (Dashboard → Services → edit → Detail page content). Slugs are only
@@ -31,30 +33,16 @@ type Props = { params: Promise<{ slug: string }> };
 // Same stand-in the /services listing shows for a service without its own photo.
 const FALLBACK_IMAGE = '/assets/marketing/service-crash-repair.jpg';
 
-function clip(text: string, max = 160): string {
-  const flat = text.replace(/\s+/g, ' ').trim();
-  if (flat.length <= max) return flat;
-  const cut = flat.slice(0, max);
-  return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 0) || max).trimEnd()}…`;
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const service = await serviceService.getPublishedBySlug(slug);
-  if (!service) return { title: 'Page not found', robots: { index: false } };
-  const image = service.image ? sizedSrc(service.image, 'w_1200,h_630,c_fill') : null;
-  return {
-    title: service.name,
-    description: clip(service.description),
-    alternates: { canonical: `/services/${service.slug}` },
-    ...(image ? { openGraph: { images: [{ url: image, alt: service.name }] } } : {}),
-  };
+  // Admin-edited search and sharing fields (Dashboard → Services → edit → SEO).
+  return (await serviceMetadata((await params).slug)) ?? { title: 'Page not found', robots: { index: false } };
 }
 
 export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
   const service = await serviceService.getPublishedBySlug(slug);
   if (!service) notFound();
+  const contact = await getSetting('contact');
 
   const path = `/services/${service.slug}`;
   const html = service.content ? renderLegalHtml(service.content) : '';
@@ -67,10 +55,18 @@ export default async function ServiceDetailPage({ params }: Props) {
         schema={graph([
           breadcrumbNode(APP_URL, [
             { name: 'Home', path: '/' },
-            { name: PUBLIC_PAGES.services.title, path: PUBLIC_PAGES.services.path },
+            { name: PUBLIC_PAGES.services.crumb, path: PUBLIC_PAGES.services.path },
             { name: service.name, path },
           ]),
-          serviceNode({ origin: APP_URL, path, name: service.name, description: service.description, imageUrl }),
+          serviceNode({
+            origin: APP_URL,
+            path,
+            name: service.name,
+            description: service.description,
+            image: imageUrl,
+            areaServed: contact.address.city || null,
+            startingPrice: service.startingPrice,
+          }),
         ])}
       />
       <PageHero

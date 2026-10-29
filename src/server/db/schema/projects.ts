@@ -1,6 +1,7 @@
 import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { users } from './auth';
 import { media } from './media';
+import { seoColumns } from './seo-columns';
 
 // `status` is a plain varchar validated in Zod ('draft' | 'published'), not a DB enum —
 // matches the varchar-status convention already used elsewhere in this repo.
@@ -20,6 +21,8 @@ export const projects = pgTable(
     afterImageMediaId: uuid('after_image_media_id').references(() => media.id, { onDelete: 'restrict' }),
     description: text('description').notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
+    // Search and sharing fields of the project's own page (/our-work/<slug>).
+    ...seoColumns(),
     isFeatured: boolean('is_featured').notNull().default(false),
     status: varchar('status', { length: 16 }).notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),

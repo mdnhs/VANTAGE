@@ -1,6 +1,7 @@
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { TiptapDoc } from '@/validations/legal-page-schema';
 import { media } from './media';
+import { seoColumns } from './seo-columns';
 
 // Money convention: site-settings has no money fields to establish a precedent, so this
 // stores `startingPrice` as a whole-unit integer (euros), not cents — simplest for a
@@ -21,6 +22,8 @@ export const services = pgTable(
     startingPrice: integer('starting_price'),
     // Rich-text body of the /services/<slug> detail page (Tiptap JSON); null shows no body.
     content: jsonb('content').$type<TiptapDoc>(),
+    // Search and sharing fields of that page.
+    ...seoColumns(),
     displayOrder: integer('display_order').notNull().default(0),
     isEnabled: boolean('is_enabled').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

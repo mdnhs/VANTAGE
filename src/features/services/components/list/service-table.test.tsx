@@ -64,12 +64,20 @@ const mockService: Service = {
   checklist: ['Chassis alignment', 'Panel beating'],
   startingPrice: 250,
   content: null,
+  seoTitle: null,
+  seoDescription: null,
+  ogTitle: null,
+  ogDescription: null,
+  ogImageMediaId: null,
+  canonical: null,
+  noindex: false,
   displayOrder: 1,
   isEnabled: true,
   createdAt: new Date(),
   updatedAt: new Date(),
   icon: null,
   image: null,
+  ogImage: null,
 };
 
 describe('ServiceTable', () => {

@@ -25,6 +25,8 @@ describe('isInviteLink', () => {
 
 describe('deliverAuthEmail', () => {
   const user = { name: 'Ed', email: 'ed@example.com' };
+  const name = async () => 'Auto Paint Shop';
+  const tick = () => new Promise((r) => setTimeout(r, 0));
 
   it('returns the link as manualLink when SMTP is not configured, sending nothing', async () => {
     const send = vi.fn();
@@ -35,19 +37,25 @@ describe('deliverAuthEmail', () => {
 
   it('sends the invite template for invite links', async () => {
     const send = vi.fn().mockResolvedValue(undefined);
-    await expect(deliverAuthEmail(user, link('/reset-password?invite=1'), send, () => true)).resolves.toEqual({});
-    expect(send.mock.calls[0]![0]).toMatchObject({ to: 'ed@example.com', subject: expect.stringMatching(/invited/i) });
+    await expect(deliverAuthEmail(user, link('/reset-password?invite=1'), send, () => true, name)).resolves.toEqual({});
+    await tick();
+    expect(send.mock.calls[0]![0]).toMatchObject({
+      to: 'ed@example.com',
+      subject: 'You have been invited to Auto Paint Shop',
+    });
   });
 
   it('sends the reset template otherwise', async () => {
     const send = vi.fn().mockResolvedValue(undefined);
-    await deliverAuthEmail(user, link('/reset-password'), send, () => true);
-    expect(send.mock.calls[0]![0].subject).toMatch(/reset/i);
+    await deliverAuthEmail(user, link('/reset-password'), send, () => true, name);
+    await tick();
+    expect(send.mock.calls[0]![0].subject).toBe('Reset your Auto Paint Shop password');
   });
 
   it('resolves before a never-settling send when SMTP is configured', async () => {
     const send = vi.fn(() => new Promise<never>(() => {}));
-    await expect(deliverAuthEmail(user, link('/x'), send, () => true)).resolves.toEqual({});
+    await expect(deliverAuthEmail(user, link('/x'), send, () => true, name)).resolves.toEqual({});
+    await tick();
     expect(send).toHaveBeenCalledOnce();
   });
 
@@ -60,6 +68,7 @@ describe('deliverAuthEmail', () => {
         url,
         () => Promise.reject(new Error('boom')),
         () => true,
+        name,
       ),
     ).resolves.toEqual({});
     await expect(
@@ -70,6 +79,7 @@ describe('deliverAuthEmail', () => {
           throw new Error('sync');
         },
         () => true,
+        name,
       ),
     ).resolves.toEqual({});
     await new Promise((r) => setTimeout(r, 0));

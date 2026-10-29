@@ -48,7 +48,7 @@ describe('presets', () => {
 
   it('vantage-red is the red admin primary', () => {
     expect(PRESETS['vantage-red']).toEqual({
-      label: 'Vantage red',
+      label: 'Brand red',
       admin: { primary: '#dc2626' },
     });
   });

@@ -121,7 +121,7 @@ export const VANTAGE_ADMIN: {
 // Each preset is one shift from the VANTAGE admin table. `vantage-red` is the
 // default (= admin.css); the rest are MK's admin primaries.
 export const PRESETS: Record<PresetId, { label: string; admin: { primary: string } }> = {
-  'vantage-red': { label: 'Vantage red', admin: { primary: '#dc2626' } },
+  'vantage-red': { label: 'Brand red', admin: { primary: '#dc2626' } },
   evergreen: { label: 'Evergreen', admin: { primary: '#157d38' } },
   'teal-sage': { label: 'Teal Sage', admin: { primary: '#336060' } },
   ocean: { label: 'Ocean', admin: { primary: '#2f5f8a' } },

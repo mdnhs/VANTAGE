@@ -19,6 +19,19 @@ export function isInviteLink(url: string): boolean {
 }
 
 type Recipient = { name: string; email: string };
+
+// The business name from Site settings; imported lazily so this module loads without the database.
+async function adminSiteName(): Promise<string> {
+  const [{ getSetting }, { siteNameFrom }] = await Promise.all([
+    import('@/server/queries/get-setting'),
+    import('@/lib/content/site-name'),
+  ]);
+  try {
+    return siteNameFrom((await getSetting('site')).name);
+  } catch {
+    return siteNameFrom(null);
+  }
+}
 type Send = (message: MailMessage) => Promise<unknown>;
 
 const captureStore = new AsyncLocalStorage<{ links: string[] }>();
@@ -36,13 +49,13 @@ export function recordAuthLink(url: string) {
   captureStore.getStore()?.links.push(url);
 }
 
-function compose(user: Recipient, url: string): MailMessage {
+function compose(user: Recipient, url: string, siteName: string): MailMessage {
   const invite = isInviteLink(url);
   const content = invite
     ? {
-        heading: 'You have been invited to VANTAGE',
+        heading: `You have been invited to ${siteName}`,
         paragraphs: [
-          `Hi ${user.name}, you have been invited to the VANTAGE admin.`,
+          `Hi ${user.name}, you have been invited to the ${siteName} admin.`,
           'Choose a password to activate your account. The link expires in 24 hours.',
         ],
         cta: { label: 'Set your password', url },
@@ -50,14 +63,14 @@ function compose(user: Recipient, url: string): MailMessage {
     : {
         heading: 'Reset your password',
         paragraphs: [
-          `Hi ${user.name}, we received a request to reset your VANTAGE admin password.`,
+          `Hi ${user.name}, we received a request to reset your ${siteName} admin password.`,
           'If this was not you, ignore this email. The link expires in 24 hours.',
         ],
         cta: { label: 'Choose a new password', url },
       };
   return {
     to: user.email,
-    subject: invite ? 'You have been invited to VANTAGE' : 'Reset your VANTAGE password',
+    subject: invite ? `You have been invited to ${siteName}` : `Reset your ${siteName} password`,
     ...renderEmail(content),
   };
 }
@@ -70,15 +83,14 @@ export async function deliverAuthEmail(
   url: string,
   send: Send = sendMail,
   configured: () => boolean = smtpConfigured,
+  siteName: () => Promise<string> = adminSiteName,
 ): Promise<{ manualLink?: string }> {
   if (!configured()) return { manualLink: url };
   // Fire and forget: awaiting the SMTP round-trip would make known emails
   // slower than unknown ones, revealing which have accounts.
-  try {
-    void Promise.resolve(send(compose(user, url))).catch(logSendFailure);
-  } catch (error) {
-    logSendFailure(error);
-  }
+  void siteName()
+    .then((name) => send(compose(user, url, name)))
+    .catch(logSendFailure);
   return {};
 }
 

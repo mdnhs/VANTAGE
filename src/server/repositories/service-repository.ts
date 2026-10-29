@@ -4,7 +4,7 @@ import { services } from '@/server/db/schema';
 import { contentImage } from '@/server/lib/media/content-images';
 import type { CreateServiceInput, ServiceListQuery, UpdateServiceInput } from '@/validations/service-schema';
 
-const withMedia = { iconMedia: true, imageMedia: true } as const;
+const withMedia = { iconMedia: true, imageMedia: true, ogImageMedia: true } as const;
 
 type ServiceWithMedia = NonNullable<Awaited<ReturnType<typeof findOne>>>;
 
@@ -13,7 +13,7 @@ function findOne(id: string) {
 }
 
 // Rows carry both the *MediaId columns and the resolved PublicImage.
-function present({ iconMedia, imageMedia, ...row }: ServiceWithMedia) {
+function present({ iconMedia, imageMedia, ogImageMedia, ...row }: ServiceWithMedia) {
   const out = { ...row } as Record<string, unknown>;
   delete out[`icon${'Public'}${'Id'}`];
   delete out[`image${'Public'}${'Id'}`];
@@ -21,9 +21,11 @@ function present({ iconMedia, imageMedia, ...row }: ServiceWithMedia) {
     ...out,
     icon: contentImage(iconMedia),
     image: contentImage(imageMedia),
-  } as Omit<ServiceWithMedia, 'iconMedia' | 'imageMedia'> & {
+    ogImage: contentImage(ogImageMedia),
+  } as Omit<ServiceWithMedia, 'iconMedia' | 'imageMedia' | 'ogImageMedia'> & {
     icon: ReturnType<typeof contentImage>;
     image: ReturnType<typeof contentImage>;
+    ogImage: ReturnType<typeof contentImage>;
   };
 }
 
@@ -73,14 +75,6 @@ export const serviceRepository = {
       with: withMedia,
     });
     return row ? present(row) : undefined;
-  },
-
-  async listPublishedForSitemap() {
-    return db
-      .select({ slug: services.slug, updatedAt: services.updatedAt })
-      .from(services)
-      .where(eq(services.isEnabled, true))
-      .orderBy(asc(services.displayOrder));
   },
 
   // Write-only halves of create/update: the caller's transaction re-checks media first.

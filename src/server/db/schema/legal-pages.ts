@@ -1,5 +1,6 @@
 import { index, integer, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import type { TiptapDoc } from '@/validations/legal-page-schema';
+import { seoColumns } from './seo-columns';
 
 // Admin-authored legal pages (privacy, terms, ...) served at the site root: /<slug>.
 // `publishedAt` is the public "Last updated" date — bumped on publish and on a published
@@ -14,6 +15,7 @@ export const legalPages = pgTable(
     status: varchar('status', { length: 16 }).$type<'draft' | 'published'>().notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    ...seoColumns(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

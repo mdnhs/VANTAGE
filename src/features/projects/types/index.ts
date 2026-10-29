@@ -22,6 +22,7 @@ export type ProjectWithGallery = WithoutLegacy<Project> & {
   galleryImages: WithoutLegacy<ProjectGalleryImage>[];
   beforeImage: PublicImage | null;
   afterImage: PublicImage | null;
+  ogImage: PublicImage | null;
   gallery: PublicImage[];
 };
 

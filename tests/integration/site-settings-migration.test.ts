@@ -479,9 +479,9 @@ describe('site_settings -> versioned keys', () => {
     ) as unknown as typeof siteSettings.$inferSelect;
     const { docs } = mapLegacyToDocs({
       ...nulls,
-      businessName: 'Vantage Autobody',
+      businessName: '',
       phone: '+353 1 234 5678',
-      email: 'info@vantageautobody.ie',
+      email: '',
       address: 'Unit 4, Industrial Estate, Dublin Road, Ireland',
       openingHours: 'Mon–Fri: 8:00 – 18:00',
       logoUseLottie: false,

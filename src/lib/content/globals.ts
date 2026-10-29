@@ -39,7 +39,8 @@ const titled = (max: number) => z.object({ title: s(max), description: s(500) })
 // ---------------------------------------------------------------- identity
 
 export const SiteGlobal = z.object({
-  name: s(255, 'Vantage Autobody'),
+  // Blank shows the site's domain (siteNameFrom); the real name is set in the admin.
+  name: s(255),
   legalName: s(120),
   logo: image(),
   favicon: image(),
@@ -57,7 +58,7 @@ export const SiteGlobal = z.object({
 });
 
 export const ContactGlobal = z.object({
-  email: z.email().or(z.literal('')).default('info@vantageautobody.ie'),
+  email: z.email().or(z.literal('')).default(''),
   phone: z
     .object({
       display: s(50, '+353 1 234 5678'),
@@ -379,6 +380,13 @@ export const SeoGlobal = z.object({
       sameAs: z.array(HttpsUrl).max(10).default([]),
     })
     .prefault({}),
+  // /llms.txt: a plain-text guide to the site for AI assistants (ChatGPT, Perplexity, Claude ...).
+  llms: z
+    .object({
+      enabled: z.boolean().default(true),
+      summary: s(1000),
+    })
+    .prefault({}),
 });
 
 // ------------------------------------------------------------ website pages
@@ -552,14 +560,14 @@ export const InsurancePageGlobal = z.object({
     .prefault({}),
   disclaimer: s(
     2000,
-    "Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms. Vantage Autobody operates independently and is legally entitled to repair vehicles insured by all major providers under the 'Right to Choose' directive. Terms and conditions apply.",
+    "Disclaimer: courtesy vehicle provision is subject to availability and your specific insurance policy terms. We operate independently and are legally entitled to repair vehicles insured by all major providers under the 'Right to Choose' directive. Terms and conditions apply.",
   ),
 });
 
 export const AboutPageGlobal = z.object({
   hero: z
     .object({
-      eyebrow: s(200, 'About Vantage Autobody'),
+      eyebrow: s(200, 'About Us'),
       line1: s(100, 'Built on'),
       accent1: s(100, 'Craft'),
       line2: s(100, 'Driven by'),
@@ -572,7 +580,7 @@ export const AboutPageGlobal = z.object({
       title: s(160, 'Our Heritage'),
       text: s(
         2000,
-        "Founded in 1998, Vantage Autobody began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
+        "Founded in 1998, we began with a singular obsession: to elevate automotive repair from a trade to a precision craft. What started as a modest two-bay garage specializing in classic restorations has evolved into Ireland's premier high-end collision and repair facility.",
       ),
       stat1: z.object({ value: s(40, '1998'), label: s(80, 'Est.') }).prefault({}),
       stat2: z.object({ value: s(40, '25+'), label: s(80, 'Years of Precision') }).prefault({}),
@@ -632,7 +640,7 @@ export const AboutPageGlobal = z.object({
 export const ProcessPageGlobal = z.object({
   eyebrow: s(200, 'Predictable & Certified Workflow'),
   // `{count}` is replaced with the number of enabled steps.
-  title: s(160, 'The {count}-Step Vantage Standard'),
+  title: s(160, 'Our {count}-Step Car Repair Process'),
   subtext: s(
     2000,
     'From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.',

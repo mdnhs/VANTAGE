@@ -6,11 +6,15 @@ const d = { titleTemplate: '', siteName: 'Vantage Autobody' };
 
 describe('documentTitle', () => {
   it('uses the site template by default', () => {
-    expect(documentTitle({ id: 'services', seoTitle: '' }, d)).toBe('Services | Vantage Autobody');
+    expect(documentTitle({ id: 'services', seoTitle: '' }, d)).toBe(
+      'Car Body Repair Services in Dublin | Vantage Autobody',
+    );
   });
 
   it('applies a custom template', () => {
-    expect(documentTitle({ id: 'services', seoTitle: null }, { ...d, titleTemplate: '%s — VA' })).toBe('Services — VA');
+    expect(documentTitle({ id: 'services', seoTitle: null }, { ...d, titleTemplate: '%s — VA' })).toBe(
+      'Car Body Repair Services in Dublin — VA',
+    );
   });
 
   it('puts an SEO title through the template', () => {
@@ -19,7 +23,7 @@ describe('documentTitle', () => {
 
   it('gives home its own full title', () => {
     expect(documentTitle({ id: 'home', seoTitle: '' }, d)).toBe(
-      'Vantage Autobody — Precision Crash Repair & Restoration Dublin',
+      'Vantage Autobody — Crash Repair & Car Restoration in Dublin',
     );
   });
 

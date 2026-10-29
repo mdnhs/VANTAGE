@@ -250,13 +250,14 @@ describe('content tools', () => {
   });
 
   it('reports the real SEO health report', async () => {
+    await settingsRepository.save('seo.page.services', { version: 0, value: { title: 'Repairs' } }, null);
     const health = await seoHealth(actorFor('marketer'));
     expect(health.label).toBe('SEO health');
     expect(health.score).toBe((await computeSeoHealth()).score);
     const issues = health.issues as { where: string; problem: string }[];
     expect(issues).toContainEqual({
       where: 'Services page (/services)',
-      problem: 'Title is 27 characters (aim for 30–60)',
+      problem: 'Title is 19 characters (aim for 30–60)',
     });
     expect(await seoHealth(actorFor('intake'))).toHaveProperty('error');
   });

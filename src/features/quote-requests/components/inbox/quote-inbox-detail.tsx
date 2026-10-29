@@ -51,6 +51,7 @@ import {
   type PaymentMethod,
 } from '../../types';
 import { formatFullDate, formatServiceType, getAvatarColor, getInitials } from './quote-inbox-formatters';
+import { quoteReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 
 interface QuoteInboxDetailProps {
   quote: QuoteRequest;
@@ -113,6 +114,7 @@ const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, { label: string; badgeClass: 
 };
 
 export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInboxDetailProps) {
+  const siteName = useSiteName();
   // State initialization
   const [status, setStatus] = useState<QuoteStatus>(quote.status as QuoteStatus);
   const [estimatedCost, setEstimatedCost] = useState<string>(quote.estimatedCost ?? '');
@@ -308,7 +310,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
 
           {/* Email Reply */}
           <a
-            href={`mailto:${quote.email}?subject=Regarding Your Quote Request — Vantage Autobody`}
+            href={replyMailto(quote.email, quoteReplySubject(siteName))}
             title='Reply via email'
             className={cn(
               buttonVariants({ variant: 'outline', size: 'sm' }),

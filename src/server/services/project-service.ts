@@ -3,7 +3,7 @@ import { ApiError } from '@/server/lib/errors';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { MEDIA_TAG } from '@/lib/cache/media-tag';
 import { assertMediaExists, assertMediaExistsLocked } from '@/server/lib/media/assert-media';
-import { mediaIdsOf, prepareMediaWrite } from '@/server/lib/media/content-images';
+import { mediaIdsOf, prepareMediaWrite, prepareShareImage } from '@/server/lib/media/content-images';
 import { isAuthorOnly } from '@/lib/auth/content-access';
 import type { Actor } from '@/server/lib/auth/actor';
 import { assertContentWrite } from '@/server/lib/auth/content-access';
@@ -99,7 +99,11 @@ export const projectService = {
       MEDIA_PAIRS,
     );
     await assertMediaExists(input.galleryMediaIds ?? []);
-    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const ids = [
+      ...mediaIdsOf(input, MEDIA_PAIRS),
+      ...(input.galleryMediaIds ?? []),
+      ...(await prepareShareImage(input.ogImageMediaId)),
+    ];
     const row = await projectRepository.create(input, (tx) => assertMediaExistsLocked(tx, ids));
     // Second arg must match the `cacheLife` profile used in the cached reads above.
     revalidateTag(LIST_TAG, 'minutes');
@@ -112,7 +116,11 @@ export const projectService = {
     if (guard === 'missing') return undefined;
     const input = await prepareMediaWrite(data, MEDIA_PAIRS);
     await assertMediaExists(input.galleryMediaIds ?? []);
-    const ids = [...mediaIdsOf(input, MEDIA_PAIRS), ...(input.galleryMediaIds ?? [])];
+    const ids = [
+      ...mediaIdsOf(input, MEDIA_PAIRS),
+      ...(input.galleryMediaIds ?? []),
+      ...(await prepareShareImage(input.ogImageMediaId)),
+    ];
     const row = await projectRepository.update(id, input, guard, (tx) => assertMediaExistsLocked(tx, ids));
     revalidateTag(LIST_TAG, 'minutes');
     revalidateTag(FEATURED_TAG, 'minutes');

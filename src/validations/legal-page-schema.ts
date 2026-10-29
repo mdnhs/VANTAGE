@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { seoFieldsSchema } from './seo-fields';
 
 // lowercase-kebab: letters/digits, hyphen-separated, no leading/trailing/double hyphens.
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -71,6 +72,7 @@ export const createLegalPageSchema = z.object({
   slug: z.string().min(1).max(SLUG_MAX).regex(slugPattern, 'Must be lowercase kebab-case (e.g. privacy-policy)'),
   content: tiptapDocSchema,
   status: z.enum(['draft', 'published']).optional(),
+  ...seoFieldsSchema.shape,
 });
 
 export const updateLegalPageSchema = createLegalPageSchema.partial();

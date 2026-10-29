@@ -1,9 +1,13 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ProjectWithGallery } from '../types';
 import { ProjectForm } from './project-form';
+
+// The form's Details / SEO tabs keep the open tab in the URL (nuqs).
+const render = (ui: React.ReactElement) => rtlRender(ui, { wrapper: NuqsTestingAdapter });
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@/contexts/actor-provider', () => ({ useActor: () => ({ roles: ['editor'] }) }));
@@ -56,6 +60,26 @@ describe('ProjectForm', () => {
       beforeImageMediaId: 'before-id',
       afterImageMediaId: 'after-id',
       galleryMediaIds: ['g1', 'g2'],
+    });
+  });
+
+  it('keeps the SEO tab in the same form: its fields are saved with the details', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<ProjectForm submitLabel='Create' isSubmitting={false} onSubmit={onSubmit} />);
+    fill();
+    fireEvent.click(screen.getByText('pick After'));
+    fireEvent.click(screen.getByText('pick Before'));
+    fireEvent.click(screen.getByRole('tab', { name: 'SEO' }));
+    fireEvent.change(await screen.findByLabelText('SEO title'), { target: { value: 'BMW respray Dublin' } });
+    fireEvent.click(screen.getByRole('switch', { name: 'Hide from search engines' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({
+      title: expect.any(String),
+      beforeImageMediaId: 'before-id',
+      seoTitle: 'BMW respray Dublin',
+      seoDescription: null,
+      noindex: true,
     });
   });
 

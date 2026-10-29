@@ -225,6 +225,13 @@
       "when": 1793239203124,
       "tag": "0031_drop_placeholder_legal_links",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793240980956,
+      "tag": "0032_content_page_seo",
+      "breakpoints": true
     }
   ]
 }

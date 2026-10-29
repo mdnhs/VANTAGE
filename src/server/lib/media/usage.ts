@@ -12,6 +12,7 @@ import type { DbLike } from '@/server/db';
 import {
   enquiryPhotos,
   homepageCatalogs,
+  legalPages,
   partnerLogos,
   projectGalleryImages,
   projects,
@@ -33,6 +34,7 @@ export const MEDIA_REFERRER_TABLES = [
   'project_gallery_images',
   'testimonials',
   'enquiry_photos',
+  'legal_pages',
 ] as const;
 
 const PAGE_KEY_HREFS: Record<string, string> = {
@@ -73,7 +75,9 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
     await db
       .select({ id: services.id, name: services.name })
       .from(services)
-      .where(sql`${services.iconMediaId} = ${id} or ${services.imageMediaId} = ${id}`),
+      .where(
+        sql`${services.iconMediaId} = ${id} or ${services.imageMediaId} = ${id} or ${services.ogImageMediaId} = ${id}`,
+      ),
     'Service',
     '/dashboard/services',
   );
@@ -97,7 +101,9 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
     await db
       .select({ id: projects.id, name: projects.title })
       .from(projects)
-      .where(sql`${projects.beforeImageMediaId} = ${id} or ${projects.afterImageMediaId} = ${id}`),
+      .where(
+        sql`${projects.beforeImageMediaId} = ${id} or ${projects.afterImageMediaId} = ${id} or ${projects.ogImageMediaId} = ${id}`,
+      ),
     'Project',
     '/dashboard/projects',
   );
@@ -117,6 +123,14 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .where(eq(testimonials.avatarMediaId, id)),
     'Testimonial',
     '/dashboard/testimonials',
+  );
+  content(
+    await db
+      .select({ id: legalPages.id, name: legalPages.title })
+      .from(legalPages)
+      .where(eq(legalPages.ogImageMediaId, id)),
+    'Legal page',
+    '/dashboard/legal-pages',
   );
 
   const photos = await db

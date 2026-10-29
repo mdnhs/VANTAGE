@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { quoteReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -107,6 +108,7 @@ const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, { label: string; badgeClass: 
 };
 
 export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
+  const siteName = useSiteName();
   const [status, setStatus] = useState<QuoteStatus>(initialQuote.status as QuoteStatus);
   const [estimatedCost, setEstimatedCost] = useState<string>(initialQuote.estimatedCost ?? '');
   const [adminNotes, setAdminNotes] = useState<string>(initialQuote.adminNotes ?? '');
@@ -239,7 +241,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
             </a>
 
             <a
-              href={`mailto:${initialQuote.email}?subject=Regarding Your Quote Request — Vantage Autobody`}
+              href={replyMailto(initialQuote.email, quoteReplySubject(siteName))}
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5 text-xs')}
             >
               <Mail className='size-3.5' />

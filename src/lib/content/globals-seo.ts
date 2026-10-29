@@ -11,7 +11,7 @@ import { imageRefSchema } from './image-ref';
 const s = (max: number) => z.string().trim().max(max).default('');
 
 // '' (own address), a site path with no trailing slash, query or hash, or an https address.
-const Canonical = z
+export const Canonical = z
   .string()
   .trim()
   .max(300)

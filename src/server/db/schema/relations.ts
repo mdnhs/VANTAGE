@@ -28,6 +28,7 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     references: [media.id],
     relationName: 'projectAfter',
   }),
+  ogImageMedia: one(media, { fields: [projects.ogImageMediaId], references: [media.id], relationName: 'projectOg' }),
 }));
 
 export const projectGalleryImagesRelations = relations(projectGalleryImages, ({ one }) => ({
@@ -56,6 +57,7 @@ export const adminUsersRelations = relations(adminUsers, ({ many }) => ({
 export const servicesRelations = relations(services, ({ one }) => ({
   iconMedia: one(media, { fields: [services.iconMediaId], references: [media.id], relationName: 'serviceIcon' }),
   imageMedia: one(media, { fields: [services.imageMediaId], references: [media.id], relationName: 'serviceImage' }),
+  ogImageMedia: one(media, { fields: [services.ogImageMediaId], references: [media.id], relationName: 'serviceOg' }),
 }));
 
 export const homepageCatalogsRelations = relations(homepageCatalogs, ({ one }) => ({

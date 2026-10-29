@@ -5,6 +5,7 @@ import { db } from '@/server/db';
 import {
   enquiryPhotos,
   homepageCatalogs,
+  legalPages,
   media,
   partnerLogos,
   projectGalleryImages,
@@ -47,7 +48,7 @@ async function insertMedia(deletedAt: Date | null = null, scope: 'library' | 'en
 
 beforeEach(async () => {
   await db.execute(
-    sql`truncate table media, services, projects, partner_logos, testimonials, homepage_catalogs, quote_requests, settings cascade`,
+    sql`truncate table media, services, projects, partner_logos, testimonials, homepage_catalogs, quote_requests, settings, legal_pages cascade`,
   );
 });
 
@@ -115,6 +116,20 @@ describe('mediaUsage', () => {
       ]),
     );
     expect(uses).toHaveLength(5);
+  });
+
+  it('finds a share image on a service, a project and a legal page', async () => {
+    const row = await insertMedia();
+    await db.insert(services).values({ name: 'Respray', slug: 'respray', description: 'd', ogImageMediaId: row.id });
+    await db.insert(legalPages).values({
+      title: 'Privacy',
+      slug: 'privacy',
+      content: { type: 'doc', content: [] },
+      ogImageMediaId: row.id,
+    });
+    const uses = await mediaUsage(db, row.id);
+    expect(uses.map((u) => u.label).sort()).toEqual(['Legal page "Privacy"', 'Service "Respray"']);
+    expect(uses.find((u) => u.label.startsWith('Legal'))?.href).toBe('/dashboard/legal-pages');
   });
 
   it('finds a project gallery image', async () => {

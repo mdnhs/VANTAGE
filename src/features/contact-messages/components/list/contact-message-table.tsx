@@ -16,6 +16,7 @@ import { useContactMessageStats } from '../../hooks/api/query/use-contact-messag
 import { useUpdateContactMessage } from '../../hooks/api/mutation/use-update-contact-message';
 import { useDeleteContactMessage } from '../../hooks/api/mutation/use-delete-contact-message';
 import { CONTACT_STATUSES, type ContactMessage, type ContactMessageStats, type ContactStatus } from '../../types';
+import { enquiryReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 
 interface ContactMessageTableProps {
   initialData: { data: ContactMessage[]; total: number };
@@ -59,6 +60,7 @@ function StatusQuickSelect({ message }: { message: ContactMessage }) {
 }
 
 export function ContactMessageTable({ initialData, initialStats }: ContactMessageTableProps) {
+  const siteName = useSiteName();
   const [status, setStatus] = useState<ContactStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -220,7 +222,7 @@ export function ContactMessageTable({ initialData, initialStats }: ContactMessag
                         {/* Email */}
                         {msg.email && (
                           <a
-                            href={`mailto:${msg.email}?subject=Re: Your enquiry with Vantage Workshop`}
+                            href={replyMailto(msg.email, enquiryReplySubject(siteName))}
                             title='Send Email'
                             className={cn(
                               buttonVariants({ variant: 'ghost', size: 'icon' }),

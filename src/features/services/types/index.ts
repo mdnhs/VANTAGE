@@ -12,7 +12,11 @@ type WithoutLegacy<T> = {
 };
 
 // Rows from the server carry the resolved images beside the *MediaId columns.
-export type Service = WithoutLegacy<ServiceRow> & { icon: PublicImage | null; image: PublicImage | null };
+export type Service = WithoutLegacy<ServiceRow> & {
+  icon: PublicImage | null;
+  image: PublicImage | null;
+  ogImage: PublicImage | null;
+};
 
 export type { NewService, CreateServiceInput, UpdateServiceInput, ServiceListQuery, ReorderServicesInput };
 

@@ -143,10 +143,10 @@ export async function publishTheme(actor: Actor, input: { version: number }) {
 
 const resetSummary = (scope: 'site' | 'admin' | 'both', preset: PresetId) =>
   scope === 'site'
-    ? 'Reset the site theme draft to the VANTAGE default'
+    ? 'Reset the site theme draft to the default'
     : `Reset the ${scope === 'both' ? 'theme' : 'admin theme'} draft to ${preset}`;
 
-// Colours only: radius and mode stay. The site half always resets to the VANTAGE default.
+// Colours only: radius and mode stay. The site half always resets to the default.
 export async function resetThemeDraft(
   actor: Actor,
   input: { version: number; preset: PresetId; scope: 'site' | 'admin' | 'both' },

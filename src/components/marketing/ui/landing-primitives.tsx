@@ -147,7 +147,8 @@ interface PageHeroProps {
 const CRUMB_LINK = 'transition-colors hover:text-white';
 
 function HeroBreadcrumb({ page, current }: { page: Exclude<PublicPageId, 'home'>; current?: string }) {
-  const { title, path } = PUBLIC_PAGES[page];
+  // The short crumb name, not the (keyword-led) page title.
+  const { crumb: title, path } = PUBLIC_PAGES[page];
   return (
     <Breadcrumb className='mb-6 lg:mb-8'>
       <BreadcrumbList className='font-site-body text-[13px] tracking-[0.04em] text-[#8a8a93] uppercase'>

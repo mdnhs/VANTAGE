@@ -5,7 +5,7 @@ import type { MediaRow } from '@/server/db/schema/media';
 
 import { db, type DbLike } from '@/server/db';
 
-import { assertMediaExists, assertMediaExistsLocked } from './assert-media';
+import { assertMediaExists, assertMediaExistsLocked, assertShareImage } from './assert-media';
 import { toPublicImage } from './resolve';
 
 // A content row's image: the live media row, else nothing.
@@ -36,6 +36,15 @@ export async function prepareMediaWrite<T extends object>(data: T, pairs: readon
 export function mediaIdsOf(data: object, pairs: readonly Pair[]): string[] {
   const record = data as Record<string, unknown>;
   return pairs.flatMap(([mediaKey]) => (typeof record[mediaKey] === 'string' ? [record[mediaKey] as string] : []));
+}
+
+// A content row's share image (`ogImageMediaId`): a live image of share size. Returns its id for
+// the in-transaction re-check, so the write can add it to the ids it locks.
+export async function prepareShareImage(id: string | null | undefined): Promise<string[]> {
+  if (!id) return [];
+  await assertMediaExists([id]);
+  await assertShareImage({ kind: 'media', id }, 'ogImageMediaId');
+  return [id];
 }
 
 // Runs the write in a transaction that first re-checks the images under the lock that

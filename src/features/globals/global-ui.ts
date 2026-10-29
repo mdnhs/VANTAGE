@@ -101,6 +101,16 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     'business.priceRange': { label: 'Price range', placeholder: '€€' },
     'business.sameAs': { label: 'Other profiles' },
+    llms: {
+      label: 'AI assistants (llms.txt)',
+      description: 'A plain-text summary of the site at /llms.txt that AI search tools read.',
+    },
+    'llms.enabled': { label: 'Publish /llms.txt' },
+    'llms.summary': {
+      label: 'Summary',
+      widget: 'textarea',
+      description: 'Who you are and what you do, in a few sentences. Blank uses the default description.',
+    },
   },
   privacy: {
     enquiryRetentionMonths: {

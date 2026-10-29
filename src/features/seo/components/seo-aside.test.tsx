@@ -97,7 +97,9 @@ describe('SeoAside', () => {
   it('shows the shipped title even when the site global is not readable (site name from the public settings)', async () => {
     siteGlobalDenied = true;
     renderAside({});
-    expect((await screen.findAllByText('Services | Vantage Autobody')).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText('Car Body Repair Services in Dublin | Vantage Autobody')).length,
+    ).toBeGreaterThan(0);
   });
 
   it('shows a placeholder and skips the size check for a legacy image', async () => {
@@ -111,7 +113,7 @@ describe('SeoAside', () => {
   it('still renders from the page label when the defaults cannot be read', async () => {
     globalsDenied = true;
     renderAside({});
-    expect((await screen.findAllByText('Services')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Car Body Repair Services in Dublin')).length).toBeGreaterThan(0);
     expect(screen.getByText('In search results')).toBeTruthy();
   });
 });

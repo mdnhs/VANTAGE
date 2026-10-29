@@ -13,6 +13,8 @@ import { MediaField } from '@/features/media/components/media-field';
 import { slotPatch, slotRef, type Slot } from '@/features/media/lib/slot';
 import { APP_ROUTES } from '@/lib/routes/app-routes';
 import type { TiptapDoc } from '@/validations/legal-page-schema';
+import { PageTabs } from '@/components/layout/page-tabs';
+import { SeoFieldsCard, seoFormState, seoPayload, type SeoFormState } from '@/features/seo/components/seo-fields-card';
 import type { Service } from '../types';
 
 function slugify(value: string): string {
@@ -38,6 +40,7 @@ interface FormState {
   checklist: string;
   content: TiptapDoc | null;
   isEnabled: boolean;
+  seo: SeoFormState;
 }
 
 function toFormState(data: Service | null): FormState {
@@ -50,21 +53,24 @@ function toFormState(data: Service | null): FormState {
     checklist: (data?.checklist ?? []).join('\n'),
     content: data?.content ?? null,
     isEnabled: data?.isEnabled ?? true,
+    seo: seoFormState(data),
   };
 }
 
 interface ServiceFormProps {
   initialData?: Service | null;
-  onSubmit: (input: {
-    name: string;
-    slug: string;
-    description: string;
-    iconMediaId?: string | null;
-    imageMediaId?: string | null;
-    checklist: string[];
-    content: TiptapDoc | null;
-    isEnabled: boolean;
-  }) => Promise<unknown>;
+  onSubmit: (
+    input: {
+      name: string;
+      slug: string;
+      description: string;
+      iconMediaId?: string | null;
+      imageMediaId?: string | null;
+      checklist: string[];
+      content: TiptapDoc | null;
+      isEnabled: boolean;
+    } & ReturnType<typeof seoPayload>,
+  ) => Promise<unknown>;
   isSubmitting: boolean;
   submitError?: string | null;
   submitLabel: string;
@@ -109,99 +115,126 @@ export function ServiceForm({
       // An editor cleared to a single empty paragraph saves as "no body".
       content: hasText(form.content) ? form.content : null,
       isEnabled: form.isEnabled,
+      ...seoPayload(form.seo),
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Service details</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='name'>Name</Label>
-            <Input id='name' value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
-          </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='slug'>Slug</Label>
-            <Input
-              id='slug'
-              value={form.slug}
-              onChange={(e) => {
-                setSlugTouched(true);
-                setField('slug', e.target.value);
-              }}
-              pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
-              required
-            />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='description'>Description</Label>
-            <Textarea
-              id='description'
-              value={form.description}
-              onChange={(e) => setField('description', e.target.value)}
-              required
-            />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='checklist'>Checklist (one item per line)</Label>
-            <Textarea
-              id='checklist'
-              value={form.checklist}
-              onChange={(e) => setField('checklist', e.target.value)}
-              placeholder={'Structural Realignment\nLaser Chassis Measuring'}
-              rows={5}
-            />
-          </div>
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isEnabled'
-              checked={form.isEnabled}
-              onCheckedChange={(checked) => setField('isEnabled', checked)}
-            />
-            <Label htmlFor='isEnabled'>Visible on the public site</Label>
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Icon</Label>
-            <MediaField
-              kind='image'
-              label='Icon'
-              nullable
-              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
-              onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
-            />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Image</Label>
-            <MediaField
-              kind='image'
-              label='Image'
-              nullable
-              value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
-              onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <PageTabs
+        tabs={[
+          {
+            value: 'details',
+            label: 'Details',
+            content: (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Service details</CardTitle>
+                  </CardHeader>
+                  <CardContent className='grid gap-4 sm:grid-cols-2'>
+                    <div className='flex flex-col gap-1.5'>
+                      <Label htmlFor='name'>Name</Label>
+                      <Input id='name' value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
+                    </div>
+                    <div className='flex flex-col gap-1.5'>
+                      <Label htmlFor='slug'>Slug</Label>
+                      <Input
+                        id='slug'
+                        value={form.slug}
+                        onChange={(e) => {
+                          setSlugTouched(true);
+                          setField('slug', e.target.value);
+                        }}
+                        pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
+                        required
+                      />
+                    </div>
+                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                      <Label htmlFor='description'>Description</Label>
+                      <Textarea
+                        id='description'
+                        value={form.description}
+                        onChange={(e) => setField('description', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                      <Label htmlFor='checklist'>Checklist (one item per line)</Label>
+                      <Textarea
+                        id='checklist'
+                        value={form.checklist}
+                        onChange={(e) => setField('checklist', e.target.value)}
+                        placeholder={'Structural Realignment\nLaser Chassis Measuring'}
+                        rows={5}
+                      />
+                    </div>
+                    <div className='flex items-center gap-3 pt-6'>
+                      <Switch
+                        id='isEnabled'
+                        checked={form.isEnabled}
+                        onCheckedChange={(checked) => setField('isEnabled', checked)}
+                      />
+                      <Label htmlFor='isEnabled'>Visible on the public site</Label>
+                    </div>
+                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                      <Label>Icon</Label>
+                      <MediaField
+                        kind='image'
+                        label='Icon'
+                        nullable
+                        value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
+                        onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
+                      />
+                    </div>
+                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                      <Label>Image</Label>
+                      <MediaField
+                        kind='image'
+                        label='Image'
+                        nullable
+                        value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
+                        onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Detail page</CardTitle>
-          <CardDescription>
-            The body of this service&apos;s own page{form.slug ? ` (/services/${form.slug})` : ''}, shown under the
-            image. The name, description, checklist and image above appear there too.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RichTextEditor
-            initialContent={form.content}
-            onChange={(doc) => setField('content', doc)}
-            ariaLabel='Detail page content'
-          />
-        </CardContent>
-      </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Detail page</CardTitle>
+                    <CardDescription>
+                      The body of this service&apos;s own page{form.slug ? ` (/services/${form.slug})` : ''}, shown
+                      under the image. The name, description, checklist and image above appear there too.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RichTextEditor
+                      initialContent={form.content}
+                      onChange={(doc) => setField('content', doc)}
+                      ariaLabel='Detail page content'
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            ),
+          },
+          {
+            value: 'seo',
+            label: 'SEO',
+            content: (
+              <SeoFieldsCard
+                value={form.seo}
+                onChange={(seo) => setField('seo', seo)}
+                path={`/services/${form.slug || 'slug'}`}
+                rowOgImageMediaId={initialData?.ogImageMediaId}
+                fallbackTitle={form.name || undefined}
+                imageHint='Blank uses the service image.'
+              />
+            ),
+          },
+        ]}
+      />
 
       {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
 

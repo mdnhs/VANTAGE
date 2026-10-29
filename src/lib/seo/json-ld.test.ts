@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { parseGlobal } from '@/lib/content/globals';
 
-import { breadcrumbNode, businessNode, graph, scriptJson, serviceNode, websiteNode } from './json-ld';
+import { breadcrumbNode, businessNode, graph, scriptJson, serviceNode, teamNodes, websiteNode } from './json-ld';
 
 const origin = 'https://x.ie';
 const site = () => parseGlobal('site', {});
@@ -90,28 +90,47 @@ describe('graph', () => {
   });
 });
 
-describe('serviceNode', () => {
-  it('describes the service at its own address, provided by the business', () => {
-    const node = serviceNode({
-      origin,
-      path: '/services/crash-repair',
-      name: 'Crash Repair',
-      description: 'Structural repairs.',
-      imageUrl: 'https://cdn.x.ie/a.jpg',
+describe('teamNodes', () => {
+  it('skips unnamed members and links each person to the business', () => {
+    const nodes = teamNodes(origin, [
+      { name: 'Aoife', role: 'Painter' },
+      { name: ' ', role: 'Ghost' },
+      { name: 'Ciara', role: '' },
+    ]) as unknown as Record<string, unknown>[];
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]).toEqual({
+      '@type': 'Person',
+      name: 'Aoife',
+      jobTitle: 'Painter',
+      worksFor: { '@id': `${origin}/#organization` },
     });
-    expect(node).toEqual({
-      '@type': 'Service',
-      '@id': 'https://x.ie/services/crash-repair#service',
-      name: 'Crash Repair',
-      description: 'Structural repairs.',
-      url: 'https://x.ie/services/crash-repair',
-      image: 'https://cdn.x.ie/a.jpg',
-      provider: { '@id': 'https://x.ie/#organization' },
+    expect(nodes[1]).not.toHaveProperty('jobTitle');
+  });
+});
+
+describe('serviceNode', () => {
+  it('links the provider and turns a starting price into a minimum-price offer', () => {
+    const n = serviceNode({
+      origin,
+      path: '/services/respray',
+      name: 'Respray',
+      description: 'Full respray',
+      areaServed: 'Dublin',
+      startingPrice: 400,
+    }) as unknown as Record<string, unknown>;
+    expect(n['@id']).toBe(`${origin}/services/respray#service`);
+    expect(n.provider).toEqual({ '@id': `${origin}/#organization` });
+    expect(n.areaServed).toEqual({ '@type': 'City', name: 'Dublin' });
+    expect(n.offers).toEqual({
+      '@type': 'Offer',
+      priceSpecification: { '@type': 'PriceSpecification', minPrice: 400, priceCurrency: 'EUR' },
     });
   });
 
-  it('leaves the image out when the service has none', () => {
-    const node = serviceNode({ origin, path: '/services/a', name: 'A', description: 'B', imageUrl: null });
-    expect(node).not.toHaveProperty('image');
+  it('leaves out what is not set', () => {
+    const n = serviceNode({ origin, path: '/services/x', name: 'X', description: 'Y' });
+    expect(n).not.toHaveProperty('offers');
+    expect(n).not.toHaveProperty('areaServed');
+    expect(n).not.toHaveProperty('image');
   });
 });

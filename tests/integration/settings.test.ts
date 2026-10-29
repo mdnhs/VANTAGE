@@ -171,7 +171,8 @@ describe('public settings with legacy row', () => {
       openingHours: 'Mon-Fri',
     });
     const pub = await siteSettingsService.getPublic();
-    expect(pub.businessName).toBe('Vantage Autobody');
+    // No name saved: the site's domain stands in.
+    expect(pub.businessName).toBe('localhost');
     expect(pub.businessName).not.toBe('Legacy Name');
   });
 });

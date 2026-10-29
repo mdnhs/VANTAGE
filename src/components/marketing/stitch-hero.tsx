@@ -63,7 +63,7 @@ export function StitchHero({
         ) : (
           <Image
             src={fallbackImageSrc}
-            alt='Vantage Autobody Dublin precision workshop'
+            alt='Precision car body repair workshop in Dublin'
             fill
             priority
             sizes='100vw'

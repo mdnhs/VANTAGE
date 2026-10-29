@@ -35,6 +35,7 @@ import { ContactStatusBadge } from '../contact-status-badge';
 import { useUpdateContactMessage } from '../../hooks/api/mutation/use-update-contact-message';
 import { useDeleteContactMessage } from '../../hooks/api/mutation/use-delete-contact-message';
 import { CONTACT_STATUSES, type ContactMessage, type ContactStatus } from '../../types';
+import { enquiryReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 
 interface ContactInboxDetailProps {
   message: ContactMessage;
@@ -43,6 +44,7 @@ interface ContactInboxDetailProps {
 }
 
 export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: ContactInboxDetailProps) {
+  const siteName = useSiteName();
   const [status, setStatus] = useState<ContactStatus>(message.status as ContactStatus);
   const [adminNotes, setAdminNotes] = useState<string>(message.adminNotes ?? '');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -146,7 +148,7 @@ export function ContactInboxDetail({ message, onCloseMobile, onDeleted }: Contac
           </a>
 
           <a
-            href={`mailto:${message.email}?subject=Re: Your enquiry — Vantage Autobody`}
+            href={replyMailto(message.email, enquiryReplySubject(siteName))}
             title='Reply via email'
             className={cn(
               buttonVariants({ variant: 'outline', size: 'sm' }),

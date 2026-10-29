@@ -30,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // Only an explicit "false" collapses; a first visit starts open.
   const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false';
   const brand = {
-    name: settings.businessName?.trim() || 'Vantage',
+    name: settings.businessName,
     logo: settings.logo,
     logoLottieJson: 'logoLottieJson' in settings ? (settings.logoLottieJson ?? null) : null,
     logoUseLottie: 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false,

@@ -1,6 +1,7 @@
 import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
+import { siteNameFrom } from '@/lib/content/site-name';
 import { telHref } from '@/lib/content/phone';
 import type { PublicImage } from '@/lib/media/public-image';
 import type { SiteSettings } from '@/server/db/schema';
@@ -272,6 +273,18 @@ export function composeLegacyView(g: PublicGlobals): LegacySiteView {
   };
 }
 
+// The animated logo as a versioned URL (src/app/brand/logo.json), never the document itself:
+// passed to the client header and footer inline, its embedded images put ~1MB into every page.
+export const LOTTIE_LOGO_PATH = '/brand/logo.json';
+export function lottieLogoSrc(json: string | null): string | null {
+  if (!json?.trim()) return null;
+  // FNV-1a over a sample of the document: cheap on every render, and any re-upload changes it.
+  let hash = 0x811c9dc5 ^ json.length;
+  const step = Math.max(1, Math.floor(json.length / 4096));
+  for (let i = 0; i < json.length; i += step) hash = Math.imul(hash ^ json.charCodeAt(i), 0x01000193);
+  return `${LOTTIE_LOGO_PATH}?v=${(hash >>> 0).toString(36)}`;
+}
+
 // A media ref reads the preloaded row (missing or soft-deleted: no image); a Cloudinary ref
 // resolves to null.
 function resolveRef(ref: ImageRef, images: Record<string, PublicImage>): PublicImage | null {
@@ -290,6 +303,8 @@ export function composePublicSettings(g: PublicGlobals, images: Record<string, P
   const about = g['page.about'];
   return {
     ...rest,
+    businessName: siteNameFrom(g.site.name),
+    logoLottieJson: lottieLogoSrc(g.site.lottieLogo.json),
     phoneHref: telHref(g.contact.phone.display, g.contact.phone.e164),
     logo: resolveRef(g.site.logo, images),
     favicon: resolveRef(g.site.favicon, images),

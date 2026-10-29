@@ -201,6 +201,6 @@ export const config = {
   matcher: [
     '/login',
     '/dashboard/:path*',
-    '/((?!(?:api|_next|uploads|assets|fonts|og|opengraph-image|twitter-image)(?:/|$)|favicon\\.ico$|robots\\.txt$|sitemap\\.xml$).*)',
+    '/((?!(?:api|_next|uploads|assets|fonts|og|brand|opengraph-image|twitter-image)(?:/|$)|favicon\\.ico$|robots\\.txt$|sitemap\\.xml$).*)',
   ],
 };

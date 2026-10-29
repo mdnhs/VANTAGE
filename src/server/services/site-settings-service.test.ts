@@ -19,7 +19,8 @@ describe('siteSettingsService.getPublic', () => {
   it('still renders the defaults when the media query fails', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const out = await siteSettingsService.getPublic();
-    expect(out.businessName).toBe('Vantage Autobody');
+    // No name saved: the site's domain stands in.
+    expect(out.businessName).toBe('localhost');
     expect(out.logo).toBeNull();
     expect(warn).toHaveBeenCalled();
   });

@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
-      lang='en'
+      lang='en-IE'
       suppressHydrationWarning
       className={`${SITE_FONT_VARIABLES} ${geistMono.variable} h-full antialiased`}
     >

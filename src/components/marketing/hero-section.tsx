@@ -26,7 +26,7 @@ export function HeroSection({
         ) : (
           <Image
             src={fallbackImageSrc}
-            alt='Restored sports car in the Vantage Autobody workshop'
+            alt='Restored sports car in our Dublin body repair workshop'
             fill
             priority
             className='object-cover'
