@@ -37,7 +37,7 @@ export default async function ProjectsListPage() {
         tabs={[
           {
             value: 'hero',
-            label: 'Hero',
+            label: 'Page text',
             content: <GlobalEditor title='Our work page' keys={['page.our-work']} embedded />,
           },
           {

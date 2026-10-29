@@ -61,9 +61,10 @@ export function FieldWidget({ field, control }: Props) {
   }
 }
 
+// `data-section` lets an editor's outline scroll to a group or list by its dotted path.
 function GroupWidget({ field, control }: Props) {
   return (
-    <FieldSet>
+    <FieldSet data-section={field.name} className='scroll-mt-4'>
       <FieldLegend>{field.label}</FieldLegend>
       {field.description ? <FieldDescription>{field.description}</FieldDescription> : null}
       <FieldGroup>
@@ -191,7 +192,7 @@ function ListWidget({ field, control }: Props) {
   );
   const inline = item.widget === 'text';
   return (
-    <FieldSet data-invalid={error ? true : undefined}>
+    <FieldSet data-section={field.name} data-invalid={error ? true : undefined} className='scroll-mt-4'>
       <FieldLegend variant='label'>{field.label}</FieldLegend>
       <ol className='flex flex-col gap-3'>
         {items.map((_, index) => {

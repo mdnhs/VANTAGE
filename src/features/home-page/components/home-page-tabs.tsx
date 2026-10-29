@@ -16,14 +16,15 @@ import type { Testimonial } from '@/features/testimonials/types';
 import type { PartnerLogo } from '@/features/partner-logos/types';
 import type { HomepageCatalog } from '@/features/homepage-catalogs/types';
 
+// In the order the sections appear on the homepage; Pillars last, as nothing shows them yet.
 const SECTIONS = [
-  { value: 'copy', label: 'Page copy' },
-  { value: 'pillars', label: 'Pillars' },
-  { value: 'catalog', label: 'Catalog' },
-  { value: 'process', label: 'Process' },
-  { value: 'testimonials', label: 'Testimonials' },
+  { value: 'copy', label: 'Top banner & text' },
+  { value: 'catalog', label: 'Service cards' },
+  { value: 'process', label: 'Process steps' },
+  { value: 'testimonials', label: 'Reviews' },
   { value: 'partner-logos', label: 'Partner logos' },
-  { value: 'seo', label: 'SEO' },
+  { value: 'seo', label: 'Search & sharing' },
+  { value: 'pillars', label: 'Pillars (not on the site)' },
 ] as const;
 
 export interface HomePageTabsProps {
@@ -64,7 +65,10 @@ export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials
         <TabsContent value='copy'>
           <GlobalEditor title='Home page' keys={['page.home']} embedded />
         </TabsContent>
-        <TabsContent value='pillars'>
+        <TabsContent value='pillars' className='flex flex-col gap-4'>
+          <p role='note' className='rounded-xl border border-warning/40 bg-warning-soft p-3 text-sm'>
+            No page on the website shows pillars at the moment, so edits here are not visible to visitors.
+          </p>
           <PillarsPanel initialData={pillars} />
         </TabsContent>
         <TabsContent value='catalog'>

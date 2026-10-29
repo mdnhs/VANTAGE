@@ -2,11 +2,12 @@
 
 import { HistoryIcon } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useAutosave } from '@/components/admin/autosave/use-autosave';
 import { SchemaForm } from '@/components/admin/schema-form/schema-form';
+import { toFields } from '@/components/admin/schema-form/to-fields';
 import { SitePreviewPane } from '@/components/admin/site-preview-pane';
 import { Button } from '@/components/ui/button';
 import { GLOBAL_LABELS, type PreviewableGlobalKey } from '@/lib/content/global-access';
@@ -55,6 +56,19 @@ export function DraftGlobalForm({
   const label = GLOBAL_LABELS[settingKey];
   const path = PUBLIC_PAGE_LIST.find((page) => page.pageKey === settingKey)?.path ?? '/';
   const { version, value } = doc;
+  const formRef = useRef<HTMLFieldSetElement>(null);
+  // The page's sections in the order they appear on the site, for the outline above the form.
+  const sections = useMemo(
+    () =>
+      toFields(GLOBALS[settingKey], GLOBAL_FIELD_UI[settingKey])
+        .filter((field) => field.widget === 'group' || field.widget === 'list')
+        .map((field) => ({ name: field.name, label: field.label })),
+    [settingKey],
+  );
+  const jumpTo = (name: string) =>
+    formRef.current
+      ?.querySelector(`[data-section="${CSS.escape(name)}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const autosave = useAutosave<unknown>({
     version,
@@ -111,8 +125,18 @@ export function DraftGlobalForm({
             {CONFLICT_MESSAGE}
           </p>
         ) : null}
+        {sections.length > 1 ? (
+          <nav aria-label='Sections on this page' className='flex flex-wrap items-center gap-2'>
+            <span className='text-sm text-muted-foreground'>On this page:</span>
+            {sections.map((section) => (
+              <Button key={section.name} type='button' variant='outline' size='sm' onClick={() => jumpTo(section.name)}>
+                {section.label}
+              </Button>
+            ))}
+          </nav>
+        ) : null}
         {/* Read-only for roles that can read but not update; the API still refuses their writes. */}
-        <fieldset disabled={!canUpdate} className='min-w-0'>
+        <fieldset ref={formRef} disabled={!canUpdate} className='min-w-0'>
           <SchemaForm
             key={`${version}:${formKey}`}
             schema={GLOBALS[settingKey]}

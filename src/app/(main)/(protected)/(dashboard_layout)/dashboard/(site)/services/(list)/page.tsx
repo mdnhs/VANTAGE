@@ -40,7 +40,7 @@ export default async function ServicesListPage() {
         tabs={[
           {
             value: 'hero',
-            label: 'Hero',
+            label: 'Page text',
             content: <GlobalEditor title='Services page' keys={['page.services']} embedded />,
           },
           {

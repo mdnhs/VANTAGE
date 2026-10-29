@@ -234,7 +234,7 @@ export function ServiceForm({
           },
           {
             value: 'seo',
-            label: 'SEO',
+            label: 'Search & sharing',
             content: (
               <SeoFieldsCard
                 value={form.seo}

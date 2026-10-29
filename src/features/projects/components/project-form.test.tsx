@@ -69,7 +69,7 @@ describe('ProjectForm', () => {
     fill();
     fireEvent.click(screen.getByText('pick After'));
     fireEvent.click(screen.getByText('pick Before'));
-    fireEvent.click(screen.getByRole('tab', { name: 'SEO' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Search & sharing' }));
     fireEvent.change(await screen.findByLabelText('SEO title'), { target: { value: 'BMW respray Dublin' } });
     fireEvent.click(screen.getByRole('switch', { name: 'Hide from search engines' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));

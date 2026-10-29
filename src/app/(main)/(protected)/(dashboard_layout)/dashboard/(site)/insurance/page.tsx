@@ -29,7 +29,7 @@ export default async function InsurancePageContentPage() {
         tabs={[
           {
             value: 'content',
-            label: 'Page copy',
+            label: 'Page text',
             content: <GlobalEditor title='Insurance page' keys={['page.insurance']} embedded />,
           },
           ...seo,

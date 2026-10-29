@@ -129,7 +129,7 @@ export function LegalPageForm({
           },
           {
             value: 'seo',
-            label: 'SEO',
+            label: 'Search & sharing',
             content: (
               <SeoFieldsCard
                 value={seo}

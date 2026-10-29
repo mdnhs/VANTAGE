@@ -29,7 +29,7 @@ export default async function AboutPageContentPage() {
         tabs={[
           {
             value: 'content',
-            label: 'Page copy',
+            label: 'Page text',
             content: <GlobalEditor title='About page' keys={['page.about']} embedded />,
           },
           ...seo,

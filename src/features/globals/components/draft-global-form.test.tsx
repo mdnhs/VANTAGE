@@ -106,6 +106,19 @@ describe('website page copy editor', () => {
     expect(publish.body).toMatchObject({ version: 1, value: { hero: { eyebrow: 'Live badge' } } });
   });
 
+  it('lists the page sections in site order and scrolls to the one clicked', async () => {
+    const scrolled: string[] = [];
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      scrolled.push(this.getAttribute('data-section') ?? '');
+    });
+    renderForm();
+    const outline = await screen.findByRole('navigation', { name: 'Sections on this page' });
+    const names = Array.from(outline.querySelectorAll('button')).map((b) => b.textContent);
+    expect(names).toEqual(['Top banner', 'FAQ']);
+    fireEvent.click(screen.getByRole('button', { name: 'FAQ' }));
+    expect(scrolled).toEqual(['faq']);
+  });
+
   it('is read-only without update permission and never writes a draft', async () => {
     can.value = false;
     renderForm();

@@ -30,7 +30,7 @@ export default async function ProcessPageContentPage() {
         tabs={[
           {
             value: 'header',
-            label: 'Header',
+            label: 'Page text',
             content: <GlobalEditor title='Process page' keys={['page.process']} embedded />,
           },
           {
