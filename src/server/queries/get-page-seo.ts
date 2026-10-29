@@ -119,7 +119,7 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
     ...pages
       // A page whose canonical points elsewhere is not listed under its own address.
       .filter(({ page, seo }) => !seo.noindex && isSelfCanonical(seo.canonical, page.path))
-      .map(({ page, lastModified }) => ({
+      .map(({ page, lastModified }): SitemapEntry => ({
         path: page.path,
         changeFrequency: page.id === 'home' ? 'weekly' : 'monthly',
         priority: page.id === 'home' ? 1 : 0.6,
