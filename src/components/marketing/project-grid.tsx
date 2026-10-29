@@ -23,7 +23,7 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
   const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
   return (
-    <article className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'>
+    <article className='group relative flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'>
       {/* Photo with Before/After toggle */}
       <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
         {current && (
@@ -42,7 +42,7 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
             type='button'
             onClick={() => setMode((prev) => (prev === 'before' ? 'after' : 'before'))}
             aria-label={currentMode === 'after' ? 'Show before photo' : 'Show after photo'}
-            className='absolute top-4 left-4 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-[7px] font-site-body text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none'
+            className='absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-[7px] font-site-body text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none'
           >
             <span
               className={`tracking-[0.6px] ${currentMode === 'before' ? 'font-medium text-white' : 'text-[#737373]'}`}
@@ -76,7 +76,12 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
             {project.serviceCategory}
           </span>
           <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
-            <Link href={projectPath(project.slug)} className='transition-colors hover:text-brand'>
+            {/* Stretched over the whole card (the ::after layer), so a click anywhere opens the
+                        project; the Before/After toggle sits above it with z-10. */}
+            <Link
+              href={projectPath(project.slug)}
+              className="transition-colors outline-none group-hover:text-brand after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-brand"
+            >
               {project.title}
             </Link>
           </h3>
