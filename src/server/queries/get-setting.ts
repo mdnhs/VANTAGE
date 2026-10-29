@@ -31,6 +31,15 @@ async function readSetting<K extends PublicGlobalKey>(key: K): Promise<GlobalVal
   const row = await settingsRepository.get(key);
   // The admin live preview (draft mode, behind GET /preview) shows unpublished page copy;
   // draft-mode requests bypass this cache, so a draft never reaches the shared entry.
-  const preview = isPreviewableGlobal(key) && (await draftMode()).isEnabled;
+  const preview = isPreviewableGlobal(key) && (await inDraftMode());
   return parseGlobal(key, preview && row?.draft != null ? row.draft : row?.value);
+}
+
+// Outside a request (scripts, jobs, tests) draftMode() throws: that is never the admin preview.
+async function inDraftMode(): Promise<boolean> {
+  try {
+    return (await draftMode()).isEnabled;
+  } catch {
+    return false;
+  }
 }
