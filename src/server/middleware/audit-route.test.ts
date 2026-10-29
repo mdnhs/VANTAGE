@@ -69,7 +69,6 @@ const ROUTE_FILES = [
   'projects',
   'testimonials',
   'partner-logos',
-  'homepage-pillars',
   'homepage-catalogs',
   'homepage-process-steps',
 ];

@@ -2,7 +2,6 @@ import { PageHeader } from '@/components/admin/dashboard/page-header';
 import type { Metadata } from 'next';
 import { requirePermission } from '@/server/lib/auth/session';
 import { permissionFor } from '@/lib/admin/route-permissions';
-import { homepagePillarService } from '@/server/services/homepage-pillar-service';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { testimonialService } from '@/server/services/testimonial-service';
@@ -19,8 +18,7 @@ export const instant = false;
 
 export default async function HomePageContentPage() {
   await requirePermission(permissionFor('/dashboard/home-page'));
-  const [pillars, catalogItems, processSteps, testimonials, partnerLogos] = await Promise.all([
-    homepagePillarService.listAdmin({ page: 1, limit: 50 }),
+  const [catalogItems, processSteps, testimonials, partnerLogos] = await Promise.all([
     homepageCatalogService.listAdmin({ page: 1, limit: 50 }),
     homepageProcessStepService.listAdmin({ page: 1, limit: 50 }),
     testimonialService.listAdmin({ page: 1, limit: 50 }),
@@ -31,10 +29,9 @@ export default async function HomePageContentPage() {
     <div className='flex flex-col gap-6'>
       <PageHeader
         title='Home page'
-        description='Page copy & media (edits show in a live preview and go live when you publish), feature pillars, catalog items, process steps, testimonials and partner logos shown on the homepage.'
+        description='Everything on the homepage, top to bottom: banner text and media (edits show in a live preview and go live when you publish), service cards, process steps, reviews and partner logos.'
       />
       <HomePageTabs
-        pillars={{ data: pillars.rows, total: pillars.total }}
         catalogItems={{ data: catalogItems.rows, total: catalogItems.total }}
         processSteps={{ data: processSteps.rows, total: processSteps.total }}
         testimonials={{ data: testimonials.rows, total: testimonials.total }}

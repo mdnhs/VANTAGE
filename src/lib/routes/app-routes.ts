@@ -42,7 +42,7 @@ export const APP_ROUTES = {
     processPage: {
       index: '/dashboard/process-page',
     },
-    // `index` points back at the relevant Home page tab — pillars/process steps/testimonials/
+    // `index` points back at the relevant Home page tab — process steps/testimonials/
     // partner logos no longer have their own standalone list page, only create/edit (used by
     // the table's "Cancel").
     testimonials: {
@@ -54,11 +54,6 @@ export const APP_ROUTES = {
       index: '/dashboard/home-page?tab=partner-logos',
       create: '/dashboard/partner-logos/create',
       edit: (id: string) => `/dashboard/partner-logos/${id}/edit`,
-    },
-    homepagePillars: {
-      index: '/dashboard/home-page?tab=pillars',
-      create: '/dashboard/homepage-pillars/create',
-      edit: (id: string) => `/dashboard/homepage-pillars/${id}/edit`,
     },
     homepageCatalogs: {
       index: '/dashboard/home-page?tab=catalog',

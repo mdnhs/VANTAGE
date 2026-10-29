@@ -69,9 +69,8 @@ export const NAV: readonly NavItem[] = [
         label: 'Home page',
         href: '/dashboard/home-page',
         permission: { page: ['read'] },
-        keywords: ['homepage', 'pillars', 'catalogs', 'steps', 'testimonials', 'partners', 'logos'],
+        keywords: ['homepage', 'catalogs', 'steps', 'testimonials', 'partners', 'logos'],
         match: [
-          '/dashboard/homepage-pillars',
           '/dashboard/homepage-catalogs',
           '/dashboard/homepage-process-steps',
           '/dashboard/testimonials',

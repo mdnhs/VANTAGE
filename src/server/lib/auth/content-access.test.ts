@@ -57,7 +57,7 @@ describe('assertContentWrite', () => {
     refuses(() => assertContentWrite(author, { type: 'project', action: 'reorder', row: own }), EDITOR);
   });
   it('refuses every other content type', () => {
-    for (const type of ['service', 'testimonial', 'partner-logo', 'pillar', 'catalog', 'process-step'] as const) {
+    for (const type of ['service', 'testimonial', 'partner-logo', 'catalog', 'process-step'] as const) {
       for (const action of ['create', 'update', 'reorder'] as const) {
         refuses(() => assertContentWrite(author, { type, action }), OWN);
       }

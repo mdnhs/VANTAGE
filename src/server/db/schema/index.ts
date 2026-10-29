@@ -9,7 +9,6 @@ export * from './projects';
 export * from './project-gallery-images';
 export * from './testimonials';
 export * from './partner-logos';
-export * from './homepage-pillars';
 export * from './homepage-process-steps';
 export * from './homepage-catalogs';
 export * from './quote-requests';

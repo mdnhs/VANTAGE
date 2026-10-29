@@ -54,15 +54,6 @@ export const API_ROUTES = {
     remove: (id: string) => `/partner-logos/${id}`,
     reorder: '/partner-logos/reorder',
   },
-  homepagePillars: {
-    public: '/homepage-pillars',
-    adminList: '/homepage-pillars/admin/list',
-    detail: (id: string) => `/homepage-pillars/${id}`,
-    create: '/homepage-pillars',
-    update: (id: string) => `/homepage-pillars/${id}`,
-    remove: (id: string) => `/homepage-pillars/${id}`,
-    reorder: '/homepage-pillars/reorder',
-  },
   homepageCatalogs: {
     public: '/homepage-catalogs',
     adminList: '/homepage-catalogs/admin/list',

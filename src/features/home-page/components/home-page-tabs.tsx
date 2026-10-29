@@ -5,18 +5,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCan } from '@/contexts/actor-provider';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { PageSeoTab } from '@/features/seo/components/page-seo-tab';
-import { PillarsPanel } from './sections/pillars-panel';
 import { CatalogPanel } from './sections/catalog-panel';
 import { ProcessPanel } from './sections/process-panel';
 import { TestimonialsPanel } from './sections/testimonials-panel';
 import { PartnerLogosPanel } from './sections/partner-logos-panel';
-import type { HomepagePillar } from '@/features/homepage-pillars/types';
 import type { HomepageProcessStep } from '@/features/homepage-process-steps/types';
 import type { Testimonial } from '@/features/testimonials/types';
 import type { PartnerLogo } from '@/features/partner-logos/types';
 import type { HomepageCatalog } from '@/features/homepage-catalogs/types';
 
-// In the order the sections appear on the homepage; Pillars last, as nothing shows them yet.
+// In the order the sections appear on the homepage.
 const SECTIONS = [
   { value: 'copy', label: 'Top banner & text' },
   { value: 'catalog', label: 'Service cards' },
@@ -24,11 +22,9 @@ const SECTIONS = [
   { value: 'testimonials', label: 'Reviews' },
   { value: 'partner-logos', label: 'Partner logos' },
   { value: 'seo', label: 'Search & sharing' },
-  { value: 'pillars', label: 'Pillars (not on the site)' },
 ] as const;
 
 export interface HomePageTabsProps {
-  pillars: { data: HomepagePillar[]; total: number };
   catalogItems: { data: HomepageCatalog[]; total: number };
   processSteps: { data: HomepageProcessStep[]; total: number };
   testimonials: { data: Testimonial[]; total: number };
@@ -36,10 +32,10 @@ export interface HomePageTabsProps {
 }
 
 // One tab per homepage content type. "Page copy" (hero, trust badges, catalog header) is the
-// versioned `page.home` global edited with GlobalEditor; pillars/catalog items/process steps/
+// versioned `page.home` global edited with GlobalEditor; catalog items/process steps/
 // testimonials/partner logos are each their own CRUD tables. Tab is kept in the URL (?tab=...)
 // via nuqs.
-export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials, partnerLogos }: HomePageTabsProps) {
+export function HomePageTabs({ catalogItems, processSteps, testimonials, partnerLogos }: HomePageTabsProps) {
   const canSeo = useCan({ seo: ['read'] });
   const sections = SECTIONS.filter((section) => section.value !== 'seo' || canSeo);
   const values = sections.map((section) => section.value);
@@ -64,12 +60,6 @@ export function HomePageTabs({ pillars, catalogItems, processSteps, testimonials
       <div className='min-w-0'>
         <TabsContent value='copy'>
           <GlobalEditor title='Home page' keys={['page.home']} embedded />
-        </TabsContent>
-        <TabsContent value='pillars' className='flex flex-col gap-4'>
-          <p role='note' className='rounded-xl border border-warning/40 bg-warning-soft p-3 text-sm'>
-            No page on the website shows pillars at the moment, so edits here are not visible to visitors.
-          </p>
-          <PillarsPanel initialData={pillars} />
         </TabsContent>
         <TabsContent value='catalog'>
           <CatalogPanel catalogItems={catalogItems} />

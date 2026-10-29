@@ -232,6 +232,13 @@
       "when": 1793240980956,
       "tag": "0032_content_page_seo",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793295921111,
+      "tag": "0033_drop_homepage_pillars",
+      "breakpoints": true
     }
   ]
 }

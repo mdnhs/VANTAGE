@@ -220,8 +220,8 @@ describe('isActivePath', () => {
   });
 
   it('deep links light the right link', () => {
-    expect(isActivePath('/dashboard/homepage-pillars/x/edit', link('website-home'))).toBe(true);
-    expect(isActivePath('/dashboard/homepage-pillars/x/edit', link('website-services'))).toBe(false);
+    expect(isActivePath('/dashboard/homepage-catalogs/x/edit', link('website-home'))).toBe(true);
+    expect(isActivePath('/dashboard/homepage-catalogs/x/edit', link('website-services'))).toBe(false);
     expect(isActivePath('/dashboard/testimonials/create', link('website-home'))).toBe(true);
     expect(isActivePath('/dashboard/services/abc/edit', link('website-services'))).toBe(true);
     expect(isActivePath('/dashboard/quotes/123', link('enquiries-quotes'))).toBe(true);
@@ -248,7 +248,7 @@ describe('isActivePath', () => {
 
 describe('activeSection', () => {
   it('returns the section for deep links of a multi-link section', () => {
-    expect(activeSection('/dashboard/homepage-pillars/x/edit', ['owner'])?.id).toBe('website');
+    expect(activeSection('/dashboard/homepage-catalogs/x/edit', ['owner'])?.id).toBe('website');
     expect(activeSection('/dashboard/quotes/123', ['owner'])?.id).toBe('enquiries');
     expect(activeSection('/dashboard/marketing/consent', ['owner'])?.id).toBe('marketing');
   });

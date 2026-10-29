@@ -6,7 +6,6 @@ export const PERMISSIONS = {
   PROJECTS_MANAGE: 'content.projects.manage',
   TESTIMONIALS_MANAGE: 'content.testimonials.manage',
   LOGOS_MANAGE: 'content.logos.manage',
-  PILLARS_MANAGE: 'content.pillars.manage',
   CATALOG_MANAGE: 'content.catalog.manage',
   PROCESS_MANAGE: 'content.process.manage',
   SETTINGS_MANAGE: 'content.settings.manage',

@@ -78,7 +78,7 @@ describe('permissionFor', () => {
   });
 
   it('ignores a query string and trailing slash', () => {
-    expect(permissionFor('/dashboard/home-page?tab=pillars')).toEqual({ page: ['read'] });
+    expect(permissionFor('/dashboard/home-page?tab=catalog')).toEqual({ page: ['read'] });
     expect(permissionFor('/dashboard/quotes/')).toEqual({ quote: ['read'] });
   });
 

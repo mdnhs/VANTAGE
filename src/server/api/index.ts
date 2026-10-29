@@ -20,7 +20,6 @@ import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
 import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
-import { homepagePillars } from './homepage-pillars';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { partnerLogos } from './partner-logos';
 import { preview } from './preview';
@@ -91,7 +90,6 @@ export const api = app
   .route('/projects', projects)
   .route('/testimonials', testimonials)
   .route('/partner-logos', partnerLogos)
-  .route('/homepage-pillars', homepagePillars)
   .route('/homepage-catalogs', homepageCatalogs)
   .route('/homepage-process-steps', homepageProcessSteps)
   .route('/quotes', quoteRequests)
