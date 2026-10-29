@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { FieldDescription } from '@/components/ui/field';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -135,10 +136,14 @@ export function ServiceForm({
                   <CardContent className='grid gap-4 sm:grid-cols-2'>
                     <div className='flex flex-col gap-1.5'>
                       <Label htmlFor='name'>Name</Label>
+                      <FieldDescription>The service title, on the Services page and its own page.</FieldDescription>
                       <Input id='name' value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
                     </div>
                     <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='slug'>Slug</Label>
+                      <Label htmlFor='slug'>Page address</Label>
+                      <FieldDescription>
+                        The page lives at /services/{form.slug || '…'}. Lowercase words joined by hyphens.
+                      </FieldDescription>
                       <Input
                         id='slug'
                         value={form.slug}
@@ -151,7 +156,10 @@ export function ServiceForm({
                       />
                     </div>
                     <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label htmlFor='description'>Description</Label>
+                      <Label htmlFor='description'>Short description</Label>
+                      <FieldDescription>
+                        A sentence or two, on the service card and under the title of its own page.
+                      </FieldDescription>
                       <Textarea
                         id='description'
                         value={form.description}
@@ -160,7 +168,8 @@ export function ServiceForm({
                       />
                     </div>
                     <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label htmlFor='checklist'>Checklist (one item per line)</Label>
+                      <Label htmlFor='checklist'>What&apos;s included</Label>
+                      <FieldDescription>One item per line; each gets a green tick.</FieldDescription>
                       <Textarea
                         id='checklist'
                         value={form.checklist}
@@ -175,10 +184,11 @@ export function ServiceForm({
                         checked={form.isEnabled}
                         onCheckedChange={(checked) => setField('isEnabled', checked)}
                       />
-                      <Label htmlFor='isEnabled'>Visible on the public site</Label>
+                      <Label htmlFor='isEnabled'>Show on the website</Label>
                     </div>
                     <div className='flex flex-col gap-1.5 sm:col-span-2'>
                       <Label>Icon</Label>
+                      <FieldDescription>Small icon on the service card. Empty uses a built-in icon.</FieldDescription>
                       <MediaField
                         kind='image'
                         label='Icon'
@@ -188,7 +198,10 @@ export function ServiceForm({
                       />
                     </div>
                     <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label>Image</Label>
+                      <Label>Photo</Label>
+                      <FieldDescription>
+                        On the service card and its own page. Empty uses a built-in workshop photo.
+                      </FieldDescription>
                       <MediaField
                         kind='image'
                         label='Image'
@@ -202,10 +215,10 @@ export function ServiceForm({
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Detail page</CardTitle>
+                    <CardTitle>More about this service</CardTitle>
                     <CardDescription>
-                      The body of this service&apos;s own page{form.slug ? ` (/services/${form.slug})` : ''}, shown
-                      under the image. The name, description, checklist and image above appear there too.
+                      Longer text for this service&apos;s own page, shown below the photo. Use headings and lists to
+                      break it up. Leave empty if the short description is enough.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
