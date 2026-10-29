@@ -86,6 +86,13 @@ export const NAV: readonly NavItem[] = [
         keywords: ['offer', 'plans'],
       },
       {
+        id: 'website-legal-pages',
+        label: 'Legal pages',
+        href: '/dashboard/legal-pages',
+        permission: { content: ['read'] },
+        keywords: ['privacy', 'terms', 'cookie', 'policy'],
+      },
+      {
         id: 'website-work',
         label: 'Our work',
         href: '/dashboard/projects',

@@ -11,7 +11,7 @@ export type ContentTarget =
       patch?: Record<string, unknown>;
     }
   | {
-      type: 'service' | 'testimonial' | 'partner-logo' | 'pillar' | 'catalog' | 'process-step';
+      type: 'service' | 'testimonial' | 'partner-logo' | 'pillar' | 'catalog' | 'process-step' | 'legal-page';
       action: 'create' | 'update' | 'reorder';
     };
 

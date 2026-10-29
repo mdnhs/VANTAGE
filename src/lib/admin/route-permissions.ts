@@ -34,6 +34,7 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
   ...(
     [
       'services',
+      'legal-pages',
       'projects',
       'testimonials',
       'partner-logos',

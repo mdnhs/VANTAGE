@@ -7,6 +7,7 @@ import type { AppEnv } from '@/server/api/types';
 import { zValidator } from '@/server/lib/validator';
 import { getSetting } from '@/server/queries/get-setting';
 import { getRedirectTable } from '@/server/queries/get-redirect-table';
+import { legalPageService } from '@/server/services/legal-page-service';
 import { recordHit } from '@/server/services/redirect-service';
 
 // Never throws: with no usable secret the redirect is still answered, just not counted.
@@ -20,7 +21,8 @@ const hitSecret = () => {
 export const resolve = new Hono<AppEnv>()
   .get('/', zValidator('query', z.object({ path: z.string().startsWith('/').max(512) })), async (c) => {
     const { path } = c.req.valid('query');
-    const result = resolvePath(await getRedirectTable(), path);
+    const [table, legalSlugs] = await Promise.all([getRedirectTable(), legalPageService.publishedSlugs()]);
+    const result = resolvePath(table, path, legalSlugs);
     // Only the proxy's signed, non-prefetch GET counts as a visit.
     const secret = hitSecret();
     if (result.kind === 'redirect' && secret && isHitToken(secret, path, c.req.header(HIT_HEADER))) {

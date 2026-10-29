@@ -30,6 +30,7 @@ import { publicStamp } from './public-stamp';
 import { quoteRequests } from './quote-requests';
 import { resolve } from './resolve';
 import { services } from './services';
+import { legalPages } from './legal-pages';
 import { siteSettings } from './site-settings';
 import { testimonials } from './testimonials';
 
@@ -86,6 +87,7 @@ export const api = app
   .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)
   .route('/services', services)
+  .route('/legal-pages', legalPages)
   .route('/projects', projects)
   .route('/testimonials', testimonials)
   .route('/partner-logos', partnerLogos)

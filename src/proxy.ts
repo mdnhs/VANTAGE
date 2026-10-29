@@ -46,7 +46,12 @@ const isSitePath = (value: unknown): value is string =>
   // The URL parser strips tab/LF/CR, so "/\t/evil" would become "//evil".
   !/[\x00-\x20\\]/.test(value);
 
-type Resolution = { kind: 'pass' } | { kind: 'redirect'; destination: unknown; statusCode: unknown };
+type Resolution =
+  { kind: 'pass' } | { kind: 'redirect'; destination: unknown; statusCode: unknown } | { kind: 'missing' };
+
+// No route serves this two-segment path, so a rewrite here renders the app's not-found page with
+// a real 404 status (the root [slug] route alone could only stream a soft 404).
+export const MISSING_PATH = '/_missing/page';
 
 // Link prefetches are not visits: they must not count as redirect hits.
 export const isPrefetch = (request: NextRequest) =>
@@ -68,7 +73,7 @@ async function resolve(pathname: string, countHit: boolean): Promise<Resolution 
     });
     if (res.status !== 200) return null;
     const body = (await res.json()) as Resolution;
-    return body && (body.kind === 'pass' || body.kind === 'redirect') ? body : null;
+    return body && (body.kind === 'pass' || body.kind === 'redirect' || body.kind === 'missing') ? body : null;
   } catch {
     return null;
   }
@@ -154,6 +159,7 @@ async function publicRoute(request: NextRequest) {
   if (hit?.kind === 'redirect') {
     return redirectResponse(request, hit.destination, hit.statusCode) ?? NextResponse.next();
   }
+  if (hit?.kind === 'missing') return NextResponse.rewrite(new URL(MISSING_PATH, request.url));
   return NextResponse.next();
 }
 

@@ -15,6 +15,14 @@ export const API_ROUTES = {
     remove: (id: string) => `/services/${id}`,
     reorder: '/services/reorder',
   },
+  legalPages: {
+    adminList: '/legal-pages/admin/list',
+    detail: (id: string) => `/legal-pages/${id}`,
+    create: '/legal-pages',
+    update: (id: string) => `/legal-pages/${id}`,
+    remove: (id: string) => `/legal-pages/${id}`,
+    reorder: '/legal-pages/reorder',
+  },
   projects: {
     public: '/projects',
     featured: '/projects/featured',

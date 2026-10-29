@@ -73,7 +73,8 @@ describe('defaults equal today’s public copy', () => {
     expect(nav.cta).toMatchObject({ label: 'Get a Free Quote', shortLabel: 'Free Quote', href: '/#estimator' });
     const footer = parseGlobal('footer', {});
     expect(footer.columns.map((c) => c.title)).toEqual(['Services', 'Company']);
-    expect(footer.legalLinks.map((l) => l.label)).toEqual(['Privacy Policy', 'Terms of Service', 'Login']);
+    // Legal pages are listed from Dashboard → Legal pages; the old #privacy/#terms placeholders are gone.
+    expect(footer.legalLinks).toEqual([{ label: 'Login', href: '/login' }]);
     // Blank: the footer then prints the site name (settings.businessName), as before.
     expect(footer.copyrightName).toBe('');
   });

@@ -17,6 +17,7 @@ import { settingsRepository } from '@/server/repositories/settings-repository';
 import { loadPublicImages } from '@/server/lib/media/resolve';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { getSetting } from '@/server/queries/get-setting';
+import { legalPageService } from '@/server/services/legal-page-service';
 import { serviceService } from '@/server/services/service-service';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 
@@ -74,7 +75,7 @@ const latest = (dates: (Date | null | undefined)[]) =>
 // Each entry is dated by its own stored rows (copy, SEO, and the services/projects it lists).
 export async function getSitemapEntries(): Promise<SitemapEntry[]> {
   'use cache';
-  cacheTag(settingTag('seo'), CACHE_TAGS.all('services'), CACHE_TAGS.all('projects'));
+  cacheTag(settingTag('seo'), CACHE_TAGS.all('services'), CACHE_TAGS.all('projects'), CACHE_TAGS.all('legal-pages'));
   for (const page of PUBLIC_PAGE_LIST) {
     cacheTag(settingTag(seoPageKey(page.id)));
     if (page.pageKey) cacheTag(settingTag(page.pageKey));
@@ -115,6 +116,12 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
     priority: 0.5,
     lastModified: updatedAt,
   }));
+  const legal = (await legalPageService.listPublishedForSitemap()).map(({ slug, publishedAt }): SitemapEntry => ({
+    path: `/${slug}`,
+    changeFrequency: 'yearly',
+    priority: 0.3,
+    ...(publishedAt ? { lastModified: publishedAt } : {}),
+  }));
   return [
     ...pages
       // A page whose canonical points elsewhere is not listed under its own address.
@@ -126,5 +133,6 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
         ...(lastModified ? { lastModified } : {}),
       })),
     ...serviceDetails,
+    ...legal,
   ];
 }

@@ -3,7 +3,7 @@ import { revalidateTag } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { db } from '@/server/db';
-import { redirects } from '@/server/db/schema';
+import { legalPages, redirects } from '@/server/db/schema';
 
 import { serverEnv } from '@/lib/env';
 import { HIT_HEADER, hitToken } from '@/lib/seo/hit-token';
@@ -28,7 +28,7 @@ const pending: Promise<unknown>[] = [];
 beforeEach(async () => {
   pending.length = 0;
   vi.mocked(revalidateTag).mockClear();
-  await db.execute(sql`truncate table redirects cascade`);
+  await db.execute(sql`truncate table redirects, legal_pages cascade`);
 });
 
 const signed = (path: string) => ({ [HIT_HEADER]: hitToken(serverEnv().AUTH_SECRET, path) });
@@ -89,13 +89,28 @@ describe('GET /resolve', () => {
     expect(await (await resolve('/about.html')).json()).toMatchObject({ kind: 'redirect', destination: '/services' });
   });
 
-  it('passes an inactive row, a live page and an unknown path without a hit', async () => {
-    await db.insert(redirects).values({ sourcePath: '/off', destination: '/services', isActive: false });
+  it('passes a live page and a deeper unknown path without a hit', async () => {
     await db.insert(redirects).values({ sourcePath: '/services-old', destination: '/services' });
-    expect(await (await resolve('/off')).json()).toEqual({ kind: 'pass' });
     expect(await (await resolve('/services')).json()).toEqual({ kind: 'pass' });
-    expect(await (await resolve('/zzz')).json()).toEqual({ kind: 'pass' });
+    expect(await (await resolve('/zzz/deeper')).json()).toEqual({ kind: 'pass' });
     expect(pending).toHaveLength(0);
+  });
+
+  it('calls an unknown or switched-off single-segment address missing, so it gets a real 404', async () => {
+    await db.insert(redirects).values({ sourcePath: '/off', destination: '/services', isActive: false });
+    expect(await (await resolve('/off')).json()).toEqual({ kind: 'missing' });
+    expect(await (await resolve('/zzz')).json()).toEqual({ kind: 'missing' });
+    expect(pending).toHaveLength(0);
+  });
+
+  it('passes a published legal page and calls a draft one missing', async () => {
+    const content = { type: 'doc' as const, content: [] };
+    await db.insert(legalPages).values([
+      { title: 'Privacy', slug: 'privacy-policy', content, status: 'published', publishedAt: new Date() },
+      { title: 'Terms', slug: 'terms', content },
+    ]);
+    expect(await (await resolve('/privacy-policy')).json()).toEqual({ kind: 'pass' });
+    expect(await (await resolve('/terms')).json()).toEqual({ kind: 'missing' });
   });
 
   it('is 422 for a path that does not start with /', async () => {
