@@ -1,6 +1,6 @@
 'use client';
 
-import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { PageHeader, TOOLBAR_CHIP, TOOLBAR_ICON } from '@/components/admin/dashboard/page-header';
 import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo } from 'react';
 import { Archive, Inbox, MailOpen, Reply, Search, Sparkles, X, RefreshCw, ShieldAlert } from 'lucide-react';
@@ -99,17 +99,20 @@ export function ContactInboxView({ initialData, initialStats }: ContactInboxView
               disabled={isRefreshing}
               title='Refresh'
               aria-label='Refresh inbox'
-              className='size-7'
+              className={TOOLBAR_ICON}
             >
-              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
+              <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
             </Button>
-            {currentStats.new > 0 && (
-              <span className='inline-flex items-center gap-1.5 rounded-full bg-red-600/10 px-2.5 py-1 font-semibold text-red-600 dark:bg-red-600/20 dark:text-red-400'>
-                <span className='size-1.5 animate-pulse rounded-full bg-red-600' />
-                {currentStats.new} new
-              </span>
-            )}
-            <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
+            <span className={TOOLBAR_CHIP}>
+              {currentStats.new > 0 && (
+                <>
+                  <span className='inline-flex items-center gap-1.5 font-semibold text-primary'>
+                    <span className='size-1.5 animate-pulse rounded-full bg-primary' />
+                    {currentStats.new} new
+                  </span>
+                  <span aria-hidden className='h-4 w-px bg-border' />
+                </>
+              )}
               {messages.length} of {currentStats.all} total
             </span>
           </>

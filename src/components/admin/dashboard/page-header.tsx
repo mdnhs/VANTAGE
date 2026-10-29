@@ -1,10 +1,17 @@
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Page title row with the primary/secondary button pair.
-export const PRIMARY_ACTION = 'h-10 gap-2 rounded-xl px-4 text-sm font-semibold';
+// Page title row actions. Everything in that row is one height (h-9) so a
+// primary button, outline tools, icon buttons and count chips line up.
+export const PRIMARY_ACTION = 'h-9 gap-1.5 rounded-lg px-3.5 text-sm font-semibold';
 export const SECONDARY_ACTION =
-  'h-10 gap-2 rounded-xl border-primary px-4 text-sm font-semibold text-primary hover:bg-accent hover:text-accent-foreground';
+  'h-9 gap-1.5 rounded-lg border-primary px-3.5 text-sm font-semibold text-primary hover:bg-accent hover:text-accent-foreground';
+// Plain outline/ghost tools in the same row (Export CSV, Call, Email...).
+export const TOOLBAR_ACTION = "h-9 gap-1.5 rounded-lg px-3 text-sm font-medium [&_svg:not([class*='size-'])]:size-4";
+export const TOOLBAR_ICON = 'size-9 rounded-lg';
+// Read-only count shown in the row ("7 total", "2 new").
+export const TOOLBAR_CHIP =
+  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-muted-foreground tabular-nums';
 // A form's own submit button, and anything sitting beside one.
 export const FORM_ACTION = 'h-11 rounded-xl px-5 font-semibold';
 
@@ -39,7 +46,7 @@ export function PageHeader({
         </h1>
         {description ? <p className='text-sm text-muted-foreground'>{description}</p> : null}
       </div>
-      {actions ? <div className='flex flex-wrap gap-3'>{actions}</div> : null}
+      {actions ? <div className='flex flex-wrap items-center gap-2'>{actions}</div> : null}
     </header>
   );
 }

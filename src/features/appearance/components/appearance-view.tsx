@@ -12,7 +12,7 @@ import {
   type AutosaveState,
 } from '@/components/admin/autosave/use-autosave';
 import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
-import { FORM_ACTION, PageHeader } from '@/components/admin/dashboard/page-header';
+import { PRIMARY_ACTION, PageHeader, TOOLBAR_ACTION } from '@/components/admin/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -257,13 +257,13 @@ function Editor({
           </span>
         }
         actions={
-          <div className='flex flex-wrap items-center gap-2 sm:gap-3'>
-            <Button variant='outline' className={FORM_ACTION} onClick={() => void previewOnSite()}>
+          <div className='flex flex-wrap items-center gap-2'>
+            <Button variant='outline' className={TOOLBAR_ACTION} onClick={() => void previewOnSite()}>
               Preview on site
             </Button>
             <Button
               variant='outline'
-              className={FORM_ACTION}
+              className={TOOLBAR_ACTION}
               disabled={!canUpdate || !doc.hasDraft || busy}
               onClick={() => void onDiscard()}
             >
@@ -271,7 +271,7 @@ function Editor({
             </Button>
             <Button
               variant='outline'
-              className={FORM_ACTION}
+              className={TOOLBAR_ACTION}
               disabled={!canUpdate || busy}
               onClick={() => setResetOpen(true)}
             >
@@ -279,7 +279,7 @@ function Editor({
             </Button>
             {canPublish ? (
               <Button
-                className={FORM_ACTION}
+                className={PRIMARY_ACTION}
                 disabled={
                   busy || state.status === 'saving' || issues.length > 0 || (!doc.hasDraft && state.status === 'idle')
                 }

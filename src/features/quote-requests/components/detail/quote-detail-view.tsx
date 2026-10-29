@@ -1,7 +1,6 @@
 'use client';
 
-import { PageHeader } from '@/components/admin/dashboard/page-header';
-import { quoteReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
+import { PageHeader, TOOLBAR_ACTION } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -50,6 +49,7 @@ import {
   type PaymentStatus,
   type PaymentMethod,
 } from '../../types';
+import { quoteReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 
 interface QuoteDetailViewProps {
   quote: QuoteRequest;
@@ -221,46 +221,48 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
               target='_blank'
               rel='noopener noreferrer'
               className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'gap-1.5 border-emerald-500/30 text-xs text-emerald-500 hover:bg-emerald-500/10',
+                buttonVariants({ variant: 'outline' }),
+                TOOLBAR_ACTION,
+                'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10',
               )}
             >
-              <MessageSquare className='size-3.5' />
+              <MessageSquare />
               <span>WhatsApp</span>
             </a>
 
             <a
               href={`tel:${phoneDigits}`}
               className={cn(
-                buttonVariants({ variant: 'outline', size: 'sm' }),
-                'gap-1.5 border-blue-500/30 text-xs text-blue-500 hover:bg-blue-500/10',
+                buttonVariants({ variant: 'outline' }),
+                TOOLBAR_ACTION,
+                'border-blue-500/30 text-blue-500 hover:bg-blue-500/10',
               )}
             >
-              <Phone className='size-3.5' />
+              <Phone />
               <span>Call Customer</span>
             </a>
 
             <a
               href={replyMailto(initialQuote.email, quoteReplySubject(siteName))}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'gap-1.5 text-xs')}
+              className={cn(buttonVariants({ variant: 'outline' }), TOOLBAR_ACTION)}
             >
-              <Mail className='size-3.5' />
+              <Mail />
               <span>Email</span>
             </a>
 
             <Button
               type='button'
               variant='destructive'
-              size='sm'
               onClick={handleDelete}
               disabled={deleteQuote.isPending}
-              className='gap-1.5 text-xs'
+              className={TOOLBAR_ACTION}
             >
-              <Trash2 className='size-3.5' />
+              <Trash2 />
               <span>Delete</span>
             </Button>
 
             <SpamActions
+              className={TOOLBAR_ACTION}
               kind='quote'
               id={initialQuote.id}
               status={initialQuote.status}

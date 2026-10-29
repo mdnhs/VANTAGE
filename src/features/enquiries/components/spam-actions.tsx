@@ -3,6 +3,7 @@
 import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useActor, useCan } from '@/contexts/actor-provider';
 import { useUpdateContactMessage } from '@/features/contact-messages/hooks/api/mutation/use-update-contact-message';
 import { useUpdateQuoteRequest } from '@/features/quote-requests/hooks/api/mutation/use-update-quote-request';
@@ -14,9 +15,10 @@ interface SpamActionsProps {
   status: string;
   spamReason?: SpamReason | string | null;
   hasBilling?: boolean;
+  className?: string;
 }
 
-export function SpamActions({ kind, id, status }: SpamActionsProps) {
+export function SpamActions({ kind, id, status, className }: SpamActionsProps) {
   const actor = useActor();
   const canUpdate = useCan(kind === 'quote' ? { quote: ['update'] } : { contact: ['update'] });
   const isViewingAs = Boolean(actor.impersonatedBy);
@@ -55,7 +57,7 @@ export function SpamActions({ kind, id, status }: SpamActionsProps) {
         size='sm'
         disabled={isPending}
         onClick={handleNotSpam}
-        className='h-8 gap-1.5 text-xs'
+        className={cn('h-8 gap-1.5 text-xs', className)}
       >
         <ShieldCheck className='size-3.5 text-emerald-600' />
         Not spam
@@ -70,7 +72,10 @@ export function SpamActions({ kind, id, status }: SpamActionsProps) {
       size='sm'
       disabled={isPending}
       onClick={handleMarkSpam}
-      className='h-8 gap-1.5 border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive'
+      className={cn(
+        'h-8 gap-1.5 border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive',
+        className,
+      )}
     >
       <ShieldAlert className='size-3.5' />
       Mark as spam

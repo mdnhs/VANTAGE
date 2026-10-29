@@ -4,6 +4,7 @@ import { Download, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { TOOLBAR_ACTION } from '@/components/admin/dashboard/page-header';
 import { Button } from '@/components/ui/button';
 import { useActor, useCan } from '@/contexts/actor-provider';
 
@@ -40,15 +41,15 @@ export function EnquiryActions({ type, status }: { type: 'quotes' | 'contacts'; 
   return (
     <>
       {canExport && (
-        <Button type='button' variant='outline' size='sm' disabled={busy} onClick={exportCsv}>
-          <Download className='size-3.5' />
+        <Button type='button' variant='outline' className={TOOLBAR_ACTION} disabled={busy} onClick={exportCsv}>
+          <Download />
           Export CSV
         </Button>
       )}
       {canPrivacy && (
         <>
-          <Button type='button' variant='outline' size='sm' onClick={() => setPrivacyOpen(true)}>
-            <Shield className='size-3.5' />
+          <Button type='button' variant='outline' className={TOOLBAR_ACTION} onClick={() => setPrivacyOpen(true)}>
+            <Shield />
             Privacy request
           </Button>
           <PrivacyRequestDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} canErase={canErase} />

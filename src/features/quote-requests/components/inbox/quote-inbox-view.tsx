@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/admin/dashboard/page-header';
+import { PageHeader, TOOLBAR_CHIP, TOOLBAR_ICON } from '@/components/admin/dashboard/page-header';
 import { EnquiryActions } from '@/features/enquiries/components/enquiry-actions';
 import { useState, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -158,42 +158,36 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
           <>
             <EnquiryActions type='quotes' status={viewMode === 'kanban' ? undefined : status} />
             {/* View Mode Switcher */}
-            <div className='flex items-center rounded-lg border border-border bg-muted/30 p-0.5 shadow-2xs'>
+            <div className='flex h-9 items-center rounded-lg border border-border bg-muted/30 p-0.5'>
               <Button
                 type='button'
                 size='sm'
-                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+                variant='ghost'
+                aria-pressed={viewMode === 'kanban'}
                 onClick={() => setViewMode('kanban')}
                 className={cn(
-                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                  viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs',
+                  'h-full gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground',
+                  viewMode === 'kanban' && 'bg-background font-semibold text-foreground shadow-xs hover:bg-background',
                 )}
               >
-                <Kanban className='size-3.5 text-red-600' />
+                <Kanban className='size-4' />
                 <span>Pipeline</span>
               </Button>
               <Button
                 type='button'
                 size='sm'
-                variant={viewMode === 'inbox' ? 'secondary' : 'ghost'}
+                variant='ghost'
+                aria-pressed={viewMode === 'inbox'}
                 onClick={() => setViewMode('inbox')}
                 className={cn(
-                  'h-7 gap-1.5 px-2.5 text-xs font-medium',
-                  viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs',
+                  'h-full gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground',
+                  viewMode === 'inbox' && 'bg-background font-semibold text-foreground shadow-xs hover:bg-background',
                 )}
               >
-                <LayoutList className='size-3.5 text-red-600' />
+                <LayoutList className='size-4' />
                 <span>Inbox</span>
               </Button>
             </div>
-
-            {/* New Enquiry Action Button */}
-            <NewEnquiryDialog
-              onCreated={(newId) => {
-                setSelectedId(newId);
-                // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
-              }}
-            />
 
             {/* Refresh Button */}
             <Button
@@ -204,21 +198,32 @@ export function QuoteInboxView({ initialData, initialStats }: QuoteInboxViewProp
               disabled={isRefreshing}
               title='Refresh data'
               aria-label='Refresh data'
-              className='size-8'
+              className={TOOLBAR_ICON}
             >
-              <RefreshCw className={cn('size-3.5', isRefreshing && 'animate-spin')} />
+              <RefreshCw className={cn('size-4', isRefreshing && 'animate-spin')} />
             </Button>
 
-            {/* Pipeline Summary Counter Badge */}
-            {currentStats.new > 0 && (
-              <span className='inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-1 font-semibold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400'>
-                <span className='size-1.5 animate-pulse rounded-full bg-rose-500' />
-                {currentStats.new} new
-              </span>
-            )}
-            <span className='rounded-full border border-border px-2.5 py-1 font-medium text-muted-foreground'>
+            {/* Pipeline Summary Counter */}
+            <span className={TOOLBAR_CHIP}>
+              {currentStats.new > 0 && (
+                <>
+                  <span className='inline-flex items-center gap-1.5 font-semibold text-primary'>
+                    <span className='size-1.5 animate-pulse rounded-full bg-primary' />
+                    {currentStats.new} new
+                  </span>
+                  <span aria-hidden className='h-4 w-px bg-border' />
+                </>
+              )}
               {quotes.length} total
             </span>
+
+            {/* New Enquiry Action Button */}
+            <NewEnquiryDialog
+              onCreated={(newId) => {
+                setSelectedId(newId);
+                // useSubmitQuoteRequest's onSuccess already invalidates lists()+stats().
+              }}
+            />
           </>
         }
       />

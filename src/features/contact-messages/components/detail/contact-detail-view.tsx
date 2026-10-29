@@ -1,7 +1,6 @@
 'use client';
 
-import { PageHeader } from '@/components/admin/dashboard/page-header';
-import { enquiryReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
+import { PageHeader, TOOLBAR_ACTION } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -19,6 +18,7 @@ import { ContactStatusBadge } from '../contact-status-badge';
 import { useUpdateContactMessage } from '../../hooks/api/mutation/use-update-contact-message';
 import { useDeleteContactMessage } from '../../hooks/api/mutation/use-delete-contact-message';
 import { CONTACT_STATUSES, type ContactMessage, type ContactStatus } from '../../types';
+import { enquiryReplySubject, replyMailto, useSiteName } from '@/components/admin/shell/site-name-context';
 
 interface ContactDetailViewProps {
   message: ContactMessage;
@@ -94,11 +94,12 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
                 target='_blank'
                 rel='noopener noreferrer'
                 className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
-                  'gap-1.5 text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400',
+                  buttonVariants({ variant: 'outline' }),
+                  TOOLBAR_ACTION,
+                  'text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400',
                 )}
               >
-                <MessageSquare className='size-3.5' />
+                <MessageSquare />
                 <span>WhatsApp Chat</span>
               </a>
             )}
@@ -107,11 +108,12 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
               <a
                 href={`tel:${phoneDigits}`}
                 className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
-                  'gap-1.5 text-xs font-semibold text-blue-500 hover:bg-blue-500/10 hover:text-blue-400',
+                  buttonVariants({ variant: 'outline' }),
+                  TOOLBAR_ACTION,
+                  'text-blue-500 hover:bg-blue-500/10 hover:text-blue-400',
                 )}
               >
-                <Phone className='size-3.5' />
+                <Phone />
                 <span>Call Phone</span>
               </a>
             )}
@@ -120,26 +122,27 @@ export function ContactDetailView({ message: initialMessage }: ContactDetailView
               <a
                 href={replyMailto(initialMessage.email, enquiryReplySubject(siteName))}
                 className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
-                  'gap-1.5 text-xs font-semibold text-purple-500 hover:bg-purple-500/10 hover:text-purple-400',
+                  buttonVariants({ variant: 'outline' }),
+                  TOOLBAR_ACTION,
+                  'text-purple-500 hover:bg-purple-500/10 hover:text-purple-400',
                 )}
               >
-                <Mail className='size-3.5' />
+                <Mail />
                 <span>Reply via Email</span>
               </a>
             )}
 
             <Button
               variant='outline'
-              size='sm'
               onClick={handleDelete}
-              className='gap-1.5 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600'
+              className={cn(TOOLBAR_ACTION, 'text-red-500 hover:bg-red-500/10 hover:text-red-600')}
             >
-              <Trash2 className='size-3.5' />
+              <Trash2 />
               <span>Delete</span>
             </Button>
 
             <SpamActions
+              className={TOOLBAR_ACTION}
               kind='contact'
               id={initialMessage.id}
               status={initialMessage.status}
