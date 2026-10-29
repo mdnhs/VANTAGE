@@ -20,6 +20,7 @@ import { HELP_LINK, NAV_GROUPS, visibleNav } from '@/lib/admin/nav';
 import { type Brand, BrandMark } from './brand-mark';
 import { type DockProps, FooterDock } from './footer-dock';
 import { NavEntry } from './nav-entry';
+import { NavIndicator } from './nav-indicator';
 import { WebsiteCard } from './website-card';
 
 export function AppSidebar({
@@ -62,7 +63,8 @@ export function AppSidebar({
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        <nav aria-label='Main'>
+        <nav aria-label='Main' className='relative'>
+          <NavIndicator pathname={pathname} />
           {NAV_GROUPS.map((group) => {
             const inGroup = items.filter((item) => item.group === group.id);
             if (inGroup.length === 0) return null;

@@ -1,4 +1,5 @@
 import { matchesSearch } from '@/lib/search/normalize';
+import { switchTheme } from '@/lib/theme/switch-theme';
 
 // Client-side actions in ⌘K. Navigation comes from the search API, so the
 // server decides what each role may reach.
@@ -27,19 +28,13 @@ export function buildActions({
       id: 'theme-light',
       label: 'Switch to light theme',
       keywords: ['appearance', 'mode', 'light'],
-      run: () => setTheme('light'),
+      run: () => switchTheme(setTheme, 'light'),
     },
     {
       id: 'theme-dark',
       label: 'Switch to dark theme',
       keywords: ['appearance', 'mode', 'night'],
-      run: () => setTheme('dark'),
-    },
-    {
-      id: 'theme-system',
-      label: 'Use the system theme',
-      keywords: ['appearance', 'mode', 'auto'],
-      run: () => setTheme('system'),
+      run: () => switchTheme(setTheme, 'dark'),
     },
     {
       id: 'open-site',

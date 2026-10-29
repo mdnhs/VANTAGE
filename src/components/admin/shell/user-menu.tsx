@@ -1,8 +1,9 @@
 'use client';
 
-import { LogOutIcon, MonitorIcon, MoonIcon, ShieldCheckIcon, SunIcon, UserIcon } from 'lucide-react';
+import { LogOutIcon, MoonIcon, ShieldCheckIcon, UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
+import { useSyncExternalStore } from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,19 +13,15 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
 import { useActor } from '@/contexts/actor-provider';
 import { useSignOut } from '@/features/auth/hooks/use-sign-out';
+import { isThemeSwitching, switchTheme } from '@/lib/theme/switch-theme';
 
-const THEMES = [
-  { value: 'light', label: 'Light', icon: SunIcon },
-  { value: 'dark', label: 'Dark', icon: MoonIcon },
-  { value: 'system', label: 'System', icon: MonitorIcon },
-] as const;
+const subscribe = () => () => {};
 
 const initials = (name: string) =>
   name
@@ -39,12 +36,24 @@ const initials = (name: string) =>
 // from assistive tech.
 export function UserMenu() {
   const { user, roles } = useActor();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  // resolvedTheme is unknown on the server; wait for mount so the switch never flips on hydrate.
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
+  const dark = mounted && resolvedTheme === 'dark';
   const { signOut, pending } = useSignOut();
   const roleLabel = roles.join(', ');
 
   return (
-    <DropdownMenu>
+    // A press during the theme reveal lands on the root element; it must not close the menu.
+    <DropdownMenu
+      onOpenChange={(open, details) => {
+        if (!open && details.reason === 'outside-press' && isThemeSwitching()) details.cancel();
+      }}
+    >
       <DropdownMenuTrigger
         aria-label={`Account menu for ${user.name}`}
         className='flex shrink-0 rounded-full p-1 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50'
@@ -79,18 +88,17 @@ export function UserMenu() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Theme</DropdownMenuLabel>
-          {/* `theme` (not resolvedTheme) so 'System' shows as selected when it is. */}
-          <DropdownMenuRadioGroup value={theme ?? 'system'} onValueChange={(value: unknown) => setTheme(String(value))}>
-            {THEMES.map(({ value, label, icon: Icon }) => (
-              <DropdownMenuRadioItem key={value} value={value}>
-                <Icon />
-                {label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
+        {/* The menu stays open so the reveal plays behind it; the switch only mirrors the row. */}
+        <DropdownMenuItem
+          role='menuitemcheckbox'
+          aria-checked={dark}
+          closeOnClick={false}
+          onClick={() => switchTheme(setTheme, dark ? 'light' : 'dark')}
+        >
+          <MoonIcon />
+          Dark mode
+          <Switch aria-hidden tabIndex={-1} checked={dark} className='pointer-events-none ml-auto' />
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled={pending} onClick={signOut}>
           <LogOutIcon />

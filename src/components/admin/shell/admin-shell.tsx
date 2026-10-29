@@ -1,6 +1,5 @@
 'use client';
 
-import { CommandPalette } from '@/components/admin/command/command-palette';
 import { CommandPaletteProvider } from '@/components/admin/command/palette-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -43,7 +42,7 @@ export function AdminShell({
             (sr-only labels, popovers), so they clip and scroll with it
             instead of stretching the document into a second scrollbar. */}
           <div className='flex h-svh min-w-0 flex-1 flex-col gap-4 p-3 [--content-h:calc(100svh-112px)] sm:p-4 sm:[--content-h:calc(100svh-120px)] lg:pl-0'>
-            <Topbar />
+            <Topbar siteUrl={siteUrl} />
             <main
               id='main'
               tabIndex={-1}
@@ -53,7 +52,6 @@ export function AdminShell({
             </main>
           </div>
         </SidebarProvider>
-        <CommandPalette siteUrl={siteUrl} />
       </CommandPaletteProvider>
     </TooltipProvider>
   );

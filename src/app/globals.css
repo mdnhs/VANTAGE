@@ -219,3 +219,18 @@
     @apply bg-transparent! dark:invert;
   }
 }
+
+/* Theme switch reveal (src/lib/theme/switch-theme.ts): no default cross-fade, the new snapshot is clipped */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Admin search sections rise in once the panel has grown (src/components/admin/command/global-search.tsx) */
+@keyframes admin-search-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
