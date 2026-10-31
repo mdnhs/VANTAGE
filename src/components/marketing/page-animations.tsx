@@ -195,6 +195,9 @@ function setup() {
           start: 'top top',
           end: () => `+=${distance() * 1.4}`,
           pin: true,
+          // GSAP skips pin spacing when the parent is a flex container (the process page's
+          // <main>), which lets the sections below scroll up over the pinned one.
+          pinSpacing: true,
           scrub: 0.6,
           invalidateOnRefresh: true,
           // Created after the reveal triggers further down the page — refresh it first so their

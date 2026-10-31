@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import { telHref } from '@/lib/content/phone';
@@ -147,72 +148,87 @@ export function StitchHeader({
           {cta.href && (
             <Link
               href={cta.href}
-              className='flex shrink-0 items-center gap-[6px] rounded-[8px] bg-brand py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none max-sm:pr-[12px] max-sm:pl-[16px]'
+              className='hidden shrink-0 items-center gap-[6px] rounded-[8px] bg-brand py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:flex'
             >
-              <span>
-                <span className='hidden sm:inline'>{cta.label}</span>
-                <span className='sm:hidden'>{cta.shortLabel}</span>
-              </span>
+              <span>{cta.label}</span>
               <ArrowIcon />
             </Link>
           )}
 
-          {/* Mobile Hamburger */}
-          <button
-            type='button'
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className='flex size-[42px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none lg:hidden'
-            aria-label='Toggle navigation menu'
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className='size-5' /> : <Menu className='size-5' />}
-          </button>
+          {/* Mobile menu: right-side sheet with every link and both buttons */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger
+              className='flex size-[42px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none lg:hidden'
+              aria-label='Toggle navigation menu'
+            >
+              <Menu className='size-5' />
+            </SheetTrigger>
+            <SheetContent
+              side='right'
+              showCloseButton={false}
+              className='w-[85%] gap-0 border-[#232328] bg-[#111113] p-0 text-white sm:max-w-sm lg:hidden'
+            >
+              <div className='flex items-center justify-between border-b border-[#232328] px-5 py-4'>
+                <SheetTitle className='text-[11px] font-normal tracking-[0.88px] text-white uppercase'>Menu</SheetTitle>
+                <SheetClose
+                  className='flex size-[38px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
+                  aria-label='Close navigation menu'
+                >
+                  <X className='size-5' />
+                </SheetClose>
+              </div>
+              <nav className='flex flex-col px-5'>
+                {mobileLinks.map((link) => {
+                  const active = pathname === link.href;
+                  return (
+                    <Link
+                      key={`${link.label}-${link.href}`}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`flex items-center justify-between border-b border-[#232328] py-[14px] text-[15px] leading-[normal] font-medium transition-colors ${
+                        active ? 'text-white' : 'text-[#a1a1a1] hover:text-white'
+                      }`}
+                    >
+                      {link.label}
+                      {active && <span className='size-[6px] rounded-full bg-brand' />}
+                    </Link>
+                  );
+                })}
+              </nav>
+              <div className='mt-auto flex flex-col gap-3 px-5 pt-6 pb-8'>
+                {cta.href && (
+                  <Link
+                    href={cta.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
+                  >
+                    <span>{cta.label}</span>
+                    <ArrowIcon />
+                  </Link>
+                )}
+                {cta.mobileHref && (
+                  <Link
+                    href={cta.mobileHref}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
+                  >
+                    <span>{cta.mobileLabel}</span>
+                    <ArrowIcon />
+                  </Link>
+                )}
+                <a
+                  href={phoneHref}
+                  className='flex w-full items-center justify-center gap-[10px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
+                >
+                  <PhoneIcon />
+                  <span>{phone}</span>
+                </a>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Mobile Dropdown Menu */}
-      {mobileMenuOpen && (
-        <div className='border-t border-[#232328] bg-[#111113] px-4 pt-3 pb-5 sm:px-6 lg:hidden'>
-          <nav className='flex flex-col'>
-            {mobileLinks.map((link) => {
-              const active = pathname === link.href;
-              return (
-                <Link
-                  key={`${link.label}-${link.href}`}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-current={active ? 'page' : undefined}
-                  className={`flex items-center justify-between border-b border-[#232328] py-[14px] text-[15px] leading-[normal] font-medium transition-colors ${
-                    active ? 'text-white' : 'text-[#a1a1a1] hover:text-white'
-                  }`}
-                >
-                  {link.label}
-                  {active && <span className='size-[6px] rounded-full bg-brand' />}
-                </Link>
-              );
-            })}
-            <div className='mt-5 flex flex-col gap-3'>
-              {cta.mobileHref && (
-                <Link
-                  href={cta.mobileHref}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
-                >
-                  <span>{cta.mobileLabel}</span>
-                  <ArrowIcon />
-                </Link>
-              )}
-              <a
-                href={phoneHref}
-                className='flex w-full items-center justify-center gap-[10px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
-              >
-                <PhoneIcon />
-                <span>{phone}</span>
-              </a>
-            </div>
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

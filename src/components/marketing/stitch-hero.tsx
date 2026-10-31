@@ -156,10 +156,13 @@ export function StitchHero({
         {trustRow.length > 0 && (
           <div
             data-hero-trust
-            className='grid grid-cols-1 gap-6 border-t border-[#232328] pt-10 sm:grid-cols-2 lg:grid-cols-4'
+            className='grid grid-cols-2 gap-x-4 gap-y-6 border-t border-[#232328] pt-10 sm:gap-6 lg:grid-cols-4'
           >
             {trustRow.map(({ icon, title, sub }, index) => (
-              <div key={`${title}-${index}`} className='flex min-w-0 items-center gap-3.5'>
+              <div
+                key={`${title}-${index}`}
+                className='flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-3.5'
+              >
                 <div className='flex shrink-0 items-center justify-center rounded-[10px] bg-white p-[11px]'>
                   <span className='flex size-5 items-center justify-center'>
                     <img src={icon.src} alt='' width={icon.width} height={icon.height} className='max-w-none' />

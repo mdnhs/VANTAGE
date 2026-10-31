@@ -75,9 +75,9 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
     <footer className='border-t border-[#232328] bg-[#111113]'>
       <div className='mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-4 pt-16 pb-10 sm:px-6 sm:pt-20 lg:gap-[64px] lg:px-10 lg:pt-[96px] lg:pb-[40px] xl:px-0'>
         {/* Footer columns */}
-        <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 sm:gap-12 lg:flex lg:items-start lg:gap-[48px]'>
+        <div className='grid grid-cols-2 gap-x-6 gap-y-10 sm:gap-12 lg:flex lg:items-start lg:gap-[48px]'>
           {/* Brand */}
-          <div className='flex flex-col items-start gap-[20px] lg:w-[320px] lg:shrink-0'>
+          <div className='col-span-2 flex flex-col items-start gap-[20px] sm:col-span-1 lg:w-[320px] lg:shrink-0'>
             <Link href='/' aria-label={settings.businessName} className='block'>
               {logoUseLottie && logoLottieJson ? (
                 <LottieLogo
@@ -113,7 +113,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
           ))}
 
           {/* Contact */}
-          <div className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'>
+          <div className='col-span-2 flex flex-col items-start gap-[20px] sm:col-span-1 lg:min-w-px lg:flex-1'>
             <h4 className={headingClass}>Contact</h4>
             <div className='flex flex-col items-start gap-[14px]'>
               <div className='flex items-center gap-[12px]'>

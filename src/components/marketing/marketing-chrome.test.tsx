@@ -67,32 +67,23 @@ describe('StitchHeader from navigation defaults', () => {
     expect(within(bar).getByText('Services').getAttribute('aria-current')).toBe('page');
   });
 
-  it('keeps the CTA copy and href, with the short label below sm', () => {
+  it('keeps the CTA copy and href, hidden below sm where the menu sheet carries it', () => {
     header();
     const cta = screen.getByRole('link', { name: /Free Quote/ });
     expect(cta.getAttribute('href')).toBe('/#estimator');
-    expect(cta.textContent).toBe('Get a Free QuoteFree Quote');
-    expect(cta.querySelector('.hidden.sm\\:inline')?.textContent).toBe('Get a Free Quote');
-    expect(cta.querySelector('.sm\\:hidden')?.textContent).toBe('Free Quote');
+    expect(cta.textContent).toBe('Get a Free Quote');
+    expect(cta.className).toMatch(/\bhidden\b.*\bsm:flex\b/);
   });
 
-  it('lists mobile-only links in the mobile menu, then the wide quote button', () => {
+  it('lists mobile-only links in the mobile menu, then the wide quote button', async () => {
     header();
     fireEvent.click(screen.getByLabelText('Toggle navigation menu'));
-    const labels = screen.getAllByRole('navigation').map((n) =>
-      within(n)
-        .getAllByRole('link')
-        .map((a) => a.textContent),
-    );
-    expect(labels[1]!.slice(0, 7)).toEqual([
-      'Home',
-      'Services',
-      'Our Work',
-      'Insurance',
-      'Contact',
-      'About',
-      'Process',
-    ]);
+    await screen.findByRole('link', { name: /Request Free Quote Online/ });
+    const menu = within(screen.getByRole('dialog')).getByRole('navigation');
+    const labels = within(menu)
+      .getAllByRole('link')
+      .map((a) => a.textContent);
+    expect(labels.slice(0, 7)).toEqual(['Home', 'Services', 'Our Work', 'Insurance', 'Contact', 'About', 'Process']);
     const wide = screen.getByRole('link', { name: /Request Free Quote Online/ });
     expect(wide.getAttribute('href')).toBe('/get-a-quote');
   });

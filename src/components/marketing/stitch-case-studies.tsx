@@ -161,7 +161,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
         <div className='flex justify-center'>
           <Link
             href='/our-work'
-            className='flex items-center gap-2.5 rounded-lg bg-brand py-4 pr-[22px] pl-6 font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+            className='flex w-full items-center justify-center gap-2.5 rounded-lg bg-brand py-4 pr-[22px] pl-6 font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:w-auto'
           >
             View all case studies
             <span className='relative size-6 shrink-0 overflow-hidden'>
