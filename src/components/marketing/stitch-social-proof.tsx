@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
 import type { TestimonialPublic } from '@/features/testimonials/types';
+import { ReviewCarousel } from './review-carousel';
 
 interface StitchSocialProofProps {
   testimonials: TestimonialPublic[];
@@ -85,7 +86,7 @@ export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
         </div>
 
         {/* Reviews */}
-        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+        <ReviewCarousel>
           {reviews.map((review) => (
             <article
               key={review.key}
@@ -122,7 +123,7 @@ export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
               </div>
             </article>
           ))}
-        </div>
+        </ReviewCarousel>
       </div>
     </section>
   );
