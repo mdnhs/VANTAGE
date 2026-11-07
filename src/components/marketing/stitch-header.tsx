@@ -145,17 +145,7 @@ export function StitchHeader({
             <span>{phone}</span>
           </a>
 
-          {cta.href && (
-            <Link
-              href={cta.href}
-              className='hidden shrink-0 items-center gap-[6px] rounded-[8px] bg-brand py-[11px] pr-[16px] pl-[22px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:flex'
-            >
-              <span>{cta.label}</span>
-              <ArrowIcon />
-            </Link>
-          )}
-
-          {/* Mobile menu: right-side sheet with every link and both buttons */}
+          {/* Mobile menu: right-side sheet with every link, the quote button and the phone */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
               className='flex size-[42px] items-center justify-center rounded-[8px] border border-[#232328] text-[#a1a1a1] transition-colors hover:border-[#3a3a40] hover:text-white focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none lg:hidden'
@@ -197,21 +187,11 @@ export function StitchHeader({
                 })}
               </nav>
               <div className='mt-auto flex flex-col gap-3 px-5 pt-6 pb-8'>
-                {cta.href && (
-                  <Link
-                    href={cta.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
-                  >
-                    <span>{cta.label}</span>
-                    <ArrowIcon />
-                  </Link>
-                )}
                 {cta.mobileHref && (
                   <Link
                     href={cta.mobileHref}
                     onClick={() => setMobileMenuOpen(false)}
-                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
+                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
                   >
                     <span>{cta.mobileLabel}</span>
                     <ArrowIcon />

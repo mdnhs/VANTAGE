@@ -67,12 +67,9 @@ describe('StitchHeader from navigation defaults', () => {
     expect(within(bar).getByText('Services').getAttribute('aria-current')).toBe('page');
   });
 
-  it('keeps the CTA copy and href, hidden below sm where the menu sheet carries it', () => {
+  it('has no quote button in the bar', () => {
     header();
-    const cta = screen.getByRole('link', { name: /Free Quote/ });
-    expect(cta.getAttribute('href')).toBe('/#estimator');
-    expect(cta.textContent).toBe('Get a Free Quote');
-    expect(cta.className).toMatch(/\bhidden\b.*\bsm:flex\b/);
+    expect(screen.queryByRole('link', { name: /Free Quote/ })).toBeNull();
   });
 
   it('lists mobile-only links in the mobile menu, then the wide quote button', async () => {
@@ -110,12 +107,10 @@ describe('StitchHeader from navigation defaults', () => {
     header(
       parseGlobal('navigation', {
         links: [{ label: 'Start', href: '/' }],
-        cta: { label: 'Book now', href: '/book', shortLabel: 'Book' },
       }),
     );
     expect(screen.getByRole('link', { name: 'Start' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Services' })).toBeNull();
-    expect(screen.getByRole('link', { name: /Book now/ }).getAttribute('href')).toBe('/book');
   });
 });
 
