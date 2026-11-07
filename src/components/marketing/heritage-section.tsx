@@ -35,7 +35,9 @@ export function HeritageSection({ title, text, stat1, stat2, image, quote }: Her
       <div className={`${SECTION_CONTAINER} grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center lg:gap-6`}>
         <div className='flex flex-col gap-8 lg:col-span-5'>
           <SectionHeader eyebrow='Who We Are' title={head} accent={accent} />
-          <p className={BODY_TEXT}>{text}</p>
+          <p data-scrub-text className={BODY_TEXT}>
+            {text}
+          </p>
 
           <dl className='grid grid-cols-2 gap-4'>
             {[stat1, stat2].map((stat, index) => (

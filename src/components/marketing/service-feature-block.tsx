@@ -70,7 +70,10 @@ export function ServiceFeatureBlock({
           className='object-cover transition-transform duration-700 group-hover:scale-[1.03]'
         />
         <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(17,17,19,0)_45%,rgba(17,17,19,0.85)_100%)]' />
-        <span className='absolute bottom-4 left-6 font-site-heading text-[56px] leading-none font-extrabold tracking-[-1.68px] text-white/25 sm:bottom-6 sm:left-8 lg:text-[96px]'>
+        <span
+          data-drift
+          className='absolute bottom-4 left-6 font-site-heading text-[56px] leading-none font-extrabold tracking-[-1.68px] text-white/25 sm:bottom-6 sm:left-8 lg:text-[96px]'
+        >
           {number}
         </span>
       </div>
