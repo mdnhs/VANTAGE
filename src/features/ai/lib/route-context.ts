@@ -17,6 +17,7 @@ const PAGE_ROUTES: Record<string, PageKey> = {
   '/dashboard/insurance': 'page.insurance',
   '/dashboard/about': 'page.about',
   '/dashboard/process-page': 'page.process',
+  '/dashboard/contact-page': 'page.contact',
 };
 
 // From the route alone (no DOM): which screen the person is on and, on a page

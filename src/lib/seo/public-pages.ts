@@ -18,7 +18,7 @@ export const PUBLIC_PAGE_IDS = [
 export type PublicPageId = (typeof PUBLIC_PAGE_IDS)[number];
 
 export type PagePageKey =
-  'page.home' | 'page.services' | 'page.our-work' | 'page.insurance' | 'page.about' | 'page.process';
+  'page.home' | 'page.services' | 'page.our-work' | 'page.insurance' | 'page.about' | 'page.process' | 'page.contact';
 
 export type PublicPage = {
   id: PublicPageId;
@@ -141,9 +141,9 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Contact',
     description:
       'Call, message or visit our Dublin body shop. Book an inspection for a precise repair estimate, or ask our technicians a question.',
-    editorHref: '/dashboard/seo/pages/contact',
-    editorTab: false,
-    pageKey: null,
+    editorHref: '/dashboard/contact-page',
+    editorTab: true,
+    pageKey: 'page.contact',
     hasH1: true,
     codeLinks: 2,
   },

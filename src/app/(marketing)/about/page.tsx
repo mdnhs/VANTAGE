@@ -28,6 +28,8 @@ export default async function AboutPage() {
           line2={content.heroLine2}
           accent2={content.heroAccent2}
           image={content.heroImage}
+          video={settings.aboutHeroVideo}
+          videoEnabled={settings.aboutHeroVideoEnabled}
         />
         <HeritageSection
           title={content.heritageTitle}

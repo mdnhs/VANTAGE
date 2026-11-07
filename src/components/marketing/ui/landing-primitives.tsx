@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ComponentProps, ReactNode } from 'react';
+import { Fragment, type ComponentProps, type ReactNode } from 'react';
 
 import {
   Breadcrumb,
@@ -11,6 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { PUBLIC_PAGES, type PublicPageId } from '@/lib/seo/public-pages';
+import type { PublicImage } from '@/lib/media/public-image';
 
 // Shared building blocks of the Figma landing design (file xOrMQXOlfhZP8QQu4mScLw, frame 131:3),
 // so inner marketing pages speak the same visual language as the homepage. Values mirror the
@@ -137,6 +138,8 @@ interface PageHeroProps {
   subtext?: ReactNode;
   imageSrc?: string | null;
   imageAlt?: string;
+  /** Plays over the photo when set; the photo stays as its poster while it loads. */
+  video?: PublicImage | null;
   /** Renders a Home › page breadcrumb above the copy, matching PageJsonLd's BreadcrumbList. */
   page?: Exclude<PublicPageId, 'home'>;
   /** A child of `page` (e.g. one service): the page becomes a link and this is the last crumb. */
@@ -183,13 +186,36 @@ function HeroBreadcrumb({ page, current }: { page: Exclude<PublicPageId, 'home'>
 
 // Inner-page version of the homepage hero (131:23): same shade + fade-to-page treatment and
 // type scale, shorter. `data-hero-copy` is the hook PageAnimations uses for the intro timeline.
-export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', page, current, children }: PageHeroProps) {
+export function PageHero({
+  eyebrow,
+  lines,
+  subtext,
+  imageSrc,
+  imageAlt = '',
+  video,
+  page,
+  current,
+  children,
+}: PageHeroProps) {
   const accentIndex = lines.length - 1;
   return (
     <section className='relative w-full overflow-hidden bg-[#111113]'>
-      {imageSrc && (
+      {(imageSrc || video) && (
         <div className='absolute inset-0'>
-          <Image src={imageSrc} alt={imageAlt} fill priority sizes='100vw' className='object-cover' />
+          {video ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={imageSrc ?? undefined}
+              className='h-full w-full object-cover'
+            >
+              <source src={video.src} type={video.mimeType ?? 'video/mp4'} />
+            </video>
+          ) : (
+            imageSrc && <Image src={imageSrc} alt={imageAlt} fill priority sizes='100vw' className='object-cover' />
+          )}
           <div className='absolute inset-0 bg-[linear-gradient(90deg,rgba(13,13,13,0.92)_0%,rgba(13,13,13,0.78)_40%,rgba(13,13,13,0.35)_65%,rgba(13,13,13,0.15)_100%)]' />
           <div className='absolute inset-x-0 bottom-0 h-[220px] bg-[linear-gradient(180deg,rgba(17,17,19,0)_0%,#111113_100%)]' />
         </div>
@@ -201,12 +227,14 @@ export function PageHero({ eyebrow, lines, subtext, imageSrc, imageAlt = '', pag
           <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
           <h1 className='font-site-heading text-[40px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>
             {lines.map((line, index) => (
-              <span
-                key={index}
-                className={`block ${index === accentIndex && lines.length > 1 ? 'text-brand' : 'text-white'}`}
-              >
-                {line}
-              </span>
+              <Fragment key={index}>
+                {/* Each line is its own block, so the space is invisible but keeps the words apart
+                    for crawlers, SEO tools and screen readers ("Repair" + "& Respray"). */}
+                {index > 0 ? ' ' : null}
+                <span className={`block ${index === accentIndex && lines.length > 1 ? 'text-brand' : 'text-white'}`}>
+                  {line}
+                </span>
+              </Fragment>
             ))}
           </h1>
           {subtext && (

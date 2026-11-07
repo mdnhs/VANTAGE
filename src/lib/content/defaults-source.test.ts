@@ -54,7 +54,13 @@ describe('single source of default copy', () => {
     expect(resolveAboutContent(null)).toEqual(ABOUT_DEFAULTS);
     expect(resolveInsuranceContent(null)).toEqual(INSURANCE_DEFAULTS);
     expect(resolveProcessPageContent(null)).toEqual(PROCESS_PAGE_DEFAULTS);
-    expect(parseGlobal('page.process', undefined)).toEqual(PROCESS_PAGE_DEFAULTS);
+    // The banner media is empty and off by default; the copy is untouched.
+    expect(parseGlobal('page.process', undefined)).toEqual({
+      ...PROCESS_PAGE_DEFAULTS,
+      video: null,
+      fallbackImage: null,
+      videoEnabled: false,
+    });
     const page = resolveAboutPageContent({
       aboutHeroImage: null,
       aboutHeritageImage: null,

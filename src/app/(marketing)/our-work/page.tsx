@@ -30,6 +30,9 @@ export default async function OurWorkPage() {
           settings.ourWorkHeroSubtext ??
           'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.'
         }
+        video={settings.ourWorkHeroVideo}
+        fallbackImage={settings.ourWorkHeroFallbackImage}
+        videoEnabled={settings.ourWorkHeroVideoEnabled}
       />
 
       <section className={`w-full ${SECTION_BG.raised} ${SECTION_PADDING}`}>

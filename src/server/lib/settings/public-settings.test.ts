@@ -58,6 +58,111 @@ describe('composePublicSettings images', () => {
     expect(out.logo?.src).toBe('https://cdn.example/logo.png');
   });
 
+  it('resolves the services banner video, photo and switch', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000002';
+    const g = defaults();
+    g['page.services'].hero.video = { kind: 'media', id: ID };
+    g['page.services'].hero.fallbackImage = { kind: 'media', id: PHOTO };
+    g['page.services'].hero.videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/services.mp4'),
+      [PHOTO]: image('https://cdn.example/services.jpg'),
+    });
+    expect(out.servicesHeroVideo?.src).toBe('https://cdn.example/services.mp4');
+    expect(out.servicesHeroFallbackImage?.src).toBe('https://cdn.example/services.jpg');
+    expect(out.servicesHeroVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).servicesHeroVideoEnabled).toBe(false);
+  });
+
+  it('resolves the Our Work banner video, photo and switch', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000003';
+    const g = defaults();
+    g['page.our-work'].hero.video = { kind: 'media', id: ID };
+    g['page.our-work'].hero.fallbackImage = { kind: 'media', id: PHOTO };
+    g['page.our-work'].hero.videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/work.mp4'),
+      [PHOTO]: image('https://cdn.example/work.jpg'),
+    });
+    expect(out.ourWorkHeroVideo?.src).toBe('https://cdn.example/work.mp4');
+    expect(out.ourWorkHeroFallbackImage?.src).toBe('https://cdn.example/work.jpg');
+    expect(out.ourWorkHeroVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).ourWorkHeroVideoEnabled).toBe(false);
+  });
+
+  it('resolves the Insurance banner video, photo and switch', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000004';
+    const g = defaults();
+    g['page.insurance'].hero.video = { kind: 'media', id: ID };
+    g['page.insurance'].hero.fallbackImage = { kind: 'media', id: PHOTO };
+    g['page.insurance'].hero.videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/insurance.mp4'),
+      [PHOTO]: image('https://cdn.example/insurance.jpg'),
+    });
+    expect(out.insuranceHeroVideo?.src).toBe('https://cdn.example/insurance.mp4');
+    expect(out.insuranceHeroFallbackImage?.src).toBe('https://cdn.example/insurance.jpg');
+    expect(out.insuranceHeroVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).insuranceHeroVideoEnabled).toBe(false);
+  });
+
+  it('resolves the About banner video and switch next to its photo', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000005';
+    const g = defaults();
+    g['page.about'].hero.video = { kind: 'media', id: ID };
+    g['page.about'].hero.image = { kind: 'media', id: PHOTO };
+    g['page.about'].hero.videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/about.mp4'),
+      [PHOTO]: image('https://cdn.example/about.jpg'),
+    });
+    expect(out.aboutHeroVideo?.src).toBe('https://cdn.example/about.mp4');
+    expect(out.aboutHeroImage?.src).toBe('https://cdn.example/about.jpg');
+    expect(out.aboutHeroVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).aboutHeroVideoEnabled).toBe(false);
+  });
+
+  it('resolves the Process banner video, photo and switch', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000006';
+    const g = defaults();
+    g['page.process'].video = { kind: 'media', id: ID };
+    g['page.process'].fallbackImage = { kind: 'media', id: PHOTO };
+    g['page.process'].videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/process.mp4'),
+      [PHOTO]: image('https://cdn.example/process.jpg'),
+    });
+    expect(out.processPageVideo?.src).toBe('https://cdn.example/process.mp4');
+    expect(out.processPageFallbackImage?.src).toBe('https://cdn.example/process.jpg');
+    expect(out.processPageVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).processPageVideoEnabled).toBe(false);
+  });
+
+  it('resolves the Contact banner video, photo and switch', () => {
+    const PHOTO = '0b1c1c52-0000-4000-8000-000000000007';
+    const g = defaults();
+    g['page.contact'].hero.video = { kind: 'media', id: ID };
+    g['page.contact'].hero.fallbackImage = { kind: 'media', id: PHOTO };
+    g['page.contact'].hero.videoEnabled = true;
+    const out = composePublicSettings(g, {
+      [ID]: image('https://cdn.example/contact.mp4'),
+      [PHOTO]: image('https://cdn.example/contact.jpg'),
+    });
+    expect(out.contactHeroVideo?.src).toBe('https://cdn.example/contact.mp4');
+    expect(out.contactHeroFallbackImage?.src).toBe('https://cdn.example/contact.jpg');
+    expect(out.contactHeroVideoEnabled).toBe(true);
+    expect(composePublicSettings(defaults(), {}).contactHeroVideoEnabled).toBe(false);
+  });
+
+  it('keeps the original Contact banner copy by default', () => {
+    expect(defaults()['page.contact'].hero).toMatchObject({
+      eyebrow: 'Visit · Call · Message',
+      line1: 'Get in',
+      accent: 'touch.',
+      videoEnabled: false,
+    });
+  });
+
   it('resolves a Cloudinary ref to null (no legacy Cloudinary fallback in settings)', () => {
     withCloud(() => {
       const g = defaults();
@@ -107,6 +212,24 @@ describe('composePublicSettings images', () => {
       'aboutHeritageImage',
       'aboutStandardsImage',
       'phoneHref',
+      // No legacy column: the services banner media only exists as a global.
+      'servicesHeroVideo',
+      'servicesHeroFallbackImage',
+      'servicesHeroVideoEnabled',
+      'ourWorkHeroVideo',
+      'ourWorkHeroFallbackImage',
+      'ourWorkHeroVideoEnabled',
+      'insuranceHeroVideo',
+      'insuranceHeroFallbackImage',
+      'insuranceHeroVideoEnabled',
+      'aboutHeroVideo',
+      'aboutHeroVideoEnabled',
+      'processPageVideo',
+      'processPageFallbackImage',
+      'processPageVideoEnabled',
+      'contactHeroVideo',
+      'contactHeroFallbackImage',
+      'contactHeroVideoEnabled',
     ];
     const legacyImageKeys = [
       'logoPublicId',

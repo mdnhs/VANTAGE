@@ -6,6 +6,7 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { resolveProcessPageContent } from '@/features/process-page/content';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
+import { sizedSrc } from '@/lib/media/public-image';
 
 export async function generateMetadata() {
   return getPageMetadata('process');
@@ -31,7 +32,15 @@ export default async function ProcessPage() {
   return (
     <main className='flex flex-col'>
       <PageJsonLd id='process' />
-      <PageHero page='process' eyebrow={content.eyebrow} lines={toHeroLines(title)} subtext={content.subtext}>
+      <PageHero
+        page='process'
+        eyebrow={content.eyebrow}
+        lines={toHeroLines(title)}
+        subtext={content.subtext}
+        imageSrc={settings.processPageFallbackImage ? sizedSrc(settings.processPageFallbackImage, 'w_1920') : null}
+        imageAlt={settings.processPageFallbackImage?.alt}
+        video={settings.processPageVideoEnabled ? settings.processPageVideo : null}
+      >
         <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
         <ButtonLink href='/services' variant='secondary'>
           Our services

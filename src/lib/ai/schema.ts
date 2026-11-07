@@ -130,6 +130,7 @@ export const PAGE_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  'page.contact',
 ] as const;
 export type PageKey = (typeof PAGE_KEYS)[number];
 

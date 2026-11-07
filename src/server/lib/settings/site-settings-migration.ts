@@ -222,6 +222,8 @@ export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: st
       title: t(row.processPageTitle),
       subtext: t(row.processPageSubtext),
     },
+    // New page: no legacy columns, so it starts at the schema defaults.
+    'page.contact': {},
   };
   return { docs, warnings, lossy };
 }

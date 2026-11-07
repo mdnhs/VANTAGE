@@ -20,6 +20,7 @@ export const PUBLIC_SETTINGS_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  'page.contact',
 ] as const;
 export type PublicSettingsKey = (typeof PUBLIC_SETTINGS_KEYS)[number];
 
@@ -90,15 +91,24 @@ export type PublicSiteSettings = {
   servicesHeroHeadlineLine1: string | null;
   servicesHeroHeadlineAccent: string | null;
   servicesHeroSubtext: string | null;
+  servicesHeroVideo: PublicImage | null;
+  servicesHeroFallbackImage: PublicImage | null;
+  servicesHeroVideoEnabled: boolean;
   ourWorkHeroEyebrow: string | null;
   ourWorkHeroHeadlineLine1: string | null;
   ourWorkHeroHeadlineAccent: string | null;
   ourWorkHeroSubtext: string | null;
+  ourWorkHeroVideo: PublicImage | null;
+  ourWorkHeroFallbackImage: PublicImage | null;
+  ourWorkHeroVideoEnabled: boolean;
   insuranceHeroEyebrow: string | null;
   insuranceHeroLine1: string | null;
   insuranceHeroLine2: string | null;
   insuranceHeroLine3: string | null;
   insuranceHeroSubtext: string | null;
+  insuranceHeroVideo: PublicImage | null;
+  insuranceHeroFallbackImage: PublicImage | null;
+  insuranceHeroVideoEnabled: boolean;
   insuranceCoordinationTitle: string | null;
   insuranceCoordinationSubtext: string | null;
   insuranceFeatures: { title: string; description: string }[] | null;
@@ -115,6 +125,8 @@ export type PublicSiteSettings = {
   aboutHeroLine2: string | null;
   aboutHeroAccent2: string | null;
   aboutHeroImage: PublicImage | null;
+  aboutHeroVideo: PublicImage | null;
+  aboutHeroVideoEnabled: boolean;
   aboutHeritageTitle: string | null;
   aboutHeritageText: string | null;
   aboutHeritageStat1Value: string | null;
@@ -133,6 +145,12 @@ export type PublicSiteSettings = {
   processPageEyebrow: string | null;
   processPageTitle: string | null;
   processPageSubtext: string | null;
+  processPageVideo: PublicImage | null;
+  processPageFallbackImage: PublicImage | null;
+  processPageVideoEnabled: boolean;
+  contactHeroVideo: PublicImage | null;
+  contactHeroFallbackImage: PublicImage | null;
+  contactHeroVideoEnabled: boolean;
 };
 
 // Only Cloudinary refs have a public id.
@@ -310,7 +328,24 @@ export function composePublicSettings(g: PublicGlobals, images: Record<string, P
     favicon: resolveRef(g.site.favicon, images),
     heroVideo: resolveRef(g['page.home'].hero.video, images),
     heroFallbackImage: resolveRef(g['page.home'].hero.fallbackImage, images),
+    servicesHeroVideo: resolveRef(g['page.services'].hero.video, images),
+    servicesHeroFallbackImage: resolveRef(g['page.services'].hero.fallbackImage, images),
+    servicesHeroVideoEnabled: g['page.services'].hero.videoEnabled,
+    ourWorkHeroVideo: resolveRef(g['page.our-work'].hero.video, images),
+    ourWorkHeroFallbackImage: resolveRef(g['page.our-work'].hero.fallbackImage, images),
+    ourWorkHeroVideoEnabled: g['page.our-work'].hero.videoEnabled,
+    insuranceHeroVideo: resolveRef(g['page.insurance'].hero.video, images),
+    insuranceHeroFallbackImage: resolveRef(g['page.insurance'].hero.fallbackImage, images),
+    insuranceHeroVideoEnabled: g['page.insurance'].hero.videoEnabled,
     aboutHeroImage: resolveRef(about.hero.image, images),
+    aboutHeroVideo: resolveRef(about.hero.video, images),
+    aboutHeroVideoEnabled: about.hero.videoEnabled,
+    processPageVideo: resolveRef(g['page.process'].video, images),
+    processPageFallbackImage: resolveRef(g['page.process'].fallbackImage, images),
+    processPageVideoEnabled: g['page.process'].videoEnabled,
+    contactHeroVideo: resolveRef(g['page.contact'].hero.video, images),
+    contactHeroFallbackImage: resolveRef(g['page.contact'].hero.fallbackImage, images),
+    contactHeroVideoEnabled: g['page.contact'].hero.videoEnabled,
     aboutHeritageImage: resolveRef(about.heritage.image, images),
     aboutStandardsImage: resolveRef(about.standards.image, images),
     aboutTeamMembers: about.team.members

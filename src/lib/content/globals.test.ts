@@ -26,6 +26,7 @@ describe('globals schemas', () => {
         'page.insurance',
         'page.about',
         'page.process',
+        'page.contact',
         'consent',
         'scripts',
         'seo.page.home',

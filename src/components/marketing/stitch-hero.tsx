@@ -93,8 +93,9 @@ export function StitchHero({
 
           {/* Heading */}
           <h1 className='font-site-heading text-[44px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[64px] lg:text-[84px] lg:leading-[88px]'>
-            <span className='block text-white'>{headlineLine1}</span>
-            <span className='block text-white'>{headlineLine2}</span>
+            {/* Plain spaces between the block lines keep the words apart for crawlers and screen readers. */}
+            <span className='block text-white'>{headlineLine1}</span>{' '}
+            <span className='block text-white'>{headlineLine2}</span>{' '}
             <span className='block text-brand'>{headlineAccent}</span>
           </h1>
 

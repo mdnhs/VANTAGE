@@ -26,6 +26,7 @@ const ALL_WEBSITE = [
   'website-insurance',
   'website-about',
   'website-process',
+  'website-contact',
 ];
 
 const ALL_SETTINGS = [

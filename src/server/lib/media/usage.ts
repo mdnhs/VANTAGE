@@ -44,6 +44,7 @@ const PAGE_KEY_HREFS: Record<string, string> = {
   'page.insurance': '/dashboard/insurance',
   'page.about': '/dashboard/about',
   'page.process': '/dashboard/process-page',
+  'page.contact': '/dashboard/contact-page',
 };
 
 function settingUse(key: string): MediaUse {

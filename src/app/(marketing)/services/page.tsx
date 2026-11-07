@@ -40,6 +40,9 @@ export default async function ServicesPage() {
           settings.servicesHeroSubtext ??
           'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.'
         }
+        video={settings.servicesHeroVideo}
+        fallbackImage={settings.servicesHeroFallbackImage}
+        videoEnabled={settings.servicesHeroVideoEnabled}
       />
 
       {services.length > 0 && (

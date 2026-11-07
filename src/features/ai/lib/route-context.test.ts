@@ -14,6 +14,7 @@ describe('contextFromRoute (V9-R10)', () => {
       '/dashboard/insurance': 'page.insurance',
       '/dashboard/about': 'page.about',
       '/dashboard/process-page': 'page.process',
+      '/dashboard/contact-page': 'page.contact',
     };
     for (const [path, key] of Object.entries(paths)) {
       expect(contextFromRoute(path)).toEqual({ screen: 'page', context: { path, entity: { type: 'page', key } } });

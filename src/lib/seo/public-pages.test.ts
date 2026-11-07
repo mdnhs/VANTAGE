@@ -65,7 +65,7 @@ describe('public page registry', () => {
     }
   });
 
-  it('links each page to its page.* global, none for contact and get-a-quote', () => {
+  it('links each page to its page.* global, none for get-a-quote', () => {
     for (const id of PUBLIC_PAGE_IDS) {
       expect(PUBLIC_PAGES[id].pageKey).toBe(PUBLIC_PAGES[id].editorTab ? `page.${id}` : null);
     }
@@ -73,7 +73,7 @@ describe('public page registry', () => {
 
   it('builds the Fix link', () => {
     expect(seoFixHref('about')).toBe('/dashboard/about?tab=seo');
-    expect(seoFixHref('contact')).toBe('/dashboard/seo/pages/contact');
+    expect(seoFixHref('contact')).toBe('/dashboard/contact-page?tab=seo');
     expect(seoFixHref('get-a-quote')).toBe('/dashboard/seo/pages/get-a-quote');
   });
 });

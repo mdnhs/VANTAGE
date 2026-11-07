@@ -31,6 +31,7 @@ const GROUP: Record<GlobalKey, Group> = {
   'page.insurance': 'page',
   'page.about': 'page',
   'page.process': 'page',
+  'page.contact': 'page',
   consent: 'tracking',
   scripts: 'code',
   'seo.page.home': 'seo',

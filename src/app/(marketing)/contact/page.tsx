@@ -7,22 +7,32 @@ import { PageHero, SECTION_BG, SECTION_CONTAINER } from '@/components/marketing/
 import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
+import { siteSettingsService } from '@/server/services/site-settings-service';
+import { sizedSrc } from '@/lib/media/public-image';
 
 export async function generateMetadata() {
   return getPageMetadata('contact');
 }
 
 export default async function ContactPage() {
-  const [services, copy] = await Promise.all([serviceService.listPublished(), getSetting('contactForm')]);
+  const [services, copy, page, settings] = await Promise.all([
+    serviceService.listPublished(),
+    getSetting('contactForm'),
+    getSetting('page.contact'),
+    siteSettingsService.getPublic(),
+  ]);
 
   return (
     <main className='grow'>
       <PageJsonLd id='contact' />
       <PageHero
         page='contact'
-        eyebrow='Visit · Call · Message'
-        lines={['Get in', 'touch.']}
-        subtext='We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.'
+        eyebrow={page.hero.eyebrow}
+        lines={[page.hero.line1, page.hero.accent]}
+        subtext={page.hero.subtext}
+        imageSrc={settings.contactHeroFallbackImage ? sizedSrc(settings.contactHeroFallbackImage, 'w_1920') : null}
+        imageAlt={settings.contactHeroFallbackImage?.alt}
+        video={settings.contactHeroVideoEnabled ? settings.contactHeroVideo : null}
       />
 
       {/* Same bg as the hero, so only bottom padding — the hero already supplies the top rhythm. */}

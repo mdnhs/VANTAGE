@@ -9,10 +9,21 @@ interface AboutHeroProps {
   line2: string;
   accent2: string;
   image: PublicImage | null;
+  video?: PublicImage | null;
+  videoEnabled?: boolean;
 }
 
 // Two CMS-driven lines ("Built on Craft." / "Driven by Quality."); PageHero paints the last one red.
-export function AboutHero({ eyebrow, line1, accent1, line2, accent2, image }: AboutHeroProps) {
+export function AboutHero({
+  eyebrow,
+  line1,
+  accent1,
+  line2,
+  accent2,
+  image,
+  video = null,
+  videoEnabled = false,
+}: AboutHeroProps) {
   return (
     <PageHero
       page='about'
@@ -20,6 +31,7 @@ export function AboutHero({ eyebrow, line1, accent1, line2, accent2, image }: Ab
       lines={[`${line1} ${accent1}.`, `${line2} ${accent2}.`]}
       imageSrc={image ? sizedSrc(image, 'w_1920') : ABOUT_FALLBACK_IMAGES.hero}
       imageAlt='Car body repair workshop in Dublin'
+      video={videoEnabled ? video : null}
     />
   );
 }

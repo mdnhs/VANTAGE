@@ -32,6 +32,9 @@ export default async function InsurancePage() {
           line2={content.heroLine2}
           line3={content.heroLine3}
           subtext={content.heroSubtext}
+          video={settings.insuranceHeroVideo}
+          fallbackImage={settings.insuranceHeroFallbackImage}
+          videoEnabled={settings.insuranceHeroVideoEnabled}
         />
         <PartnerLogosStrip logos={partnerLogos} />
         <CoordinationSection

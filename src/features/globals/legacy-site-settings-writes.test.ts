@@ -85,6 +85,7 @@ describe('legacy site-settings write path is gone', () => {
       [`${site}/about/page.tsx`]: 'page.about',
       [`${site}/insurance/page.tsx`]: 'page.insurance',
       [`${site}/process-page/page.tsx`]: 'page.process',
+      [`${site}/contact-page/page.tsx`]: 'page.contact',
       [`${site}/services/(list)/page.tsx`]: 'page.services',
       [`${site}/projects/(list)/page.tsx`]: 'page.our-work',
       'features/home-page/components/home-page-tabs.tsx': 'page.home',

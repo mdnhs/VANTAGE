@@ -119,6 +119,13 @@ export const NAV: readonly NavItem[] = [
         permission: { page: ['read'] },
         keywords: ['steps', 'how it works'],
       },
+      {
+        id: 'website-contact',
+        label: 'Contact',
+        href: '/dashboard/contact-page',
+        permission: { page: ['read'] },
+        keywords: ['get in touch', 'visit', 'banner'],
+      },
     ],
   },
   {

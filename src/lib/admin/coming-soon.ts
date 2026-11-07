@@ -18,6 +18,7 @@ export const REAL_ROUTES: ReadonlySet<string> = new Set([
   '/dashboard/insurance',
   '/dashboard/about',
   '/dashboard/process-page',
+  '/dashboard/contact-page',
   '/dashboard/quotes',
   '/dashboard/contacts',
   '/dashboard/settings',

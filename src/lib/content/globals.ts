@@ -437,13 +437,21 @@ export const HomePageGlobal = z.object({
 });
 
 export const ServicesPageGlobal = z.object({
-  hero: heroTitled({
-    eyebrow: 'Master Craftsmanship',
-    line1: 'Professional Bodywork.',
-    accent: 'Precision Finish.',
-    subtext:
-      'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
-  }),
+  // Same background media as the homepage banner: a photo, or a video over it when switched on.
+  hero: z
+    .object({
+      eyebrow: s(200, 'Master Craftsmanship'),
+      line1: s(100, 'Professional Bodywork.'),
+      accent: s(100, 'Precision Finish.'),
+      subtext: s(
+        2000,
+        'Our specialized services are engineered to restore your vehicle to factory perfection or elevate it beyond original specifications.',
+      ),
+      video: video(),
+      fallbackImage: image(),
+      videoEnabled: z.boolean().default(false),
+    })
+    .prefault({}),
   faq: z
     .object({
       eyebrow: s(100, 'Good to Know'),
@@ -473,13 +481,21 @@ export const ServicesPageGlobal = z.object({
 });
 
 export const OurWorkPageGlobal = z.object({
-  hero: heroTitled({
-    eyebrow: 'Portfolio',
-    line1: 'Our Recent',
-    accent: 'Restorations.',
-    subtext:
-      'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.',
-  }),
+  // Background media like the homepage banner; the banner stays plain dark until one is added.
+  hero: z
+    .object({
+      eyebrow: s(200, 'Portfolio'),
+      line1: s(100, 'Our Recent'),
+      accent: s(100, 'Restorations.'),
+      subtext: s(
+        2000,
+        'Explore a curated selection of our most challenging and rewarding projects. Precision engineering meets master craftsmanship.',
+      ),
+      video: video(),
+      fallbackImage: image(),
+      videoEnabled: z.boolean().default(false),
+    })
+    .prefault({}),
 });
 
 export const InsurancePageGlobal = z.object({
@@ -493,6 +509,10 @@ export const InsurancePageGlobal = z.object({
         2000,
         'We handle the paperwork, the assessors, and the exact precision repairs. Focus on getting back on the road while our dedicated specialists coordinate seamlessly with your insurance provider.',
       ),
+      // Same background media as the homepage banner: a photo, or a video over it when switched on.
+      video: video(),
+      fallbackImage: image(),
+      videoEnabled: z.boolean().default(false),
     })
     .prefault({}),
   coordination: z
@@ -573,6 +593,9 @@ export const AboutPageGlobal = z.object({
       line2: s(100, 'Driven by'),
       accent2: s(100, 'Quality'),
       image: image(),
+      // The photo above is the video's poster; the video plays over it when switched on.
+      video: video(),
+      videoEnabled: z.boolean().default(false),
     })
     .prefault({}),
   heritage: z
@@ -645,6 +668,28 @@ export const ProcessPageGlobal = z.object({
     2000,
     'From initial digital triage to strict multi-point handoff inspection, every step is transparently logged.',
   ),
+  // Background media like the homepage banner; the banner stays plain dark until one is added.
+  video: video(),
+  fallbackImage: image(),
+  videoEnabled: z.boolean().default(false),
+});
+
+export const ContactPageGlobal = z.object({
+  // Background media like the homepage banner; the banner stays plain dark until one is added.
+  hero: z
+    .object({
+      eyebrow: s(200, 'Visit · Call · Message'),
+      line1: s(100, 'Get in'),
+      accent: s(100, 'touch.'),
+      subtext: s(
+        2000,
+        'We provide precise estimates based on detailed inspections. Reach out to schedule an appointment or ask technical questions.',
+      ),
+      video: video(),
+      fallbackImage: image(),
+      videoEnabled: z.boolean().default(false),
+    })
+    .prefault({}),
 });
 
 export const GLOBALS = {
@@ -664,6 +709,7 @@ export const GLOBALS = {
   'page.insurance': InsurancePageGlobal,
   'page.about': AboutPageGlobal,
   'page.process': ProcessPageGlobal,
+  'page.contact': ContactPageGlobal,
   ...MARKETING_GLOBALS,
   ...SEO_PAGE_GLOBALS,
 } as const;
@@ -688,6 +734,7 @@ export const PUBLIC_GLOBAL_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  'page.contact',
   ...MARKETING_PUBLIC_KEYS,
   ...SEO_PAGE_KEYS,
 ] as const satisfies readonly GlobalKey[];

@@ -23,6 +23,7 @@ export const EDITABLE_GLOBAL_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  'page.contact',
   ...MARKETING_EDITABLE_KEYS,
   ...SEO_PAGE_KEYS,
 ] as const satisfies readonly GlobalKey[];
@@ -36,6 +37,7 @@ export const PREVIEWABLE_GLOBAL_KEYS = [
   'page.insurance',
   'page.about',
   'page.process',
+  'page.contact',
 ] as const satisfies readonly EditableGlobalKey[];
 export type PreviewableGlobalKey = (typeof PREVIEWABLE_GLOBAL_KEYS)[number];
 export const isPreviewableGlobal = (key: string): key is PreviewableGlobalKey =>
@@ -72,6 +74,7 @@ export const GLOBAL_ACCESS: Record<EditableGlobalKey, Access> = {
   'page.insurance': pageAccess,
   'page.about': pageAccess,
   'page.process': pageAccess,
+  'page.contact': pageAccess,
   ...MARKETING_GLOBAL_ACCESS,
   ...SEO_PAGE_GLOBAL_ACCESS,
 };
@@ -115,6 +118,7 @@ export const GLOBAL_LABELS: Record<EditableGlobalKey, string> = {
   'page.insurance': 'Insurance page',
   'page.about': 'About page',
   'page.process': 'Process page',
+  'page.contact': 'Contact page',
   ...MARKETING_GLOBAL_LABELS,
   ...SEO_PAGE_GLOBAL_LABELS,
 };

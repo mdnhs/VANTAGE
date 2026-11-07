@@ -99,7 +99,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
               key={`${column.title}-${index}`}
               className='flex flex-col items-start gap-[20px] lg:min-w-px lg:flex-1'
             >
-              <h4 className={headingClass}>{column.title}</h4>
+              <h3 className={headingClass}>{column.title}</h3>
               <nav className='flex flex-col items-start gap-[14px]'>
                 {column.links
                   .filter((link) => link.label && link.href)
@@ -114,7 +114,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
 
           {/* Contact */}
           <div className='col-span-2 flex flex-col items-start gap-[20px] sm:col-span-1 lg:min-w-px lg:flex-1'>
-            <h4 className={headingClass}>Contact</h4>
+            <h3 className={headingClass}>Contact</h3>
             <div className='flex flex-col items-start gap-[14px]'>
               <div className='flex items-center gap-[12px]'>
                 <ContactIcon

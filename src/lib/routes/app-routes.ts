@@ -42,6 +42,9 @@ export const APP_ROUTES = {
     processPage: {
       index: '/dashboard/process-page',
     },
+    contactPage: {
+      index: '/dashboard/contact-page',
+    },
     // `index` points back at the relevant Home page tab — process steps/testimonials/
     // partner logos no longer have their own standalone list page, only create/edit (used by
     // the table's "Cancel").
