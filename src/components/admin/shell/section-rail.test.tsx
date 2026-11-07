@@ -27,6 +27,14 @@ describe('SectionRail', () => {
     expect(html).toContain('content-here');
   });
 
+  it('pins the tabs on desktop without stretching them to the page height', () => {
+    state.pathname = '/dashboard/process-page';
+    const nav = render().match(/<nav[^>]*>/)?.[0] ?? '';
+    expect(nav).toContain('lg:sticky');
+    expect(nav).toContain('lg:top-8');
+    expect(nav).toContain('lg:self-start');
+  });
+
   it('renders no rail on /dashboard', () => {
     const html = render();
     expect(html).not.toContain('<nav');

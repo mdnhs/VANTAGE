@@ -8,8 +8,9 @@ import { activeSection, isActivePath } from '@/lib/admin/nav';
 import { cn } from '@/lib/utils';
 
 // A section's sub-pages (Website, Enquiries, SEO, Marketing) as vertical tabs
-// inside the content panel, so the sidebar lists sections only. Below 1024px
-// the tabs become a scrolling row above the page.
+// inside the content panel, so the sidebar lists sections only. From 1024px the
+// tabs stay pinned (matching the panel's lg:p-8) while the page scrolls; below
+// that they become a scrolling row above the page.
 export function SectionRail({ children }: { children: React.ReactNode }) {
   const { roles } = useActor();
   const pathname = usePathname();
@@ -22,7 +23,10 @@ export function SectionRail({ children }: { children: React.ReactNode }) {
     .sort((a, b) => b.href.length - a.href.length)[0];
   return (
     <div className='flex flex-col gap-6 [--rail-h:3.75rem] lg:flex-row lg:gap-8 lg:[--rail-h:0px]'>
-      <nav aria-label={section.label} className='-mx-1 shrink-0 overflow-x-auto lg:mx-0 lg:w-52 lg:overflow-visible'>
+      <nav
+        aria-label={section.label}
+        className='-mx-1 shrink-0 overflow-x-auto lg:sticky lg:top-8 lg:mx-0 lg:w-52 lg:self-start lg:overflow-visible'
+      >
         <p className='mb-2 hidden px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase lg:block'>
           {section.label}
         </p>
