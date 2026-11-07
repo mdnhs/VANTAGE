@@ -198,34 +198,59 @@ export function PageHero({
   children,
 }: PageHeroProps) {
   const accentIndex = lines.length - 1;
+  const hasMedia = Boolean(imageSrc || video);
   return (
-    <section className='relative w-full overflow-hidden bg-[#111113]'>
-      {(imageSrc || video) && (
+    // With a photo or video behind it the hero fills the screen below the sticky header (73px on
+    // phones, 97px from sm up; svh holds steady while a phone's address bar shows or hides). On
+    // phones the copy sits at the bottom so the media shows above it. Without media it keeps its
+    // natural height: a full screen of plain dark would only look empty.
+    <section
+      className={`relative flex w-full flex-col overflow-hidden bg-[#111113] ${
+        hasMedia ? 'min-h-[calc(100svh-73px)] sm:min-h-[calc(100svh-97px)]' : ''
+      }`}
+    >
+      {hasMedia && (
         <div className='absolute inset-0'>
           {video ? (
             <video
+              data-hero-media
               autoPlay
               muted
               loop
               playsInline
               poster={imageSrc ?? undefined}
-              className='h-full w-full object-cover'
+              className='h-full w-full object-cover object-[68%_50%] sm:object-center'
             >
               <source src={video.src} type={video.mimeType ?? 'video/mp4'} />
             </video>
           ) : (
-            imageSrc && <Image src={imageSrc} alt={imageAlt} fill priority sizes='100vw' className='object-cover' />
+            imageSrc && (
+              <Image
+                data-hero-media
+                src={imageSrc}
+                alt={imageAlt}
+                fill
+                priority
+                sizes='100vw'
+                className='object-cover object-[68%_50%] sm:object-center'
+              />
+            )
           )}
-          <div className='absolute inset-0 bg-[linear-gradient(90deg,rgba(13,13,13,0.92)_0%,rgba(13,13,13,0.78)_40%,rgba(13,13,13,0.35)_65%,rgba(13,13,13,0.15)_100%)]' />
-          <div className='absolute inset-x-0 bottom-0 h-[220px] bg-[linear-gradient(180deg,rgba(17,17,19,0)_0%,#111113_100%)]' />
+          {/* Shade: top to bottom on phones, where the copy sits low and spans the width; left to right from sm up */}
+          <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(13,13,13,0.1)_0%,rgba(13,13,13,0.2)_22%,rgba(13,13,13,0.78)_52%,rgba(13,13,13,0.94)_100%)] sm:hidden' />
+          <div className='absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(13,13,13,0.92)_0%,rgba(13,13,13,0.78)_40%,rgba(13,13,13,0.35)_65%,rgba(13,13,13,0.15)_100%)] sm:block' />
+          <div className='absolute inset-x-0 bottom-0 h-[120px] bg-[linear-gradient(180deg,rgba(17,17,19,0)_0%,#111113_100%)] sm:h-[220px]' />
         </div>
       )}
-      <div className='relative z-10 mx-auto flex w-full max-w-[1200px] flex-col px-4 pt-20 pb-16 sm:px-6 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-[120px] lg:pb-[100px] xl:px-0'>
+      <div className='relative z-10 mx-auto flex w-full max-w-[1200px] grow flex-col px-4 pt-10 pb-8 sm:justify-center sm:px-6 sm:pt-28 sm:pb-20 lg:px-12 lg:pt-[120px] lg:pb-[100px] xl:px-0'>
         {/* Outside data-hero-copy: PageAnimations reads that block's children as [eyebrow, heading, ...] */}
         {page && <HeroBreadcrumb page={page} current={current} />}
-        <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-6 lg:gap-8'>
+        <div
+          data-hero-copy
+          className={`flex w-full max-w-[760px] flex-col items-start gap-5 sm:gap-6 lg:gap-8 ${hasMedia ? 'mt-auto sm:mt-0' : ''}`}
+        >
           <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
-          <h1 className='font-site-heading text-[40px] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>
+          <h1 className='font-site-heading text-[clamp(30px,9.2vw,40px)] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[56px] lg:text-[72px] lg:leading-[76px]'>
             {lines.map((line, index) => (
               <Fragment key={index}>
                 {/* Each line is its own block, so the space is invisible but keeps the words apart
@@ -238,7 +263,7 @@ export function PageHero({
             ))}
           </h1>
           {subtext && (
-            <p className='max-w-[600px] font-site-body text-base leading-[1.6] text-[#d4d4d4] sm:text-[18px] sm:leading-[29px]'>
+            <p className='max-w-[600px] font-site-body text-[15px] leading-[1.55] text-[#d4d4d4] sm:text-[18px] sm:leading-[29px]'>
               {subtext}
             </p>
           )}
@@ -246,6 +271,19 @@ export function PageHero({
             <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center'>{children}</div>
           )}
         </div>
+        {/* Scroll cue under a full-screen hero (PageAnimations draws the line and fades it on scroll) */}
+        {hasMedia && (
+          <div
+            data-scroll-cue
+            aria-hidden='true'
+            className='pointer-events-none absolute bottom-3 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex [@media(max-height:760px)]:hidden'
+          >
+            <span className='font-site-body text-[10px] tracking-[0.2em] text-white/55 uppercase'>Scroll</span>
+            <span className='relative block h-9 w-px overflow-hidden bg-white/15'>
+              <span data-cue-line className='absolute inset-0 block bg-white/70' />
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );
