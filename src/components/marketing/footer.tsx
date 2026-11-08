@@ -5,6 +5,9 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
 import { getSetting } from '@/server/queries/get-setting';
 import { legalPageService } from '@/server/services/legal-page-service';
+import { collectMediaIds } from '@/lib/content/image-ref';
+import { loadPublicImages } from '@/server/lib/media/resolve';
+import { FooterSocials } from '@/components/marketing/footer-socials';
 
 // Figma 131:674 assets
 const FALLBACK_LOGO = '/assets/landing/27e96966dcba4218e85dc86d5723b210f88c7f2d.png';
@@ -58,6 +61,13 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
     ...footer.legalLinks.filter((link) => link.label && link.href && !legalPaths.has(link.href)),
     ...legalPages.map((page) => ({ label: page.title, href: `/${page.slug}` })),
   ];
+  // Social icons are media-library refs, resolved in one cached query (none: no query result needed).
+  const socialIcons = await loadPublicImages(collectMediaIds(footer.socials));
+  const socials = footer.socials.map((social) => ({
+    name: social.name,
+    url: social.url,
+    icon: social.icon?.kind === 'media' ? (socialIcons[social.icon.id.toLowerCase()] ?? null) : null,
+  }));
   const logoLottieJson = 'logoLottieJson' in settings ? settings.logoLottieJson : null;
   const logoUseLottie = 'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false;
 
@@ -91,6 +101,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
               )}
             </Link>
             <p className='max-w-[320px] text-[14px] leading-[23px] text-[#a1a1a1]'>{footer.blurb}</p>
+            <FooterSocials socials={socials} />
           </div>
 
           {/* Link columns (Settings > Footer) */}

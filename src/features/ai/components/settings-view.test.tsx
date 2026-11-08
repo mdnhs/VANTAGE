@@ -140,6 +140,7 @@ describe('SettingsView', () => {
 
   it('lets only an owner share enquiry details; an admin sees it disabled', async () => {
     setup(admin);
+    fireEvent.click(await screen.findByRole('tab', { name: 'Access' }));
     const toggle = await screen.findByRole('switch', { name: /enquiry details/ });
     expect(toggle.hasAttribute('data-disabled')).toBe(true);
     expect(screen.getByText('Only an owner can change this.')).toBeTruthy();
@@ -148,6 +149,7 @@ describe('SettingsView', () => {
   it('makes the owner tick the acknowledgement, which names the 90-day retention', async () => {
     responses['PUT /admin/ai/settings'] = ok(doc());
     setup();
+    fireEvent.click(await screen.findByRole('tab', { name: 'Access' }));
     fireEvent.click(await screen.findByRole('switch', { name: /enquiry details/ }));
     const ack = screen.getByRole('checkbox', { name: /kept for up to 90 days/ });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -228,6 +230,7 @@ describe('SettingsView', () => {
       },
     };
     setup();
+    fireEvent.click(await screen.findByRole('tab', { name: 'Access' }));
     fireEvent.click(await screen.findByRole('switch', { name: /enquiry details/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     const message = await screen.findByText('Confirm the acknowledgement first');
@@ -235,6 +238,26 @@ describe('SettingsView', () => {
     const ack = screen.getByRole('checkbox', { name: /kept for up to 90 days/ });
     expect(ack.getAttribute('aria-describedby')).toBe(message.id);
     expect(screen.queryByText('Validation failed')).toBeNull();
+  });
+
+  it('groups the page into Connection, Access and Behaviour tabs, Connection first', async () => {
+    setup();
+    await screen.findByRole('switch', { name: 'Turn on the AI assistant' });
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Connection', 'Access', 'Behaviour']);
+    expect(screen.getByRole('tab', { name: 'Connection' }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('opens the tab of a field that fails validation, and marks it', async () => {
+    setup();
+    fireEvent.click(await screen.findByRole('tab', { name: 'Behaviour' }));
+    fireEvent.change(screen.getByLabelText('Longest answer (tokens)'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Connection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { name: /Behaviour/ }).getAttribute('aria-selected')).toBe('true'),
+    );
+    expect(screen.getByRole('tab', { name: /Behaviour/ }).querySelector('[role="img"]')).not.toBeNull();
+    expect(puts()).toHaveLength(0);
   });
 
   it('puts a cause with no field on screen in the alert', async () => {

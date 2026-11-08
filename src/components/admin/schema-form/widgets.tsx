@@ -191,6 +191,8 @@ function ListWidget({ field, control }: Props) {
     </div>
   );
   const inline = item.widget === 'text';
+  // A link item (text + target) is one compact row, not a titled card.
+  const linkRow = item.widget === 'link';
   return (
     <FieldSet data-section={field.name} data-invalid={error ? true : undefined} className='scroll-mt-4'>
       <FieldLegend variant='label'>{field.label}</FieldLegend>
@@ -204,6 +206,13 @@ function ListWidget({ field, control }: Props) {
             <li key={index}>
               {inline ? (
                 <InlineTextItem field={child} control={control} listId={id} index={index} actions={controls(index)} />
+              ) : linkRow ? (
+                <div className='flex flex-col gap-3 rounded-xl border p-3 sm:flex-row sm:items-start'>
+                  <div className='min-w-0 flex-1'>
+                    <LinkWidget field={child} control={control} compact />
+                  </div>
+                  <div className='sm:pt-6'>{controls(index)}</div>
+                </div>
               ) : (
                 <fieldset aria-label={child.label} className='flex flex-col gap-3 rounded-xl border p-3'>
                   <div className='flex items-center justify-between'>

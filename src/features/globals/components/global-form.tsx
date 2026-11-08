@@ -77,6 +77,8 @@ export function GlobalForm({
           defaultValues={value as never}
           submitLabel={`Save ${label.toLowerCase()}`}
           readOnly={!canUpdate}
+          // Forms with sections (the footer) show them as horizontal tabs.
+          sectionTabs
           onValuesChange={onValuesChange}
           onSubmit={async (next) => {
             setConflict(false);

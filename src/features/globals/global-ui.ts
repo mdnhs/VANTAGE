@@ -17,66 +17,232 @@ const SUBTEXT = { label: 'Text under the title' } as const;
 // live here. Keys not listed fall back to a humanised field name.
 export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>> = {
   site: {
-    name: { label: 'Business name' },
-    legalName: { label: 'Legal name', description: 'Used in legal pages and invoices (not shown on the site yet).' },
-    logo: { label: 'Logo' },
-    favicon: { label: 'Favicon' },
-    lottieLogo: { label: 'Animated logo' },
+    name: {
+      label: 'Business name',
+      widget: 'text',
+      section: 'Business',
+      sectionDescription: 'Who the business is. The name appears across the site, in page titles and in emails.',
+    },
+    legalName: {
+      label: 'Legal name',
+      description: 'Used in legal pages and invoices (not shown on the site yet).',
+      section: 'Business',
+    },
+    logo: {
+      label: 'Logo',
+      section: 'Logo & icons',
+      sectionDescription: 'The logo in the header and footer, and the small icon in browser tabs.',
+    },
+    favicon: { label: 'Favicon', section: 'Logo & icons' },
+    lottieLogo: { label: 'Animated logo', section: 'Logo & icons' },
     'lottieLogo.enabled': { label: 'Use the animated logo', description: 'Falls back to the logo when off.' },
     'lottieLogo.json': {
       widget: 'json-file',
       label: 'Lottie animation',
       description: 'A .json file exported from Lottie.',
     },
-    social: { label: 'Social profiles' },
+    social: {
+      label: 'Social profiles',
+      section: 'Social profiles',
+      sectionDescription:
+        'Your profiles by network and address. The icons shown in the footer are managed under Settings > Footer > Social media.',
+    },
     'social.$.label': { label: 'Network' },
     'social.$.url': { label: 'Address', inputType: 'url', placeholder: 'https://' },
   },
   contact: {
-    email: { inputType: 'email', label: 'Email' },
+    phone: {
+      label: 'Phone',
+      section: 'Phone & email',
+      sectionDescription: 'How customers reach you. These appear in the header, footer and on the Contact page.',
+    },
+    email: { inputType: 'email', label: 'Email', section: 'Phone & email' },
     'phone.display': { label: 'Phone (as shown)' },
     'phone.e164': {
       label: 'Phone in international format (E.164)',
       placeholder: '+35312345678',
       description: 'Used for phone links on the site when valid (e.g. +35312345678). Falls back to the display number.',
     },
-    emergencyPhone: { label: 'Emergency phone', inputType: 'tel' },
-    whatsapp: { label: 'WhatsApp number', inputType: 'tel' },
+    emergencyPhone: { label: 'Emergency phone', inputType: 'tel', section: 'Phone & email' },
+    whatsapp: { label: 'WhatsApp number', inputType: 'tel', section: 'Phone & email' },
+    address: {
+      label: 'Address',
+      section: 'Address & map',
+      sectionDescription: 'Where the workshop is. Shown in the footer and on the Contact page.',
+    },
     'address.lines': { label: 'Address lines' },
     'address.eircode': { label: 'Eircode' },
-    hours: { label: 'Opening hours' },
+    hours: {
+      label: 'Opening hours',
+      section: 'Opening hours',
+      sectionDescription: 'When the workshop is open.',
+    },
     'hours.weekly': { widget: 'weekly-hours-groups', label: 'Opening times' },
     'hours.note': { description: 'Internal note about the hours (not shown on the site yet).' },
     'hours.summary': { description: 'Leave blank to generate it from the opening times.' },
-    mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://' },
+    mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://', section: 'Address & map' },
   },
   navigation: {
-    links: { label: 'Header links' },
+    links: {
+      label: 'Header links',
+      section: 'Menu links',
+      sectionDescription: 'The links in the header and in the mobile menu.',
+    },
+    'links.$.label': { label: 'Link text' },
+    'links.$.href': { label: 'Link target', widget: 'text' },
     'links.$.mobileOnly': { label: 'Mobile menu only' },
-    cta: { label: 'Call to action' },
+    cta: {
+      label: 'Call to action',
+      section: 'Quote button',
+      sectionDescription:
+        'The header button was removed, so only the wide quote button in the mobile menu is shown: its "Mobile menu label" and "Mobile menu link". The other fields are kept but not used.',
+    },
     'cta.shortLabel': { label: 'Short label', description: 'Used on small screens.' },
     'cta.mobileLabel': { label: 'Mobile menu label' },
     'cta.mobileHref': { label: 'Mobile menu link' },
   },
   footer: {
-    columns: { label: 'Link columns' },
+    // Brand: the logo column on the left of the footer.
+    blurb: {
+      label: 'Text under the logo',
+      description: 'A short line about the business.',
+      section: 'Brand',
+      sectionDescription: 'The logo column at the left of the footer: the short text under the logo.',
+    },
+    socials: {
+      label: 'Social media',
+      description: 'Add a profile, give it a name and link, and upload its icon.',
+      section: 'Social media',
+      sectionDescription: 'Icons shown under the text in the logo column, one for each profile you add.',
+    },
+    'socials.$': { label: 'Profile' },
+    'socials.$.name': { label: 'Name', placeholder: 'Facebook' },
+    'socials.$.url': { label: 'Link', widget: 'text', inputType: 'url', placeholder: 'https://facebook.com/yourpage' },
+    'socials.$.icon': {
+      label: 'Icon',
+      description:
+        'A small square image, SVG or PNG. It sits on a white tile, so use a dark or coloured icon. Without one, the first letter of the name shows.',
+    },
+    // Link columns: up to four, after the brand column.
+    columns: {
+      label: 'Link columns',
+      description: 'Each column has a title and its own links.',
+      section: 'Link columns',
+      sectionDescription: 'The columns of links next to the logo column, such as Services and Company. Up to 4.',
+    },
+    'columns.$.title': { label: 'Column title' },
     'columns.$.links': { label: 'Links' },
-    legalLinks: { label: 'Legal links' },
-    legalNote: { description: 'Printed after the copyright name.' },
+    'columns.$.links.$': { widget: 'link' },
+    // Contact: the column at the right.
+    contactNote: {
+      label: 'Note under the contact details',
+      description: 'Optional small print, for example "Emergency callouts 24/7".',
+      section: 'Contact column',
+      sectionDescription:
+        'The Contact column lists the phone, email and address from Settings > Contact. You can only add a note here.',
+    },
+    // Bottom bar: the line along the very bottom.
+    copyrightName: {
+      label: 'Copyright name',
+      description: 'Blank uses the business name.',
+      section: 'Bottom bar',
+      sectionDescription: 'The line along the very bottom: the copyright text on the left, small links on the right.',
+    },
+    legalNote: {
+      label: 'Text after the copyright',
+      description: 'Printed after the copyright name.',
+      section: 'Bottom bar',
+    },
+    legalLinks: {
+      label: 'Small links',
+      description:
+        'Shown at the right of the bottom bar. Your published legal pages are added after these automatically (Website > Legal pages).',
+      section: 'Bottom bar',
+    },
+    'legalLinks.$': { widget: 'link' },
   },
   quoteForm: {
+    steps: {
+      section: 'Steps',
+      sectionDescription: 'The three steps shown above the quote form.',
+    },
+    labels: {
+      section: 'Field text',
+      sectionDescription: 'The labels, example text and hints for the quote form fields.',
+    },
+    placeholders: { section: 'Field text' },
+    hints: { section: 'Field text' },
+    buttons: {
+      section: 'Buttons',
+      sectionDescription: 'The text on the quote form buttons.',
+    },
+    responseTime: {
+      section: 'Reassurance',
+      sectionDescription: 'The short reassurances shown beside the form, and the privacy note under it.',
+    },
+    noCard: { section: 'Reassurance' },
+    benefits: { section: 'Reassurance' },
+    privacyNote: { section: 'Reassurance' },
+    success: {
+      section: 'After sending',
+      sectionDescription: 'What visitors see once they send the form, or when something goes wrong.',
+    },
+    errors: { section: 'After sending' },
     'success.body': { description: '"{name}", "{vehicle}" and "{phone}" are replaced.' },
   },
   contactForm: {
+    title: {
+      section: 'Heading',
+      sectionDescription: 'The heading and introduction above the contact form.',
+    },
+    intro: { section: 'Heading' },
+    labels: {
+      section: 'Fields',
+      sectionDescription: 'The labels, example text and photo drop area of the contact form.',
+    },
+    placeholders: { section: 'Fields' },
+    dropzone: { section: 'Fields' },
+    button: {
+      section: 'Buttons & notes',
+      sectionDescription: 'The send button and the small notes around it.',
+    },
+    submitting: { section: 'Buttons & notes' },
+    responseNote: { section: 'Buttons & notes' },
+    sendAnother: { section: 'Buttons & notes' },
+    success: {
+      section: 'After sending',
+      sectionDescription: 'What visitors see once they send the form, or when something goes wrong.',
+    },
+    errors: { section: 'After sending' },
     'success.body': { description: '"{name}" is replaced.' },
   },
+  microcopy: {
+    contactInfo: {
+      section: 'Contact info',
+      sectionDescription: 'The details cards on the Contact page: headings and labels.',
+    },
+    visitUs: {
+      section: 'Visit us',
+      sectionDescription: 'The map section at the bottom of the Contact page.',
+    },
+  },
   notifications: {
-    recipients: { label: 'Recipients', description: 'New enquiries are emailed to these addresses.' },
+    recipients: {
+      label: 'Recipients',
+      description: 'New enquiries are emailed to these addresses.',
+      section: 'Recipients',
+      sectionDescription: 'Who is emailed when a new enquiry arrives.',
+    },
     includeMessage: {
       label: 'Include the message in notification emails',
       description: 'Off by default: email copies leave the admin.',
+      section: 'Recipients',
     },
-    autoReply: { label: 'Auto-reply to the customer' },
+    autoReply: {
+      label: 'Auto-reply to the customer',
+      section: 'Auto-reply',
+      sectionDescription: 'An automatic reply sent to the customer after they send an enquiry.',
+    },
     'autoReply.enabled': {
       label: 'Send an auto-reply',
       description: 'Auto-replies go to whatever address is typed into the form.',
@@ -122,11 +288,15 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
   },
   privacy: {
     enquiryRetentionMonths: {
+      section: 'Enquiries',
+      sectionDescription: 'How long finished enquiries are kept before they are deleted.',
       label: 'Keep enquiries for (months)',
       description:
         'Only finished enquiries are deleted, counted from their last update: completed, cancelled or archived quotes with no billing data (no invoice number, status unpaid, nothing paid, no payment method), and replied or archived contact messages. New and in-progress enquiries are never deleted.',
     },
     spamRetentionDays: {
+      section: 'Spam',
+      sectionDescription: 'How long enquiries filed as spam are kept before they are deleted.',
       label: 'Keep spam for (days)',
       description:
         'Applies to enquiries filed as spam, counted from their last update. A quote with invoice or payment records is never deleted.',

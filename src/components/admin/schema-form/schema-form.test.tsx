@@ -132,3 +132,41 @@ describe('SchemaForm', () => {
     expect(labelFor(html, describedby![2]!)).toBe('Shown at the top');
   });
 });
+
+describe('form sections', () => {
+  const Sectioned = z.object({
+    a: z.string(),
+    b: z.string(),
+    c: z.string(),
+    d: z.string(),
+  });
+  const html = (overrides?: Record<string, object>) =>
+    renderToStaticMarkup(
+      <QueryClientProvider client={new QueryClient()}>
+        <SchemaForm
+          schema={Sectioned}
+          defaultValues={{ a: '', b: '', c: '', d: '' }}
+          onSubmit={vi.fn()}
+          submitLabel='Save'
+          overrides={overrides}
+        />
+      </QueryClientProvider>,
+    );
+
+  it('draws fields flat, with no section markup, when none set a section', () => {
+    expect(html()).not.toContain('<section');
+  });
+
+  it('groups fields into titled cards in field order, with the help line once', () => {
+    const out = html({
+      a: { section: 'First', sectionDescription: 'About the first' },
+      b: { section: 'First' },
+      c: { section: 'Second' },
+    });
+    expect(out.match(/<section/g)).toHaveLength(2);
+    expect(out.indexOf('>First<')).toBeLessThan(out.indexOf('>Second<'));
+    expect(out.match(/About the first/g)).toHaveLength(1);
+    // d has no section: it follows the cards on its own.
+    expect(out.indexOf('>Second<')).toBeLessThan(out.indexOf('name="d"'));
+  });
+});

@@ -47,6 +47,9 @@ export type FormField = {
   fields?: FormField[];
   item?: FormField;
   folder?: string;
+  // Heading (and help line) of the card this top-level field is drawn in; see UiMeta.
+  section?: string;
+  sectionDescription?: string;
   // The field's JSON Schema, for widgets that build values.
   node: JsonNode;
 };
@@ -133,6 +136,8 @@ function toField(raw: JsonNode, name: string, required: boolean, overrides: Fiel
     inputType: meta.inputType,
     autoComplete: meta.autoComplete,
     folder: meta.folder,
+    section: meta.section,
+    sectionDescription: meta.sectionDescription,
     // An image/video widget (inferred or overridden) always starts unset.
     node: optionalRef ? { ...node, 'x-ref': widget } : node,
   };

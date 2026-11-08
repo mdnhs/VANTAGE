@@ -227,3 +227,34 @@ describe('parseGlobal drift', () => {
     });
   });
 });
+
+describe('footer social media', () => {
+  const ICON = { kind: 'media', id: '0b1c1c52-0000-4000-8000-000000000001' };
+
+  it('starts with no profiles, so the footer shows none', () => {
+    expect(parseGlobal('footer', {}).socials).toEqual([]);
+  });
+
+  it('keeps a profile with its name, address and uploaded icon', () => {
+    const footer = GLOBALS.footer.parse({
+      socials: [{ name: 'Facebook', url: 'https://facebook.com/shop', icon: ICON }],
+    });
+    expect(footer.socials).toEqual([{ name: 'Facebook', url: 'https://facebook.com/shop', icon: ICON }]);
+  });
+
+  it('allows a profile without an icon', () => {
+    const footer = GLOBALS.footer.parse({ socials: [{ name: 'TikTok', url: 'https://tiktok.com/@shop' }] });
+    expect(footer.socials[0]?.icon).toBeNull();
+  });
+
+  it('rejects an address that is not a full http(s) link', () => {
+    for (const url of ['', 'facebook.com/shop', 'javascript:alert(1)']) {
+      expect(GLOBALS.footer.safeParse({ socials: [{ name: 'X', url }] }).success, url).toBe(false);
+    }
+  });
+
+  it('caps the list at 12 profiles', () => {
+    const socials = Array.from({ length: 13 }, (_, i) => ({ name: `n${i}`, url: `https://example.com/${i}` }));
+    expect(GLOBALS.footer.safeParse({ socials }).success).toBe(false);
+  });
+});

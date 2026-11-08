@@ -1,7 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/admin/dashboard/page-header';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SectionTabs } from '@/components/admin/section-tabs';
 import { GLOBAL_LABELS, type EditableGlobalKey } from '@/lib/content/global-access';
 
 import { GlobalForm } from './global-form';
@@ -27,20 +27,15 @@ export function GlobalEditor({
       {keys.length === 1 ? (
         <GlobalForm settingKey={keys[0]!} onValuesChange={onValuesChange} />
       ) : (
-        <Tabs defaultValue={keys[0]}>
-          <TabsList className='h-auto flex-wrap'>
-            {keys.map((key) => (
-              <TabsTrigger key={key} value={key} className='px-3 py-1.5'>
-                {GLOBAL_LABELS[key]}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {keys.map((key) => (
-            <TabsContent key={key} value={key} className='pt-2'>
-              <GlobalForm settingKey={key} />
-            </TabsContent>
-          ))}
-        </Tabs>
+        // Each document is its own form with its own Save and History, so only the open one is mounted.
+        <SectionTabs
+          keepMounted={false}
+          tabs={keys.map((key) => ({
+            value: key,
+            label: GLOBAL_LABELS[key],
+            content: <GlobalForm settingKey={key} />,
+          }))}
+        />
       )}
     </div>
   );

@@ -34,6 +34,7 @@ const legalLinks = vi.hoisted(() => ({ list: [] as { title: string; slug: string
 vi.mock('@/server/services/legal-page-service', () => ({
   legalPageService: { listPublishedLinks: async () => legalLinks.list },
 }));
+const footerSocials = vi.hoisted(() => ({ list: [] as unknown[] }));
 vi.mock('@/server/queries/get-setting', () => ({
   getSetting: async () => ({
     blurb: '',
@@ -42,6 +43,22 @@ vi.mock('@/server/queries/get-setting', () => ({
     copyrightName: '',
     legalNote: '',
     legalLinks: [{ label: 'Privacy', href: '/privacy' }],
+    socials: footerSocials.list,
+  }),
+}));
+const ICON_ID = '0b1c1c52-0000-4000-8000-0000000000aa';
+vi.mock('@/server/lib/media/resolve', () => ({
+  loadPublicImages: async () => ({
+    [ICON_ID]: {
+      id: ICON_ID,
+      src: '/uploads/facebook.svg',
+      mimeType: 'image/svg+xml',
+      width: 24,
+      height: 24,
+      alt: '',
+      blurDataUrl: null,
+      focal: { x: 0.5, y: 0.5 },
+    },
   }),
 }));
 
@@ -269,6 +286,33 @@ describe('MarketingFooter cookie settings slot', () => {
     const row = legalRow(container);
     expect(row.lastElementChild?.textContent).toBe('Cookie settings');
     expect(row.querySelectorAll('a')).toHaveLength(1);
+  });
+});
+
+describe('MarketingFooter social media', () => {
+  afterEach(() => {
+    footerSocials.list = [];
+  });
+
+  it('shows no social row when none are set', async () => {
+    const { container } = render(await MarketingFooter({}));
+    expect(container.querySelector('ul[aria-label="Social media"]')).toBeNull();
+  });
+
+  it('shows each profile with its uploaded icon, and a letter when there is none', async () => {
+    footerSocials.list = [
+      { name: 'Facebook', url: 'https://facebook.com/shop', icon: { kind: 'media', id: ICON_ID } },
+      { name: 'TikTok', url: 'https://tiktok.com/@shop', icon: null },
+    ];
+    const { container } = render(await MarketingFooter({}));
+    const links = [...container.querySelectorAll('ul[aria-label="Social media"] a')];
+    expect(links.map((a) => [a.getAttribute('aria-label'), a.getAttribute('href')])).toEqual([
+      ['Facebook', 'https://facebook.com/shop'],
+      ['TikTok', 'https://tiktok.com/@shop'],
+    ]);
+    expect(links[0]!.querySelector('img')?.getAttribute('src')).toBe('/uploads/facebook.svg');
+    expect(links[1]!.querySelector('img')).toBeNull();
+    expect(links[1]!.textContent).toBe('T');
   });
 });
 

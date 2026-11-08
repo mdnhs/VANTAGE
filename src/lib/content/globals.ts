@@ -57,8 +57,8 @@ export const SiteGlobal = z.object({
     .default([]),
 });
 
+// Field order follows the settings tabs: phone and email, address and map, opening hours.
 export const ContactGlobal = z.object({
-  email: z.email().or(z.literal('')).default(''),
   phone: z
     .object({
       display: s(50, '+353 1 234 5678'),
@@ -69,6 +69,7 @@ export const ContactGlobal = z.object({
     })
     .prefault({}),
   emergencyPhone: s(50),
+  email: z.email().or(z.literal('')).default(''),
   whatsapp: s(50),
   address: z
     .object({
@@ -78,6 +79,12 @@ export const ContactGlobal = z.object({
       country: s(60),
     })
     .prefault({}),
+  mapUrl: z
+    .string()
+    .trim()
+    .max(1000)
+    .refine((v) => v === '' || /^https?:\/\/\S+$/.test(v), 'Use a full http(s):// address')
+    .default(''),
   hours: z
     .object({
       weekly: z
@@ -93,12 +100,6 @@ export const ContactGlobal = z.object({
       note: s(200),
     })
     .prefault({}),
-  mapUrl: z
-    .string()
-    .trim()
-    .max(1000)
-    .refine((v) => v === '' || /^https?:\/\/\S+$/.test(v), 'Use a full http(s):// address')
-    .default(''),
 });
 
 export const NavigationGlobal = z.object({
@@ -128,11 +129,17 @@ export const NavigationGlobal = z.object({
     .prefault({}),
 });
 
+// Field order follows the footer on the page: brand, link columns, contact column, bottom bar.
 export const FooterGlobal = z.object({
   blurb: s(
     300,
     'Excellence in precision automotive restoration and high-end repair since 1998. Your vehicle, our obsession.',
   ),
+  // Icons under the blurb: each is a name, an address and an uploaded icon.
+  socials: z
+    .array(z.object({ name: s(40), url: HttpsUrl, icon: image() }))
+    .max(12)
+    .default([]),
   columns: z
     .array(z.object({ title: s(40), links: z.array(Link).max(10).default([]) }))
     .max(4)
@@ -157,15 +164,15 @@ export const FooterGlobal = z.object({
       },
     ]),
   contactNote: s(200),
+  // Blank prints the site name, exactly as the footer did before this was editable.
+  copyrightName: s(80),
+  // Printed after the copyright name.
+  legalNote: s(120, 'Registered in Ireland.'),
   legalLinks: z
     .array(Link)
     .max(6)
     // Legal pages themselves are listed from Dashboard → Legal pages, after these.
     .default([{ label: 'Login', href: '/login' }]),
-  // Blank prints the site name, exactly as the footer did before this was editable.
-  copyrightName: s(80),
-  // Printed after the copyright name.
-  legalNote: s(120, 'Registered in Ireland.'),
 });
 
 // ------------------------------------------------------------------- forms

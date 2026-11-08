@@ -9,7 +9,16 @@ import { Input } from '@/components/ui/input';
 import type { FormField } from '../to-fields';
 
 // Any /path, #anchor, https:, mailto: or tel: is accepted (Href).
-export function LinkWidget({ field, control }: { field: FormField; control: Control<FieldValues> }) {
+// `compact` is for a row inside a list that already titles it: just the two inputs, side by side.
+export function LinkWidget({
+  field,
+  control,
+  compact = false,
+}: {
+  field: FormField;
+  control: Control<FieldValues>;
+  compact?: boolean;
+}) {
   const id = useId();
   const part = (key: 'label' | 'href', label: string) => (
     <Controller
@@ -34,6 +43,14 @@ export function LinkWidget({ field, control }: { field: FormField; control: Cont
       )}
     />
   );
+  if (compact) {
+    return (
+      <div role='group' aria-label={field.label} className='grid gap-3 sm:grid-cols-2'>
+        {part('label', 'Link text')}
+        {part('href', 'Link target')}
+      </div>
+    );
+  }
   return (
     <FieldSet>
       <FieldLegend variant='label'>{field.label}</FieldLegend>

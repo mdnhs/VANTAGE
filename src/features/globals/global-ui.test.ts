@@ -104,3 +104,118 @@ describe('settings pages', () => {
     expect(html).toContain('<form');
   });
 });
+
+describe('footer social media form', () => {
+  const social = flat(toFields(GLOBALS.footer, GLOBAL_FIELD_UI.footer)).find((f) => f.name === 'socials');
+
+  it('is a list with an add button named after the field', () => {
+    expect(social?.widget).toBe('list');
+    expect(social?.label).toBe('Social media');
+  });
+
+  it('asks for a name, a link and an uploaded icon for each profile', () => {
+    const item = flat(social?.item ? [social.item] : []);
+    const field = (name: string) => item.find((f) => f.name === `socials.$.${name}`);
+    expect(field('name')?.label).toBe('Name');
+    expect(field('url')?.inputType).toBe('url');
+    // One line, not the tall box long text gets by default.
+    expect(field('url')?.widget).toBe('text');
+    expect(field('icon')?.widget).toBe('image');
+  });
+});
+
+describe('footer editor layout', () => {
+  const top = toFields(GLOBALS.footer, GLOBAL_FIELD_UI.footer);
+
+  it('lists fields in the order the footer shows them', () => {
+    expect(top.map((f) => f.name)).toEqual([
+      'blurb',
+      'socials',
+      'columns',
+      'contactNote',
+      'copyrightName',
+      'legalNote',
+      'legalLinks',
+    ]);
+  });
+
+  it('puts every field in a section: Brand, Social media, Link columns, Contact column, Bottom bar', () => {
+    expect(top.map((f) => [f.name, f.section])).toEqual([
+      ['blurb', 'Brand'],
+      ['socials', 'Social media'],
+      ['columns', 'Link columns'],
+      ['contactNote', 'Contact column'],
+      ['copyrightName', 'Bottom bar'],
+      ['legalNote', 'Bottom bar'],
+      ['legalLinks', 'Bottom bar'],
+    ]);
+  });
+
+  it('renders the five section headings in that order', () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: new QueryClient() },
+        createElement(SchemaForm, {
+          schema: GLOBALS.footer,
+          defaultValues: parseGlobal('footer', {}),
+          onSubmit: () => undefined,
+          submitLabel: 'Save',
+          overrides: GLOBAL_FIELD_UI.footer,
+        }),
+      ),
+    );
+    const at = ['>Brand<', '>Social media<', '>Link columns<', '>Contact column<', '>Bottom bar<'].map((h) =>
+      html.indexOf(h),
+    );
+    expect(at.every((i) => i >= 0)).toBe(true);
+    expect([...at].sort((x, y) => x - y)).toEqual(at);
+  });
+
+  it('as tabs: five horizontal tabs in site order, every panel still in the form', () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: new QueryClient() },
+        createElement(SchemaForm, {
+          schema: GLOBALS.footer,
+          defaultValues: parseGlobal('footer', {}),
+          onSubmit: () => undefined,
+          submitLabel: 'Save',
+          overrides: GLOBAL_FIELD_UI.footer,
+          sectionTabs: true,
+        }),
+      ),
+    );
+    const tabs = [...html.matchAll(/role="tab"[^>]*>([^<]+)</g)].map((m) => m[1]);
+    expect(tabs).toEqual(['Brand', 'Social media', 'Link columns', 'Contact column', 'Bottom bar']);
+    expect(html).toContain('Text under the logo');
+    expect(html).toContain('Small links');
+  });
+});
+
+describe('settings pages are organised into tabs', () => {
+  const TABS: Record<string, string[]> = {
+    site: ['Business', 'Logo & icons', 'Social profiles'],
+    contact: ['Phone & email', 'Address & map', 'Opening hours'],
+    navigation: ['Menu links', 'Quote button'],
+    footer: ['Brand', 'Social media', 'Link columns', 'Contact column', 'Bottom bar'],
+    quoteForm: ['Steps', 'Field text', 'Buttons', 'Reassurance', 'After sending'],
+    contactForm: ['Heading', 'Fields', 'Buttons & notes', 'After sending'],
+    microcopy: ['Contact info', 'Visit us'],
+    notifications: ['Recipients', 'Auto-reply'],
+    privacy: ['Enquiries', 'Spam'],
+  };
+
+  it('covers every document the Settings pages edit', () => {
+    expect(Object.keys(TABS).sort()).toEqual([...Object.values(SETTINGS_PAGES).flat()].sort());
+  });
+
+  it.each(Object.entries(TABS))('%s: every field is in a section, one unbroken run each', (key, tabs) => {
+    const fields = toFields(GLOBALS[key as keyof typeof GLOBALS], GLOBAL_FIELD_UI[key as keyof typeof GLOBAL_FIELD_UI]);
+    expect(fields.filter((f) => !f.section).map((f) => f.name)).toEqual([]);
+    // A section split in two runs would show as two tabs with the same name.
+    const runs = fields.map((f) => f.section).filter((section, i, all) => section !== all[i - 1]);
+    expect(runs).toEqual(tabs);
+  });
+});

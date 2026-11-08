@@ -31,6 +31,10 @@ export type UiMeta = {
   step?: number;
   // Cloudinary folder for image/video uploads.
   folder?: string;
+  // Top-level fields sharing a `section` are drawn together under that heading (a titled card, with
+  // an optional line of help). Fields without one render flat, as they always did.
+  section?: string;
+  sectionDescription?: string;
 };
 
 export const ui = z.registry<UiMeta>();
