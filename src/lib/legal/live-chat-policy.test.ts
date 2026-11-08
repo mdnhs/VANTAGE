@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { tiptapDocSchema, type TiptapDoc } from '@/validations/legal-page-schema';
 
-import { addLiveChatSection } from './live-chat-policy';
+import { addLiveChatSection, fillBusinessDetails } from './live-chat-policy';
 
 const text = (value: string) => ({ type: 'text', text: value });
 const heading = (value: string, level = 3) => ({ type: 'heading', attrs: { level }, content: [text(value)] });
@@ -63,6 +63,31 @@ describe('addLiveChatSection', () => {
     );
   });
 
+  it('updates a "Last Updated" line that sits among other lines of a paragraph', () => {
+    const doc = policy();
+    doc.content[1] = {
+      type: 'paragraph',
+      content: [
+        { type: 'text', text: 'Website: https://example.com' },
+        { type: 'hardBreak' },
+        { type: 'text', text: 'Last Updated:' },
+        { type: 'text', text: ' 2 November 2026' },
+      ],
+    };
+
+    const out = allText(addLiveChatSection(doc, OPTIONS).doc);
+
+    expect(out).toContain('"Last Updated:"},{"type":"text","text":" 8 November 2026"');
+    expect(out).toContain('Website: https://example.com');
+  });
+
+  it('leaves a sentence that merely mentions the date alone', () => {
+    const doc = policy();
+    doc.content.push(paragraph('Updates are published with a revised "Last Updated" date.'));
+
+    expect(allText(addLiveChatSection(doc, OPTIONS).doc)).toContain('a revised \\"Last Updated\\" date.');
+  });
+
   it('changes nothing the second time', () => {
     const once = addLiveChatSection(policy(), OPTIONS);
     const twice = addLiveChatSection(once.doc, { ...OPTIONS, today: new Date('2027-01-01T12:00:00Z') });
@@ -86,5 +111,50 @@ describe('addLiveChatSection', () => {
     const before = JSON.stringify(doc);
     addLiveChatSection(doc, OPTIONS);
     expect(JSON.stringify(doc)).toBe(before);
+  });
+});
+
+describe('fillBusinessDetails', () => {
+  const details = { email: 'shop@example.com', address: '10 Park Street, Dublin' };
+  const withPlaceholders = (): TiptapDoc => ({
+    type: 'doc',
+    content: [
+      {
+        type: 'bulletList',
+        content: [
+          { type: 'listItem', content: [paragraph('Email: [Insert Business Email Address]')] },
+          { type: 'listItem', content: [paragraph('Business Address: [Insert Business Address]')] },
+        ],
+      },
+      paragraph('Write to [Insert Business Email Address] at any time.'),
+    ],
+  });
+
+  it('fills every placeholder, however deep', () => {
+    const { doc, changed } = fillBusinessDetails(withPlaceholders(), details);
+
+    expect(changed).toBe(true);
+    expect(allText(doc)).not.toContain('[Insert');
+    expect(allText(doc)).toContain('Email: shop@example.com');
+    expect(allText(doc)).toContain('Business Address: 10 Park Street, Dublin');
+    expect(allText(doc)).toContain('Write to shop@example.com at any time.');
+  });
+
+  it('reports no change when there is nothing to fill', () => {
+    const before = policy();
+
+    const { doc, changed } = fillBusinessDetails(before, details);
+
+    expect(changed).toBe(false);
+    expect(doc).toEqual(before);
+  });
+
+  it('leaves the original document untouched', () => {
+    const before = withPlaceholders();
+    const copy = JSON.stringify(before);
+
+    fillBusinessDetails(before, details);
+
+    expect(JSON.stringify(before)).toBe(copy);
   });
 });

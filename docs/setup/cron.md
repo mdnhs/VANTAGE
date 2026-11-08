@@ -41,3 +41,11 @@ Daily at 03:15 server time, output appended to a log:
 `bash -lc` loads a login shell so `yarn`/`node` are on PATH when Node comes from nvm or corepack
 (cron's own PATH is minimal). Otherwise use absolute paths to `yarn`. Adjust `/srv/vantage` and
 the log path to the deployment; install with `crontab -e` as the app user.
+
+### On Dokploy
+
+The Docker image has no `yarn` or `scripts/`, so production runs the same job over HTTP from inside
+the container. A Dokploy schedule on the application (daily at 03:15, Europe/Dublin) posts to
+`/api/v1/internal/jobs/retention` with the container's own `AUTH_SECRET` as the `x-job-key` header.
+Add `?dryRun=1` to only count. Without the key the route answers 404. Live chats are removed by the
+same job once their last message is older than `enquiryRetentionMonths`.

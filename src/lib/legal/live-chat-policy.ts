@@ -5,11 +5,17 @@ const isHeading = (node: TiptapNode) => node.type === 'heading';
 const paragraph = (text: string): TiptapNode => ({ type: 'paragraph', content: [{ type: 'text', text }] });
 
 function withUpdatedDate(node: TiptapNode, date: string): TiptapNode {
-  if (node.type !== 'paragraph' || !textOf(node).startsWith('Last Updated:') || !node.content?.length) return node;
+  if (node.type !== 'paragraph' || !node.content) return node;
+  const at = node.content.findIndex((child) => child.text?.startsWith('Last Updated:'));
+  if (at === -1) return node;
   const content = node.content.map((child) => ({ ...child }));
-  const last = content.at(-1)!;
-  // A one-piece line holds the label too; a split line holds only the date in its last piece.
-  last.text = last.text?.startsWith('Last Updated:') ? `Last Updated: ${date}` : ` ${date}`;
+  const label = content[at]!;
+  // The label may hold the date itself, or (when the label is bold) leave it to the next piece.
+  if (label.text!.trim() === 'Last Updated:' && content[at + 1]?.text !== undefined) {
+    content[at + 1]!.text = ` ${date}`;
+  } else {
+    label.text = `Last Updated: ${date}`;
+  }
   return { ...node, content };
 }
 
@@ -54,4 +60,33 @@ export function addLiveChatSection(
     withUpdatedDate(node, date),
   );
   return { doc: { ...doc, content }, changed: true };
+}
+
+const PLACEHOLDERS = {
+  '[Insert Business Email Address]': 'email',
+  '[Insert Business Address]': 'address',
+} as const;
+
+// Puts the published business details where the policy template left blanks.
+export function fillBusinessDetails(
+  doc: TiptapDoc,
+  details: { email: string; address: string },
+): { doc: TiptapDoc; changed: boolean } {
+  let changed = false;
+  const fill = (node: TiptapNode): TiptapNode => {
+    let text = node.text;
+    for (const [placeholder, field] of Object.entries(PLACEHOLDERS)) {
+      if (text?.includes(placeholder)) {
+        text = text.replaceAll(placeholder, details[field]);
+        changed = true;
+      }
+    }
+    return {
+      ...node,
+      ...(text === undefined ? {} : { text }),
+      ...(node.content ? { content: node.content.map(fill) } : {}),
+    };
+  };
+  const content = doc.content.map(fill);
+  return changed ? { doc: { ...doc, content }, changed } : { doc, changed };
 }

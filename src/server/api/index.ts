@@ -21,6 +21,7 @@ import { adminUsersLookup } from './admin-users-lookup';
 import { auth } from './auth';
 import { contacts } from './contacts';
 import { homepageCatalogs } from './homepage-catalogs';
+import { internalJobs } from './internal-jobs';
 import { homepageProcessSteps } from './homepage-process-steps';
 import { partnerLogos } from './partner-logos';
 import { preview } from './preview';
@@ -99,6 +100,7 @@ export const api = app
   .route('/contacts', contacts)
   .route('/public/consent', publicConsent)
   .route('/public/support', publicSupport)
+  .route('/internal/jobs', internalJobs)
   .route('/public/enquiry-stamp', publicStamp);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)

@@ -1,19 +1,23 @@
 // Adds the live chat section to the published privacy policy, once.
 //   yarn legal:add-live-chat           show what would be added; nothing is written
 //   yarn legal:add-live-chat --apply   write it (safe to repeat)
+//   --email=... --address=...          also fill the policy's [Insert Business ...] blanks
 // Run before the deploy that turns the chat on, so the rebuilt page already includes it.
 import { fail } from './lib/cli-env';
 
 const SLUG = 'privacy-policy';
 
 async function main() {
-  const apply = process.argv.slice(2).includes('--apply');
+  const args = process.argv.slice(2);
+  const apply = args.includes('--apply');
+  const option = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+  const [email, address] = [option('email'), option('address')];
   const { eq } = await import('drizzle-orm');
   const { db } = await import('@/server/db');
   const { legalPages } = await import('@/server/db/schema');
   const { audit } = await import('@/server/lib/audit');
   const { parseGlobal } = await import('@/lib/content/globals');
-  const { addLiveChatSection } = await import('@/lib/legal/live-chat-policy');
+  const { addLiveChatSection, fillBusinessDetails } = await import('@/lib/legal/live-chat-policy');
   const { settingsRepository } = await import('@/server/repositories/settings-repository');
   const { tiptapDocSchema } = await import('@/validations/legal-page-schema');
 
@@ -22,12 +26,13 @@ async function main() {
 
   const privacy = parseGlobal('privacy', (await settingsRepository.get('privacy'))?.value);
   const today = new Date();
-  const { doc, changed } = addLiveChatSection(page.content, {
-    retentionMonths: privacy.enquiryRetentionMonths,
-    today,
-  });
+  const section = addLiveChatSection(page.content, { retentionMonths: privacy.enquiryRetentionMonths, today });
+  const filled =
+    email && address ? fillBusinessDetails(section.doc, { email, address }) : { ...section, changed: false };
+  const doc = filled.doc;
+  const changed = section.changed || filled.changed;
   if (!changed) {
-    console.log('OK the policy already covers live chat; nothing to do');
+    console.log('OK nothing to do');
     process.exit(0);
   }
   tiptapDocSchema.parse(doc);
@@ -50,9 +55,9 @@ async function main() {
     action: 'legal.update',
     entityType: 'legal_page',
     entityId: page.id,
-    summary: 'Live chat section added to the privacy policy',
+    summary: 'Live chat section and business details added to the privacy policy',
   });
-  console.log('OK the live chat section was added');
+  console.log('OK the policy was updated');
   process.exit(0);
 }
 

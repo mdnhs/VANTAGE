@@ -11,6 +11,7 @@ import { countUnread } from '../../lib/unread';
 import { VISITOR_STREAM_URL, visitorApi } from '../../services/visitor-api';
 import { ChatHint } from './chat-hint';
 import { useChatMoments } from './use-chat-moments';
+import { useClearOfControls } from './use-clear-of-controls';
 import { useWidgetMotion } from './use-widget-motion';
 
 // Remembers only UI state (no message text, no identity). The chat itself is proven by an httpOnly cookie.
@@ -50,6 +51,8 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
   const [error, setError] = useState<string | null>(null);
 
   const { panel, launcher, chatIcon, closeIcon, panelMounted } = useWidgetMotion(ready, open);
+  const widgetRoot = useRef<HTMLDivElement>(null);
+  useClearOfControls(ready, open, widgetRoot, launcher);
   const composer = useRef<HTMLTextAreaElement>(null);
   const log = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
@@ -181,7 +184,10 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
       : 'We will reply as soon as we can';
 
   return (
-    <div className='fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 font-site-body sm:right-6 sm:bottom-6'>
+    <div
+      ref={widgetRoot}
+      className='fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 font-site-body sm:right-6 sm:bottom-6'
+    >
       {panelMounted ? (
         <div
           ref={panel}
