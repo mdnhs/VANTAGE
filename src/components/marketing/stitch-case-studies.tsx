@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -160,18 +161,21 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
         {/* CTA */}
         <div className='flex justify-center'>
           <Link
+            data-reveal-button
             href='/our-work'
-            className='flex w-full items-center justify-center gap-2.5 rounded-lg bg-brand py-4 pr-[22px] pl-6 font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:w-auto'
+            className='relative flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-lg border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:w-auto'
           >
-            View all case studies
-            <span className='relative size-6 shrink-0 overflow-hidden'>
-              <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%]'>
-                <span className='absolute inset-[-6.25%_-12.5%]'>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ARROW_ICON} alt='' width={7.5} height={13.5} className='block size-full max-w-none' />
+            <RevealContent band='dark' className='gap-2.5'>
+              View all case studies
+              <span className='relative size-6 shrink-0 overflow-hidden'>
+                <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%]'>
+                  <span className='absolute inset-[-6.25%_-12.5%]'>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ARROW_ICON} alt='' width={7.5} height={13.5} className='block size-full max-w-none' />
+                  </span>
                 </span>
               </span>
-            </span>
+            </RevealContent>
           </Link>
         </div>
       </div>

@@ -24,6 +24,7 @@ export const DEMO_USERS: { email: string; name: string; role: RoleName; password
   { email: 'author@vantage.test', name: 'Aaron Author', role: 'author', password: DEMO_PASSWORD },
   { email: 'marketer@vantage.test', name: 'Maya Marketer', role: 'marketer', password: DEMO_PASSWORD },
   { email: 'intake@vantage.test', name: 'Ian Intake', role: 'intake', password: DEMO_PASSWORD },
+  { email: 'support@vantage.test', name: 'Sam Support', role: 'support', password: DEMO_PASSWORD },
   { email: 'viewer@vantage.test', name: 'Vera Viewer', role: 'viewer', password: DEMO_PASSWORD },
 ];
 

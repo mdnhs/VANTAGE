@@ -23,4 +23,5 @@ export * from './ai';
 export * from './redirects';
 export * from './media-purges';
 export * from './legal-pages';
+export * from './support';
 // export * from './orders';

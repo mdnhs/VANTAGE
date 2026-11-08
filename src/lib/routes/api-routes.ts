@@ -6,6 +6,27 @@ export const API_ROUTES = {
   },
   health: '/health',
   enquiryStamp: '/public/enquiry-stamp',
+  support: {
+    visitor: {
+      status: '/public/support/status',
+      conversation: '/public/support/conversation',
+      start: '/public/support/conversations',
+      messages: '/public/support/messages',
+      contact: '/public/support/contact',
+      stream: '/public/support/stream',
+    },
+    admin: {
+      unread: '/admin/support/unread',
+      agents: '/admin/support/agents',
+      stream: '/admin/support/stream',
+      list: '/admin/support/conversations',
+      detail: (id: string) => `/admin/support/conversations/${id}`,
+      messages: (id: string) => `/admin/support/conversations/${id}/messages`,
+      read: (id: string) => `/admin/support/conversations/${id}/read`,
+      assign: (id: string) => `/admin/support/conversations/${id}/assign`,
+      close: (id: string) => `/admin/support/conversations/${id}/close`,
+    },
+  },
   services: {
     public: '/services',
     adminList: '/services/admin/list',

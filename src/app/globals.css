@@ -228,6 +228,36 @@
 }
 
 /* Admin search sections rise in once the panel has grown (src/components/admin/command/global-search.tsx) */
+/* A burst of shaking, then a pause, like a phone ringing. */
+@keyframes phone-ring {
+  0%,
+  56%,
+  100% {
+    transform: rotate(0deg);
+  }
+  7% {
+    transform: rotate(-20deg);
+  }
+  14% {
+    transform: rotate(18deg);
+  }
+  21% {
+    transform: rotate(-16deg);
+  }
+  28% {
+    transform: rotate(14deg);
+  }
+  35% {
+    transform: rotate(-10deg);
+  }
+  42% {
+    transform: rotate(7deg);
+  }
+  49% {
+    transform: rotate(-3deg);
+  }
+}
+
 @keyframes admin-search-in {
   from {
     opacity: 0;

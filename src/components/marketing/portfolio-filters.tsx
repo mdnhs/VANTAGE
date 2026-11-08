@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 export const ALL_FILTER = 'All';
 // Also offered as suggestions in the admin project form, so categories stay consistent.
 export const DEFAULT_FILTERS = [ALL_FILTER, 'Crash Repair', 'Bodywork', 'Paint', 'Respray', 'Restoration', 'Custom'];
@@ -22,17 +23,18 @@ export function PortfolioFilters({ filters = DEFAULT_FILTERS, active = ALL_FILTE
         const isActive = filter === active;
         return (
           <button
+            data-reveal-button
             key={filter}
             type='button'
             aria-pressed={isActive}
             onClick={() => onChange?.(filter)}
-            className={`shrink-0 rounded-full border px-4 py-2.5 font-site-body text-[11px] leading-normal font-semibold tracking-[0.88px] whitespace-nowrap uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16161a] focus-visible:outline-none ${
+            className={`relative shrink-0 overflow-hidden rounded-full border px-4 py-2.5 font-site-body text-[11px] leading-normal font-semibold tracking-[0.88px] whitespace-nowrap uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#16161a] focus-visible:outline-none ${
               isActive
                 ? 'border-brand bg-brand text-white shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.25)]'
                 : 'border-[#2a2a30] bg-[#1b1b20] text-[#b5b5b5] hover:border-brand/60 hover:text-white'
             }`}
           >
-            {filter}
+            <RevealContent band={isActive ? 'dark' : 'brand'}>{filter}</RevealContent>
           </button>
         );
       })}

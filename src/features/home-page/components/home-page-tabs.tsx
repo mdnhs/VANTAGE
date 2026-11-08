@@ -18,6 +18,7 @@ import type { HomepageCatalog } from '@/features/homepage-catalogs/types';
 const SECTIONS = [
   { value: 'copy', label: 'Top banner & text' },
   { value: 'catalog', label: 'Service cards' },
+  { value: 'quote-form', label: 'Quote form' },
   { value: 'process', label: 'Process steps' },
   { value: 'testimonials', label: 'Reviews' },
   { value: 'partner-logos', label: 'Partner logos' },
@@ -37,6 +38,7 @@ export interface HomePageTabsProps {
 // via nuqs.
 export function HomePageTabs({ catalogItems, processSteps, testimonials, partnerLogos }: HomePageTabsProps) {
   const canSeo = useCan({ seo: ['read'] });
+  const canEditFormText = useCan({ globals: ['read'] });
   const sections = SECTIONS.filter((section) => section.value !== 'seo' || canSeo);
   const values = sections.map((section) => section.value);
   const [tab, setTab] = useQueryState(
@@ -63,6 +65,14 @@ export function HomePageTabs({ catalogItems, processSteps, testimonials, partner
         </TabsContent>
         <TabsContent value='catalog'>
           <CatalogPanel catalogItems={catalogItems} />
+        </TabsContent>
+        <TabsContent value='quote-form'>
+          {/* The form section is shared with /get-a-quote, so this one tab covers both pages. */}
+          <GlobalEditor
+            title='Quote form'
+            keys={canEditFormText ? ['quoteForm', 'page.get-a-quote'] : ['page.get-a-quote']}
+            embedded
+          />
         </TabsContent>
         <TabsContent value='process'>
           <ProcessPanel initialData={processSteps} />

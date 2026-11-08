@@ -111,7 +111,8 @@ export function PrivacyRequestDialog({
               <p>
                 Erased {result.deleted.quotes} {result.deleted.quotes === 1 ? 'quote' : 'quotes'} and{' '}
                 {result.deleted.contacts} {result.deleted.contacts === 1 ? 'contact message' : 'contact messages'}
-                {result.deleted.aiMessages > 0 && ` and ${result.deleted.aiMessages} saved AI messages`}.
+                {result.deleted.aiMessages > 0 && ` and ${result.deleted.aiMessages} saved AI messages`}
+                {result.deleted.supportChats > 0 && ` and ${result.deleted.supportChats} live chats`}.
               </p>
               {result.kept.length > 0 && (
                 <ul className='mt-2 space-y-1 text-muted-foreground'>

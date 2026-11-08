@@ -27,6 +27,7 @@ describe('globals schemas', () => {
         'page.about',
         'page.process',
         'page.contact',
+        'page.get-a-quote',
         'consent',
         'scripts',
         'seo.page.home',
@@ -71,7 +72,7 @@ describe('defaults equal today’s public copy', () => {
       ['About', '/about', true],
       ['Process', '/process', true],
     ]);
-    expect(nav.cta).toMatchObject({ label: 'Get a Free Quote', shortLabel: 'Free Quote', href: '/#estimator' });
+    expect(nav.cta).toMatchObject({ label: 'Get a Free Quote', shortLabel: 'Free Quote', href: '/get-a-quote' });
     const footer = parseGlobal('footer', {});
     expect(footer.columns.map((c) => c.title)).toEqual(['Services', 'Company']);
     // Legal pages are listed from Dashboard → Legal pages; the old #privacy/#terms placeholders are gone.

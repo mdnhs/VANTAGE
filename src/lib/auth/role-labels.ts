@@ -7,6 +7,7 @@ export const ROLE_LABELS: Record<RoleName, string> = {
   author: 'Author',
   marketer: 'Marketer',
   intake: 'Intake',
+  support: 'Support',
   viewer: 'Viewer',
 };
 
@@ -17,5 +18,6 @@ export const ROLE_PURPOSE: Record<RoleName, string> = {
   author: 'Create and edit content (projects: their own), without deleting.',
   marketer: 'SEO, redirects and tracking. No quotes or messages.',
   intake: 'The quotes and contact messages inbox only.',
+  support: 'Live chats assigned to them only.',
   viewer: 'Read-only access.',
 };

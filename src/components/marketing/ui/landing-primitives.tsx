@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+import { RevealContent } from './reveal-content';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment, type ComponentProps, type ReactNode } from 'react';
@@ -105,7 +106,7 @@ function Arrow() {
 
 const BUTTON_BASE =
   'group flex w-full items-center justify-center gap-2.5 sm:inline-flex sm:w-auto rounded-[8px] font-site-body text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none';
-export const BUTTON_PRIMARY = `${BUTTON_BASE} bg-brand py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60`;
+export const BUTTON_PRIMARY = `${BUTTON_BASE} border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60`;
 export const BUTTON_SECONDARY = `${BUTTON_BASE} border border-[#34343a] bg-[#16161a] px-6 py-4 hover:border-brand hover:bg-[#1d1d22]`;
 
 type ButtonLinkProps = ComponentProps<typeof Link> & {
@@ -123,10 +124,16 @@ export function ButtonLink({
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link {...props} className={`${variant === 'primary' ? BUTTON_PRIMARY : BUTTON_SECONDARY} ${className}`}>
-      {icon}
-      <span>{children}</span>
-      {arrow && <Arrow />}
+    <Link
+      data-reveal-button
+      {...props}
+      className={`relative overflow-hidden ${variant === 'primary' ? BUTTON_PRIMARY : BUTTON_SECONDARY} ${className}`}
+    >
+      <RevealContent band={variant === 'primary' ? 'dark' : 'brand'} className='gap-2.5'>
+        {icon}
+        <span>{children}</span>
+        {arrow && <Arrow />}
+      </RevealContent>
     </Link>
   );
 }

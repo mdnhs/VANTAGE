@@ -3,7 +3,7 @@ import { API_ROUTES } from '@/lib/routes/api-routes';
 const BASE_URL = `${process.env.NEXT_PUBLIC_API_PREFIX || '/api'}${process.env.NEXT_PUBLIC_API_VERSION || '/v1'}`;
 
 export type ErasureResult = {
-  deleted: { quotes: number; contacts: number; aiMessages: number };
+  deleted: { quotes: number; contacts: number; aiMessages: number; supportChats: number };
   kept: { id: string; reason: 'billing' }[];
 };
 

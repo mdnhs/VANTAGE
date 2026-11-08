@@ -30,7 +30,7 @@ export function AppSidebar({
 }: {
   siteUrl: string;
   brand: Brand;
-  badges?: Partial<Record<'new-leads', number>>;
+  badges?: Partial<Record<'new-leads' | 'support-unread', number>>;
 }) {
   const { roles } = useActor();
   const pathname = usePathname();

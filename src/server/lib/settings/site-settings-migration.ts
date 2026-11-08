@@ -224,6 +224,7 @@ export function mapLegacyToDocs(row: Legacy): { docs: MigratedDocs; warnings: st
     },
     // New page: no legacy columns, so it starts at the schema defaults.
     'page.contact': {},
+    'page.get-a-quote': {},
   };
   return { docs, warnings, lossy };
 }

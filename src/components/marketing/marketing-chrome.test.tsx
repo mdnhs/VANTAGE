@@ -213,28 +213,16 @@ describe('generate_lead from the contact form', () => {
   });
 });
 
-describe.each([
-  ['QuoteForm', 'quote'],
-  ['StitchEstimator', 'estimator'],
-] as const)('generate_lead from %s', (which, formId) => {
+describe.each([['QuoteForm', 'quote']] as const)('generate_lead from %s', (_which, formId) => {
   const run = async () => {
-    if (which === 'QuoteForm') {
-      const copy = parseGlobal('quoteForm', {});
-      render(<QuoteForm services={[]} copy={copy} />);
-      fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
-      fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
-      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
-      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
-      fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
-      fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
-    } else {
-      render(<StitchEstimator />);
-      fireEvent.click(screen.getByRole('button', { name: /Continue my free quote/ }));
-      fireEvent.change(screen.getByPlaceholderText('e.g. Liam Murphy'), { target: { value: 'Pat' } });
-      fireEvent.change(screen.getByPlaceholderText('+353 87 123 4567'), { target: { value: '0871234567' } });
-      fireEvent.change(screen.getByPlaceholderText('name@example.ie'), { target: { value: 'p@example.com' } });
-      fireEvent.click(screen.getByRole('button', { name: /Send my free quote request/ }));
-    }
+    const copy = parseGlobal('quoteForm', {});
+    render(<QuoteForm services={[]} copy={copy} />);
+    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
+    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
     await waitFor(() => expect(submitQuoteRequest).toHaveBeenCalledTimes(1));
   };
 
@@ -348,5 +336,42 @@ describe('MarketingFooter legal pages', () => {
     const { container } = render(await MarketingFooter({}));
     expect(container.querySelectorAll('a[href="/privacy"]')).toHaveLength(1);
     expect(container.querySelector('a[href="/privacy"]')!.textContent).toBe('Privacy Policy');
+  });
+});
+
+describe('homepage quote section', () => {
+  const copy = parseGlobal('quoteForm', {});
+  const heading = parseGlobal('page.home', {}).quoteSection;
+  const section = (over = {}) =>
+    render(<StitchEstimator services={[]} copy={copy} heading={{ ...heading, ...over }} />);
+
+  it('is the #estimator target every quote button points at', () => {
+    const { container } = section();
+    expect(container.querySelector('section#estimator')).not.toBeNull();
+    expect(screen.getByRole('heading', { level: 2, name: /provide the cost/i })).toBeTruthy();
+  });
+
+  it('shows the heading edited in the admin', () => {
+    section({ line1: 'Edited title.', accent: 'Edited red.', subtext: 'Edited text.', eyebrow: 'Edited badge' });
+    expect(screen.getByRole('heading', { level: 2, name: /Edited title\. Edited red\./ })).toBeTruthy();
+    expect(screen.getByText('Edited text.')).toBeTruthy();
+    expect(screen.getByText('Edited badge')).toBeTruthy();
+  });
+
+  it('starts with an empty registration, never a sample one', () => {
+    section();
+    expect((screen.getByLabelText(copy.labels.registration) as HTMLInputElement).value).toBe('');
+  });
+
+  it('has no pretend vehicle lookup', () => {
+    section();
+    expect(screen.queryByRole('button', { name: /look up registration/i })).toBeNull();
+    expect(screen.queryByText(/Auto-fills year/i)).toBeNull();
+  });
+
+  it('lets the customer describe the damage', () => {
+    section();
+    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
+    expect(screen.getByLabelText(copy.labels.damage)).toBeTruthy();
   });
 });

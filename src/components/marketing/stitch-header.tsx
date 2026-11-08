@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -26,9 +27,9 @@ interface StitchHeaderProps {
   logoUseLottie?: boolean;
 }
 
-function PhoneIcon() {
+function PhoneIcon({ className = '' }: { className?: string }) {
   return (
-    <span className='relative block size-[18px] shrink-0 overflow-clip'>
+    <span className={`relative block size-[18px] shrink-0 overflow-clip ${className}`}>
       <span className='absolute inset-[12.5%]'>
         <span className='absolute inset-[-4.17%]'>
           <Image
@@ -139,9 +140,9 @@ export function StitchHeader({
         <div className='flex items-center gap-3 sm:gap-[32px]'>
           <a
             href={phoneHref}
-            className='hidden items-center gap-[10px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:text-brand focus-visible:text-brand focus-visible:outline-none md:flex'
+            className='group hidden items-center gap-[10px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-white transition-colors hover:text-brand focus-visible:text-brand focus-visible:outline-none md:flex'
           >
-            <PhoneIcon />
+            <PhoneIcon className='motion-safe:group-hover:animate-[phone-ring_1.4s_ease-in-out_infinite] motion-safe:group-focus-visible:animate-[phone-ring_1.4s_ease-in-out_infinite]' />
             <span>{phone}</span>
           </a>
 
@@ -189,20 +190,26 @@ export function StitchHeader({
               <div className='mt-auto flex flex-col gap-3 px-5 pt-6 pb-8'>
                 {cta.mobileHref && (
                   <Link
+                    data-reveal-button
                     href={cta.mobileHref}
                     onClick={() => setMobileMenuOpen(false)}
-                    className='flex w-full items-center justify-center gap-[6px] rounded-[8px] bg-brand py-[13px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
+                    className='relative flex w-full items-center justify-center gap-[6px] overflow-hidden rounded-[8px] border border-brand bg-brand py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:bg-brand-hover'
                   >
-                    <span>{cta.mobileLabel}</span>
-                    <ArrowIcon />
+                    <RevealContent band='dark' className='gap-[6px]'>
+                      <span>{cta.mobileLabel}</span>
+                      <ArrowIcon />
+                    </RevealContent>
                   </Link>
                 )}
                 <a
+                  data-reveal-button
                   href={phoneHref}
-                  className='flex w-full items-center justify-center gap-[10px] rounded-[8px] border border-[#232328] bg-white/[0.03] py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
+                  className='relative flex w-full items-center justify-center gap-[10px] overflow-hidden rounded-[8px] border border-[#232328] bg-white/[0.03] py-[12px] text-[14px] leading-[normal] font-semibold text-white transition-colors hover:border-[#3a3a40]'
                 >
-                  <PhoneIcon />
-                  <span>{phone}</span>
+                  <RevealContent band='brand' className='gap-[10px]'>
+                    <PhoneIcon />
+                    <span>{phone}</span>
+                  </RevealContent>
                 </a>
               </div>
             </SheetContent>

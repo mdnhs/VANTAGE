@@ -12,6 +12,8 @@ import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { projectService } from '@/server/services/project-service';
+import { serviceService } from '@/server/services/service-service';
+import { getSetting } from '@/server/queries/get-setting';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
 export async function generateMetadata() {
@@ -19,13 +21,26 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const [settings, catalogItems, testimonials, partnerLogos, processSteps, featuredProjects] = await Promise.all([
+  const [
+    settings,
+    catalogItems,
+    testimonials,
+    partnerLogos,
+    processSteps,
+    featuredProjects,
+    services,
+    quoteCopy,
+    homePage,
+  ] = await Promise.all([
     siteSettingsService.getPublic(),
     homepageCatalogService.listEnabled(),
     testimonialService.listFeatured(),
     partnerLogoService.listEnabled(),
     homepageProcessStepService.listEnabled(),
     projectService.listFeatured(),
+    serviceService.listPublished(),
+    getSetting('quoteForm'),
+    getSetting('page.home'),
   ]);
 
   const trustItems = [
@@ -57,7 +72,7 @@ export default async function Home() {
           headlineAccent={settings.catalogHeadlineAccent}
           subtext={settings.catalogSubtext}
         />
-        <StitchEstimator />
+        <StitchEstimator services={services} copy={quoteCopy} heading={homePage.quoteSection} />
         <StitchCaseStudies projects={featuredProjects} />
         <StitchProcess steps={processSteps} />
         <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} />

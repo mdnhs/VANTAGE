@@ -13,13 +13,16 @@ async function main() {
       `contacts: ${r.contacts.expired} + ${r.contacts.spam}; photos: ${r.photos} (+ ${r.legacyPhotos} legacy left for cleanup); orphan photos: ${r.orphanPhotos}`,
   );
   const { countDuePurges, purgeMediaObjects } = await import('@/server/services/media-purge-service');
+  const { runSupportRetention } = await import('@/server/services/support-service');
   if (dryRun) {
     console.log('ai conversations: (not counted in dry run)');
+    console.log(`live chats: ${await runSupportRetention({ dryRun: true })}`);
     console.log(`media files due: ${await countDuePurges()}`);
   } else {
     const { runAiRetention } = await import('@/server/repositories/ai-conversation-repository');
     const ai = await runAiRetention(new Date());
     console.log(`ai conversations: ${ai.conversations}, messages: ${ai.messages}`);
+    console.log(`live chats: ${await runSupportRetention()}`);
     const m = await purgeMediaObjects();
     console.log(
       `media files: ${m.purged} removed, ${m.kept} kept (still in use), ${m.skipped} skipped (outside prefix), ${m.failed} failed`,

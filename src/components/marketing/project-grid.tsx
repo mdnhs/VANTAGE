@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -168,11 +169,12 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
       {filtered.length > visible && (
         <div className='flex justify-center'>
           <button
+            data-reveal-button
             type='button'
             onClick={() => setVisible((count) => count + PAGE_SIZE)}
-            className={`${BUTTON_SECONDARY} w-full sm:w-auto`}
+            className={`relative overflow-hidden ${BUTTON_SECONDARY} w-full sm:w-auto`}
           >
-            Load more projects
+            <RevealContent band='brand'>Load more projects</RevealContent>
           </button>
         </div>
       )}

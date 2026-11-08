@@ -78,21 +78,27 @@ export function StitchCta({ phone }: { phone: string }) {
           {/* CTAs */}
           <div className='relative flex w-full flex-col items-stretch gap-[12px] sm:w-auto sm:flex-row sm:items-center'>
             <Link
-              href='/#estimator'
-              className='flex items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+              href='/get-a-quote'
+              data-reveal-button
+              className='relative flex items-center justify-center overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase drop-shadow-[0px_10px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
             >
-              <span>Get free quote online</span>
-              <span className='relative block size-[24px] shrink-0 overflow-clip'>
-                <span className='absolute top-1/4 right-[37.5%] bottom-1/4 left-[37.5%]'>
-                  <span className='absolute inset-[-6.25%_-12.5%]'>
-                    <Image
-                      src={ICON_ARROW}
-                      alt=''
-                      width={7.50005}
-                      height={13.5001}
-                      unoptimized
-                      className='block size-full max-w-none'
-                    />
+              <span data-reveal-band aria-hidden className='absolute inset-0 bg-[#17171a] opacity-0' />
+              <span className='relative block overflow-hidden'>
+                <span data-reveal-rise className='flex items-center gap-[10px]'>
+                  <span>Get free quote online</span>
+                  <span className='relative block size-[24px] shrink-0 overflow-clip'>
+                    <span className='absolute top-1/4 right-[37.5%] bottom-1/4 left-[37.5%]'>
+                      <span className='absolute inset-[-6.25%_-12.5%]'>
+                        <Image
+                          src={ICON_ARROW}
+                          alt=''
+                          width={7.50005}
+                          height={13.5001}
+                          unoptimized
+                          className='block size-full max-w-none'
+                        />
+                      </span>
+                    </span>
                   </span>
                 </span>
               </span>
@@ -102,19 +108,25 @@ export function StitchCta({ phone }: { phone: string }) {
               href={whatsappHref(phone)}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex items-center justify-center gap-[10px] rounded-[8px] border border-white/[0.16] bg-white/[0.06] px-[24px] py-[16px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors hover:border-white/[0.28] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
+              data-reveal-button
+              className='relative flex items-center justify-center overflow-hidden rounded-[8px] border border-white/[0.16] bg-white/[0.06] px-[24px] py-[16px] text-[13px] leading-[normal] font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase transition-colors hover:border-white/[0.28] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none'
             >
-              <span className='relative block size-[22px] shrink-0'>
-                <Image
-                  src={LOGO_WHATSAPP}
-                  alt=''
-                  width={22}
-                  height={22}
-                  unoptimized
-                  className='absolute inset-0 block size-full max-w-none'
-                />
+              <span data-reveal-band aria-hidden className='absolute inset-0 bg-brand opacity-0' />
+              <span className='relative block overflow-hidden'>
+                <span data-reveal-rise className='flex items-center gap-[10px]'>
+                  <span className='relative block size-[22px] shrink-0'>
+                    <Image
+                      src={LOGO_WHATSAPP}
+                      alt=''
+                      width={22}
+                      height={22}
+                      unoptimized
+                      className='absolute inset-0 block size-full max-w-none'
+                    />
+                  </span>
+                  <span>WhatsApp photos</span>
+                </span>
               </span>
-              <span>WhatsApp photos</span>
             </a>
           </div>
         </div>

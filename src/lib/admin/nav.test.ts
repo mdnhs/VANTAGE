@@ -49,6 +49,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     website: ALL_WEBSITE,
     media: [],
     enquiries: ['enquiries-quotes', 'enquiries-contacts'],
+    support: [],
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
     marketing: ['marketing-tracking', 'marketing-consent', 'marketing-events', 'marketing-code'],
     appearance: [],
@@ -61,6 +62,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     website: ALL_WEBSITE,
     media: [],
     enquiries: ['enquiries-quotes', 'enquiries-contacts'],
+    support: [],
     seo: ['seo-overview', 'seo-defaults', 'seo-redirects'],
     marketing: ['marketing-tracking', 'marketing-consent', 'marketing-events'],
     appearance: [],
@@ -85,6 +87,7 @@ const EXPECTED: Record<string, Record<string, string[]>> = {
     settings: GLOBALS_SETTINGS,
   },
   intake: { dashboard: [], enquiries: ['enquiries-quotes', 'enquiries-contacts'] },
+  support: { dashboard: [], support: [] },
   viewer: {
     dashboard: [],
     website: ALL_WEBSITE,

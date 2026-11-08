@@ -21,6 +21,7 @@ export const PUBLIC_SETTINGS_KEYS = [
   'page.about',
   'page.process',
   'page.contact',
+  'page.get-a-quote',
 ] as const;
 export type PublicSettingsKey = (typeof PUBLIC_SETTINGS_KEYS)[number];
 
@@ -151,6 +152,9 @@ export type PublicSiteSettings = {
   contactHeroVideo: PublicImage | null;
   contactHeroFallbackImage: PublicImage | null;
   contactHeroVideoEnabled: boolean;
+  quoteHeroVideo: PublicImage | null;
+  quoteHeroFallbackImage: PublicImage | null;
+  quoteHeroVideoEnabled: boolean;
 };
 
 // Only Cloudinary refs have a public id.
@@ -346,6 +350,9 @@ export function composePublicSettings(g: PublicGlobals, images: Record<string, P
     contactHeroVideo: resolveRef(g['page.contact'].hero.video, images),
     contactHeroFallbackImage: resolveRef(g['page.contact'].hero.fallbackImage, images),
     contactHeroVideoEnabled: g['page.contact'].hero.videoEnabled,
+    quoteHeroVideo: resolveRef(g['page.get-a-quote'].hero.video, images),
+    quoteHeroFallbackImage: resolveRef(g['page.get-a-quote'].hero.fallbackImage, images),
+    quoteHeroVideoEnabled: g['page.get-a-quote'].hero.videoEnabled,
     aboutHeritageImage: resolveRef(about.heritage.image, images),
     aboutStandardsImage: resolveRef(about.standards.image, images),
     aboutTeamMembers: about.team.members

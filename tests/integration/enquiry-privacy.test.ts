@@ -139,7 +139,7 @@ describe('POST /admin/enquiries/privacy/erase', () => {
     const res = await post(ERASE, owner);
     expect(res.status).toBe(200);
     expect((await res.json()).data).toEqual({
-      deleted: { quotes: 1, contacts: 1, aiMessages: 1 },
+      deleted: { quotes: 1, contacts: 1, aiMessages: 1, supportChats: 0 },
       kept: [{ id: paidId, reason: 'billing' }],
     });
     const left = (await db.select({ id: quoteRequests.id }).from(quoteRequests)).map((r) => r.id).sort();
@@ -157,7 +157,7 @@ describe('POST /admin/enquiries/privacy/erase', () => {
 
     const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, 'privacy.erase'));
     expect(row!.summary).toBe(
-      'Privacy erase: 1 quotes and 1 contact messages and 1 AI messages deleted, 1 quotes kept (invoice or payment records)',
+      'Privacy erase: 1 quotes and 1 contact messages and 1 AI messages and 0 live chats deleted, 1 quotes kept (invoice or payment records)',
     );
     expect(JSON.stringify(row).toLowerCase()).not.toContain('example.com');
     expect(JSON.stringify(row)).not.toContain('PRIVATE');

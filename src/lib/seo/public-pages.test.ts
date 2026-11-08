@@ -65,9 +65,9 @@ describe('public page registry', () => {
     }
   });
 
-  it('links each page to its page.* global, none for get-a-quote', () => {
+  it('links each page to its page.* global', () => {
     for (const id of PUBLIC_PAGE_IDS) {
-      expect(PUBLIC_PAGES[id].pageKey).toBe(PUBLIC_PAGES[id].editorTab ? `page.${id}` : null);
+      expect(PUBLIC_PAGES[id].pageKey).toBe(`page.${id}`);
     }
   });
 

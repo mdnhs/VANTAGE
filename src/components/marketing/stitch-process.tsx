@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const DOT_ICON = '/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.svg';
@@ -152,26 +153,32 @@ export function StitchProcess({
 
         <div className='hidden shrink-0 gap-3 sm:flex'>
           <button
+            data-reveal-button
             type='button'
             onClick={() => scrollByCard(-1)}
             disabled={!canScroll.prev}
             aria-label='Previous step'
             aria-controls='process-track'
-            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
+            className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
           >
-            <span className='flex rotate-180'>
-              <ArrowIcon />
-            </span>
+            <RevealContent band='brand'>
+              <span className='flex rotate-180'>
+                <ArrowIcon />
+              </span>
+            </RevealContent>
           </button>
           <button
+            data-reveal-button
             type='button'
             onClick={() => scrollByCard(1)}
             disabled={!canScroll.next}
             aria-label='Next step'
             aria-controls='process-track'
-            className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
+            className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#252525] transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-[#1b1b20] disabled:hover:border-[#2a2a30]'
           >
-            <ArrowIcon />
+            <RevealContent band='brand'>
+              <ArrowIcon />
+            </RevealContent>
           </button>
         </div>
       </div>

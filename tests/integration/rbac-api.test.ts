@@ -78,6 +78,7 @@ const GRANTED: Record<RoleName | 'user', Key[]> = {
   author: ['content.read', 'content.create', 'content.update', 'media.read'],
   marketer: ['content.read', 'seo.update', 'media.read'],
   intake: ['quote.read', 'quote.update', 'contact.read', 'contact.update'],
+  support: [],
   viewer: ['content.read'],
   user: [],
 };

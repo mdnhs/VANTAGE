@@ -21,6 +21,8 @@ export const statement = {
   settings: ['read', 'update'],
   audit: ['read'],
   ai: ['use', 'manage'],
+  // read/reply cover the chats assigned to you; assign opens every chat and hands them out.
+  support: ['read', 'reply', 'assign'],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -85,6 +87,12 @@ const intake = ac.newRole({
   ai: ['use'],
 });
 
+const support = ac.newRole({
+  dashboard: ['view'],
+  support: ['read', 'reply'],
+  ai: ['use'],
+});
+
 const viewer = ac.newRole({
   dashboard: ['view'],
   page: ['read'],
@@ -94,7 +102,7 @@ const viewer = ac.newRole({
   ai: ['use'],
 });
 
-export const roles = { owner, admin, editor, author, marketer, intake, viewer };
+export const roles = { owner, admin, editor, author, marketer, intake, support, viewer };
 export type RoleName = keyof typeof roles;
 export const ROLE_NAMES = Object.keys(roles) as RoleName[];
 

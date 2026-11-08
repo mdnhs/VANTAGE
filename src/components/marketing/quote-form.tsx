@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
@@ -100,26 +101,29 @@ function SubmitRow({
   return (
     <div className='flex w-full flex-col gap-[28px]'>
       <button
+        data-reveal-button
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+        className='group relative flex w-full items-center justify-center gap-[10px] overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
       >
-        {busy ? (
-          <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-white' />
-        ) : (
-          <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
-        )}
-        <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-white uppercase'>
-          {label}
-        </span>
-        <FigmaIcon
-          src={ICONS.arrow}
-          size={24}
-          inset='25% 37.5%'
-          bleed='-6.25% -12.5%'
-          className='transition-transform group-hover:translate-x-1'
-        />
+        <RevealContent band='dark' className='gap-[10px]'>
+          {busy ? (
+            <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-white' />
+          ) : (
+            <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
+          )}
+          <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-white uppercase'>
+            {label}
+          </span>
+          <FigmaIcon
+            src={ICONS.arrow}
+            size={24}
+            inset='25% 37.5%'
+            bleed='-6.25% -12.5%'
+            className='transition-transform group-hover:translate-x-1'
+          />
+        </RevealContent>
       </button>
       <div className='flex w-full flex-col items-center gap-2 text-[12px] leading-normal sm:flex-row sm:justify-between'>
         <span className='flex items-center gap-[6px] text-[#a1a1a1]'>
@@ -186,12 +190,14 @@ function FieldGroup({ label, htmlFor, children }: { label: string; htmlFor?: str
 }
 
 interface QuoteFormProps {
+  intro?: React.ReactNode;
+  source?: 'quote_page' | 'homepage_estimator';
   services: ServicePublic[];
   // Editable in Settings > Forms & microcopy; the defaults are the original copy.
   copy: QuoteCopy;
 }
 
-export function QuoteForm({ services, copy }: QuoteFormProps) {
+export function QuoteForm({ services, copy, intro, source = 'quote_page' }: QuoteFormProps) {
   const { labels, placeholders, hints, buttons } = copy;
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -245,7 +251,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
         serviceType: selectedService,
         description: damageDescription.trim() || null,
         photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
-        source: 'quote_page',
+        source,
         eventId,
         sourcePath: window.location.pathname,
         website,
@@ -287,8 +293,38 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
 
   return (
     <div className='flex w-full flex-col gap-12 lg:flex-row lg:items-start lg:gap-[80px]'>
-      {/* Form card — mirrors the homepage estimator card */}
-      <div className='flex w-full min-w-0 flex-col gap-[28px] rounded-[20px] border border-[#232328] bg-[#161616] p-5 sm:p-[36px] lg:flex-1'>
+      {/* Left column: the section's intro, then the check list and privacy note */}
+      <aside className='flex w-full flex-col gap-[28px] lg:w-[480px] lg:shrink-0'>
+        {intro}
+        <ul className='flex w-full flex-col gap-[20px]'>
+          {copy.benefits.map((b) => (
+            <li key={b.title} data-popout className='flex w-full items-start gap-[16px]'>
+              <span
+                data-popout-icon
+                className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-[6px]'
+              >
+                <CheckIcon size={16} />
+              </span>
+              <span className='flex min-w-0 flex-1 flex-col gap-[4px]'>
+                <span className='text-[16px] leading-normal font-semibold text-white'>{b.title}</span>
+                <span className='text-[14px] leading-[22px] text-[#a1a1a1]'>{b.body}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div
+          data-popout
+          className='flex w-full items-center gap-[12px] rounded-[12px] border border-[#232328] px-[16px] py-[14px]'
+        >
+          <FigmaIcon src={ICONS.shield} size={20} inset='8.33% 12.5%' bleed='-4.5% -5%' />
+          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a1a1a1]'>{copy.privacyNote}</p>
+        </div>
+      </aside>
+
+      <div
+        data-quote-card
+        className='flex w-full min-w-0 flex-col gap-[28px] rounded-[20px] border border-[#232328] bg-[#161616] p-5 sm:p-[36px] lg:flex-1'
+      >
         {/* Stepper */}
         <ol className='flex w-full items-center gap-2 sm:gap-[14px]'>
           {copy.steps.map((label, idx) => {
@@ -350,11 +386,12 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
               })}
             </p>
             <button
+              data-reveal-button
               type='button'
               onClick={handleReset}
-              className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+              className='relative mt-6 overflow-hidden rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
             >
-              {buttons.another}
+              <RevealContent band='brand'>{buttons.another}</RevealContent>
             </button>
           </div>
         ) : currentStep === 1 ? (
@@ -537,7 +574,7 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
               {buttons.backToDamage}
             </button>
             {errorMessage && (
-              <p role='alert' className='text-[12px] text-brand'>
+              <p role='alert' className='text-[12px] text-brand-soft'>
                 {errorMessage}
               </p>
             )}
@@ -552,27 +589,6 @@ export function QuoteForm({ services, copy }: QuoteFormProps) {
           </form>
         )}
       </div>
-
-      {/* Reassurance column — same check list + privacy note as the homepage estimator */}
-      <aside className='flex w-full flex-col gap-[28px] lg:w-[360px] lg:shrink-0 lg:pt-[36px]'>
-        <ul className='flex w-full flex-col gap-[20px]'>
-          {copy.benefits.map((b) => (
-            <li key={b.title} className='flex w-full items-start gap-[16px]'>
-              <span className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-[6px]'>
-                <CheckIcon size={16} />
-              </span>
-              <span className='flex min-w-0 flex-1 flex-col gap-[4px]'>
-                <span className='text-[16px] leading-normal font-semibold text-white'>{b.title}</span>
-                <span className='text-[14px] leading-[22px] text-[#a1a1a1]'>{b.body}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div className='flex w-full items-center gap-[12px] rounded-[12px] border border-[#232328] px-[16px] py-[14px]'>
-          <FigmaIcon src={ICONS.shield} size={20} inset='8.33% 12.5%' bleed='-4.5% -5%' />
-          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a1a1a1]'>{copy.privacyNote}</p>
-        </div>
-      </aside>
     </div>
   );
 }

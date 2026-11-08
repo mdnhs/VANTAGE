@@ -119,8 +119,8 @@ export const NavigationGlobal = z.object({
   cta: z
     .object({
       label: s(60, 'Get a Free Quote'),
-      href: Href.default('/#estimator'),
-      // The mobile menu shows a wider button to the full quote form.
+      href: Href.default('/get-a-quote'),
+      // The mobile menu shows a wider button to the quote form.
       // Shown below the sm breakpoint.
       shortLabel: s(30, 'Free Quote'),
       mobileLabel: s(60, 'Request Free Quote Online'),
@@ -441,6 +441,14 @@ export const HomePageGlobal = z.object({
     subtext:
       'Comprehensive automotive bodywork, structural restoration, and cosmetic refinement using factory-approved techniques.',
   }),
+  // The heading beside the quote form further down the homepage.
+  quoteSection: heroTitled({
+    eyebrow: '2-Minute Online Quotation',
+    line1: "Show us the damage. We'll",
+    accent: 'provide the cost.',
+    subtext:
+      'No need to take time off work or drive in with damage. Upload three photos and our Dublin estimators will issue an itemised, insurer-compatible quote with estimated completion dates.',
+  }),
 });
 
 export const ServicesPageGlobal = z.object({
@@ -699,6 +707,24 @@ export const ContactPageGlobal = z.object({
     .prefault({}),
 });
 
+export const QuotePageGlobal = z.object({
+  // Background media like the homepage banner; the banner stays plain dark until one is added.
+  hero: z
+    .object({
+      eyebrow: s(200, 'Free Online Quotation'),
+      line1: s(100, 'Get your repair'),
+      accent: s(100, 'quote.'),
+      subtext: s(
+        2000,
+        'Precision assessment starts here. Provide your vehicle details and images for an accurate, no-obligation estimate from our master technicians.',
+      ),
+      video: video(),
+      fallbackImage: image(),
+      videoEnabled: z.boolean().default(false),
+    })
+    .prefault({}),
+});
+
 export const GLOBALS = {
   site: SiteGlobal,
   contact: ContactGlobal,
@@ -717,6 +743,7 @@ export const GLOBALS = {
   'page.about': AboutPageGlobal,
   'page.process': ProcessPageGlobal,
   'page.contact': ContactPageGlobal,
+  'page.get-a-quote': QuotePageGlobal,
   ...MARKETING_GLOBALS,
   ...SEO_PAGE_GLOBALS,
 } as const;
@@ -742,6 +769,7 @@ export const PUBLIC_GLOBAL_KEYS = [
   'page.about',
   'page.process',
   'page.contact',
+  'page.get-a-quote',
   ...MARKETING_PUBLIC_KEYS,
   ...SEO_PAGE_KEYS,
 ] as const satisfies readonly GlobalKey[];

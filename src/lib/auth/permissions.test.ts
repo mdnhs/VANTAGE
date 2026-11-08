@@ -55,6 +55,11 @@ const EXPECTED: Record<Exclude<RoleName, 'owner' | 'admin'>, Permissions> = {
     contact: ['read', 'update'],
     ai: ['use'],
   },
+  support: {
+    dashboard: ['view'],
+    support: ['read', 'reply'],
+    ai: ['use'],
+  },
   viewer: {
     dashboard: ['view'],
     page: ['read'],
@@ -81,7 +86,7 @@ describe('statement', () => {
 
 describe('roles', () => {
   it('orders the 7 admin roles owner to viewer', () => {
-    expect(ROLE_NAMES).toEqual(['owner', 'admin', 'editor', 'author', 'marketer', 'intake', 'viewer']);
+    expect(ROLE_NAMES).toEqual(['owner', 'admin', 'editor', 'author', 'marketer', 'intake', 'support', 'viewer']);
   });
 
   it('owner has every action of every resource', () => {

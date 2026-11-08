@@ -239,6 +239,20 @@
       "when": 1793295921111,
       "tag": "0033_drop_homepage_pillars",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794146242704,
+      "tag": "0034_third_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794147774050,
+      "tag": "0035_ambiguous_captain_flint",
+      "breakpoints": true
     }
   ]
 }

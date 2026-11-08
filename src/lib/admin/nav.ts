@@ -22,7 +22,7 @@ export type NavItem = Omit<NavLink, 'permission'> & {
   permission: Permissions | readonly Permissions[];
   group: NavGroupId;
   children?: readonly NavLink[];
-  badge?: 'new-leads';
+  badge?: 'new-leads' | 'support-unread';
   // Drawn as an icon button in the sidebar footer dock, not in the menu.
   dock?: true;
 };
@@ -160,6 +160,15 @@ export const NAV: readonly NavItem[] = [
         keywords: ['inbox', 'messages', 'enquiry'],
       },
     ],
+  },
+  {
+    id: 'support',
+    group: 'menu',
+    label: 'Live chat',
+    href: '/dashboard/support',
+    permission: { support: ['read'] },
+    keywords: ['chat', 'support', 'visitors', 'conversations'],
+    badge: 'support-unread',
   },
   {
     id: 'seo',

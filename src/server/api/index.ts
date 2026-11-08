@@ -13,6 +13,7 @@ import { adminNotifications } from './admin-notifications';
 import { adminRedirects } from './admin-redirects';
 import { adminSearch } from './admin-search';
 import { adminSeo } from './admin-seo';
+import { adminSupport } from './admin-support';
 import { adminTracking } from './admin-tracking';
 import { adminTheme } from './admin-theme';
 import { adminUsers } from './admin-users';
@@ -26,6 +27,7 @@ import { preview } from './preview';
 import { projects } from './projects';
 import { publicConsent } from './public-consent';
 import { publicStamp } from './public-stamp';
+import { publicSupport } from './public-support';
 import { quoteRequests } from './quote-requests';
 import { resolve } from './resolve';
 import { services } from './services';
@@ -83,6 +85,7 @@ export const api = app
   .route('/account', account)
   .route('/admin/notifications', adminNotifications)
   .route('/admin/audit', adminAudit)
+  .route('/admin/support', adminSupport)
   .route('/admin', adminUsersLookup)
   .route('/site-settings', siteSettings)
   .route('/services', services)
@@ -95,6 +98,7 @@ export const api = app
   .route('/quotes', quoteRequests)
   .route('/contacts', contacts)
   .route('/public/consent', publicConsent)
+  .route('/public/support', publicSupport)
   .route('/public/enquiry-stamp', publicStamp);
 // TODO: mount feature route modules here as they are scaffolded
 // .route('/orders', orders)

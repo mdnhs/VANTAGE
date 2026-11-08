@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Clears the sticky header, matching the offset of Lenis's in-page anchors.
+const HEADER_OFFSET = 97;
+
 // GSAP motion for every marketing page, applied over the server-rendered sections without
 // wiring refs into each one: a hero intro timeline (`[data-hero-copy]`), a slow hero-media
 // parallax, and scroll reveals for every later section's heading block and cards.
@@ -22,15 +25,23 @@ export function PageAnimations() {
 
   useEffect(() => {
     let ctx: gsap.Context | undefined;
+    let stopWatching = () => {};
     const isReady = () => Boolean(document.querySelector('main section'));
     const start = () => {
       ctx = gsap.context(setup);
       ScrollTrigger.refresh();
+      scrollToHash();
+      stopWatching = refreshWhenResized();
+    };
+
+    const stop = () => {
+      stopWatching();
+      ctx?.revert();
     };
 
     if (isReady()) {
       start();
-      return () => ctx?.revert();
+      return stop;
     }
 
     const observer = new MutationObserver(() => {
@@ -42,11 +53,36 @@ export function PageAnimations() {
 
     return () => {
       observer.disconnect();
-      ctx?.revert();
+      stop();
     };
   }, [pathname]);
 
   return null;
+}
+
+// Pinned sections add height once GSAP runs, so the browser's own jump to /#estimator lands short.
+function scrollToHash() {
+  const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
+  if (target) window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET);
+}
+
+// The multi-step form changes height as it advances, which would leave every pin below it stale.
+function refreshWhenResized() {
+  const watched = document.querySelector('[data-refresh-scroll]');
+  if (!watched) return () => {};
+  let height = watched.getBoundingClientRect().height;
+  const refresh = gsap.delayedCall(0.25, () => ScrollTrigger.refresh()).pause();
+  const observer = new ResizeObserver(() => {
+    const next = watched.getBoundingClientRect().height;
+    if (Math.abs(next - height) < 1) return;
+    height = next;
+    refresh.restart(true);
+  });
+  observer.observe(watched);
+  return () => {
+    observer.disconnect();
+    refresh.kill();
+  };
 }
 
 function setup() {
@@ -163,6 +199,30 @@ function setup() {
         });
       }
 
+      // Short lists pop in one at a time, each with its icon landing a beat later.
+      const popouts = Array.from(section.querySelectorAll<HTMLElement>('[data-popout]'));
+      if (popouts.length) {
+        const sequence = gsap.timeline({ scrollTrigger: { trigger: popouts[0], start: 'top 85%', once: true } });
+        popouts.forEach((item, index) => {
+          const at = index * 0.2;
+          sequence.fromTo(
+            item,
+            { autoAlpha: 0, scale: 0.86, y: 18, transformOrigin: '0% 50%' },
+            { autoAlpha: 1, scale: 1, y: 0, duration: 0.55, ease: 'back.out(1.9)' },
+            at,
+          );
+          const icon = item.querySelector('[data-popout-icon]');
+          if (icon) {
+            sequence.fromTo(
+              icon,
+              { scale: 0, rotate: -45 },
+              { scale: 1, rotate: 0, duration: 0.5, ease: 'back.out(3)' },
+              at + 0.1,
+            );
+          }
+        });
+      }
+
       const form = section.querySelector('form');
       if (form) {
         gsap.from(form, {
@@ -260,20 +320,6 @@ function setup() {
       cleanups.push(() => el.removeEventListener(type, fn as EventListener));
     };
 
-    document.querySelectorAll<HTMLElement>('main a.bg-brand, section#contact a.bg-brand').forEach((button) => {
-      const xTo = gsap.quickTo(button, 'x', { duration: 0.5, ease: 'power3' });
-      const yTo = gsap.quickTo(button, 'y', { duration: 0.5, ease: 'power3' });
-      on(button, 'pointermove', (e) => {
-        const r = button.getBoundingClientRect();
-        xTo((e.clientX - r.left - r.width / 2) * 0.22);
-        yTo((e.clientY - r.top - r.height / 2) * 0.3);
-      });
-      on(button, 'pointerleave', () => {
-        xTo(0);
-        yTo(0);
-      });
-    });
-
     document.querySelectorAll<HTMLElement>('main article').forEach((card) => {
       // Big feature blocks and the carousels (which animate their own cards) stay put.
       if (card.closest('[data-process-track], [aria-roledescription="carousel"]') || card.offsetWidth > 520) return;
@@ -331,6 +377,9 @@ function setup() {
       track.style.scrollSnapType = 'none';
       const state = { left: 0 };
 
+      // How far hovering has lifted each card out of its dimmed resting state (0 to 1).
+      const lifted = new Map(cards.map((card) => [card, { amount: 0 }]));
+
       const focusCards = () => {
         const trackLeft = track.getBoundingClientRect().left + parseFloat(getComputedStyle(track).paddingLeft);
         cards.forEach((card) => {
@@ -339,19 +388,33 @@ function setup() {
           const passed = gsap.utils.clamp(0, 1, -offset);
           // 0 on the focus line, → 1 a card's width ahead of it: the cards to come wait dimmed behind.
           const ahead = gsap.utils.clamp(0, 1, offset);
-          const focus = 1 - Math.max(passed, ahead);
-          card.style.scale = String((1 - passed * 0.06) * (0.94 + 0.06 * (1 - ahead)));
-          const dim = (1 - passed * 0.5) * (0.7 + 0.3 * (1 - ahead));
+          const lift = lifted.get(card)?.amount ?? 0;
+          const restingScale = (1 - passed * 0.06) * (0.94 + 0.06 * (1 - ahead));
+          card.style.scale = String(restingScale + (1 - restingScale) * lift);
+          const restingDim = (1 - passed * 0.5) * (0.7 + 0.3 * (1 - ahead));
+          const dim = restingDim + (1 - restingDim) * lift;
           card.style.filter = dim < 0.999 ? `brightness(${dim}) saturate(${dim})` : '';
-          // The card in focus gets a soft brand ring and glow.
-          card.style.boxShadow =
-            focus > 0.01
-              ? `0 0 0 1px rgb(var(--brand-rgb) / ${0.5 * focus}), 0 24px 60px -24px rgb(var(--brand-rgb) / ${0.4 * focus})`
-              : '';
         });
       };
 
       focusCards();
+
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        cards.forEach((card) => {
+          const lift = lifted.get(card)!;
+          const liftTo = (amount: number) => () =>
+            gsap.to(lift, { amount, duration: 0.3, ease: 'power2.out', overwrite: true, onUpdate: focusCards });
+          const enter = liftTo(1);
+          const leave = liftTo(0);
+          card.addEventListener('pointerenter', enter);
+          card.addEventListener('pointerleave', leave);
+          restores.push(() => {
+            gsap.killTweensOf(lift);
+            card.removeEventListener('pointerenter', enter);
+            card.removeEventListener('pointerleave', leave);
+          });
+        });
+      }
 
       const tween = gsap.to(state, {
         left: distance,
@@ -402,7 +465,6 @@ function setup() {
         cards.forEach((card) => {
           card.style.scale = '';
           card.style.filter = '';
-          card.style.boxShadow = '';
         });
       });
     });

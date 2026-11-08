@@ -1,0 +1,1 @@
+ALTER TABLE "support_conversations" ADD COLUMN "staff_alerted_at" timestamp with time zone;

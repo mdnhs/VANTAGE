@@ -20,6 +20,7 @@
     "settings:migrate": "tsx scripts/migrate-site-settings.ts",
     "legacy:check": "tsx scripts/legacy-check.ts",
     "jobs:retention": "tsx scripts/retention.ts",
+    "legal:add-live-chat": "tsx scripts/legal-add-live-chat.ts",
     "admin:create": "tsx scripts/admin-create.ts",
     "media:smoke": "tsx scripts/r2-smoke.ts",
     "media:migrate": "tsx scripts/migrate-cloudinary-media.ts",

@@ -331,6 +331,15 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'catalog.line1': { label: 'Title', description: 'White.' },
     'catalog.accent': { label: 'Title — red part', description: 'Red, after the white part.' },
     'catalog.subtext': SUBTEXT,
+    quoteSection: {
+      label: 'Quote form heading',
+      description:
+        "The heading beside the quote form, shown here and on the Get a quote page. The form's own labels, check list and privacy note are under the Quote form tab.",
+    },
+    'quoteSection.eyebrow': BADGE,
+    'quoteSection.line1': { label: 'Title', description: 'White.' },
+    'quoteSection.accent': { label: 'Title — red part', description: 'Red, after the white part.' },
+    'quoteSection.subtext': SUBTEXT,
   },
   'page.services': {
     hero: { label: 'Top banner', description: 'The dark banner at the top of the Services page.' },
@@ -477,6 +486,22 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     hero: {
       label: 'Top banner',
       description: 'The banner at the top of the Contact page. Phone, email and address are under Settings > Contact.',
+    },
+    'hero.eyebrow': BADGE,
+    'hero.line1': { label: 'Title — line 1', description: 'White.' },
+    'hero.accent': { label: 'Title — line 2', description: 'Red.' },
+    'hero.subtext': SUBTEXT,
+    'hero.video': { label: 'Background video', description: 'Plays behind the title when switched on below.' },
+    'hero.fallbackImage': {
+      label: 'Background photo',
+      description: 'Shown when the video is off, and while it loads on slow connections.',
+    },
+    'hero.videoEnabled': { label: 'Play the video instead of the photo' },
+  },
+  'page.get-a-quote': {
+    hero: {
+      label: 'Top banner',
+      description: 'The banner at the top of the Get a quote page. It appears only on that page.',
     },
     'hero.eyebrow': BADGE,
     'hero.line1': { label: 'Title — line 1', description: 'White.' },

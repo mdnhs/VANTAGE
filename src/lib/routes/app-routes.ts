@@ -81,5 +81,9 @@ export const APP_ROUTES = {
       index: '/dashboard/contacts',
       details: (id: string) => `/dashboard/contacts/${id}`,
     },
+    support: {
+      index: '/dashboard/support',
+      conversation: (id: string) => `/dashboard/support?c=${id}`,
+    },
   },
 } as const;

@@ -32,6 +32,7 @@ const GROUP: Record<GlobalKey, Group> = {
   'page.about': 'page',
   'page.process': 'page',
   'page.contact': 'page',
+  'page.get-a-quote': 'page',
   consent: 'tracking',
   scripts: 'code',
   'seo.page.home': 'seo',
@@ -87,6 +88,14 @@ const GRANTS: Record<RoleName, Record<Group, [boolean, boolean]>> = {
     code: [false, false],
   },
   intake: {
+    settings: [false, false],
+    globals: [false, false],
+    seo: [false, false],
+    page: [false, false],
+    tracking: [false, false],
+    code: [false, false],
+  },
+  support: {
     settings: [false, false],
     globals: [false, false],
     seo: [false, false],

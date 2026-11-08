@@ -3,7 +3,10 @@
 import { CommandPaletteProvider } from '@/components/admin/command/palette-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useCan } from '@/contexts/actor-provider';
 import { useNewEnquiriesCount } from '@/features/enquiries/hooks/use-new-enquiries-count';
+import { SupportLive } from '@/features/support/components/support-live';
+import { useSupportUnread } from '@/features/support/hooks/use-support';
 
 import { AppSidebar } from './app-sidebar';
 import type { Brand } from './brand-mark';
@@ -25,6 +28,8 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const newEnquiries = useNewEnquiriesCount();
+  const canUseChat = useCan({ support: ['read'] });
+  const supportUnread = useSupportUnread(canUseChat);
   return (
     <SiteNameProvider value={brand.name}>
       <TooltipProvider>
@@ -36,7 +41,12 @@ export function AdminShell({
             >
               Skip to content
             </a>
-            <AppSidebar siteUrl={siteUrl} brand={brand} badges={{ 'new-leads': newEnquiries }} />
+            {canUseChat ? <SupportLive /> : null}
+            <AppSidebar
+              siteUrl={siteUrl}
+              brand={brand}
+              badges={{ 'new-leads': newEnquiries, 'support-unread': supportUnread }}
+            />
             {/* The content panel scrolls inside its own rounded corners, below a
             still topbar. --content-h is its visible height (the svh less the
             gutters, the 72px topbar and the gap) for sticky panes inside.

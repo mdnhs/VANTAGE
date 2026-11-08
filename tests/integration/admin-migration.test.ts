@@ -250,7 +250,7 @@ describe('demo users', () => {
   it('creates one user per role, idempotently, and they can sign in', async () => {
     process.env.SEED_DEMO_USERS = 'true';
     const first = await seedDemoUsers();
-    expect(first.created).toBe(7);
+    expect(first.created).toBe(8);
     const second = await seedDemoUsers();
     expect(second.created).toBe(0);
 
@@ -262,6 +262,7 @@ describe('demo users', () => {
       'intake',
       'marketer',
       'owner',
+      'support',
       'viewer',
     ]);
     expect(rows.find((r) => r.email === 'owner@vantage.test')).toMatchObject({ name: 'Olivia Owner', role: 'owner' });

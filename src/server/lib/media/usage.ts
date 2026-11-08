@@ -45,6 +45,7 @@ const PAGE_KEY_HREFS: Record<string, string> = {
   'page.about': '/dashboard/about',
   'page.process': '/dashboard/process-page',
   'page.contact': '/dashboard/contact-page',
+  'page.get-a-quote': '/dashboard/home-page?tab=quote-form',
 };
 
 function settingUse(key: string): MediaUse {

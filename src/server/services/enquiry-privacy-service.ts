@@ -3,7 +3,15 @@ import 'server-only';
 import { and, asc, inArray, notExists, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/server/db';
-import { aiConversations, aiMessages, contactMessages, enquiryPhotos, quoteRequests } from '@/server/db/schema';
+import {
+  aiConversations,
+  aiMessages,
+  contactMessages,
+  enquiryPhotos,
+  quoteRequests,
+  supportConversations,
+  supportMessages,
+} from '@/server/db/schema';
 import { audit } from '@/server/lib/audit';
 import type { Actor } from '@/server/lib/auth/actor';
 import { derivedHmac } from '@/server/lib/crypto';
@@ -13,7 +21,7 @@ import { hardDeleteEnquiryMedia } from '@/server/services/media-library-service'
 
 export type PrivacyKept = { id: string; reason: 'billing' };
 export type ErasureResult = {
-  deleted: { quotes: number; contacts: number; aiMessages: number };
+  deleted: { quotes: number; contacts: number; aiMessages: number; supportChats: number };
   kept: PrivacyKept[];
 };
 
@@ -26,6 +34,13 @@ const personId = (email: string) => derivedHmac('privacy-email', normalise(email
 
 const quoteMatch = (email: string) => sql`lower(trim(${quoteRequests.email})) = ${normalise(email)}`;
 const contactMatch = (email: string) => sql`lower(trim(${contactMessages.email})) = ${normalise(email)}`;
+// A live chat given under the address, or one where the address was typed into a message.
+const chatMatch = (email: string) =>
+  sql`(lower(trim(${supportConversations.visitorEmail})) = ${normalise(email)} or exists (
+    select 1 from ${supportMessages}
+    where ${supportMessages.conversationId} = ${supportConversations.id}
+      and position(${normalise(email)} in lower(${supportMessages.body})) > 0
+  ))`;
 
 export async function exportPerson(actor: Actor, email: string) {
   const quotes = await attachPhotos('quoteRequestId', await db.select().from(quoteRequests).where(quoteMatch(email)));
@@ -38,13 +53,58 @@ export async function exportPerson(actor: Actor, email: string) {
     .from(aiMessages)
     .where(mentions(email))
     .orderBy(asc(aiMessages.createdAt));
+  // Named columns: the visitor's secret token hash never leaves the database.
+  const chats = await db
+    .select({
+      id: supportConversations.id,
+      status: supportConversations.status,
+      visitorName: supportConversations.visitorName,
+      visitorEmail: supportConversations.visitorEmail,
+      sourcePath: supportConversations.sourcePath,
+      createdAt: supportConversations.createdAt,
+      closedAt: supportConversations.closedAt,
+    })
+    .from(supportConversations)
+    .where(chatMatch(email));
+  const chatMessages =
+    chats.length === 0
+      ? []
+      : await db
+          .select({
+            conversationId: supportMessages.conversationId,
+            sender: supportMessages.sender,
+            senderName: supportMessages.senderName,
+            body: supportMessages.body,
+            createdAt: supportMessages.createdAt,
+          })
+          .from(supportMessages)
+          .where(
+            inArray(
+              supportMessages.conversationId,
+              chats.map((c) => c.id),
+            ),
+          )
+          .orderBy(asc(supportMessages.createdAt));
+  const supportChats = chats.map((chat) => ({
+    ...chat,
+    messages: chatMessages
+      .filter((m) => m.conversationId === chat.id)
+      .map(({ conversationId: _conversationId, ...message }) => message),
+  }));
   await audit(actor, {
     action: 'privacy.export',
     entityType: 'person',
     entityId: personId(email),
-    summary: `Privacy export: ${quotes.length} quotes, ${contacts.length} contact messages and ${ai.length} AI messages`,
+    summary: `Privacy export: ${quotes.length} quotes, ${contacts.length} contact messages, ${ai.length} AI messages and ${chats.length} live chats`,
   });
-  return { email: normalise(email), exportedAt: new Date().toISOString(), quotes, contacts, aiMessages: ai };
+  return {
+    email: normalise(email),
+    exportedAt: new Date().toISOString(),
+    quotes,
+    contacts,
+    aiMessages: ai,
+    supportChats,
+  };
 }
 
 // Deletes every contact message and every quote without invoice or payment data (and their enquiry
@@ -119,14 +179,25 @@ export async function erasePerson(actor: Actor, email: string): Promise<ErasureR
       );
     }
 
-    const deleted = { quotes: deletedQuotes.length, contacts: deletedContacts.length, aiMessages: goneAi.length };
+    // Messages cascade away with their chat.
+    const goneChats = await tx
+      .delete(supportConversations)
+      .where(chatMatch(email))
+      .returning({ id: supportConversations.id });
+
+    const deleted = {
+      quotes: deletedQuotes.length,
+      contacts: deletedContacts.length,
+      aiMessages: goneAi.length,
+      supportChats: goneChats.length,
+    };
     await audit(
       actor,
       {
         action: 'privacy.erase',
         entityType: 'person',
         entityId: personId(email),
-        summary: `Privacy erase: ${deleted.quotes} quotes and ${deleted.contacts} contact messages and ${deleted.aiMessages} AI messages deleted, ${kept.length} quotes kept (invoice or payment records)`,
+        summary: `Privacy erase: ${deleted.quotes} quotes and ${deleted.contacts} contact messages and ${deleted.aiMessages} AI messages and ${deleted.supportChats} live chats deleted, ${kept.length} quotes kept (invoice or payment records)`,
       },
       tx,
     );

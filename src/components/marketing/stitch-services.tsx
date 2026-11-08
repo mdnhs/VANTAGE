@@ -1,6 +1,8 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -296,7 +298,7 @@ export function StitchServices({
             {cards.map((card) => (
               <article
                 key={card.key}
-                className='group flex min-h-[351px] w-[85%] shrink-0 snap-start flex-col justify-between rounded-2xl border border-[#2a2a30] bg-[#1b1b20] p-7 transition-colors duration-300 hover:border-brand/60 sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-60px)/4)]'
+                className='group flex min-h-[351px] w-[85%] shrink-0 snap-start flex-col justify-between rounded-2xl bg-[#1b1b20] p-7 sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-60px)/4)]'
               >
                 <div className='flex flex-col items-start gap-5 pb-6'>
                   <div className='flex w-full items-center justify-between'>
@@ -335,8 +337,8 @@ export function StitchServices({
                   <span className='font-site-body text-[10px] leading-normal font-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
                     {card.footnote}
                   </span>
-                  <a
-                    href='#estimator'
+                  <Link
+                    href='/get-a-quote'
                     className='flex shrink-0 items-center gap-0.5 rounded font-site-body text-xs leading-normal font-semibold text-brand transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
                   >
                     Quote
@@ -345,7 +347,7 @@ export function StitchServices({
                         <img src={ARROW_UR_SRC} alt='' width={12.5} height={12.5} className='block max-w-none' />
                       </span>
                     </span>
-                  </a>
+                  </Link>
                 </div>
               </article>
             ))}
@@ -369,30 +371,36 @@ export function StitchServices({
             </div>
             <div className='flex items-start gap-3'>
               <button
+                data-reveal-button
                 type='button'
                 onClick={() => scrollByPage(-1)}
                 disabled={atStart}
                 aria-label='Previous services'
-                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
-                <span className='relative block size-6 rotate-180 overflow-hidden'>
-                  <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>
-                    <img src={ARROW_SRC} alt='' width={7.50005} height={13.5001} className='block max-w-none' />
+                <RevealContent band='brand'>
+                  <span className='relative block size-6 rotate-180 overflow-hidden'>
+                    <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>
+                      <img src={ARROW_SRC} alt='' width={7.50005} height={13.5001} className='block max-w-none' />
+                    </span>
                   </span>
-                </span>
+                </RevealContent>
               </button>
               <button
+                data-reveal-button
                 type='button'
                 onClick={() => scrollByPage(1)}
                 disabled={atEnd}
                 aria-label='Next services'
-                className='flex size-[52px] items-center justify-center rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
-                <span className='relative block size-6 overflow-hidden'>
-                  <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>
-                    <img src={ARROW_SRC} alt='' width={7.50005} height={13.5001} className='block max-w-none' />
+                <RevealContent band='brand'>
+                  <span className='relative block size-6 overflow-hidden'>
+                    <span className='absolute inset-y-1/4 right-[37.5%] left-[37.5%] flex items-center justify-center'>
+                      <img src={ARROW_SRC} alt='' width={7.50005} height={13.5001} className='block max-w-none' />
+                    </span>
                   </span>
-                </span>
+                </RevealContent>
               </button>
             </div>
           </div>

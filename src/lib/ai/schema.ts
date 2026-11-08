@@ -131,6 +131,7 @@ export const PAGE_KEYS = [
   'page.about',
   'page.process',
   'page.contact',
+  'page.get-a-quote',
 ] as const;
 export type PageKey = (typeof PAGE_KEYS)[number];
 

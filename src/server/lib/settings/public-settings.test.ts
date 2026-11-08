@@ -230,6 +230,9 @@ describe('composePublicSettings images', () => {
       'contactHeroVideo',
       'contactHeroFallbackImage',
       'contactHeroVideoEnabled',
+      'quoteHeroVideo',
+      'quoteHeroFallbackImage',
+      'quoteHeroVideoEnabled',
     ];
     const legacyImageKeys = [
       'logoPublicId',

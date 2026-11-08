@@ -180,6 +180,6 @@ describe('VANTAGE rulings', () => {
     expect(DEFAULT_MODEL.anthropic).toBe('claude-opus-5-5');
   });
   it('gates every non-manager role by default', () => {
-    expect(GATED_ROLES).toEqual(['editor', 'author', 'marketer', 'intake', 'viewer']);
+    expect(GATED_ROLES).toEqual(['editor', 'author', 'marketer', 'intake', 'support', 'viewer']);
   });
 });

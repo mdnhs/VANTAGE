@@ -1,4 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
+import Link from 'next/link';
 import Image from 'next/image';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
@@ -121,49 +123,55 @@ export function StitchHero({
 
             {/* CTAs */}
             <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center'>
-              <a
-                href='#estimator'
-                className='group flex items-center justify-center gap-2.5 rounded-[8px] bg-brand py-4 pr-[22px] pl-6 shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+              <Link
+                data-reveal-button
+                href='/get-a-quote'
+                className='group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
               >
-                <span className='flex size-[18px] shrink-0 items-center justify-center'>
-                  <img
-                    src='/assets/landing/77f4614fe4f24a8e612134c222c8e6b222b0af4f.svg'
-                    alt=''
-                    width={16.125}
-                    height={16.125}
-                    className='max-w-none'
-                  />
-                </span>
-                <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
-                  Get a free estimate
-                </span>
-                <span className='flex size-6 shrink-0 items-center justify-center transition-transform group-hover:translate-x-1'>
-                  <img
-                    src='/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg'
-                    alt=''
-                    width={7.50005}
-                    height={13.5001}
-                    className='max-w-none'
-                  />
-                </span>
-              </a>
+                <RevealContent band='dark' className='gap-2.5'>
+                  <span className='flex size-[18px] shrink-0 items-center justify-center'>
+                    <img
+                      src='/assets/landing/77f4614fe4f24a8e612134c222c8e6b222b0af4f.svg'
+                      alt=''
+                      width={16.125}
+                      height={16.125}
+                      className='max-w-none'
+                    />
+                  </span>
+                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
+                    Get a free estimate
+                  </span>
+                  <span className='flex size-6 shrink-0 items-center justify-center transition-transform group-hover:translate-x-1'>
+                    <img
+                      src='/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg'
+                      alt=''
+                      width={7.50005}
+                      height={13.5001}
+                      className='max-w-none'
+                    />
+                  </span>
+                </RevealContent>
+              </Link>
 
               <a
+                data-reveal-button
                 href='#work'
-                className='flex items-center justify-center gap-2.5 rounded-[8px] border border-[#34343a] bg-[#16161a] px-6 py-4 transition-colors hover:border-brand hover:bg-[#1d1d22] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+                className='relative flex items-center justify-center gap-2.5 overflow-hidden rounded-[8px] border border-[#34343a] bg-[#16161a] px-6 py-4 transition-colors hover:border-brand hover:bg-[#1d1d22] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
               >
-                <span className='flex size-[18px] shrink-0 items-center justify-center'>
-                  <img
-                    src='/assets/landing/e976313112893b5be1131d67ff6e9f554ddb598d.svg'
-                    alt=''
-                    width={15.375}
-                    height={15.375}
-                    className='max-w-none'
-                  />
-                </span>
-                <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
-                  View our work
-                </span>
+                <RevealContent band='brand' className='gap-2.5'>
+                  <span className='flex size-[18px] shrink-0 items-center justify-center'>
+                    <img
+                      src='/assets/landing/e976313112893b5be1131d67ff6e9f554ddb598d.svg'
+                      alt=''
+                      width={15.375}
+                      height={15.375}
+                      className='max-w-none'
+                    />
+                  </span>
+                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
+                    View our work
+                  </span>
+                </RevealContent>
               </a>
             </div>
           </div>

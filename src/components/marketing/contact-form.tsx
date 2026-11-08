@@ -1,5 +1,6 @@
 'use client';
 
+import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState, type CSSProperties, type DragEvent } from 'react';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 import type { ServicePublic } from '@/features/services/types';
@@ -203,11 +204,12 @@ export function ContactForm({ services, copy }: ContactFormProps) {
             {fillCopy(copy.success.body, { name: firstName })}
           </p>
           <button
+            data-reveal-button
             type='button'
             onClick={handleReset}
-            className='mt-6 rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+            className='relative mt-6 overflow-hidden rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
           >
-            {copy.sendAnother}
+            <RevealContent band='brand'>{copy.sendAnother}</RevealContent>
           </button>
         </div>
       </div>
@@ -345,25 +347,28 @@ export function ContactForm({ services, copy }: ContactFormProps) {
       {/* Submit row — same button + meta line as the homepage quote form. */}
       <div className='flex w-full flex-col gap-[28px]'>
         <button
+          data-reveal-button
           type='submit'
           disabled={isSubmitting}
-          className='group flex w-full items-center justify-center gap-[10px] rounded-[8px] bg-brand py-[16px] pr-[22px] pl-[24px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+          className='group relative flex w-full items-center justify-center gap-[10px] overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
         >
-          {isSubmitting ? (
-            <Loader2 aria-hidden className='size-[18px] animate-spin text-white' />
-          ) : (
-            <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
-          )}
-          <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
-            {isSubmitting ? copy.submitting : copy.button}
-          </span>
-          <FigmaIcon
-            src={ICONS.arrow}
-            size={24}
-            inset='25% 37.5%'
-            bleed='-6.25% -12.5%'
-            className='transition-transform group-hover:translate-x-1'
-          />
+          <RevealContent band='dark' className='gap-[10px]'>
+            {isSubmitting ? (
+              <Loader2 aria-hidden className='size-[18px] animate-spin text-white' />
+            ) : (
+              <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
+            )}
+            <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
+              {isSubmitting ? copy.submitting : copy.button}
+            </span>
+            <FigmaIcon
+              src={ICONS.arrow}
+              size={24}
+              inset='25% 37.5%'
+              bleed='-6.25% -12.5%'
+              className='transition-transform group-hover:translate-x-1'
+            />
+          </RevealContent>
         </button>
         <p className='flex items-center justify-center gap-[6px] text-center text-[12px] leading-normal text-[#a1a1a1]'>
           <FigmaIcon src={ICONS.zap} size={14} inset='12.5% 22.92%' bleed='-7.14% -9.89%' />

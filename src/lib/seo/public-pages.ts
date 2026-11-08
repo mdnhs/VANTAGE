@@ -18,7 +18,14 @@ export const PUBLIC_PAGE_IDS = [
 export type PublicPageId = (typeof PUBLIC_PAGE_IDS)[number];
 
 export type PagePageKey =
-  'page.home' | 'page.services' | 'page.our-work' | 'page.insurance' | 'page.about' | 'page.process' | 'page.contact';
+  | 'page.get-a-quote'
+  | 'page.home'
+  | 'page.services'
+  | 'page.our-work'
+  | 'page.insurance'
+  | 'page.about'
+  | 'page.process'
+  | 'page.contact';
 
 export type PublicPage = {
   id: PublicPageId;
@@ -39,13 +46,11 @@ export type PublicPage = {
   hasH1: true;
   // Distinct internal hrefs rendered by the page body, counted from the component source: the
   // page's own components plus the closing CTA band the marketing layout renders after it
-  // (StitchCta -> "/#estimator"); the header and footer are excluded. Hrefs are resolved against
-  // the page's own path, so "#estimator" on the home page and "/#estimator" are one link.
+  // (StitchCta -> "/get-a-quote"); the header and footer are excluded.
   // Every page but home also links "/" from its PageHero breadcrumb.
-  // Per page: home /our-work, /#estimator, /#work (3); services /, /get-a-quote, /process,
-  // /#estimator (4); our-work /, /#estimator (2); insurance /, /get-a-quote, /#estimator (3);
-  // about /, /#estimator (2); process /, /get-a-quote, /services, /#estimator (4);
-  // contact /, /#estimator (2); get-a-quote /, /#estimator (2).
+  // Per page: home /our-work, /get-a-quote, /#work (3); services /, /process, /get-a-quote (3);
+  // our-work /, /get-a-quote (2); insurance /, /get-a-quote (2); about /, /get-a-quote (2);
+  // process /, /services, /get-a-quote (3); contact /, /get-a-quote (2); get-a-quote / and itself (2).
   codeLinks: number;
 };
 
@@ -75,7 +80,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.services',
     hasH1: true,
-    codeLinks: 4,
+    codeLinks: 3,
   },
   'our-work': {
     id: 'our-work',
@@ -103,7 +108,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.insurance',
     hasH1: true,
-    codeLinks: 3,
+    codeLinks: 2,
   },
   about: {
     id: 'about',
@@ -131,7 +136,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     editorTab: true,
     pageKey: 'page.process',
     hasH1: true,
-    codeLinks: 4,
+    codeLinks: 3,
   },
   contact: {
     id: 'contact',
@@ -157,7 +162,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
       'Send your vehicle details and photos for an accurate, no-obligation car body repair quote from our Dublin technicians.',
     editorHref: '/dashboard/seo/pages/get-a-quote',
     editorTab: false,
-    pageKey: null,
+    pageKey: 'page.get-a-quote',
     hasH1: true,
     codeLinks: 2,
   },
