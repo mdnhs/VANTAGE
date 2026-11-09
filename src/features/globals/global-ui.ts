@@ -286,6 +286,32 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       description: 'Who you are and what you do, in a few sentences. Blank uses the default description.',
     },
   },
+  supportBot: {
+    enabled: {
+      section: 'Assistant',
+      sectionDescription:
+        'An AI assistant answers new live chats first, using your services, contact details and reviews. Staff see every chat and can take over at any time. It needs an AI provider under AI assistant settings.',
+      label: 'Let the AI assistant answer live chats',
+      description:
+        'Visitors are told it is an AI. Chat text is sent to the AI provider you chose. Turning this off does not end chats already open: staff can still reply.',
+    },
+    botName: {
+      section: 'Assistant',
+      label: 'Name shown to visitors',
+      description: 'Keep it clear that this is an AI.',
+    },
+    extraInstructions: {
+      section: 'Assistant',
+      label: 'Extra instructions',
+      description:
+        'Tone and focus only (for example "keep answers under three sentences"). It cannot override the safety rules: no invented prices, approvals or promises.',
+    },
+    maxAiReplies: {
+      section: 'Limits',
+      sectionDescription: 'After this many AI replies in one chat, a team member is asked to take over.',
+      label: 'Most AI replies per chat',
+    },
+  },
   privacy: {
     enquiryRetentionMonths: {
       section: 'Enquiries',
@@ -319,28 +345,6 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     'hero.videoEnabled': { label: 'Play the video instead of the photo' },
     trustBadges: {
-  supportBot: {
-    enabled: {
-      section: 'Assistant',
-      sectionDescription:
-        'An AI assistant answers new live chats first, using your services, contact details and reviews. Staff see every chat and can take over at any time. It needs an AI provider under AI assistant settings.',
-      label: 'Let the AI assistant answer live chats',
-      description:
-        'Visitors are told it is an AI. Chat text is sent to the AI provider you chose. Turning this off does not end chats already open: staff can still reply.',
-    },
-    botName: { section: 'Assistant', label: 'Name shown to visitors', description: 'Keep it clear that this is an AI.' },
-    extraInstructions: {
-      section: 'Assistant',
-      label: 'Extra instructions',
-      description:
-        'Tone and focus only (for example "keep answers under three sentences"). It cannot override the safety rules: no invented prices, approvals or promises.',
-    },
-    maxAiReplies: {
-      section: 'Limits',
-      sectionDescription: 'After this many AI replies in one chat, a team member is asked to take over.',
-      label: 'Most AI replies per chat',
-    },
-  },
       label: 'Trust ticker',
       description:
         'The 4 short facts scrolling under the banner buttons. Icons follow the order and cannot be changed.',
