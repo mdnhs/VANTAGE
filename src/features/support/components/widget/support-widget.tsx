@@ -15,6 +15,7 @@ import { useClearOfControls } from './use-clear-of-controls';
 import { useWidgetMotion } from './use-widget-motion';
 
 // Remembers only UI state (no message text, no identity). The chat itself is proven by an httpOnly cookie.
+const TYPING_TIMEOUT_MS = 25_000;
 const STORAGE_KEY = 'support-chat';
 type Stored = { active?: boolean; seenId?: string };
 
@@ -48,6 +49,8 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
   const [email, setEmail] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [sending, setSending] = useState(false);
+  // Which visitor message the "typing" hint gave up on, so a silent failure never shows it forever.
+  const [typingGaveUp, setTypingGaveUp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { panel, launcher, chatIcon, closeIcon, panelMounted } = useWidgetMotion(ready, open);
@@ -116,6 +119,13 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
   }, [open, lastMessageId]);
 
   useEffect(() => {
+  const waitingForAi = Boolean(conversation?.aiActive) && conversation?.messages.at(-1)?.sender === 'visitor';
+  useEffect(() => {
+    if (!waitingForAi || !lastMessageId) return;
+    const timer = setTimeout(() => setTypingGaveUp(lastMessageId), TYPING_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [waitingForAi, lastMessageId]);
+
     if (open) composer.current?.focus({ preventScroll: true });
   }, [open]);
 
@@ -176,12 +186,17 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
     composer.current?.focus();
   };
 
-  const askEmail = Boolean(conversation && !ended && !conversation.agentName && !conversation.hasEmail && !online);
+  const askEmail = Boolean(
+    conversation && !ended && !conversation.agentName && !conversation.hasEmail && !conversation.aiActive && !online,
+  );
+  const typing = waitingForAi && typingGaveUp !== lastMessageId;
   const status = conversation?.agentName
     ? `Chatting with ${conversation.agentName}`
-    : online
-      ? 'We are online'
-      : 'We will reply as soon as we can';
+    : conversation?.aiActive
+      ? 'AI assistant · a team member can join'
+      : online
+        ? 'We are online'
+        : 'We will reply as soon as we can';
 
   return (
     <div
@@ -244,6 +259,17 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
               m.sender === 'system' ? (
                 <p
                   key={m.id}
+              ) : m.sender === 'ai' ? (
+                <div key={m.id} className='flex max-w-[85%] flex-col gap-1'>
+                  <span className='text-[12px] text-white/55'>{m.senderName || 'AI assistant'}</span>
+                  <p
+                    data-message-id={m.id}
+                    data-sender={m.sender}
+                    className='rounded-[14px] rounded-bl-[4px] bg-white/[0.08] px-3.5 py-2.5 text-[15px] break-words whitespace-pre-wrap'
+                  >
+                    {m.body}
+                  </p>
+                </div>
                   data-message-id={m.id}
                   data-sender={m.sender}
                   className='py-1 text-center text-[13px] text-white/55'
@@ -259,6 +285,11 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
                     m.sender === 'visitor'
                       ? 'max-w-[85%] self-end rounded-[14px] rounded-br-[4px] bg-brand px-3.5 py-2.5 text-[15px] break-words whitespace-pre-wrap'
                       : 'max-w-[85%] rounded-[14px] rounded-bl-[4px] bg-white/[0.08] px-3.5 py-2.5 text-[15px] break-words whitespace-pre-wrap'
+            {typing ? (
+              <p role='status' className='text-[13px] text-white/55'>
+                AI assistant is typing…
+              </p>
+            ) : null}
                   }
                 >
                   {m.body}

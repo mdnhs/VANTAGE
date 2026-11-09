@@ -30,6 +30,8 @@ export const supportListQuerySchema = z.object({
 
 export const supportAssignSchema = z.object({ userId: z.string().min(1).nullable() });
 
+export const supportAiSchema = z.object({ enabled: z.boolean() });
+
 export type SupportListQuery = z.infer<typeof supportListQuerySchema>;
 export type SupportStartInput = z.infer<typeof supportStartSchema>;
 export type SupportVisitorContactInput = z.infer<typeof supportVisitorContactSchema>;

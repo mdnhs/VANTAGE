@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { tiptapDocSchema, type TiptapDoc } from '@/validations/legal-page-schema';
 
-import { addLiveChatSection, fillBusinessDetails } from './live-chat-policy';
+import { addAiAssistantNotice, addLiveChatSection, fillBusinessDetails } from './live-chat-policy';
 
 const text = (value: string) => ({ type: 'text', text: value });
 const heading = (value: string, level = 3) => ({ type: 'heading', attrs: { level }, content: [text(value)] });
@@ -156,5 +156,44 @@ describe('fillBusinessDetails', () => {
     fillBusinessDetails(before, details);
 
     expect(JSON.stringify(before)).toBe(copy);
+  });
+});
+
+describe('addAiAssistantNotice', () => {
+  const withChat = () => addLiveChatSection(policy(), OPTIONS).doc;
+
+  it('says an AI answers first, that the text goes to an AI provider and that a person can take over', () => {
+    const out = allText(addAiAssistantNotice(withChat(), OPTIONS).doc);
+    expect(out).toMatch(/automated AI assistant/);
+    expect(out).toMatch(/AI provider/);
+    expect(out).toMatch(/team member can take over/);
+  });
+
+  it('puts the notice inside the Live Chat section, before the next section', () => {
+    const { doc } = addAiAssistantNotice(withChat(), OPTIONS);
+    const titleAt = (t: string) => doc.content.findIndex((n) => n.content?.[0]?.text === t);
+    const noticeAt = doc.content.findIndex((n) => allText({ ...doc, content: [n] }).includes('automated AI assistant'));
+    expect(noticeAt).toBeGreaterThan(titleAt('3.4 Live Chat'));
+    expect(noticeAt).toBeLessThan(titleAt('4. How We Use Your Personal Information'));
+  });
+
+  it('is safe to run twice', () => {
+    const once = addAiAssistantNotice(withChat(), OPTIONS);
+    const twice = addAiAssistantNotice(once.doc, OPTIONS);
+    expect(once.changed).toBe(true);
+    expect(twice.changed).toBe(false);
+    expect(twice.doc).toEqual(once.doc);
+  });
+
+  it('does nothing to a policy with no Live Chat section', () => {
+    const result = addAiAssistantNotice(policy(), OPTIONS);
+    expect(result.changed).toBe(false);
+    expect(result.doc).toEqual(policy());
+  });
+
+  it('updates the visible "Last Updated" line and stays a valid document', () => {
+    const { doc } = addAiAssistantNotice(withChat(), { ...OPTIONS, today: new Date('2026-12-01T12:00:00Z') });
+    expect(allText(doc)).toContain('Last Updated: 1 December 2026');
+    expect(tiptapDocSchema.safeParse(doc).success).toBe(true);
   });
 });

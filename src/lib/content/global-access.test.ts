@@ -18,6 +18,7 @@ const GROUP: Record<GlobalKey, Group> = {
   site: 'settings',
   notifications: 'settings',
   privacy: 'settings',
+  supportBot: 'settings',
   contact: 'globals',
   navigation: 'globals',
   footer: 'globals',
@@ -135,9 +136,10 @@ describe('global access', () => {
   it('keeps notifications and privacy out of the public keys', () => {
     expect(PUBLIC_GLOBAL_KEYS).not.toContain('notifications');
     expect(PUBLIC_GLOBAL_KEYS).not.toContain('privacy');
+    expect(PUBLIC_GLOBAL_KEYS).not.toContain('supportBot');
     expect([...PUBLIC_GLOBAL_KEYS].sort()).toEqual(
       Object.keys(GLOBALS)
-        .filter((k) => k !== 'notifications' && k !== 'privacy')
+        .filter((k) => k !== 'notifications' && k !== 'privacy' && k !== 'supportBot')
         .sort(),
     );
   });
@@ -159,6 +161,7 @@ describe('global access', () => {
       forms: ['quoteForm', 'contactForm', 'microcopy'],
       notifications: ['notifications'],
       privacy: ['privacy'],
+      'live-chat-ai': ['supportBot'],
     });
     expect(Object.keys(SETTINGS_PAGE_LABELS).sort()).toEqual(Object.keys(SETTINGS_PAGES).sort());
   });

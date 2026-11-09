@@ -23,6 +23,8 @@ const listColumns = {
   preview: conversations.lastMessagePreview,
   lastMessageAt: conversations.lastMessageAt,
   unread,
+  needsHuman: conversations.needsHuman,
+  aiEnabled: conversations.aiEnabled,
   sourcePath: conversations.sourcePath,
   createdAt: conversations.createdAt,
 };
@@ -34,6 +36,8 @@ export type NewSupportMessage = {
   senderUserId?: string | null;
   senderName?: string | null;
   allowClosed?: boolean;
+  // Drop the message (return null) if a person has taken the chat from the AI.
+  requireAiEnabled?: boolean;
 };
 
 // `onlyAssignedTo` limits a support agent to their own chats.
@@ -100,6 +104,7 @@ export const supportRepository = {
           and(
             eq(conversations.id, input.conversationId),
             input.allowClosed ? undefined : eq(conversations.status, 'open'),
+            input.requireAiEnabled ? eq(conversations.aiEnabled, true) : undefined,
           ),
         )
         .returning({ id: conversations.id });
@@ -173,6 +178,62 @@ export const supportRepository = {
       .where(and(eq(conversations.id, id), eq(conversations.status, 'open'), isNull(conversations.staffAlertedAt)))
       .returning();
     return row ?? null;
+  },
+
+  // Null when the chat is closed. Turning the AI off also clears "needs a person": one is here now.
+  async setAi(id: string, enabled: boolean) {
+    return db.transaction(async (t) => {
+      const [chat] = await t
+        .select({
+          status: conversations.status,
+          aiEnabled: conversations.aiEnabled,
+          assignedTo: conversations.assignedTo,
+        })
+        .from(conversations)
+        .where(eq(conversations.id, id))
+        .for('update');
+      if (!chat || chat.status !== 'open') return null;
+      if (chat.aiEnabled === enabled) return { changed: false, assignedTo: chat.assignedTo };
+      await t.update(conversations).set({ aiEnabled: enabled, needsHuman: false }).where(eq(conversations.id, id));
+      return { changed: true, assignedTo: chat.assignedTo };
+    });
+  },
+
+  // True only for the call that sets the flag, so the team is told once. A chat a person has taken
+  // from the AI is never flagged: they are already here.
+  async flagNeedsHuman(id: string) {
+    const rows = await db
+      .update(conversations)
+      .set({ needsHuman: true })
+      .where(
+        and(
+          eq(conversations.id, id),
+          eq(conversations.status, 'open'),
+          eq(conversations.aiEnabled, true),
+          eq(conversations.needsHuman, false),
+        ),
+      )
+      .returning({ id: conversations.id });
+    return rows.length > 0;
+  },
+
+  // Newest `limit` visitor/AI/staff messages, oldest first. System notices stay out of the model's view.
+  async recentForModel(conversationId: string, limit: number) {
+    const rows = await db
+      .select({ sender: messages.sender, body: messages.body })
+      .from(messages)
+      .where(and(eq(messages.conversationId, conversationId), ne(messages.sender, 'system')))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit);
+    return rows.reverse() as { sender: SupportSender; body: string }[];
+  },
+
+  async aiReplyCount(conversationId: string) {
+    const [row] = await db
+      .select({ n: count() })
+      .from(messages)
+      .where(and(eq(messages.conversationId, conversationId), eq(messages.sender, 'ai')));
+    return row?.n ?? 0;
   },
 
   async markRead(id: string) {

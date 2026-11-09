@@ -37,6 +37,7 @@ const ALL_SETTINGS = [
   'settings-forms',
   'settings-notifications',
   'settings-privacy',
+  'settings-live-chat-ai',
   'settings-ai-assistant',
 ];
 // globals.read only (editor, marketer, viewer): no identity, notifications, privacy.

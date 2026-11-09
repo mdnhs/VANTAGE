@@ -205,6 +205,7 @@ describe('settings pages are organised into tabs', () => {
     microcopy: ['Contact info', 'Visit us'],
     notifications: ['Recipients', 'Auto-reply'],
     privacy: ['Enquiries', 'Spam'],
+    supportBot: ['Assistant', 'Limits'],
   };
 
   it('covers every document the Settings pages edit', () => {

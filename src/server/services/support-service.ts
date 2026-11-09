@@ -24,19 +24,17 @@ import { agentsOnline, isAgentOnline, publishSupportEvent } from '@/server/lib/s
 import { settingsRepository } from '@/server/repositories/settings-repository';
 import { supportRepository, type SupportListRow } from '@/server/repositories/support-repository';
 import { runAfterResponse } from '@/server/services/enquiry-notify';
-import { readEffectiveGlobal } from '@/server/services/globals-service';
+import { supportBotService } from '@/server/services/support-bot-service';
+import { emailTeam, inboxUrl } from '@/server/services/support-notify';
 import { retentionCutoffs } from '@/server/services/retention-service';
 import type { SupportListQuery, SupportStartInput, SupportVisitorContactInput } from '@/validations/support-schema';
 
 const CLOSED = 'This chat has ended';
 const NO_REPLY_MINUTES = 5;
 
-// Site-wide ceilings on top of the per-IP limits, for a flood spread across many addresses.
+// Site-wide ceiling on top of the per-IP limits, for a flood spread across many addresses.
 const newChatBudget = createBudget(60, 10 * 60_000);
-const teamEmailBudget = createBudget(20, 60 * 60_000);
 
-const appUrl = () => (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
-const inboxUrl = (id: string) => `${appUrl()}/dashboard/support?c=${id}`;
 const firstName = (name: string | null | undefined) => name?.trim().split(/\s+/)[0] || null;
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -64,50 +62,54 @@ const toListItem = (row: SupportListRow): SupportListItemDto => ({
   preview: row.preview,
   lastMessageAt: row.lastMessageAt.toISOString(),
   unread: Boolean(row.unread),
+  needsHuman: row.needsHuman,
 });
 
+// The AI answers an open chat that no person holds and that has not asked for one.
+const aiMayAnswer = (row: SupportConversation) =>
+  row.status === 'open' && row.aiEnabled && !row.assignedTo && !row.needsHuman;
+
 async function visitorView(row: SupportConversation): Promise<VisitorConversationDto> {
-  const [detail, messages] = await Promise.all([supportRepository.detail(row.id), supportRepository.messages(row.id)]);
+  const [detail, messages, aiActive] = await Promise.all([
+    supportRepository.detail(row.id),
+    supportRepository.messages(row.id),
+    aiMayAnswer(row) ? supportBotService.isActiveCached() : false,
+  ]);
   return {
     id: row.id,
     status: row.status as SupportStatus,
     agentName: firstName(detail?.assigneeName),
     hasEmail: Boolean(row.visitorEmail),
+    aiActive,
     // Visitors only ever get an agent's first name.
-    messages: messages.map((m) => toMessage(m, firstName(m.senderName))),
+    // The bot keeps its name whole; only people are cut to a first name.
+    messages: messages.map((m) => toMessage(m, m.sender === 'staff' ? firstName(m.senderName) : m.senderName)),
   };
 }
 
 // Tells the team (and the agent holding the chat) that a visitor has been left waiting.
 async function alertIfUnanswered(id: string) {
-  if (!teamEmailBudget.take()) {
-    console.error('[support] team email budget reached');
-    return;
-  }
   const row = await supportRepository.claimNoReplyAlert(id);
   if (!row) return;
-  const [notifications, contact, assignee] = await Promise.all([
-    readEffectiveGlobal('notifications').then((s) => s.value),
-    readEffectiveGlobal('contact').then((s) => s.value),
-    row.assignedTo ? supportRepository.staffById(row.assignedTo) : undefined,
-  ]);
-  const team = notifications.recipients.length ? notifications.recipients : [contact.email].filter(Boolean);
-  const to = [...new Set([...team, ...(assignee ? [assignee.email] : [])])];
-  if (!to.length) return;
-  const { html, text } = renderEmail({
+  await emailTeam(row, {
+    subject: 'A website visitor is waiting for a reply',
     heading: 'A visitor is waiting for a reply',
-    paragraphs: [
-      `A website chat has had no reply for ${NO_REPLY_MINUTES} minutes.`,
-      ...(notifications.includeMessage && row.lastMessagePreview ? [row.lastMessagePreview] : []),
-    ],
-    cta: { label: 'Open the chat', url: inboxUrl(row.id) },
+    paragraphs: [`A website chat has had no reply for ${NO_REPLY_MINUTES} minutes.`],
   });
-  await sendMail({ to, subject: 'A website visitor is waiting for a reply', html, text });
 }
 
 const noReplyTimers = createNoReplyTimers(NO_REPLY_MINUTES * 60_000, (id) => {
   alertIfUnanswered(id).catch(() => console.error('[support] no-reply alert failed'));
 });
+
+// After a visitor message: the AI answers when it may, otherwise the team's no-reply timer runs.
+async function afterVisitorMessage(row: SupportConversation) {
+  if (aiMayAnswer(row) && (await supportBotService.isActive())) {
+    runAfterResponse(() => supportBotService.maybeReply(row.id));
+    return;
+  }
+  noReplyTimers.schedule(row.id);
+}
 
 function emailAgentAboutAssignment(email: string, conversationId: string) {
   runAfterResponse(async () => {
@@ -133,6 +135,8 @@ const requireOpen = (row: SupportConversation) => {
 
 async function applyAssignment(id: string, userId: string | null, joinedName: string | null) {
   const notice = userId && joinedName ? `${firstName(joinedName)} joined the chat.` : null;
+  // A person holding the chat ends the AI's turn before anything else, so it cannot talk over them.
+  if (userId) await supportRepository.setAi(id, false);
   const { outcome, previous } = await supportRepository.assign(id, userId, notice);
   if (outcome === 'closed') throw ApiError.conflict(CLOSED);
   if (outcome === 'unchanged') return;
@@ -165,7 +169,7 @@ export const supportService = {
     });
     await publishSupportEvent({ type: 'conversation', conversationId: row.id, assignedTo: null });
     await publishSupportEvent({ type: 'message', conversationId: row.id, assignedTo: null, from: 'visitor' });
-    noReplyTimers.schedule(row.id);
+    await afterVisitorMessage(row);
     return { token, conversation: await visitorView(row) };
   },
 
@@ -175,9 +179,9 @@ export const supportService = {
       throw ApiError.conflict(CLOSED);
     }
     await publishSupportEvent({ type: 'message', conversationId: row.id, assignedTo: row.assignedTo, from: 'visitor' });
-    noReplyTimers.schedule(row.id);
-    const fresh = await supportRepository.byId(row.id);
-    return visitorView(fresh ?? row);
+    const fresh = (await supportRepository.byId(row.id)) ?? row;
+    await afterVisitorMessage(fresh);
+    return visitorView(fresh);
   },
 
   async visitorContact(row: SupportConversation, input: SupportVisitorContactInput) {
@@ -202,6 +206,7 @@ export const supportService = {
     return {
       ...toListItem(row),
       sourcePath: row.sourcePath,
+      aiEnabled: row.aiEnabled,
       createdAt: row.createdAt.toISOString(),
       messages: messages.map((m) => toMessage(m)),
     };
@@ -213,6 +218,8 @@ export const supportService = {
     // The first person to answer an unassigned chat takes it.
     if (!row.assignedTo) await applyAssignment(id, actor.userId, actor.name);
     const assignedTo = row.assignedTo ?? actor.userId;
+    // Replying is taking over, even when the chat was already assigned to this person.
+    await supportRepository.setAi(id, false);
     const message = await supportRepository.addMessage({
       conversationId: id,
       sender: 'staff',
@@ -224,6 +231,45 @@ export const supportService = {
     noReplyTimers.cancel(id);
     await publishSupportEvent({ type: 'message', conversationId: id, assignedTo, from: 'staff' });
     return toMessage(message);
+  },
+
+  // "Take over" (enabled false) or "hand back to the AI" (enabled true).
+  async setAi(actor: Actor, id: string, enabled: boolean) {
+    const row = await requireVisible(actor, id);
+    requireOpen(row);
+    if (!enabled) {
+      if (!row.assignedTo) await applyAssignment(id, actor.userId, actor.name);
+      else await supportRepository.setAi(id, false);
+      await publishSupportEvent({
+        type: 'conversation',
+        conversationId: id,
+        assignedTo: row.assignedTo ?? actor.userId,
+      });
+      return { aiEnabled: false };
+    }
+    if (row.assignedTo && row.assignedTo !== actor.userId) {
+      throw ApiError.conflict('Another team member holds this chat');
+    }
+    // Handing back to an assistant that is switched off would leave the visitor with nobody.
+    if (!(await supportBotService.isActive())) {
+      throw ApiError.conflict('The AI assistant is turned off. Turn it on in Settings > Live chat AI.');
+    }
+    // The AI skips chats a person holds, so handing back releases the chat too.
+    if (row.assignedTo) await applyAssignment(id, null, null);
+    const result = await supportRepository.setAi(id, true);
+    if (!result) throw ApiError.conflict(CLOSED);
+    if (result.changed) {
+      await supportRepository.addMessage({
+        conversationId: id,
+        sender: 'system',
+        body: 'AI assistant is back on this chat.',
+      });
+      await publishSupportEvent({ type: 'message', conversationId: id, assignedTo: null, from: 'system' });
+    }
+    await publishSupportEvent({ type: 'conversation', conversationId: id, assignedTo: null });
+    // A visitor still waiting gets an answer now; the bot skips the chat if their last message was answered.
+    runAfterResponse(() => supportBotService.maybeReply(id));
+    return { aiEnabled: true };
   },
 
   async markRead(actor: Actor, id: string) {

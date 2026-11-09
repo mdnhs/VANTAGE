@@ -252,6 +252,7 @@ export const NAV: readonly NavItem[] = [
       settingsLink('forms', { globals: ['read'] }, ['quote form', 'contact form', 'microcopy', 'labels']),
       settingsLink('notifications', { settings: ['read'] }, ['email', 'auto-reply', 'recipients']),
       settingsLink('privacy', { settings: ['read'] }, ['retention', 'gdpr', 'spam']),
+      settingsLink('live-chat-ai', { settings: ['read'] }, ['chat', 'ai', 'bot', 'support']),
       {
         id: 'settings-ai-assistant',
         label: 'AI assistant',

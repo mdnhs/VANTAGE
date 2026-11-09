@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, check, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { users } from './auth';
 
@@ -24,6 +24,10 @@ export const supportConversations = pgTable(
     staffReadAt: timestamp('staff_read_at', { withTimezone: true }),
     // Set when the team is emailed about an unanswered chat; a staff reply clears it.
     staffAlertedAt: timestamp('staff_alerted_at', { withTimezone: true }),
+    // The AI assistant answers while this is true. Any human reply, assignment or "take over" turns it off.
+    aiEnabled: boolean('ai_enabled').notNull().default(true),
+    // The AI could not help (or hit a limit) and a person is needed.
+    needsHuman: boolean('needs_human').notNull().default(false),
     closedAt: timestamp('closed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -50,7 +54,7 @@ export const supportMessages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('support_messages_sender_check', sql`${t.sender} in ('visitor','staff','system')`),
+    check('support_messages_sender_check', sql`${t.sender} in ('visitor','staff','system','ai')`),
     index('support_messages_conversation_idx').on(t.conversationId, t.createdAt),
     index('support_messages_sender_user_idx').on(t.senderUserId),
   ],

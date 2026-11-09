@@ -21,6 +21,7 @@ import {
   useDeleteSupportChat,
   useMarkSupportRead,
   useSendSupportMessage,
+  useSetSupportAi,
   useSupportAgents,
   useSupportDetail,
   useSupportList,
@@ -103,7 +104,14 @@ export function SupportInboxView({ initialId }: { initialId: string | null }) {
                           </span>
                         ) : null}
                       </span>
-                      <span className='text-xs text-muted-foreground'>{item.assigneeName ?? 'Unassigned'}</span>
+                      <span className='flex items-center gap-2 text-xs text-muted-foreground'>
+                        {item.assigneeName ?? 'Unassigned'}
+                        {item.needsHuman ? (
+                          <span className='rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive'>
+                            Needs a person
+                          </span>
+                        ) : null}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -182,13 +190,16 @@ function ChatThread({ id, onBack }: { id: string; onBack: () => void }) {
               <p
                 className={cn(
                   'rounded-xl px-3.5 py-2 text-sm break-words whitespace-pre-wrap',
-                  m.sender === 'staff' ? 'bg-primary text-primary-foreground' : 'border bg-card',
+                  m.sender === 'staff' && 'bg-primary text-primary-foreground',
+                  m.sender === 'visitor' && 'border bg-card',
+                  m.sender === 'ai' && 'border border-dashed bg-muted',
                 )}
               >
                 {m.body}
               </p>
               <span className='text-xs text-muted-foreground'>
                 {m.sender === 'staff' && m.senderName ? `${m.senderName}, ` : ''}
+                {m.sender === 'ai' ? `${m.senderName || 'AI assistant'}, ` : ''}
                 {timeOf(m.createdAt)}
               </span>
             </div>
@@ -206,6 +217,7 @@ function ChatHeader({ chat, onBack }: { chat: SupportDetailDto; onBack: () => vo
   const agents = useSupportAgents(canAssign);
   const assign = useAssignSupportChat(chat.id);
   const close = useCloseSupportChat(chat.id);
+  const setAi = useSetSupportAi(chat.id);
   const remove = useDeleteSupportChat(chat.id);
   const [confirming, setConfirming] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -251,6 +263,16 @@ function ChatHeader({ chat, onBack }: { chat: SupportDetailDto; onBack: () => vo
       ) : (
         <span className='text-xs text-muted-foreground'>{chat.assigneeName ?? 'Unassigned'}</span>
       )}
+      {canReply && open ? (
+        <Button
+          variant={chat.aiEnabled ? 'default' : 'outline'}
+          className={TOOLBAR_ACTION}
+          disabled={setAi.isPending}
+          onClick={() => setAi.mutate(!chat.aiEnabled)}
+        >
+          {chat.aiEnabled ? 'Take over' : 'Hand back to AI'}
+        </Button>
+      ) : null}
       {canReply && open ? (
         <Button
           variant={confirming ? 'destructive' : 'outline'}

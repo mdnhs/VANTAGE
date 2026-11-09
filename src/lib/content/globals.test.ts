@@ -19,6 +19,7 @@ describe('globals schemas', () => {
         'microcopy',
         'notifications',
         'privacy',
+        'supportBot',
         'seo',
         'page.home',
         'page.services',
@@ -143,6 +144,24 @@ describe('defaults equal today’s public copy', () => {
       includeMessage: false,
       autoReply: { enabled: false, subject: '', body: '' },
     });
+  });
+});
+
+describe('supportBot global', () => {
+  it('defaults to off, with a neutral name and a 30 reply cap', () => {
+    expect(parseGlobal('supportBot', {})).toEqual({
+      enabled: false,
+      botName: 'AI assistant',
+      extraInstructions: '',
+      maxAiReplies: 30,
+    });
+  });
+
+  it('rejects a zero reply cap and a bot name over 40 characters', () => {
+    expect(GLOBALS.supportBot.safeParse({ maxAiReplies: 0 }).success).toBe(false);
+    expect(GLOBALS.supportBot.safeParse({ maxAiReplies: 101 }).success).toBe(false);
+    expect(GLOBALS.supportBot.safeParse({ botName: 'x'.repeat(41) }).success).toBe(false);
+    expect(GLOBALS.supportBot.safeParse({ extraInstructions: 'x'.repeat(1001) }).success).toBe(false);
   });
 });
 

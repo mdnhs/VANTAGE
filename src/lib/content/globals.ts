@@ -359,6 +359,15 @@ const SeoToken = z
   .default('');
 
 export const SeoGlobal = z.object({
+// The live chat AI assistant. Off until an owner switches it on; it also needs an AI provider
+// to be set up under AI assistant settings.
+export const SupportBotGlobal = z.object({
+  enabled: z.boolean().default(false),
+  botName: s(40, 'AI assistant'),
+  extraInstructions: s(1000),
+  maxAiReplies: z.number().int().min(1).max(100).default(30),
+});
+
   titleTemplate: z
     .string()
     .trim()
@@ -748,6 +757,7 @@ export const GLOBALS = {
   ...SEO_PAGE_GLOBALS,
 } as const;
 
+  supportBot: SupportBotGlobal,
 export type GlobalKey = keyof typeof GLOBALS;
 export type GlobalValue<K extends GlobalKey> = z.infer<(typeof GLOBALS)[K]>;
 

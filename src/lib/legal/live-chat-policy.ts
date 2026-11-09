@@ -62,6 +62,29 @@ export function addLiveChatSection(
   return { doc: { ...doc, content }, changed: true };
 }
 
+const AI_NOTICE =
+  'Our live chat is first answered by an automated AI assistant. It replies using information from our website, such as our services and opening hours. The messages you send in the chat are shared with our AI provider so that it can write a reply, and a team member can take over the chat at any time. Please do not put sensitive personal information in the chat.';
+
+// Adds the AI assistant disclosure to the end of the Live Chat section. Safe to run twice, and
+// leaves a policy without a Live Chat section as it was (add that section first).
+export function addAiAssistantNotice(doc: TiptapDoc, { today }: { today: Date }): { doc: TiptapDoc; changed: boolean } {
+  if (JSON.stringify(doc).includes('automated AI assistant')) return { doc, changed: false };
+  const start = doc.content.findIndex((node) => isHeading(node) && textOf(node).includes('Live Chat'));
+  if (start === -1) return { doc, changed: false };
+  const after = doc.content.findIndex((node, i) => i > start && isHeading(node));
+  const at = after === -1 ? doc.content.length : after;
+  const date = today.toLocaleDateString('en-IE', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Dublin',
+  });
+  const content = [...doc.content.slice(0, at), paragraph(AI_NOTICE), ...doc.content.slice(at)].map((node) =>
+    withUpdatedDate(node, date),
+  );
+  return { doc: { ...doc, content }, changed: true };
+}
+
 const PLACEHOLDERS = {
   '[Insert Business Email Address]': 'email',
   '[Insert Business Address]': 'address',

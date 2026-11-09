@@ -360,3 +360,89 @@ describe('SupportWidget moments', () => {
     expect(screen.getByText('Chatting with Sam')).toBeTruthy();
   });
 });
+
+describe('SupportWidget with the AI assistant', () => {
+  const visitorMessage = {
+    id: 'm1',
+    sender: 'visitor',
+    senderName: null,
+    body: 'Do you fix dents?',
+    createdAt: '2026-11-09T12:00:00.000Z',
+  };
+  const aiMessage = {
+    id: 'm2',
+    sender: 'ai',
+    senderName: 'AI assistant',
+    body: 'Yes, we repair dents.',
+    createdAt: '2026-11-09T12:00:05.000Z',
+  };
+  const chat = (over: Record<string, unknown>) => ({
+    id: 'chat-1',
+    status: 'open',
+    agentName: null,
+    hasEmail: false,
+    aiActive: true,
+    messages: [visitorMessage],
+    ...over,
+  });
+  const openWith = async (conversation: unknown) => {
+    localStorage.setItem('support-chat', JSON.stringify({ active: true }));
+    vi.stubGlobal(
+      'EventSource',
+      class {
+        addEventListener() {}
+        close() {}
+      },
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const data = String(url).endsWith('/conversation') ? conversation : { online: false };
+        return new Response(JSON.stringify({ success: true, data }));
+      }),
+    );
+    render(<SupportWidget retentionMonths={12} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Open chat' }));
+    return screen.getByRole('dialog');
+  };
+
+  it('labels the assistant’s reply as AI, apart from a person', async () => {
+    const dialog = await openWith(chat({ messages: [visitorMessage, aiMessage] }));
+    await waitFor(() => expect(dialog.querySelector('[data-sender="ai"]')).not.toBeNull());
+    expect(dialog.textContent).toContain('AI assistant');
+    expect(dialog.textContent).toContain('Yes, we repair dents.');
+  });
+
+  it('says it is an AI that a team member can join, until a person has the chat', async () => {
+    const dialog = await openWith(chat({ messages: [visitorMessage, aiMessage] }));
+    await waitFor(() => expect(dialog.textContent).toContain('a team member can join'));
+  });
+
+  it('switches to the person’s name once they join', async () => {
+    const dialog = await openWith(chat({ aiActive: false, agentName: 'Sam', messages: [visitorMessage, aiMessage] }));
+    await waitFor(() => expect(dialog.textContent).toContain('Chatting with Sam'));
+    expect(dialog.textContent).not.toContain('a team member can join');
+  });
+
+  it('shows that the assistant is typing while it owes the visitor an answer', async () => {
+    const dialog = await openWith(chat({}));
+    await waitFor(() => expect(dialog.textContent).toContain('AI assistant is typing'));
+  });
+
+  it('stops showing typing once the assistant has answered', async () => {
+    const dialog = await openWith(chat({ messages: [visitorMessage, aiMessage] }));
+    await waitFor(() => expect(dialog.querySelector('[data-sender="ai"]')).not.toBeNull());
+    expect(dialog.textContent).not.toContain('AI assistant is typing');
+  });
+
+  it('does not ask for an email while the assistant is still answering', async () => {
+    const dialog = await openWith(chat({}));
+    await waitFor(() => expect(dialog.textContent).toContain('Do you fix dents?'));
+    expect(dialog.textContent).not.toContain('Leave your email');
+  });
+
+  it('asks for an email when nobody is online and the assistant has handed over', async () => {
+    const dialog = await openWith(chat({ aiActive: false }));
+    await waitFor(() => expect(dialog.textContent).toContain('Leave your email'));
+  });
+});

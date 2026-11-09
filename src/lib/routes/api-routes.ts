@@ -24,6 +24,7 @@ export const API_ROUTES = {
       messages: (id: string) => `/admin/support/conversations/${id}/messages`,
       read: (id: string) => `/admin/support/conversations/${id}/read`,
       assign: (id: string) => `/admin/support/conversations/${id}/assign`,
+      ai: (id: string) => `/admin/support/conversations/${id}/ai`,
       close: (id: string) => `/admin/support/conversations/${id}/close`,
     },
   },

@@ -12,7 +12,12 @@ import { auditRoute } from '@/server/middleware/audit-route';
 import { actorOf, can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
 import { supportService } from '@/server/services/support-service';
-import { supportAssignSchema, supportListQuerySchema, supportMessageSchema } from '@/validations/support-schema';
+import {
+  supportAiSchema,
+  supportAssignSchema,
+  supportListQuerySchema,
+  supportMessageSchema,
+} from '@/validations/support-schema';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
@@ -96,6 +101,22 @@ export const adminSupport = new Hono<AppEnv>()
     zValidator('param', idParamSchema),
     zValidator('json', supportAssignSchema),
     async (c) => ok(c, await supportService.assign(actorOf(c), c.req.valid('param').id, c.req.valid('json').userId)),
+  )
+
+  .post(
+    '/conversations/:id/ai',
+    can({ support: ['reply'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'support.ai',
+      entityType: 'support_chat',
+      summary: 'Live chat AI toggled',
+      load: supportService.byId,
+      fields: ['aiEnabled', 'assignedTo'],
+    }),
+    zValidator('param', idParamSchema),
+    zValidator('json', supportAiSchema),
+    async (c) => ok(c, await supportService.setAi(actorOf(c), c.req.valid('param').id, c.req.valid('json').enabled)),
   )
 
   .post(

@@ -1,4 +1,4 @@
-// Adds the live chat section to the published privacy policy, once.
+// Adds the live chat section and the AI assistant notice to the published privacy policy, once.
 //   yarn legal:add-live-chat           show what would be added; nothing is written
 //   yarn legal:add-live-chat --apply   write it (safe to repeat)
 //   --email=... --address=...          also fill the policy's [Insert Business ...] blanks
@@ -17,7 +17,8 @@ async function main() {
   const { legalPages } = await import('@/server/db/schema');
   const { audit } = await import('@/server/lib/audit');
   const { parseGlobal } = await import('@/lib/content/globals');
-  const { addLiveChatSection, fillBusinessDetails } = await import('@/lib/legal/live-chat-policy');
+  const { addAiAssistantNotice, addLiveChatSection, fillBusinessDetails } =
+    await import('@/lib/legal/live-chat-policy');
   const { settingsRepository } = await import('@/server/repositories/settings-repository');
   const { tiptapDocSchema } = await import('@/validations/legal-page-schema');
 
@@ -27,10 +28,10 @@ async function main() {
   const privacy = parseGlobal('privacy', (await settingsRepository.get('privacy'))?.value);
   const today = new Date();
   const section = addLiveChatSection(page.content, { retentionMonths: privacy.enquiryRetentionMonths, today });
-  const filled =
-    email && address ? fillBusinessDetails(section.doc, { email, address }) : { ...section, changed: false };
+  const ai = addAiAssistantNotice(section.doc, { today });
+  const filled = email && address ? fillBusinessDetails(ai.doc, { email, address }) : { ...ai, changed: false };
   const doc = filled.doc;
-  const changed = section.changed || filled.changed;
+  const changed = section.changed || ai.changed || filled.changed;
   if (!changed) {
     console.log('OK nothing to do');
     process.exit(0);
@@ -55,7 +56,7 @@ async function main() {
     action: 'legal.update',
     entityType: 'legal_page',
     entityId: page.id,
-    summary: 'Live chat section and business details added to the privacy policy',
+    summary: 'Live chat section, AI assistant notice and business details added to the privacy policy',
   });
   console.log('OK the policy was updated');
   process.exit(0);

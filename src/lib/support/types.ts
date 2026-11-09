@@ -1,5 +1,5 @@
 // Shapes shared by the API and both chat UIs. No server imports: the public widget uses these.
-export type SupportSender = 'visitor' | 'staff' | 'system';
+export type SupportSender = 'visitor' | 'staff' | 'system' | 'ai';
 export type SupportStatus = 'open' | 'closed';
 
 export type SupportMessageDto = {
@@ -15,6 +15,8 @@ export type VisitorConversationDto = {
   status: SupportStatus;
   agentName: string | null;
   hasEmail: boolean;
+  // The AI assistant is the one answering right now.
+  aiActive: boolean;
   messages: SupportMessageDto[];
 };
 
@@ -28,10 +30,12 @@ export type SupportListItemDto = {
   preview: string | null;
   lastMessageAt: string;
   unread: boolean;
+  needsHuman: boolean;
 };
 
 export type SupportDetailDto = SupportListItemDto & {
   sourcePath: string | null;
+  aiEnabled: boolean;
   createdAt: string;
   messages: SupportMessageDto[];
 };

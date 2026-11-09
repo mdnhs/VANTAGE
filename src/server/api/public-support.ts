@@ -56,7 +56,7 @@ export const publicSupport = new Hono<AppEnv>()
     if (website) {
       return ok(
         c,
-        { id: randomUUID(), status: 'open', agentName: null, hasEmail: false, messages: [] },
+        { id: randomUUID(), status: 'open', agentName: null, hasEmail: false, aiActive: false, messages: [] },
         { status: 201 },
       );
     }

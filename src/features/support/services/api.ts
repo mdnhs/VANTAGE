@@ -38,6 +38,7 @@ export const supportApi = {
   send: (id: string, body: string) => post<SupportMessageDto>(routes.messages(id), { body }),
   markRead: (id: string) => post<{ read: boolean }>(routes.read(id)),
   assign: (id: string, userId: string | null) => post<{ assignedTo: string | null }>(routes.assign(id), { userId }),
+  setAi: (id: string, enabled: boolean) => post<{ aiEnabled: boolean }>(routes.ai(id), { enabled }),
   close: (id: string) => post<{ status: 'closed' }>(routes.close(id)),
   remove: async (id: string) =>
     parse<{ deleted: boolean }>(

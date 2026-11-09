@@ -60,6 +60,15 @@ export function useAssignSupportChat(id: string) {
   });
 }
 
+export function useSetSupportAi(id: string) {
+  const refresh = useRefreshChat(id);
+  return useMutation({
+    mutationFn: (enabled: boolean) => supportApi.setAi(id, enabled),
+    onSuccess: refresh,
+    onError: showError,
+  });
+}
+
 export function useCloseSupportChat(id: string) {
   const refresh = useRefreshChat(id);
   return useMutation({ mutationFn: () => supportApi.close(id), onSuccess: refresh, onError: showError });

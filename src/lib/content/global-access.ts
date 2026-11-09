@@ -16,6 +16,7 @@ export const EDITABLE_GLOBAL_KEYS = [
   'microcopy',
   'notifications',
   'privacy',
+  'supportBot',
   'seo',
   'page.home',
   'page.services',
@@ -63,6 +64,7 @@ export const GLOBAL_ACCESS: Record<EditableGlobalKey, Access> = {
   site: settingsAccess,
   notifications: settingsAccess,
   privacy: settingsAccess,
+  supportBot: settingsAccess,
   contact: globalsAccess,
   navigation: globalsAccess,
   footer: globalsAccess,
@@ -91,6 +93,7 @@ export const SETTINGS_PAGES = {
   forms: ['quoteForm', 'contactForm', 'microcopy'],
   notifications: ['notifications'],
   privacy: ['privacy'],
+  'live-chat-ai': ['supportBot'],
 } as const satisfies Record<string, readonly EditableGlobalKey[]>;
 export type SettingsPage = keyof typeof SETTINGS_PAGES;
 
@@ -102,6 +105,7 @@ export const SETTINGS_PAGE_LABELS: Record<SettingsPage, string> = {
   forms: 'Forms & microcopy',
   notifications: 'Notifications',
   privacy: 'Privacy',
+  'live-chat-ai': 'Live chat AI',
 };
 
 export const GLOBAL_LABELS: Record<EditableGlobalKey, string> = {
@@ -114,6 +118,7 @@ export const GLOBAL_LABELS: Record<EditableGlobalKey, string> = {
   microcopy: 'Microcopy',
   notifications: 'Notifications',
   privacy: 'Privacy',
+  supportBot: 'Live chat AI',
   seo: 'SEO defaults',
   'page.home': 'Home page',
   'page.services': 'Services page',
