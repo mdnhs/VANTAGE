@@ -14,8 +14,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Runs first: the schema is ready before the new image is built and started. If a migration fails
+  # nothing is built or deployed, so the live site never runs against a missing column.
+  migrate:
+    name: Migrate production database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Apply pending migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: yarn tsx scripts/db-migrate.ts
+
   build-and-push:
     name: Build & Push Docker Image to GHCR
+    needs: migrate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
