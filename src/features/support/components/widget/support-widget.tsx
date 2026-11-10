@@ -10,6 +10,7 @@ import { SUPPORT_MESSAGE_MAX } from '@/validations/support-schema';
 import { countUnread } from '../../lib/unread';
 import { VISITOR_STREAM_URL, visitorApi } from '../../services/visitor-api';
 import { ChatHint } from './chat-hint';
+import { LinkifiedText } from './linkified-text';
 import { TypingIndicator } from './typing-indicator';
 import { useChatMoments } from './use-chat-moments';
 import { useWidgetMotion } from './use-widget-motion';
@@ -268,7 +269,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
                     data-sender={m.sender}
                     className='rounded-[14px] rounded-bl-[4px] bg-white/[0.08] px-3.5 py-2.5 text-[15px] break-words whitespace-pre-wrap'
                   >
-                    {m.body}
+                    <LinkifiedText text={m.body} />
                   </p>
                 </div>
               ) : (
@@ -282,7 +283,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
                       : 'max-w-[85%] rounded-[14px] rounded-bl-[4px] bg-white/[0.08] px-3.5 py-2.5 text-[15px] break-words whitespace-pre-wrap'
                   }
                 >
-                  {m.body}
+                  {m.sender === 'visitor' ? m.body : <LinkifiedText text={m.body} />}
                 </p>
               ),
             )}
