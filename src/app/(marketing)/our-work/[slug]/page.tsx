@@ -15,7 +15,7 @@ import {
 import { PageAnimations } from '@/components/marketing/page-animations';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { projectPath, servicePath } from '@/lib/seo/detail-paths';
-import { breadcrumbNode, graph } from '@/lib/seo/json-ld';
+import { breadcrumbNode, graph, projectNode } from '@/lib/seo/json-ld';
 import { PUBLIC_PAGES } from '@/lib/seo/public-pages';
 import { projectMetadata, publishedProject } from '@/server/queries/get-detail-pages';
 import { projectService } from '@/server/services/project-service';
@@ -35,6 +35,8 @@ export async function generateMetadata({ params }: PageProps<'/our-work/[slug]'>
   // Admin-edited search and sharing fields (Dashboard → Projects → edit → SEO).
   return (await projectMetadata((await params).slug)) ?? { title: 'Page not found', robots: { index: false } };
 }
+
+const absoluteUrl = (src: string) => (src.startsWith('/') ? `${APP_URL}${src}` : src);
 
 function Photo({ image, alt, label }: { image: PublicImage; alt: string; label?: string }) {
   return (
@@ -76,6 +78,14 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
             { name: PUBLIC_PAGES['our-work'].crumb, path: '/our-work' },
             { name: project.title, path },
           ]),
+          projectNode({
+            origin: APP_URL,
+            path,
+            name: project.title,
+            description: project.description,
+            imageUrl: project.afterImage ? absoluteUrl(project.afterImage.src) : null,
+            dateModified: project.updatedAt ? new Date(project.updatedAt).toISOString() : null,
+          }),
         ])}
       />
       <PageHero

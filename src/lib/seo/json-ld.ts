@@ -1,4 +1,14 @@
-import type { BreadcrumbList, FAQPage, Graph, LocalBusiness, Person, Service, Thing, WebSite } from 'schema-dts';
+import type {
+  BreadcrumbList,
+  CreativeWork,
+  FAQPage,
+  Graph,
+  LocalBusiness,
+  Person,
+  Service,
+  Thing,
+  WebSite,
+} from 'schema-dts';
 
 import type { GlobalValue } from '@/lib/content/globals';
 import { siteNameFrom } from '@/lib/content/site-name';
@@ -160,5 +170,27 @@ export function serviceNode(i: {
           },
         }
       : {}),
+  };
+}
+
+// One finished job on its own project page, made by the business.
+export function projectNode(i: {
+  origin: string;
+  path: string;
+  name: string;
+  description: string;
+  imageUrl?: string | null;
+  dateModified?: string | null;
+}): CreativeWork {
+  const url = abs(i.origin, i.path);
+  return {
+    '@type': 'CreativeWork',
+    '@id': `${url}#project`,
+    name: i.name,
+    description: i.description,
+    url,
+    creator: { '@id': `${i.origin}/#organization` },
+    ...(i.imageUrl ? { image: i.imageUrl } : {}),
+    ...(i.dateModified ? { dateModified: i.dateModified } : {}),
   };
 }

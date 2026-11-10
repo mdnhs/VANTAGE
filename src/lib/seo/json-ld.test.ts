@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { parseGlobal } from '@/lib/content/globals';
 
-import { breadcrumbNode, businessNode, graph, scriptJson, serviceNode, teamNodes, websiteNode } from './json-ld';
+import {
+  breadcrumbNode,
+  businessNode,
+  graph,
+  projectNode,
+  scriptJson,
+  serviceNode,
+  teamNodes,
+  websiteNode,
+} from './json-ld';
 
 const origin = 'https://x.ie';
 const site = () => parseGlobal('site', {});
@@ -143,6 +152,25 @@ describe('businessNode admin fields', () => {
 
   it('adds the image when one is given', () => {
     expect(node(() => {}, 'https://x.ie/shop.jpg').image).toBe('https://x.ie/shop.jpg');
+  });
+});
+
+describe('projectNode', () => {
+  const base = { origin, path: '/our-work/audi-rs6', name: 'Audi RS6 respray', description: 'A full respray.' };
+
+  it('is a CreativeWork made by the business, with an absolute url', () => {
+    const n = projectNode(base) as unknown as Record<string, unknown>;
+    expect(n['@type']).toBe('CreativeWork');
+    expect(n.url).toBe('https://x.ie/our-work/audi-rs6');
+    expect(n.creator).toEqual({ '@id': `${origin}/#organization` });
+    expect(n.image).toBeUndefined();
+    expect(n.dateModified).toBeUndefined();
+  });
+
+  it('adds the image and the modified date when known', () => {
+    const n = projectNode({ ...base, imageUrl: 'https://x.ie/a.jpg', dateModified: '2026-11-07T10:58:58.358Z' });
+    expect((n as unknown as Record<string, unknown>).image).toBe('https://x.ie/a.jpg');
+    expect((n as unknown as Record<string, unknown>).dateModified).toBe('2026-11-07T10:58:58.358Z');
   });
 });
 
