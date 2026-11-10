@@ -10,6 +10,7 @@ import { SUPPORT_MESSAGE_MAX } from '@/validations/support-schema';
 import { countUnread } from '../../lib/unread';
 import { VISITOR_STREAM_URL, visitorApi } from '../../services/visitor-api';
 import { ChatHint } from './chat-hint';
+import { TypingIndicator } from './typing-indicator';
 import { useChatMoments } from './use-chat-moments';
 import { useWidgetMotion } from './use-widget-motion';
 
@@ -285,11 +286,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
                 </p>
               ),
             )}
-            {typing ? (
-              <p role='status' className='text-[13px] text-white/55'>
-                AI assistant is typing…
-              </p>
-            ) : null}
+            {typing ? <TypingIndicator name='AI assistant' /> : null}
             {askEmail ? (
               <form onSubmit={saveEmail} className='mt-1 flex flex-col gap-2 rounded-[14px] border border-white/10 p-3'>
                 <label htmlFor='support-email' className='text-[14px] text-white/80'>

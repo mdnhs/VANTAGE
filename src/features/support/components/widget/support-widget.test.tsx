@@ -424,12 +424,24 @@ describe('SupportWidget with the AI assistant', () => {
     expect(dialog.textContent).not.toContain('a team member can join');
   });
 
+  const stillMotion = () =>
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('reduce'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+    }));
+
   it('shows that the assistant is typing while it owes the visitor an answer', async () => {
+    stillMotion();
     const dialog = await openWith(chat({}));
     await waitFor(() => expect(dialog.textContent).toContain('AI assistant is typing'));
   });
 
   it('stops showing typing once the assistant has answered', async () => {
+    stillMotion();
     const dialog = await openWith(chat({ messages: [visitorMessage, aiMessage] }));
     await waitFor(() => expect(dialog.querySelector('[data-sender="ai"]')).not.toBeNull());
     expect(dialog.textContent).not.toContain('AI assistant is typing');
