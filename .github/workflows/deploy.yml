@@ -37,6 +37,12 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: yarn tsx scripts/db-migrate.ts
 
+      # Read-only: confirms every migration is recorded and every table and column exists.
+      - name: Verify schema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: yarn tsx scripts/db-verify.ts
+
   build-and-push:
     name: Build & Push Docker Image to GHCR
     needs: migrate
