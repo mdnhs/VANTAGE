@@ -313,7 +313,23 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       ],
     },
     'business.priceRange': { label: 'Price range', placeholder: '€€' },
-    'business.sameAs': { label: 'Other profiles' },
+    'business.sameAs': { label: 'Other profiles', description: 'Instagram, TikTok, Google profile and similar pages.' },
+    'business.areaServed': {
+      label: 'Areas served',
+      description: 'Towns or counties you repair cars for, for example Dublin. Helps local search.',
+    },
+    'business.latitude': {
+      label: 'Latitude',
+      placeholder: '53.3498',
+      description: 'Right-click your pin in Google Maps to copy it.',
+    },
+    'business.longitude': { label: 'Longitude', placeholder: '-6.2603' },
+    'business.ratingValue': {
+      label: 'Google rating',
+      placeholder: '4.9',
+      description: 'Only enter the rating shown on your Google profile; it must match real reviews.',
+    },
+    'business.reviewCount': { label: 'Number of reviews', placeholder: '180' },
     llms: {
       label: 'AI assistants (llms.txt)',
       description: 'A plain-text summary of the site at /llms.txt that AI search tools read.',

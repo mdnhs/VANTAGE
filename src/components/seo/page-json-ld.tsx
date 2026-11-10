@@ -10,9 +10,11 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').rep
 
 async function business() {
   const [site, contact, seo] = await Promise.all([getSetting('site'), getSetting('contact'), getSetting('seo')]);
-  const logo = await resolveImageRef(site.logo);
+  const [logo, share] = await Promise.all([resolveImageRef(site.logo), resolveImageRef(seo.defaultOgImage)]);
   const logoUrl = logo ? (logo.src.startsWith('/') ? `${APP_URL}${logo.src}` : logo.src) : null;
-  return { site, node: businessNode({ origin: APP_URL, site, contact, seo, logoUrl }) };
+  const abs = (src: string) => (src.startsWith('/') ? `${APP_URL}${src}` : src);
+  const imageUrl = share ? abs(share.src) : logoUrl;
+  return { site, node: businessNode({ origin: APP_URL, site, contact, seo, logoUrl, imageUrl }) };
 }
 
 // Home: WebSite + business. Every other public page: Home > page breadcrumb; Contact adds the

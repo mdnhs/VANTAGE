@@ -26,14 +26,36 @@ export function websiteNode({ origin, siteName }: { origin: string; siteName: st
   };
 }
 
+// Admin-typed numbers: a blank or out-of-range value leaves the whole property out.
+const numberOf = (v: string) => (v.trim() === '' ? NaN : Number(v));
+
+function geoOf(lat: string, lng: string) {
+  const latitude = numberOf(lat);
+  const longitude = numberOf(lng);
+  const ok = Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180;
+  return ok ? { '@type': 'GeoCoordinates' as const, latitude, longitude } : null;
+}
+
+// Google rejects a rating without a count, so both are required.
+function ratingOf(value: string, count: string) {
+  const ratingValue = numberOf(value);
+  const reviewCount = numberOf(count);
+  const ok = ratingValue >= 1 && ratingValue <= 5 && Number.isInteger(reviewCount) && reviewCount >= 1;
+  return ok ? { '@type': 'AggregateRating' as const, ratingValue, reviewCount, bestRating: 5 } : null;
+}
+
 export function businessNode(i: {
   origin: string;
   site: GlobalValue<'site'>;
   contact: GlobalValue<'contact'>;
   seo: GlobalValue<'seo'>;
   logoUrl?: string | null;
+  imageUrl?: string | null;
 }): LocalBusiness {
   const { address, phone, hours } = i.contact;
+  const { areaServed } = i.seo.business;
+  const geo = geoOf(i.seo.business.latitude, i.seo.business.longitude);
+  const rating = ratingOf(i.seo.business.ratingValue, i.seo.business.reviewCount);
   const sameAs = [...new Set([...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)])];
   return {
     '@type': i.seo.business.type,
@@ -42,10 +64,14 @@ export function businessNode(i: {
     ...(i.site.legalName ? { legalName: i.site.legalName } : {}),
     url: i.origin,
     ...(i.logoUrl ? { logo: i.logoUrl } : {}),
+    ...(i.imageUrl ? { image: i.imageUrl } : {}),
     ...(phone.e164 ? { telephone: phone.e164 } : {}),
     ...(i.contact.email ? { email: i.contact.email } : {}),
     ...(i.seo.business.priceRange ? { priceRange: i.seo.business.priceRange } : {}),
     ...(sameAs.length ? { sameAs } : {}),
+    ...(areaServed.length ? { areaServed: areaServed.map((name) => ({ '@type': 'City' as const, name })) } : {}),
+    ...(geo ? { geo } : {}),
+    ...(rating ? { aggregateRating: rating } : {}),
     ...(address.city || address.lines.length
       ? {
           address: {

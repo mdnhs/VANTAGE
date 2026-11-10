@@ -71,6 +71,81 @@ describe('businessNode', () => {
   });
 });
 
+describe('businessNode admin fields', () => {
+  const node = (patch: (s: ReturnType<typeof seo>) => void, imageUrl?: string | null) => {
+    const s = seo();
+    patch(s);
+    return businessNode({ origin, site: site(), contact: contact(), seo: s, imageUrl }) as unknown as Record<
+      string,
+      unknown
+    >;
+  };
+
+  it('emits none of the optional keys by default', () => {
+    const n = node(() => {});
+    for (const key of ['areaServed', 'geo', 'aggregateRating', 'image']) expect(n[key], key).toBeUndefined();
+  });
+
+  it('lists the areas served and the map position', () => {
+    const n = node((s) => {
+      s.business.areaServed = ['Dublin', 'Wicklow'];
+      s.business.latitude = '53.3498';
+      s.business.longitude = '-6.2603';
+    });
+    expect(n.areaServed).toEqual([
+      { '@type': 'City', name: 'Dublin' },
+      { '@type': 'City', name: 'Wicklow' },
+    ]);
+    expect(n.geo).toEqual({ '@type': 'GeoCoordinates', latitude: 53.3498, longitude: -6.2603 });
+  });
+
+  it('needs both coordinates, and valid ones, for geo', () => {
+    expect(node((s) => void (s.business.latitude = '53.3')).geo).toBeUndefined();
+    expect(
+      node((s) => {
+        s.business.latitude = '95';
+        s.business.longitude = '-6';
+      }).geo,
+    ).toBeUndefined();
+    expect(
+      node((s) => {
+        s.business.latitude = 'north';
+        s.business.longitude = '-6';
+      }).geo,
+    ).toBeUndefined();
+  });
+
+  it('emits a rating only with both a value from 1 to 5 and a review count', () => {
+    const rated = node((s) => {
+      s.business.ratingValue = '4.9';
+      s.business.reviewCount = '180';
+    });
+    expect(rated.aggregateRating).toEqual({
+      '@type': 'AggregateRating',
+      ratingValue: 4.9,
+      reviewCount: 180,
+      bestRating: 5,
+    });
+    expect(node((s) => void (s.business.ratingValue = '4.9')).aggregateRating).toBeUndefined();
+    expect(
+      node((s) => {
+        s.business.ratingValue = '9';
+        s.business.reviewCount = '10';
+      }).aggregateRating,
+    ).toBeUndefined();
+    expect(
+      node((s) => {
+        s.business.ratingValue = '4.5';
+        s.business.reviewCount = '0';
+      }).aggregateRating,
+    ).toBeUndefined();
+  });
+
+  it('adds the image when one is given', () => {
+    expect(node(() => {}, 'https://x.ie/shop.jpg').image).toBe('https://x.ie/shop.jpg');
+  });
+});
+
 describe('breadcrumbNode', () => {
   it('numbers steps from 1 with absolute items', () => {
     const n = breadcrumbNode(origin, [

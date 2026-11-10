@@ -410,6 +410,12 @@ export const SeoGlobal = z.object({
       type: z.enum(['AutoBodyShop', 'AutoRepair', 'LocalBusiness']).default('AutoBodyShop'),
       priceRange: s(10),
       sameAs: z.array(HttpsUrl).max(10).default([]),
+      // Local-search details for the business schema; blank fields are left out of it.
+      areaServed: z.array(s(80)).max(10).default([]),
+      latitude: s(20),
+      longitude: s(20),
+      ratingValue: s(5),
+      reviewCount: s(7),
     })
     .prefault({}),
   // /llms.txt: a plain-text guide to the site for AI assistants (ChatGPT, Perplexity, Claude ...).
