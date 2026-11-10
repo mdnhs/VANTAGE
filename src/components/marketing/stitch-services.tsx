@@ -1,6 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 
+import { visibleCopy } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -183,7 +184,7 @@ function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceC
     key: item.id,
     name: item.title,
     description: item.description,
-    badge: item.badge,
+    badge: item.badge && visibleCopy(item.badge) ? item.badge : null,
     footnote: item.footnote || 'Free Estimate',
     icon: resolveIcon(item.icon, index),
     iconSrc: item.iconImage ? sizedSrc(item.iconImage, 'w_48,h_48') : null,
