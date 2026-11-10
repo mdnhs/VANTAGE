@@ -185,7 +185,7 @@ function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceC
     name: item.title,
     description: item.description,
     badge: item.badge && visibleCopy(item.badge) ? item.badge : null,
-    footnote: item.footnote || 'Free Estimate',
+    footnote: item.footnote && visibleCopy(item.footnote) ? item.footnote : 'Free Estimate',
     icon: resolveIcon(item.icon, index),
     iconSrc: item.iconImage ? sizedSrc(item.iconImage, 'w_48,h_48') : null,
   };
