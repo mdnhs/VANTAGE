@@ -66,3 +66,16 @@ describe('toModelMessages', () => {
     ).toEqual([{ role: 'user', content: 'y' }]);
   });
 });
+
+describe('tidyReply', () => {
+  it('splits a long one-block reply into short paragraphs and leaves laid-out replies alone', async () => {
+    const { tidyReply } = await import('./bot-prompt');
+    const wall =
+      'Our prices start low, so there is something for every budget. Scratch repair is from €120. Paint repair is from €250. Final prices depend on the damage. Send us photos for a quote.';
+    expect(tidyReply(wall)).toBe(
+      'Our prices start low, so there is something for every budget. Scratch repair is from €120.\n\nPaint repair is from €250. Final prices depend on the damage.\n\nSend us photos for a quote.',
+    );
+    expect(tidyReply('Hi!\n\nShort and laid out.')).toBe('Hi!\n\nShort and laid out.');
+    expect(tidyReply('Short one.')).toBe('Short one.');
+  });
+});

@@ -6,7 +6,7 @@ import * as z from 'zod';
 import type { SupportSender } from '@/lib/support/types';
 import { siteNameFrom } from '@/lib/content/site-name';
 import { buildKnowledge } from '@/server/lib/support/bot-knowledge';
-import { buildBotPrompt, toModelMessages } from '@/server/lib/support/bot-prompt';
+import { buildBotPrompt, tidyReply, toModelMessages } from '@/server/lib/support/bot-prompt';
 import { createBudget } from '@/server/lib/support/limits';
 import { publishSupportEvent } from '@/server/lib/support/realtime';
 import { serviceRepository } from '@/server/repositories/service-repository';
@@ -147,7 +147,7 @@ async function generate(
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  const body = result.text.trim() || (handoff ? HANDOFF_FALLBACK : '');
+  const body = tidyReply(result.text) || (handoff ? HANDOFF_FALLBACK : '');
   if (!body) throw new Error('empty answer');
   return { body, handoff };
 }
