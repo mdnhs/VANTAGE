@@ -1,5 +1,6 @@
 'use client';
 
+import { visibleCopy } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Image from 'next/image';
@@ -317,20 +318,22 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
       <aside className='flex w-full flex-col gap-[28px] lg:w-[480px] lg:shrink-0'>
         {intro}
         <ul className='flex w-full flex-col gap-[20px]'>
-          {copy.benefits.map((b) => (
-            <li key={b.title} data-popout className='flex w-full items-start gap-[16px]'>
-              <span
-                data-popout-icon
-                className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-[6px]'
-              >
-                <CheckIcon size={16} />
-              </span>
-              <span className='flex min-w-0 flex-1 flex-col gap-[4px]'>
-                <span className='text-[16px] leading-normal font-semibold text-[#f1f3f6]'>{b.title}</span>
-                <span className='text-[14px] leading-[22px] text-[#a4abb6]'>{b.body}</span>
-              </span>
-            </li>
-          ))}
+          {copy.benefits
+            .filter((b) => visibleCopy(b.title, b.body))
+            .map((b) => (
+              <li key={b.title} data-popout className='flex w-full items-start gap-[16px]'>
+                <span
+                  data-popout-icon
+                  className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-[6px]'
+                >
+                  <CheckIcon size={16} />
+                </span>
+                <span className='flex min-w-0 flex-1 flex-col gap-[4px]'>
+                  <span className='text-[16px] leading-normal font-semibold text-[#f1f3f6]'>{b.title}</span>
+                  <span className='text-[14px] leading-[22px] text-[#a4abb6]'>{b.body}</span>
+                </span>
+              </li>
+            ))}
         </ul>
         <div
           data-popout

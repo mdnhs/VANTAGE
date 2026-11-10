@@ -81,7 +81,7 @@ export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
             </h2>
           </div>
           <p className='max-w-[440px] font-site-body text-base leading-[1.55] text-[#b9bfc9] sm:leading-[26px]'>
-            Rated 4.9 on Google for craftsmanship, communication and a hassle-free insurance process.
+            Rated 4.9 on Google for craftsmanship, communication and a hassle-free repair.
           </p>
         </div>
 

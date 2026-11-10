@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { INSURANCE_ENABLED } from '@/lib/features';
 import { PageHeader } from '@/components/admin/dashboard/page-header';
 import { PageTabs } from '@/components/layout/page-tabs';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 export const instant = false;
 
 export default async function InsurancePageContentPage() {
+  if (!INSURANCE_ENABLED) notFound();
   const actor = await requirePermission(permissionFor('/dashboard/insurance'));
   const seo = seoTab(actor, 'insurance');
   if (seo.length === 0) return <GlobalEditor title='Insurance page' keys={['page.insurance']} />;

@@ -1,5 +1,6 @@
 'use client';
 
+import { visibleLink } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -77,8 +78,10 @@ export function StitchHeader({
   logoUseLottie = false,
 }: StitchHeaderProps) {
   // Figma 131:4: the desktop bar skips `mobileOnly` links, the mobile menu lists all of them.
-  const desktopLinks = navigation.links.filter((link) => link.label && link.href && !link.mobileOnly);
-  const mobileLinks = navigation.links.filter((link) => link.label && link.href);
+  const desktopLinks = navigation.links.filter(
+    (link) => link.label && link.href && !link.mobileOnly && visibleLink(link),
+  );
+  const mobileLinks = navigation.links.filter((link) => link.label && link.href && visibleLink(link));
   const phoneHref = phoneHrefProp ?? telHref(phone);
   const logoSrc = logo ? sizedSrc(logo, 'h_240') : FALLBACK_LOGO;
 

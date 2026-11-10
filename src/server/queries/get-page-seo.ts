@@ -11,6 +11,7 @@ import { seoPageKey } from '@/lib/content/globals-seo';
 import type { PublicImage } from '@/lib/media/public-image';
 import { projectPath, servicePath } from '@/lib/seo/detail-paths';
 import { pageMetadata } from '@/lib/seo/metadata';
+import { INSURANCE_ENABLED } from '@/lib/features';
 import { PUBLIC_PAGE_LIST, type PublicPageId } from '@/lib/seo/public-pages';
 import { db } from '@/server/db';
 import { projects, services } from '@/server/db/schema';
@@ -109,7 +110,7 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
     (row: T) =>
       !row.noindex && isSelfCanonical(row.canonical ?? '', path(row));
   const pages = await Promise.all(
-    PUBLIC_PAGE_LIST.map(async (page) => {
+    PUBLIC_PAGE_LIST.filter((page) => INSURANCE_ENABLED || page.id !== 'insurance').map(async (page) => {
       const [seoRow, copyRow] = await Promise.all([
         settingsRepository.get(seoPageKey(page.id)),
         page.pageKey ? settingsRepository.get(page.pageKey) : null,

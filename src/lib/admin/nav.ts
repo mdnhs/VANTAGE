@@ -1,3 +1,4 @@
+import { INSURANCE_ENABLED } from '@/lib/features';
 import { hasPermission, type Permissions, type RoleName } from '@/lib/auth/permissions';
 import { SETTINGS_PAGE_LABELS, type SettingsPage } from '@/lib/content/global-access';
 
@@ -317,7 +318,9 @@ type Allows = (permission: Permissions | readonly Permissions[]) => boolean;
 export function visibleNavWith(allows: Allows): NavItem[] {
   return NAV.filter((item) => allows(item.permission)).map((item) => {
     if (!item.children) return item;
-    const children = item.children.filter((child) => allows(child.permission));
+    const children = item.children.filter(
+      (child) => allows(child.permission) && (INSURANCE_ENABLED || child.href !== '/dashboard/insurance'),
+    );
     const own = children.some((child) => child.href === item.href);
     return { ...item, children, href: own ? item.href : (children[0]?.href ?? item.href) };
   });

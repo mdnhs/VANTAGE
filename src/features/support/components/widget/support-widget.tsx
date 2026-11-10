@@ -135,20 +135,10 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
     launcher.current?.focus();
   };
 
-  const openPanel = (topic?: string) => {
-    if (topic) setDraft((current) => current || topic);
-    setOpen(true);
-    setError(null);
-    visitorApi.status().then(
-      (s) => setOnline(s.online),
-      () => {},
-    );
-  };
-
   const ended = conversation?.status === 'closed';
 
-  const send = async () => {
-    const body = draft.trim();
+  const send = async (text?: string) => {
+    const body = (text ?? draft).trim();
     if (!body || sending) return;
     setSending(true);
     setError(null);
@@ -165,6 +155,17 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
     } finally {
       setSending(false);
     }
+  };
+
+  // A quick-reply option sends its message straight away; an ended chat has no composer, so it only opens.
+  const openPanel = (topic?: string) => {
+    setOpen(true);
+    setError(null);
+    visitorApi.status().then(
+      (s) => setOnline(s.online),
+      () => {},
+    );
+    if (topic && !ended) void send(topic);
   };
 
   const saveEmail = async (event: React.FormEvent) => {

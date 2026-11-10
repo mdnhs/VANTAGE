@@ -23,7 +23,6 @@ const PAGE_KEYS = [
   'page.home',
   'page.services',
   'page.our-work',
-  'page.insurance',
   'page.about',
   'page.process',
   'page.contact',

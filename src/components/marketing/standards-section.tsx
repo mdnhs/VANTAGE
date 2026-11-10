@@ -1,3 +1,4 @@
+import { visibleCopy } from '@/lib/features';
 import Image from 'next/image';
 import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
@@ -50,30 +51,32 @@ export function StandardsSection({ eyebrow, title, image, items }: StandardsSect
           </div>
 
           <div className='flex flex-col gap-7 max-sm:order-3 sm:gap-4 lg:gap-6'>
-            {items.map((item, index) => {
-              const Icon = ICONS[index % ICONS.length];
-              return (
-                <article
-                  key={`${item.title}-${index}`}
-                  className='group flex gap-3 transition-colors duration-300 hover:border-brand/60 sm:gap-5 sm:rounded-2xl sm:border sm:border-[#353c47] sm:bg-[#262b34] sm:p-6 lg:gap-4 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0'
-                >
-                  <div className='flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#055e45] transition-transform duration-300 group-hover:scale-105 sm:size-12 sm:rounded-xl sm:bg-[#f1f3f6] lg:size-7 lg:rounded-full lg:bg-[#055e45]'>
-                    <Icon
-                      aria-hidden
-                      className='size-4 text-[#f1f3f6] sm:size-6 sm:text-[#1b1f26] lg:size-4 lg:text-[#f1f3f6]'
-                    />
-                  </div>
-                  <div className='flex flex-col gap-0.5 sm:gap-2 lg:gap-1'>
-                    <h3 className='font-site-heading text-[15px] leading-normal font-semibold tracking-[-0.1px] text-[#f1f3f6] sm:text-xl sm:leading-[26px] sm:font-bold lg:text-base lg:leading-normal lg:font-semibold'>
-                      {item.title}
-                    </h3>
-                    <p className='font-site-body text-sm leading-[21px] text-[#a4abb6] sm:leading-[22px] sm:text-[#b9bfc9] lg:text-[#a4abb6]'>
-                      {item.description}
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
+            {items
+              .filter((item) => visibleCopy(item.title, item.description))
+              .map((item, index) => {
+                const Icon = ICONS[index % ICONS.length];
+                return (
+                  <article
+                    key={`${item.title}-${index}`}
+                    className='group flex gap-3 transition-colors duration-300 hover:border-brand/60 sm:gap-5 sm:rounded-2xl sm:border sm:border-[#353c47] sm:bg-[#262b34] sm:p-6 lg:gap-4 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0'
+                  >
+                    <div className='flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#055e45] transition-transform duration-300 group-hover:scale-105 sm:size-12 sm:rounded-xl sm:bg-[#f1f3f6] lg:size-7 lg:rounded-full lg:bg-[#055e45]'>
+                      <Icon
+                        aria-hidden
+                        className='size-4 text-[#f1f3f6] sm:size-6 sm:text-[#1b1f26] lg:size-4 lg:text-[#f1f3f6]'
+                      />
+                    </div>
+                    <div className='flex flex-col gap-0.5 sm:gap-2 lg:gap-1'>
+                      <h3 className='font-site-heading text-[15px] leading-normal font-semibold tracking-[-0.1px] text-[#f1f3f6] sm:text-xl sm:leading-[26px] sm:font-bold lg:text-base lg:leading-normal lg:font-semibold'>
+                        {item.title}
+                      </h3>
+                      <p className='font-site-body text-sm leading-[21px] text-[#a4abb6] sm:leading-[22px] sm:text-[#b9bfc9] lg:text-[#a4abb6]'>
+                        {item.description}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })}
           </div>
         </div>
       </div>

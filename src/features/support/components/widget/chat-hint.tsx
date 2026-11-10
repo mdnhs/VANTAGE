@@ -6,7 +6,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 const OPTIONS = [
   { label: 'Get a repair estimate', draft: "I'd like a repair estimate." },
-  { label: 'Help with an insurance claim', draft: 'I need help with an insurance claim.' },
+  { label: 'How much does a repair cost?', draft: 'How much does a repair cost?' },
+  { label: 'Opening hours & location', draft: 'What are your opening hours and where are you located?' },
+  { label: 'Book a visit to the workshop', draft: "I'd like to book a visit to the workshop." },
   { label: 'Ask something else', draft: '' },
 ];
 
@@ -260,7 +262,7 @@ export function ChatHint({
           </span>
           <span className='block overflow-hidden'>
             <span data-hint-rise className='block text-[13px] leading-5 text-white/60'>
-              A scratch, a dent or a claim?
+              A scratch, a dent or a quote?
             </span>
           </span>
         </button>

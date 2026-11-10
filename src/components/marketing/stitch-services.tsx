@@ -119,7 +119,7 @@ const DEFAULT_SERVICES: ServiceCard[] = [
   [
     'Crash & collision repair',
     'Major accident reconstruction, hydraulic bench pull and laser structural chassis realignment.',
-    'Insurance Approved',
+    'OEM Certified',
   ],
   [
     'Dent repair & PDR',

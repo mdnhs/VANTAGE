@@ -127,7 +127,8 @@ describe('SupportWidget help offer', () => {
     hoverOffer();
 
     expect(option('Get a repair estimate')).not.toBeNull();
-    expect(option('Help with an insurance claim')).not.toBeNull();
+    expect(option('Opening hours & location')).not.toBeNull();
+    expect(option('Help with an insurance claim')).toBeNull();
     expect(option('Ask something else')).not.toBeNull();
   });
 
@@ -156,14 +157,28 @@ describe('SupportWidget help offer', () => {
     expect(option('Get a repair estimate')).not.toBeNull();
   });
 
-  it('starts the chat with a chosen topic written but not sent', () => {
-    const fetchSpy = vi.mocked(fetch);
+  it('sends a chosen topic straight away instead of filling the box', async () => {
+    const started = { id: 'c1', status: 'open', aiActive: true, agentName: null, hasEmail: false, messages: [] };
+    const fetchSpy = vi.fn(async (_url: string, init?: RequestInit) => {
+      const data = init?.method === 'POST' ? started : { online: false };
+      return new Response(JSON.stringify({ success: true, data }));
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    vi.stubGlobal(
+      'EventSource',
+      class {
+        addEventListener() {}
+        close() {}
+      },
+    );
     hoverOffer();
 
     fireEvent.click(option('Get a repair estimate')!);
 
-    expect(composer().value).toBe("I'd like a repair estimate.");
-    expect(fetchSpy.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+    await flush();
+    const post = fetchSpy.mock.calls.find(([, init]) => init?.method === 'POST');
+    expect(String(post?.[1]?.body)).toContain("I'd like a repair estimate.");
+    expect(composer().value).toBe('');
   });
 
   it('opens an empty chat for anything else', () => {

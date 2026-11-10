@@ -23,4 +23,12 @@ describe('LinkifiedText', () => {
     render(<LinkifiedText text='Call 0852785974 or javascript:alert(1)' />);
     expect(screen.queryByRole('link')).toBeNull();
   });
+
+  it('turns a site path into a link on the current origin', () => {
+    render(<LinkifiedText text={'Send photos here:\n/get-a-quote\nThanks'} />);
+    const link = screen.getByRole('link');
+    expect(link.getAttribute('href')).toBe('/get-a-quote');
+    expect(link.textContent).toBe(`${window.location.origin}/get-a-quote`);
+    expect(link.getAttribute('target')).toBeNull();
+  });
 });

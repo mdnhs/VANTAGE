@@ -78,7 +78,6 @@ describe('StitchHeader from navigation defaults', () => {
       ['Home', '/'],
       ['Services', '/services'],
       ['Our Work', '/our-work'],
-      ['Insurance', '/insurance'],
       ['Contact', '/contact'],
     ]);
     expect(within(bar).getByText('Services').getAttribute('aria-current')).toBe('page');
@@ -97,7 +96,7 @@ describe('StitchHeader from navigation defaults', () => {
     const labels = within(menu)
       .getAllByRole('link')
       .map((a) => a.textContent);
-    expect(labels.slice(0, 7)).toEqual(['Home', 'Services', 'Our Work', 'Insurance', 'Contact', 'About', 'Process']);
+    expect(labels.slice(0, 6)).toEqual(['Home', 'Services', 'Our Work', 'Contact', 'About', 'Process']);
     const wide = screen.getByRole('link', { name: /Get a Free Quote/ });
     expect(wide.getAttribute('href')).toBe('/get-a-quote');
   });

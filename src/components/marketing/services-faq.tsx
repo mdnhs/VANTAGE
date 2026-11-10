@@ -1,3 +1,4 @@
+import { visibleCopy } from '@/lib/features';
 import { JsonLd } from '@/components/seo/json-ld';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CARD, SECTION_BG, SectionHeader } from '@/components/marketing/ui/landing-primitives';
@@ -9,7 +10,7 @@ type ServicesFaqProps = { faq: GlobalValue<'page.services'>['faq'] };
 // CMS-driven (Dashboard → Services → Services page → FAQ). Blank rows are skipped so a
 // half-filled question never reaches the page or the FAQPage markup.
 export function ServicesFaq({ faq }: ServicesFaqProps) {
-  const items = faq.items.filter((item) => item.question && item.answer);
+  const items = faq.items.filter((item) => item.question && item.answer && visibleCopy(item.question, item.answer));
   if (items.length === 0) return null;
 
   return (

@@ -23,7 +23,6 @@ const ALL_WEBSITE = [
   'website-services',
   'website-legal-pages',
   'website-work',
-  'website-insurance',
   'website-about',
   'website-process',
   'website-contact',

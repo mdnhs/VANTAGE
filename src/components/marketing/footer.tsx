@@ -1,3 +1,4 @@
+import { visibleLink } from '@/lib/features';
 import Image from 'next/image';
 import Link from 'next/link';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -118,7 +119,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
               <h3 className={headingClass}>{column.title}</h3>
               <nav className='flex flex-col items-start gap-1 sm:gap-[14px]'>
                 {column.links
-                  .filter((link) => link.label && link.href)
+                  .filter((link) => link.label && link.href && visibleLink(link))
                   .map((link, i) => (
                     <Link key={`${link.label}-${link.href}-${i}`} href={link.href} className={columnLinkClass}>
                       {link.label}
