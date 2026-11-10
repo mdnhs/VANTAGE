@@ -207,7 +207,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
           onKeyDown={(e) => {
             if (e.key === 'Escape') close();
           }}
-          className='flex h-[min(620px,calc(100dvh-112px))] w-[min(380px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#2e343e] bg-[#1b1f26] text-[#f1f3f6] shadow-2xl'
+          className='flex h-[min(520px,calc(100dvh-112px))] w-[min(340px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#2e343e] bg-[#1b1f26] text-[#f1f3f6] shadow-2xl'
         >
           <header data-chat-part className='flex items-center gap-3 border-b border-[#2e343e] px-4 py-3.5'>
             <span ref={avatar} className='relative grid size-10 shrink-0 place-items-center rounded-full bg-brand'>
