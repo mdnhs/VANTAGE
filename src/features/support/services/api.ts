@@ -2,6 +2,7 @@ import { API_ROUTES } from '@/lib/routes/api-routes';
 import type {
   SupportAgentDto,
   SupportDetailDto,
+  SupportKnowledgeStatusDto,
   SupportListItemDto,
   SupportMessageDto,
   SupportStatus,
@@ -39,6 +40,8 @@ export const supportApi = {
   markRead: (id: string) => post<{ read: boolean }>(routes.read(id)),
   assign: (id: string, userId: string | null) => post<{ assignedTo: string | null }>(routes.assign(id), { userId }),
   setAi: (id: string, enabled: boolean) => post<{ aiEnabled: boolean }>(routes.ai(id), { enabled }),
+  knowledge: () => get<SupportKnowledgeStatusDto>(routes.knowledge),
+  syncKnowledge: () => post<SupportKnowledgeStatusDto>(routes.knowledgeSync),
   close: (id: string) => post<{ status: 'closed' }>(routes.close(id)),
   remove: async (id: string) =>
     parse<{ deleted: boolean }>(

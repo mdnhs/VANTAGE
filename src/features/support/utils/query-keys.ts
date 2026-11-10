@@ -6,5 +6,6 @@ export const SUPPORT_QUERY_KEYS = {
   agents: () => [...SUPPORT_QUERY_KEYS.all, 'agents'] as const,
   lists: () => [...SUPPORT_QUERY_KEYS.all, 'list'] as const,
   list: (status: SupportStatus, limit: number) => [...SUPPORT_QUERY_KEYS.lists(), status, limit] as const,
+  knowledge: () => [...SUPPORT_QUERY_KEYS.all, 'knowledge'] as const,
   detail: (id: string) => [...SUPPORT_QUERY_KEYS.all, 'detail', id] as const,
 };

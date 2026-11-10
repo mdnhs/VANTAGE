@@ -20,6 +20,7 @@ const h = vi.hoisted(() => ({
   flagNeedsHuman: vi.fn(),
   publish: vi.fn(),
   notify: vi.fn(),
+  memory: vi.fn(),
   model: null as unknown,
 }));
 
@@ -66,6 +67,7 @@ vi.mock('@/server/repositories/testimonial-repository', () => ({
   testimonialRepository: { listPublished: async () => [{ customerName: 'Sam', reviewText: 'Great.' }] },
 }));
 vi.mock('@/server/lib/support/realtime', () => ({ publishSupportEvent: h.publish }));
+vi.mock('@/server/services/support-knowledge-service', () => ({ supportKnowledgeService: { contextFor: h.memory } }));
 vi.mock('@/server/services/support-notify', () => ({ notifyTeamNeedsHuman: h.notify }));
 
 import { supportBotService } from './support-bot-service';
@@ -103,6 +105,7 @@ beforeEach(() => {
   h.addMessage.mockReset().mockResolvedValue({ id: 'm1' });
   h.flagNeedsHuman.mockReset().mockResolvedValue(true);
   h.publish.mockReset().mockResolvedValue(undefined);
+  h.memory.mockReset().mockResolvedValue(null);
   h.notify.mockReset().mockResolvedValue(undefined);
   h.model = modelReturning(text('Yes, we repair dents. A quote depends on the damage.'));
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -223,6 +226,22 @@ describe('supportBotService.maybeReply', () => {
     expect(sentToModel).not.toContain('aoife@example.com');
     expect(sentToModel).not.toContain('Byrne');
     expect(sentToModel).not.toContain('utm=x');
+  });
+});
+
+describe('supportBotService.maybeReply with the synced website memory', () => {
+  it('answers from the memory, ranked by what the visitor asked, instead of the live content', async () => {
+    h.memory.mockResolvedValue('MEMORY: Alloy Wheel Refurbishment (from €85)');
+    h.history = [
+      { sender: 'visitor', body: 'Hi' },
+      { sender: 'ai', body: 'Hello!' },
+      { sender: 'visitor', body: 'Do you repair alloy wheels?' },
+    ];
+    await supportBotService.maybeReply('c1');
+    const sentToModel = JSON.stringify(seen[0]);
+    expect(sentToModel).toContain('MEMORY: Alloy Wheel Refurbishment (from €85)');
+    expect(sentToModel).not.toContain('Dent repair');
+    expect(h.memory).toHaveBeenCalledWith('Hi Do you repair alloy wheels?');
   });
 });
 

@@ -60,6 +60,24 @@ export function useAssignSupportChat(id: string) {
   });
 }
 
+// Polls only while a sync is running, so the progress bar follows the server's real progress.
+export const useSupportKnowledge = () =>
+  useQuery({
+    queryKey: keys.knowledge(),
+    queryFn: supportApi.knowledge,
+    refetchInterval: (query) => (query.state.data?.status === 'running' ? 600 : false),
+    staleTime: 0,
+  });
+
+export function useSyncSupportKnowledge() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: supportApi.syncKnowledge,
+    onSuccess: (data) => client.setQueryData(keys.knowledge(), data),
+    onError: showError,
+  });
+}
+
 export function useSetSupportAi(id: string) {
   const refresh = useRefreshChat(id);
   return useMutation({

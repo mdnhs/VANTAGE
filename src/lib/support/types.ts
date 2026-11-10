@@ -50,3 +50,16 @@ export type SupportEvent = {
   assignedTo: string | null;
   from?: SupportSender;
 };
+
+// The AI's website memory: progress of the latest sync, polled by the admin page.
+export type SupportKnowledgeStatusDto = {
+  status: 'idle' | 'running' | 'done' | 'failed';
+  step: string | null;
+  total: number;
+  done: number;
+  chunks: number;
+  error: string | null;
+  lastSyncedAt: string | null;
+  // Never synced, or the site changed after the last sync.
+  stale: boolean;
+};

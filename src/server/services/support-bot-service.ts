@@ -17,6 +17,7 @@ import { getModel, mockEnabled } from '@/server/services/ai/provider';
 import { decryptApiKey, isConfigured, readAiSettings } from '@/server/services/ai/settings';
 import { firstNameOf } from '@/server/services/ai/prompt';
 import { readEffectiveGlobal } from '@/server/services/globals-service';
+import { supportKnowledgeService } from '@/server/services/support-knowledge-service';
 import { notifyTeamNeedsHuman } from '@/server/services/support-notify';
 
 const HISTORY = 20;
@@ -96,6 +97,14 @@ async function escalate(id: string, notice: string | null) {
 
 type Generated = { body: string; handoff: boolean };
 
+// The last two things the visitor wrote: a follow-up like "and the price?" still carries the topic.
+const questionOf = (history: { sender: SupportSender; body: string }[]) =>
+  history
+    .filter((m) => m.sender === 'visitor')
+    .slice(-2)
+    .map((m) => m.body)
+    .join(' ');
+
 async function generate(
   chat: { visitorName: string | null },
   history: { sender: SupportSender; body: string }[],
@@ -114,7 +123,8 @@ async function generate(
     instructions: buildBotPrompt({
       botName: bot.botName,
       siteName: siteNameFrom((await readEffectiveGlobal('site')).value.name),
-      knowledge: await knowledge(),
+      // The synced website memory, ranked for what the visitor just asked; the live content if never synced.
+      knowledge: (await supportKnowledgeService.contextFor(questionOf(history))) ?? (await knowledge()),
       extra: bot.extraInstructions,
       // First name only: the model never sees an email, surname or page query.
       visitorFirstName: chat.visitorName ? firstNameOf(chat.visitorName) || null : null,

@@ -25,6 +25,8 @@ export const API_ROUTES = {
       read: (id: string) => `/admin/support/conversations/${id}/read`,
       assign: (id: string) => `/admin/support/conversations/${id}/assign`,
       ai: (id: string) => `/admin/support/conversations/${id}/ai`,
+      knowledge: '/admin/support/knowledge',
+      knowledgeSync: '/admin/support/knowledge/sync',
       close: (id: string) => `/admin/support/conversations/${id}/close`,
     },
   },

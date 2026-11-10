@@ -1,5 +1,16 @@
 import { sql } from 'drizzle-orm';
-import { boolean, check, index, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { users } from './auth';
 
@@ -62,3 +73,38 @@ export const supportMessages = pgTable(
 
 export type SupportConversation = typeof supportConversations.$inferSelect;
 export type SupportMessage = typeof supportMessages.$inferSelect;
+
+// What the live chat AI knows: one row per piece of website content, written by the admin's
+// "Sync" button. The AI reads these (ranked by the visitor's question) instead of searching the
+// live tables on every message. `core` rows are always sent; the rest only when relevant.
+export const supportKnowledge = pgTable(
+  'support_knowledge',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    source: varchar('source', { length: 40 }).notNull(),
+    sourceKey: varchar('source_key', { length: 200 }).notNull(),
+    title: varchar('title', { length: 200 }).notNull(),
+    body: text('body').notNull(),
+    core: boolean('core').notNull().default(false),
+    syncedAt: timestamp('synced_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('support_knowledge_source_key_idx').on(t.source, t.sourceKey)],
+);
+
+// One row ('main'): progress of the latest sync, polled by the admin page's progress bar.
+export const supportKnowledgeSync = pgTable(
+  'support_knowledge_sync',
+  {
+    id: varchar('id', { length: 16 }).primaryKey(),
+    status: varchar('status', { length: 16 }).notNull().default('idle'),
+    step: varchar('step', { length: 120 }),
+    total: integer('total').notNull().default(0),
+    done: integer('done').notNull().default(0),
+    chunks: integer('chunks').notNull().default(0),
+    error: varchar('error', { length: 300 }),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    startedBy: text('started_by'),
+  },
+  (t) => [check('support_knowledge_sync_status_check', sql`${t.status} in ('idle','running','done','failed')`)],
+);

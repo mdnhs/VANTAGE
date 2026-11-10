@@ -11,6 +11,7 @@ import { zValidator } from '@/server/lib/validator';
 import { auditRoute } from '@/server/middleware/audit-route';
 import { actorOf, can } from '@/server/middleware/auth';
 import { notViewingAs, VIEW_AS_READ_ONLY } from '@/server/middleware/view-as';
+import { supportKnowledgeService } from '@/server/services/support-knowledge-service';
 import { supportService } from '@/server/services/support-service';
 import {
   supportAiSchema,
@@ -32,6 +33,21 @@ export const adminSupport = new Hono<AppEnv>()
   .get('/unread', can({ support: ['read'] }), async (c) => ok(c, await supportService.unread(actorOf(c))))
 
   .get('/agents', can({ support: ['assign'] }), async (c) => ok(c, await supportService.agents()))
+
+  // The AI's website memory. Managing it is a settings task, like the rest of Live chat AI.
+  .get('/knowledge', can({ settings: ['read'] }), async (c) => ok(c, await supportKnowledgeService.status()))
+
+  .post(
+    '/knowledge/sync',
+    can({ settings: ['update'] }),
+    notViewingAs(VIEW_AS_READ_ONLY),
+    auditRoute({
+      action: 'support.knowledge_sync',
+      entityType: 'support_knowledge',
+      summary: 'Live chat AI memory synced from the website',
+    }),
+    async (c) => ok(c, await supportKnowledgeService.start(actorOf(c)), { status: 202 }),
+  )
 
   .get('/stream', can({ support: ['read'] }), (c) => {
     const actor = actorOf(c);
