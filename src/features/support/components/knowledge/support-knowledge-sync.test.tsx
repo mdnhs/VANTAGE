@@ -92,6 +92,16 @@ describe('SupportKnowledgeSync', () => {
     await screen.findByText('The sync stopped before it finished. Try again.');
   });
 
+  it('says so when the status cannot be loaded, instead of hiding the section', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ success: false, error: { message: 'Internal error' } }), { status: 500 }),
+      ),
+    );
+    mount();
+    expect((await screen.findByRole('alert')).textContent).toContain('Internal error');
+  });
+
   it('disables the button for someone who may not change settings', async () => {
     can.value = false;
     server([base]);

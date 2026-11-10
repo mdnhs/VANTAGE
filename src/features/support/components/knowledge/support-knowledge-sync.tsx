@@ -19,6 +19,17 @@ export function SupportKnowledgeSync() {
   const knowledge = useSupportKnowledge();
   const sync = useSyncSupportKnowledge();
   const data = knowledge.data;
+  if (knowledge.isError) {
+    return (
+      <section aria-label='AI memory' className='flex flex-col items-start gap-2'>
+        <h2 className='text-base font-medium'>AI memory</h2>
+        <p role='alert' className='text-sm text-destructive'>
+          Could not load the AI memory status ({knowledge.error.message}). If this persists, the database may be missing
+          the latest migration.
+        </p>
+      </section>
+    );
+  }
   if (!data) return null;
 
   const running = data.status === 'running' || sync.isPending;
