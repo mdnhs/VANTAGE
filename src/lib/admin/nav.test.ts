@@ -109,6 +109,15 @@ describe('visibleNav', () => {
     expect(tree).toEqual(EXPECTED[name]);
   });
 
+  it('lists the Insurance page only when the admin switches it on', () => {
+    const website = (opts?: { insurance?: boolean }) =>
+      visibleNav(['owner'], opts)
+        .find((i) => i.id === 'website')!
+        .children!.map((c) => c.id);
+    expect(website()).not.toContain('website-insurance');
+    expect(website({ insurance: true })).toContain('website-insurance');
+  });
+
   it('merges multiple roles', () => {
     const ids = visibleNav(['intake', 'marketer']).map((i) => i.id);
     expect(ids).toContain('enquiries');

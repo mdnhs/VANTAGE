@@ -1,5 +1,6 @@
 'use client';
 
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { visibleLink } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState } from 'react';
@@ -78,10 +79,11 @@ export function StitchHeader({
   logoUseLottie = false,
 }: StitchHeaderProps) {
   // Figma 131:4: the desktop bar skips `mobileOnly` links, the mobile menu lists all of them.
+  const insurance = useInsuranceEnabled();
   const desktopLinks = navigation.links.filter(
-    (link) => link.label && link.href && !link.mobileOnly && visibleLink(link),
+    (link) => link.label && link.href && !link.mobileOnly && visibleLink(link, insurance),
   );
-  const mobileLinks = navigation.links.filter((link) => link.label && link.href && visibleLink(link));
+  const mobileLinks = navigation.links.filter((link) => link.label && link.href && visibleLink(link, insurance));
   const phoneHref = phoneHrefProp ?? telHref(phone);
   const logoSrc = logo ? sizedSrc(logo, 'h_240') : FALLBACK_LOGO;
 

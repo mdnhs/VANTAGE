@@ -1,3 +1,4 @@
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { visibleLink } from '@/lib/features';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -55,10 +56,11 @@ function ContactIcon({
 // on every marketing page, so this is a repeated call to a `'use cache'`-wrapped function:
 // Next.js dedupes identical cache-key reads within the same render, so it costs nothing extra.
 export async function MarketingFooter({ cookieSettings }: { cookieSettings?: React.ReactNode }) {
-  const [settings, footer, legalPages] = await Promise.all([
+  const [settings, footer, legalPages, insurance] = await Promise.all([
     siteSettingsService.getPublic(),
     getSetting('footer'),
     legalPageService.listPublishedLinks(),
+    getInsuranceEnabled(),
   ]);
   // Manual links first, then every published legal page (Dashboard → Legal pages); a manual
   // link to a legal page's address gives way to the page so it is listed once.
@@ -119,7 +121,7 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
               <h3 className={headingClass}>{column.title}</h3>
               <nav className='flex flex-col items-start gap-1 sm:gap-[14px]'>
                 {column.links
-                  .filter((link) => link.label && link.href && visibleLink(link))
+                  .filter((link) => link.label && link.href && visibleLink(link, insurance))
                   .map((link, i) => (
                     <Link key={`${link.label}-${link.href}-${i}`} href={link.href} className={columnLinkClass}>
                       {link.label}

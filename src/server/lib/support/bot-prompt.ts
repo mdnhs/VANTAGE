@@ -1,4 +1,3 @@
-import { INSURANCE_ENABLED } from '@/lib/features';
 import 'server-only';
 
 import type { SupportSender } from '@/lib/support/types';
@@ -11,6 +10,8 @@ export type BotPromptInput = {
   extra: string;
   visitorFirstName: string | null;
   today: string;
+  // The admin's "Show the Insurance page" switch: off keeps the chat from offering insurance help.
+  insurance: boolean;
 };
 
 // The owner's extra text comes last and is framed as subordinate, so it can set tone but
@@ -23,7 +24,7 @@ export function buildBotPrompt(input: BotPromptInput): string {
     `You are "${name}", the AI assistant in the website live chat of ${site}, a car body and accident repair business in Ireland. A real team member can join the chat at any time.`,
     'Help visitors with questions about the business: services, what is included, opening hours, location and how to get in touch or get a quote.',
     'Only use the business information below, and always answer what you can first: name the matching service, what it includes and its "from €N" starting price, and give the phone, email, WhatsApp, address or hours when asked. Only if the answer really is not there, say so briefly instead of guessing.',
-    ...(INSURANCE_ENABLED
+    ...(input.insurance
       ? []
       : [
           'Do not offer or mention insurance claims, insurers or insurance help, even if the business information does. If a visitor asks about insurance, say you cannot help with that here and offer the quote form, phone or WhatsApp instead.',

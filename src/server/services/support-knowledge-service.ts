@@ -1,3 +1,4 @@
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import 'server-only';
 
 import { siteNameFrom } from '@/lib/content/site-name';
@@ -119,7 +120,8 @@ const STEPS: Step[] = [
     label: 'Website pages (about, insurance, FAQ and more)',
     async run() {
       const chunks: KnowledgeChunk[] = [];
-      for (const key of PAGE_KEYS) {
+      const keys = (await getInsuranceEnabled()) ? [...PAGE_KEYS, 'page.insurance' as const] : PAGE_KEYS;
+      for (const key of keys) {
         const { value } = await readEffectiveGlobal(key);
         const body = pageText(value);
         if (body) chunks.push({ source: 'page', sourceKey: key, title: `Website page: ${key.slice(5)}`, body });

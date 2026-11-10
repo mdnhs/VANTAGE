@@ -5,12 +5,14 @@ import { CARD, SECTION_BG, SectionHeader } from '@/components/marketing/ui/landi
 import type { GlobalValue } from '@/lib/content/globals';
 import { faqNode, graph } from '@/lib/seo/json-ld';
 
-type ServicesFaqProps = { faq: GlobalValue<'page.services'>['faq'] };
+type ServicesFaqProps = { faq: GlobalValue<'page.services'>['faq']; insurance?: boolean };
 
 // CMS-driven (Dashboard → Services → Services page → FAQ). Blank rows are skipped so a
 // half-filled question never reaches the page or the FAQPage markup.
-export function ServicesFaq({ faq }: ServicesFaqProps) {
-  const items = faq.items.filter((item) => item.question && item.answer && visibleCopy(item.question, item.answer));
+export function ServicesFaq({ faq, insurance = false }: ServicesFaqProps) {
+  const items = faq.items.filter(
+    (item) => item.question && item.answer && visibleCopy(insurance, item.question, item.answer),
+  );
   if (items.length === 0) return null;
 
   return (

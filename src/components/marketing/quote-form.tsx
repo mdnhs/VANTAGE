@@ -1,5 +1,6 @@
 'use client';
 
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { visibleCopy } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
@@ -202,6 +203,7 @@ interface QuoteFormProps {
 
 export function QuoteForm({ services, copy, intro, source = 'quote_page' }: QuoteFormProps) {
   const { labels, placeholders, hints, buttons } = copy;
+  const insurance = useInsuranceEnabled();
 
   // Step 1: Vehicle & Service
   const [registration, setRegistration] = useState('');
@@ -319,7 +321,7 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
         {intro}
         <ul className='flex w-full flex-col gap-[20px]'>
           {copy.benefits
-            .filter((b) => visibleCopy(b.title, b.body))
+            .filter((b) => visibleCopy(insurance, b.title, b.body))
             .map((b) => (
               <li key={b.title} data-popout className='flex w-full items-start gap-[16px]'>
                 <span

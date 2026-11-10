@@ -18,6 +18,7 @@ interface StandardsSectionProps {
   title: string;
   image: PublicImage | null;
   items: AboutStandard[];
+  insurance?: boolean;
 }
 
 // Last word of the CMS title becomes the red accent; the CMS newline is folded into a space.
@@ -27,7 +28,7 @@ function splitAccent(title: string) {
   return { head: words.slice(0, -1).join(' '), accent: words[words.length - 1] };
 }
 
-export function StandardsSection({ eyebrow, title, image, items }: StandardsSectionProps) {
+export function StandardsSection({ eyebrow, title, image, items, insurance = false }: StandardsSectionProps) {
   const { head, accent } = splitAccent(title);
 
   return (
@@ -52,7 +53,7 @@ export function StandardsSection({ eyebrow, title, image, items }: StandardsSect
 
           <div className='flex flex-col gap-7 max-sm:order-3 sm:gap-4 lg:gap-6'>
             {items
-              .filter((item) => visibleCopy(item.title, item.description))
+              .filter((item) => visibleCopy(insurance, item.title, item.description))
               .map((item, index) => {
                 const Icon = ICONS[index % ICONS.length];
                 return (

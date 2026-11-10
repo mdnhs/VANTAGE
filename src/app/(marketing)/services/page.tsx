@@ -1,3 +1,4 @@
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -18,10 +19,11 @@ const FALLBACK_IMAGE = '/assets/marketing/service-crash-repair.jpg';
 
 // Content is CMS-driven (Dashboard → Services) — order and enabled state come from there.
 export default async function ServicesPage() {
-  const [services, settings, page] = await Promise.all([
+  const [services, settings, page, insurance] = await Promise.all([
     serviceService.listPublished(),
     siteSettingsService.getPublic(),
     getSetting('page.services'),
+    getInsuranceEnabled(),
   ]);
 
   return (
@@ -73,7 +75,7 @@ export default async function ServicesPage() {
           </div>
         </section>
       )}
-      <ServicesFaq faq={page.faq} />
+      <ServicesFaq faq={page.faq} insurance={insurance} />
       <PageAnimations />
     </main>
   );

@@ -1,3 +1,5 @@
+import { InsuranceProvider } from '@/contexts/insurance-context';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import './admin.css';
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
@@ -21,11 +23,12 @@ export const instant = false;
 // the database-checked Better Auth session and redirects (to /login) when it is missing,
 // expired, or belongs to a site customer (role "user").
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const [actor, settings, cookieStore, theme] = await Promise.all([
+  const [actor, settings, cookieStore, theme, insurance] = await Promise.all([
     requireActor(),
     siteSettingsService.getPublic(),
     cookies(),
     getPublishedTheme(),
+    getInsuranceEnabled(),
   ]);
   // Only an explicit "false" collapses; a first visit starts open.
   const sidebarOpen = cookieStore.get(SIDEBAR_COOKIE)?.value !== 'false';
@@ -42,9 +45,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <AdminThemeStyle theme={theme} />
       <DefaultMode mode={theme.admin.mode} />
       <ActorProvider actor={toMePayload(actor)}>
-        <AdminShell defaultOpen={sidebarOpen} siteUrl={siteUrl} brand={brand}>
-          {children}
-        </AdminShell>
+        <InsuranceProvider enabled={insurance}>
+          <AdminShell defaultOpen={sidebarOpen} siteUrl={siteUrl} brand={brand}>
+            {children}
+          </AdminShell>
+        </InsuranceProvider>
         <ViewAsBanner />
       </ActorProvider>
       <Toaster position='top-center' />

@@ -1,3 +1,5 @@
+import { InsuranceProvider } from '@/contexts/insurance-context';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { manrope, inter } from '@/lib/font';
 import { StitchHeader } from '@/components/marketing/stitch-header';
 import { QuoteCtaProvider } from '@/components/marketing/quote-cta';
@@ -16,36 +18,39 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // One navbar + closing CTA + footer for every public page; contact details come from CMS site settings.
 export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
-  const [settings, navigation, chatRetentionMonths] = await Promise.all([
+  const [settings, navigation, chatRetentionMonths, insurance] = await Promise.all([
     siteSettingsService.getPublic(),
     getSetting('navigation'),
     getSupportRetentionMonths(),
+    getInsuranceEnabled(),
   ]);
 
   return (
-    <QuoteCtaProvider label={navigation.cta.label}>
-      <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#1b1f26] font-site-body`}>
-        <SiteThemeStyle />
-        <SmoothScroll />
-        <StitchHeader
-          navigation={navigation}
-          phone={settings.phone}
-          phoneHref={settings.phoneHref}
-          businessName={settings.businessName}
-          logo={settings.logo}
-          logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
-          logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
-        />
-        <div data-route-content>
-          {children}
-          <StitchCta phone={settings.phone} />
-          <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+    <InsuranceProvider enabled={insurance}>
+      <QuoteCtaProvider label={navigation.cta.label}>
+        <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#1b1f26] font-site-body`}>
+          <SiteThemeStyle />
+          <SmoothScroll />
+          <StitchHeader
+            navigation={navigation}
+            phone={settings.phone}
+            phoneHref={settings.phoneHref}
+            businessName={settings.businessName}
+            logo={settings.logo}
+            logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
+            logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
+          />
+          <div data-route-content>
+            {children}
+            <StitchCta phone={settings.phone} />
+            <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+          </div>
+          <MarketingTracking />
+          <SupportWidget retentionMonths={chatRetentionMonths} />
+          <ButtonRevealLayer />
+          <RouteFade />
         </div>
-        <MarketingTracking />
-        <SupportWidget retentionMonths={chatRetentionMonths} />
-        <ButtonRevealLayer />
-        <RouteFade />
-      </div>
-    </QuoteCtaProvider>
+      </QuoteCtaProvider>
+    </InsuranceProvider>
   );
 }

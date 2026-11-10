@@ -1,5 +1,6 @@
 'use client';
 
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -36,7 +37,7 @@ export function AppSidebar({
   const pathname = usePathname();
   const { signOut, pending } = useSignOut();
   const { isMobile, setOpenMobile } = useSidebar();
-  const visible = visibleNav(roles);
+  const visible = visibleNav(roles, { insurance: useInsuranceEnabled() });
   const items = visible.filter((item) => !item.dock);
   // Following a link inside the mobile sheet closes it.
   const onNavigate = () => {

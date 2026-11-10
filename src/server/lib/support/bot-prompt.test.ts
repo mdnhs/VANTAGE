@@ -9,6 +9,7 @@ const input = {
   extra: '',
   visitorFirstName: 'Aoife',
   today: '2026-11-09',
+  insurance: false,
 };
 
 describe('buildBotPrompt', () => {
@@ -77,5 +78,10 @@ describe('tidyReply', () => {
     );
     expect(tidyReply('Hi!\n\nShort and laid out.')).toBe('Hi!\n\nShort and laid out.');
     expect(tidyReply('Short one.')).toBe('Short one.');
+  });
+
+  it('keeps insurance out of the chat unless the admin switches it on', () => {
+    expect(buildBotPrompt(input)).toMatch(/Do not offer or mention insurance/i);
+    expect(buildBotPrompt({ ...input, insurance: true })).not.toMatch(/Do not offer or mention insurance/i);
   });
 });

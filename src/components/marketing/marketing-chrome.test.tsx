@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { InsuranceProvider } from '@/contexts/insurance-context';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -31,6 +32,7 @@ vi.mock('@/server/services/site-settings-service', () => ({
   },
 }));
 const legalLinks = vi.hoisted(() => ({ list: [] as { title: string; slug: string }[] }));
+vi.mock('@/server/queries/get-features', () => ({ getInsuranceEnabled: async () => false }));
 vi.mock('@/server/services/legal-page-service', () => ({
   legalPageService: { listPublishedLinks: async () => legalLinks.list },
 }));
@@ -66,6 +68,25 @@ afterEach(cleanup);
 
 const header = (navigation = parseGlobal('navigation', {})) =>
   render(<StitchHeader navigation={navigation} phone='+353 1 234' businessName='Shop' logo={null} />);
+
+describe('StitchHeader insurance link', () => {
+  const insuranceLinks = (enabled: boolean) => {
+    render(
+      <InsuranceProvider enabled={enabled}>
+        <StitchHeader navigation={parseGlobal('navigation', {})} phone='+353 1 234' businessName='Shop' logo={null} />
+      </InsuranceProvider>,
+    );
+    return within(screen.getByRole('navigation'))
+      .getAllByRole('link')
+      .map((a) => a.getAttribute('href'));
+  };
+
+  it('shows the Insurance link only when the admin switches insurance on', () => {
+    expect(insuranceLinks(false)).not.toContain('/insurance');
+    cleanup();
+    expect(insuranceLinks(true)).toContain('/insurance');
+  });
+});
 
 describe('StitchHeader from navigation defaults', () => {
   it('renders the same desktop links, in order, as the old hard-coded bar', () => {

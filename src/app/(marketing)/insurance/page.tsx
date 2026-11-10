@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { INSURANCE_ENABLED } from '@/lib/features';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { InsuranceHero } from '@/components/marketing/insurance-hero';
@@ -18,7 +18,7 @@ export async function generateMetadata() {
 }
 
 export default async function InsurancePage() {
-  if (!INSURANCE_ENABLED) notFound();
+  if (!(await getInsuranceEnabled())) notFound();
   const [partnerLogos, settings] = await Promise.all([
     partnerLogoService.listEnabled(),
     siteSettingsService.getPublic(),

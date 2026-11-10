@@ -2,15 +2,18 @@
 
 import { gsap } from 'gsap';
 import { X } from 'lucide-react';
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-const OPTIONS = [
+const BASE_OPTIONS = [
   { label: 'Get a repair estimate', draft: "I'd like a repair estimate." },
   { label: 'How much does a repair cost?', draft: 'How much does a repair cost?' },
   { label: 'Opening hours & location', draft: 'What are your opening hours and where are you located?' },
   { label: 'Book a visit to the workshop', draft: "I'd like to book a visit to the workshop." },
   { label: 'Ask something else', draft: '' },
 ];
+
+const INSURANCE_OPTION = { label: 'Help with an insurance claim', draft: 'I need help with an insurance claim.' };
 
 const ENTRANCE_DELAY_S = 0.5;
 const COLLAPSE_DELAY_MS = 320;
@@ -36,6 +39,10 @@ export function ChatHint({
   onOpen: (draft?: string) => void;
   onGone: () => void;
 }) {
+  const insurance = useInsuranceEnabled();
+  const options = insurance
+    ? [...BASE_OPTIONS.slice(0, -1), INSURANCE_OPTION, ...BASE_OPTIONS.slice(-1)]
+    : BASE_OPTIONS;
   const [expanded, setExpanded] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const band = useRef<HTMLSpanElement>(null);
@@ -224,7 +231,7 @@ export function ChatHint({
 
       <div ref={tray} className='h-0 overflow-hidden'>
         <ul className='border-b border-white/10 px-2 pt-3 pb-1.5'>
-          {OPTIONS.map((option) => (
+          {options.map((option) => (
             <li key={option.label}>
               <button
                 type='button'
@@ -262,7 +269,7 @@ export function ChatHint({
           </span>
           <span className='block overflow-hidden'>
             <span data-hint-rise className='block text-[13px] leading-5 text-white/60'>
-              A scratch, a dent or a quote?
+              {insurance ? 'A scratch, a dent or a claim?' : 'A scratch, a dent or a quote?'}
             </span>
           </span>
         </button>

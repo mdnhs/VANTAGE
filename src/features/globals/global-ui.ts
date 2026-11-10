@@ -28,6 +28,12 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       description: 'Used in legal pages and invoices (not shown on the site yet).',
       section: 'Business',
     },
+    features: { section: 'Business' },
+    'features.insurance': {
+      label: 'Show the Insurance page and insurance wording',
+      description:
+        "Off hides the Insurance page and its menu links, the insurance wording on the site and the AI chat's insurance help.",
+    },
     logo: {
       label: 'Logo',
       section: 'Logo & icons',

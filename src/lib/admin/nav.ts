@@ -1,4 +1,3 @@
-import { INSURANCE_ENABLED } from '@/lib/features';
 import { hasPermission, type Permissions, type RoleName } from '@/lib/auth/permissions';
 import { SETTINGS_PAGE_LABELS, type SettingsPage } from '@/lib/content/global-access';
 
@@ -315,19 +314,21 @@ type Allows = (permission: Permissions | readonly Permissions[]) => boolean;
 
 // A section whose own href belongs to a child the actor cannot open (an any-of
 // parent such as Enquiries) links to its first child they can.
-export function visibleNavWith(allows: Allows): NavItem[] {
+export type NavOptions = { insurance?: boolean };
+
+export function visibleNavWith(allows: Allows, opts: NavOptions = {}): NavItem[] {
   return NAV.filter((item) => allows(item.permission)).map((item) => {
     if (!item.children) return item;
     const children = item.children.filter(
-      (child) => allows(child.permission) && (INSURANCE_ENABLED || child.href !== '/dashboard/insurance'),
+      (child) => allows(child.permission) && (opts.insurance === true || child.href !== '/dashboard/insurance'),
     );
     const own = children.some((child) => child.href === item.href);
     return { ...item, children, href: own ? item.href : (children[0]?.href ?? item.href) };
   });
 }
 
-export function visibleNav(roles: readonly RoleName[]): NavItem[] {
-  return visibleNavWith((permission) => canOpen(roles, permission));
+export function visibleNav(roles: readonly RoleName[], opts: NavOptions = {}): NavItem[] {
+  return visibleNavWith((permission) => canOpen(roles, permission), opts);
 }
 
 // Every page the actor may open, once each, labelled with its section.

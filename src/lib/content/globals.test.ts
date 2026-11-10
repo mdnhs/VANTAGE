@@ -278,3 +278,10 @@ describe('footer social media', () => {
     expect(GLOBALS.footer.safeParse({ socials }).success).toBe(false);
   });
 });
+
+describe('site features', () => {
+  it('keeps the insurance page switched off until the admin turns it on', () => {
+    expect(parseGlobal('site', {}).features.insurance).toBe(false);
+    expect(parseGlobal('site', { features: { insurance: true } }).features.insurance).toBe(true);
+  });
+});

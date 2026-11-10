@@ -1,6 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { visibleCopy } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import Link from 'next/link';
@@ -179,13 +180,13 @@ function toCard(service: ServicePublic, index: number): ServiceCard {
   };
 }
 
-function catalogItemToCard(item: HomepageCatalogPublic, index: number): ServiceCard {
+function catalogItemToCard(item: HomepageCatalogPublic, index: number, insurance: boolean): ServiceCard {
   return {
     key: item.id,
     name: item.title,
     description: item.description,
-    badge: item.badge && visibleCopy(item.badge) ? item.badge : null,
-    footnote: item.footnote && visibleCopy(item.footnote) ? item.footnote : 'Free Estimate',
+    badge: item.badge && visibleCopy(insurance, item.badge) ? item.badge : null,
+    footnote: item.footnote && visibleCopy(insurance, item.footnote) ? item.footnote : 'Free Estimate',
     icon: resolveIcon(item.icon, index),
     iconSrc: item.iconImage ? sizedSrc(item.iconImage, 'w_48,h_48') : null,
   };
@@ -210,9 +211,10 @@ export function StitchServices({
   headlineAccent,
   subtext,
 }: StitchServicesProps) {
+  const insurance = useInsuranceEnabled();
   const cards =
     catalogItems && catalogItems.length > 0
-      ? catalogItems.map(catalogItemToCard)
+      ? catalogItems.map((item, i) => catalogItemToCard(item, i, insurance))
       : services && services.length > 0
         ? services.map(toCard)
         : DEFAULT_SERVICES;

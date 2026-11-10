@@ -42,6 +42,12 @@ export const SiteGlobal = z.object({
   // Blank shows the site's domain (siteNameFrom); the real name is set in the admin.
   name: s(255),
   legalName: s(120),
+  // Switches the Insurance page and every insurance wording on the site and in the AI chat.
+  features: z
+    .object({
+      insurance: z.boolean().default(false),
+    })
+    .prefault({}),
   logo: image(),
   favicon: image(),
   // Animated logo (Lottie JSON); falls back to `logo` when off or missing.

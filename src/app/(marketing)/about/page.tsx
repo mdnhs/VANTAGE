@@ -1,3 +1,4 @@
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { AboutHero } from '@/components/marketing/about-hero';
@@ -14,7 +15,7 @@ export async function generateMetadata() {
 
 // Content is CMS-driven (Dashboard → About page); blank fields fall back to the design copy.
 export default async function AboutPage() {
-  const settings = await siteSettingsService.getPublic();
+  const [settings, insurance] = await Promise.all([siteSettingsService.getPublic(), getInsuranceEnabled()]);
   const content = resolveAboutPageContent(settings);
 
   return (
@@ -45,6 +46,7 @@ export default async function AboutPage() {
           title={content.standardsTitle}
           image={content.standardsImage}
           items={content.standardsItems}
+          insurance={insurance}
         />
         <PageAnimations />
       </main>

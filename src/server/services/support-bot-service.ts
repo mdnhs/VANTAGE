@@ -1,3 +1,4 @@
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import 'server-only';
 
 import { generateText, isStepCount, tool } from 'ai';
@@ -130,6 +131,7 @@ async function generate(
       // First name only: the model never sees an email, surname or page query.
       visitorFirstName: chat.visitorName ? firstNameOf(chat.visitorName) || null : null,
       today: new Date().toISOString().slice(0, 10),
+      insurance: await getInsuranceEnabled(),
     }),
     messages: toModelMessages(history),
     tools: {
