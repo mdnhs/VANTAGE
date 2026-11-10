@@ -85,7 +85,7 @@ export default async function Home() {
         />
         <StitchEstimator services={services} copy={quoteCopy} heading={quoteHeading} />
         <StitchCaseStudies projects={featuredProjects} />
-        <StitchProcess steps={processSteps} />
+        <StitchProcess steps={processSteps.filter((step) => visibleCopy(insurance, step.title, step.description))} />
         <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} insurance={insurance} />
         <PageAnimations />
       </main>

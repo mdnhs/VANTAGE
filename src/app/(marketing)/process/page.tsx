@@ -1,3 +1,5 @@
+import { visibleCopy } from '@/lib/features';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { QuoteButton } from '@/components/marketing/quote-cta';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
@@ -22,10 +24,13 @@ function toHeroLines(title: string): string[] {
 }
 
 export default async function ProcessPage() {
-  const [steps, settings] = await Promise.all([
+  const [allSteps, settings, insurance] = await Promise.all([
     homepageProcessStepService.listEnabled(),
     siteSettingsService.getPublic(),
+    getInsuranceEnabled(),
   ]);
+  // A repair step about insurance is left out while the admin switch is off.
+  const steps = allSteps.filter((step) => visibleCopy(insurance, step.title, step.description));
   const content = resolveProcessPageContent(settings);
   const title = content.title.replace('{count}', String(steps.length));
 
