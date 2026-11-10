@@ -160,8 +160,8 @@ describe('rootMetadata', () => {
   it('uses the uploaded icon as the favicon and none when there is no icon', () => {
     const icon = { ...image, src: 'https://media.x.ie/fav.png', mimeType: 'image/png' };
     expect(rootMetadata({ ...base, icon }).icons).toEqual({
-      icon: [{ url: icon.src, type: 'image/png' }],
-      apple: [{ url: icon.src }],
+      icon: [{ url: '/favicon.ico', type: 'image/png' }],
+      apple: [{ url: '/favicon.ico' }],
     });
     expect(rootMetadata(base).icons).toBeUndefined();
   });

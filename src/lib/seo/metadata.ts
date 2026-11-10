@@ -86,6 +86,9 @@ export function pageMetadata(i: PageSeoInput): Metadata {
   };
 }
 
+// Served from the site's own domain by app/favicon.ico, so Google can crawl and index it.
+export const FAVICON_PATH = '/favicon.ico';
+
 export type RootMetadataInput = {
   appUrl: string;
   seo: GlobalValue<'seo'>;
@@ -116,7 +119,7 @@ export function rootMetadata(i: RootMetadataInput): Metadata {
     description,
     applicationName: siteName,
     ...(i.icon
-      ? { icons: { icon: [{ url: i.icon.src, type: i.icon.mimeType ?? undefined }], apple: [{ url: i.icon.src }] } }
+      ? { icons: { icon: [{ url: FAVICON_PATH, type: i.icon.mimeType ?? undefined }], apple: [{ url: FAVICON_PATH }] } }
       : {}),
     generator: 'Next.js',
     referrer: 'origin-when-cross-origin',
