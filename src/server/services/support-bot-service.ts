@@ -1,3 +1,4 @@
+import { formatAddress } from '@/lib/content/format-address';
 import { getInsuranceEnabled } from '@/server/queries/get-features';
 import 'server-only';
 
@@ -61,9 +62,7 @@ async function knowledge(): Promise<string> {
     serviceRepository.listPublished(),
     testimonialRepository.listPublished({ limit: 5 }),
   ]);
-  const address = [...contact.address.lines, contact.address.city, contact.address.eircode, contact.address.country]
-    .filter(Boolean)
-    .join(', ');
+  const address = formatAddress(contact.address);
   const text = buildKnowledge({
     siteName: siteNameFrom(site.name),
     services: services.map((s) => ({

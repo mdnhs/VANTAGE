@@ -1,3 +1,4 @@
+import { formatAddress } from '@/lib/content/format-address';
 import 'server-only';
 
 import { cacheLife, cacheTag } from 'next/cache';
@@ -52,10 +53,7 @@ export async function getLlmsTxt(): Promise<string | null> {
   // What the sitemap lists: rows not set noindex and not pointing their canonical elsewhere.
   const listable = (row: { noindex: boolean; canonical: string | null }, path: string) =>
     !row.noindex && isSelfCanonical(row.canonical ?? '', path);
-  const address = [...contact.address.lines, contact.address.city, contact.address.eircode, contact.address.country]
-    .map((v) => v.trim())
-    .filter(Boolean)
-    .join(', ');
+  const address = formatAddress(contact.address);
   return llmsText({
     insurance: await getInsuranceEnabled(),
     siteName: name,

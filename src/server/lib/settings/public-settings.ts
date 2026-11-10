@@ -1,3 +1,4 @@
+import { formatAddress } from '@/lib/content/format-address';
 import { formatOpeningHoursSummary, type DaySchedule } from '@/lib/content/opening-hours';
 import { parseGlobal, type GlobalValue } from '@/lib/content/globals';
 import type { ImageRef } from '@/lib/content/image-ref';
@@ -191,10 +192,7 @@ export function composeLegacyView(g: PublicGlobals): LegacySiteView {
   const process = g['page.process'];
 
   const social = (label: string) => site.social.find((s) => s.label.trim().toLowerCase() === label)?.url ?? null;
-  const address = [...contact.address.lines, contact.address.city, contact.address.eircode, contact.address.country]
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join(', ');
+  const address = formatAddress(contact.address);
   const openingHours = hoursText(contact.hours);
 
   // An SEO value equal to what the site derives anyway is "not overridden" (null).

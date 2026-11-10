@@ -1,3 +1,4 @@
+import { formatAddress } from '@/lib/content/format-address';
 import { getInsuranceEnabled } from '@/server/queries/get-features';
 import 'server-only';
 
@@ -46,9 +47,7 @@ const STEPS: Step[] = [
         readEffectiveGlobal('site').then((s) => s.value),
         readEffectiveGlobal('contact').then((s) => s.value),
       ]);
-      const address = [...contact.address.lines, contact.address.city, contact.address.eircode, contact.address.country]
-        .filter(Boolean)
-        .join(', ');
+      const address = formatAddress(contact.address);
       const line = (label: string, v: string) => (oneLine(v, 300) ? `${label}: ${oneLine(v, 300)}` : null);
       const body = [
         line('Business', siteNameFrom(site.name)),
