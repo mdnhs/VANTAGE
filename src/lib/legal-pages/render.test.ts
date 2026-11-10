@@ -57,4 +57,19 @@ describe('excerptOf', () => {
     expect(excerpt.endsWith('…')).toBe(true);
     expect(excerpt).not.toMatch(/\s…$/);
   });
+
+  it('skips policy boilerplate and numbered headings so the description starts with real text', () => {
+    const excerpt = excerptOf(
+      doc(
+        p(text('Website: https://autopaintshop.ie/Business Name: Auto Paint ShopLast Updated: 8 November 2026')),
+        { type: 'heading', attrs: { level: 2 }, content: [text('1. Introduction')] },
+        p(text('Welcome to Auto Paint Shop. We explain how we use your data.')),
+      ),
+    );
+    expect(excerpt).toBe('Welcome to Auto Paint Shop. We explain how we use your data.');
+  });
+
+  it('falls back to every block when only boilerplate is left', () => {
+    expect(excerptOf(doc(p(text('Last Updated: 8 November 2026'))))).toBe('Last Updated: 8 November 2026');
+  });
 });

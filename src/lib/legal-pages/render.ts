@@ -39,11 +39,23 @@ function textOf(node: TiptapNode): string {
   return (node.content ?? []).map(textOf).join('');
 }
 
-// Plain text of the opening blocks, for a meta description.
-export function excerptOf(doc: TiptapDoc, max = 160): string {
-  const full = doc.content.map(textOf).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+const BOILERPLATE = /^\s*(website|business name|last updated|effective date)\s*:|last updated\s*:/i;
+const NUMBERED_HEADING = /^\s*\d+[.)]\s/;
+
+const cut = (full: string, max: number) => {
   if (full.length <= max) return full;
-  const cut = full.slice(0, max);
-  const lastSpace = cut.lastIndexOf(' ');
-  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+  const head = full.slice(0, max);
+  const lastSpace = head.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? head.slice(0, lastSpace) : head).trimEnd()}…`;
+};
+
+// Plain text of the opening blocks, for a meta description. Policy boilerplate ("Website: ...",
+// "Last Updated: ...") and numbered section headings are skipped so it starts with real text.
+export function excerptOf(doc: TiptapDoc, max = 160): string {
+  const blocks = doc.content.map((node) => ({ node, text: textOf(node).replace(/\s+/g, ' ').trim() }));
+  const meaningful = blocks.filter(
+    ({ node, text }) => text && !BOILERPLATE.test(text) && !(node.type === 'heading' && NUMBERED_HEADING.test(text)),
+  );
+  const chosen = meaningful.length ? meaningful : blocks.filter(({ text }) => text);
+  return cut(chosen.map(({ text }) => text).join(' '), max);
 }
