@@ -37,9 +37,10 @@ const replyBudget = createBudget(300, 60 * 60_000);
 // second answer. (Another server instance could still overlap; the reply cap bounds the cost.)
 const inFlight = new Set<string>();
 
-// The AI answers an open chat that no person holds and that has not asked for one.
-const aiOwns = (c: { status: string; aiEnabled: boolean; assignedTo: string | null; needsHuman: boolean }) =>
-  c.status === 'open' && c.aiEnabled && !c.assignedTo && !c.needsHuman;
+// The AI answers an open chat that no person holds. A chat flagged for a person is still answered
+// until one takes it: the visitor must not be met with silence while they wait.
+const aiOwns = (c: { status: string; aiEnabled: boolean; assignedTo: string | null }) =>
+  c.status === 'open' && c.aiEnabled && !c.assignedTo;
 
 export type BotOutcome = 'replied' | 'skipped' | 'handoff' | 'failed';
 

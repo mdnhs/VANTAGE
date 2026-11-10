@@ -139,9 +139,6 @@ describe('supportBotService.maybeReply', () => {
     h.chat.assignedTo = 'staff-1';
     expect(await supportBotService.maybeReply('c1')).toBe('skipped');
     h.chat.assignedTo = null;
-    h.chat.needsHuman = true;
-    expect(await supportBotService.maybeReply('c1')).toBe('skipped');
-    h.chat.needsHuman = false;
     h.chat.status = 'closed';
     expect(await supportBotService.maybeReply('c1')).toBe('skipped');
     h.chat.status = 'open';
