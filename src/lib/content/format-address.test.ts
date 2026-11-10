@@ -28,4 +28,17 @@ describe('formatAddress', () => {
     expect(formatAddress(addr({ lines: ['  ', '10 Park Street'], city: ' ' }))).toBe('10 Park Street');
     expect(formatAddress(addr())).toBe('');
   });
+
+  it('treats the country code IE and Ireland as the same country', () => {
+    expect(formatAddress(addr({ lines: ['10 Park Street, Ireland'], country: 'IE' }))).toBe('10 Park Street, Ireland');
+    expect(formatAddress(addr({ lines: ['10 Park Street'], city: 'Dublin', country: 'IE' }))).toBe(
+      '10 Park Street, Dublin, Ireland',
+    );
+  });
+
+  it('does not double the country when the last line ends with it without a comma', () => {
+    expect(formatAddress(addr({ lines: ['10 Park Street Dublin Ireland'], country: 'Ireland' }))).toBe(
+      '10 Park Street Dublin Ireland',
+    );
+  });
 });

@@ -1,6 +1,7 @@
+import 'server-only';
+
 import { formatAddress } from '@/lib/content/format-address';
 import { getInsuranceEnabled } from '@/server/queries/get-features';
-import 'server-only';
 
 import { siteNameFrom } from '@/lib/content/site-name';
 import type { SupportKnowledgeStatusDto } from '@/lib/support/types';
@@ -187,11 +188,16 @@ export const supportKnowledgeService = {
   // What the AI is told for this question. Null when the site has never been synced, so the
   // caller falls back to reading the live content.
   async contextFor(question: string): Promise<string | null> {
-    const core = await supportKnowledgeRepository.core();
+    // A chunk from the Insurance page stays out of the answer while the admin switch is off, even if
+    // it was synced earlier.
+    const insurance = await getInsuranceEnabled();
+    const allowed = (c: { sourceKey: string }) => insurance || c.sourceKey !== 'page.insurance';
+    const core = (await supportKnowledgeRepository.core()).filter(allowed);
     if (!core.length) return null;
-    let relevant = await supportKnowledgeRepository.search(question, RELEVANT_LIMIT);
+    let relevant = (await supportKnowledgeRepository.search(question, RELEVANT_LIMIT)).filter(allowed);
     // Nothing matched (a vague "hi, can you help?"): the service list is the best general answer.
-    if (!relevant.length) relevant = await supportKnowledgeRepository.ofSource('service', RELEVANT_LIMIT * 2);
+    if (!relevant.length)
+      relevant = (await supportKnowledgeRepository.ofSource('service', RELEVANT_LIMIT * 2)).filter(allowed);
     let text = `${render(core)}\n\nRELEVANT INFORMATION FROM THE WEBSITE\n${render(relevant)}`;
     if (text.length > KNOWLEDGE_MAX) text = text.slice(0, KNOWLEDGE_MAX);
     return text;

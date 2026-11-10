@@ -11,6 +11,23 @@ import { MARKETING_GLOBALS, MARKETING_PUBLIC_KEYS } from './globals-marketing';
 
 const s = (max: number, fallback = '') => z.string().trim().max(max).default(fallback);
 
+// Text the admin types for a number: blank, or a number within the range (no comma decimals).
+const numberText = (max: number, min: number, upper: number, whole = false) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .refine(
+      (v) =>
+        v === '' ||
+        (/^-?\d+(\.\d+)?$/.test(v) &&
+          Number(v) >= min &&
+          Number(v) <= upper &&
+          (!whole || Number.isInteger(Number(v)))),
+      `Enter a number from ${min} to ${upper}${whole ? ' (whole)' : ''}, using a dot for decimals`,
+    )
+    .default('');
+
 // Internal paths, anchors, mailto/tel and http(s) links; '' = not set.
 const HREF = /^(\/|#|https:\/\/|http:\/\/|mailto:|tel:)\S*$/;
 const Href = z
@@ -412,10 +429,10 @@ export const SeoGlobal = z.object({
       sameAs: z.array(HttpsUrl).max(10).default([]),
       // Local-search details for the business schema; blank fields are left out of it.
       areaServed: z.array(s(80)).max(10).default([]),
-      latitude: s(20),
-      longitude: s(20),
-      ratingValue: s(5),
-      reviewCount: s(7),
+      latitude: numberText(20, -90, 90),
+      longitude: numberText(20, -180, 180),
+      ratingValue: numberText(5, 1, 5),
+      reviewCount: numberText(7, 1, 9_999_999, true),
     })
     .prefault({}),
   // /llms.txt: a plain-text guide to the site for AI assistants (ChatGPT, Perplexity, Claude ...).

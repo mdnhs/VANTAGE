@@ -72,4 +72,12 @@ describe('excerptOf', () => {
   it('falls back to every block when only boilerplate is left', () => {
     expect(excerptOf(doc(p(text('Last Updated: 8 November 2026'))))).toBe('Last Updated: 8 November 2026');
   });
+
+  it('keeps a real sentence that merely mentions a last-updated date', () => {
+    expect(
+      excerptOf(
+        doc(p(text('This policy was last updated: 1 May and covers how we use your data.')), p(text('Second.'))),
+      ),
+    ).toBe('This policy was last updated: 1 May and covers how we use your data. Second.');
+  });
 });

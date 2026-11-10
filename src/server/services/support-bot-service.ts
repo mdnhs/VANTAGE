@@ -1,6 +1,7 @@
+import 'server-only';
+
 import { formatAddress } from '@/lib/content/format-address';
 import { getInsuranceEnabled } from '@/server/queries/get-features';
-import 'server-only';
 
 import { generateText, isStepCount, tool } from 'ai';
 import * as z from 'zod';

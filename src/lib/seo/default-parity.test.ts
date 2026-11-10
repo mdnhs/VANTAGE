@@ -5,7 +5,7 @@ import { seoPageKey } from '@/lib/content/globals-seo';
 
 import { businessNode } from './json-ld';
 import { pageMetadata } from './metadata';
-import { PUBLIC_PAGE_IDS, type PublicPageId } from './public-pages';
+import { HOME_DESCRIPTION, PUBLIC_PAGE_IDS, PUBLIC_PAGES, type PublicPageId } from './public-pages';
 import { robotsFor, siteEnvFrom } from './robots';
 
 // With no SEO rows saved the public output is the registry defaults (title through the
@@ -108,7 +108,11 @@ describe('default (no SEO rows) output', () => {
 describe('default copy', () => {
   it('never mentions insurance outside the Insurance page itself', () => {
     for (const id of PUBLIC_PAGE_IDS.filter((x) => x !== 'insurance')) {
-      expect(`${TODAY[id].title} ${TODAY[id].description}`, id).not.toMatch(/insur/i);
+      expect(`${PUBLIC_PAGES[id].title} ${PUBLIC_PAGES[id].description}`, id).not.toMatch(/insur/i);
+    }
+    expect(HOME_DESCRIPTION).not.toMatch(/insur/i);
+    for (const id of PUBLIC_PAGE_IDS.filter((x) => x !== 'insurance')) {
+      expect(TODAY[id].description, id).not.toMatch(/insur/i);
     }
   });
 });

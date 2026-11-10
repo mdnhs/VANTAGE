@@ -1,5 +1,6 @@
-import { formatAddress } from '@/lib/content/format-address';
 import 'server-only';
+
+import { formatAddress } from '@/lib/content/format-address';
 
 import { cacheLife, cacheTag } from 'next/cache';
 

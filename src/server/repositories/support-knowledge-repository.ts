@@ -4,7 +4,7 @@ import { db } from '@/server/db';
 import { supportKnowledge, supportKnowledgeSync } from '@/server/db/schema';
 
 export type KnowledgeChunk = { source: string; sourceKey: string; title: string; body: string; core?: boolean };
-export type KnowledgeRow = { title: string; body: string; source: string };
+export type KnowledgeRow = { title: string; body: string; source: string; sourceKey: string };
 
 const SYNC_ID = 'main';
 // A run that never finished (server restarted mid-sync) stops blocking a new one after this long.
@@ -89,7 +89,12 @@ export const supportKnowledgeRepository = {
 
   async core(): Promise<KnowledgeRow[]> {
     return db
-      .select({ title: supportKnowledge.title, body: supportKnowledge.body, source: supportKnowledge.source })
+      .select({
+        title: supportKnowledge.title,
+        body: supportKnowledge.body,
+        source: supportKnowledge.source,
+        sourceKey: supportKnowledge.sourceKey,
+      })
       .from(supportKnowledge)
       .where(eq(supportKnowledge.core, true))
       .orderBy(asc(supportKnowledge.source), asc(supportKnowledge.sourceKey));
@@ -102,7 +107,12 @@ export const supportKnowledgeRepository = {
     const doc = sql`to_tsvector('english', ${supportKnowledge.title} || ' ' || ${supportKnowledge.body})`;
     const tsq = sql`to_tsquery('english', ${q})`;
     return db
-      .select({ title: supportKnowledge.title, body: supportKnowledge.body, source: supportKnowledge.source })
+      .select({
+        title: supportKnowledge.title,
+        body: supportKnowledge.body,
+        source: supportKnowledge.source,
+        sourceKey: supportKnowledge.sourceKey,
+      })
       .from(supportKnowledge)
       .where(and(eq(supportKnowledge.core, false), sql`${doc} @@ ${tsq}`))
       .orderBy(sql`ts_rank(${doc}, ${tsq}) desc`)
@@ -111,7 +121,12 @@ export const supportKnowledgeRepository = {
 
   async ofSource(source: string, limit: number): Promise<KnowledgeRow[]> {
     return db
-      .select({ title: supportKnowledge.title, body: supportKnowledge.body, source: supportKnowledge.source })
+      .select({
+        title: supportKnowledge.title,
+        body: supportKnowledge.body,
+        source: supportKnowledge.source,
+        sourceKey: supportKnowledge.sourceKey,
+      })
       .from(supportKnowledge)
       .where(and(eq(supportKnowledge.source, source), eq(supportKnowledge.core, false)))
       .orderBy(asc(supportKnowledge.sourceKey))

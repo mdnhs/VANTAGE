@@ -285,3 +285,28 @@ describe('site features', () => {
     expect(parseGlobal('site', { features: { insurance: true } }).features.insurance).toBe(true);
   });
 });
+
+describe('business schema number fields', () => {
+  const parse = (business: Partial<Record<string, string>>) => GLOBALS.seo.safeParse({ business });
+
+  it('accepts blank values and valid numbers', () => {
+    expect(parse({}).success).toBe(true);
+    expect(parse({ latitude: '53.3498', longitude: '-6.2603', ratingValue: '4.9', reviewCount: '180' }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects a bad latitude, longitude, rating or review count with a message', () => {
+    for (const bad of [
+      { latitude: '95' },
+      { latitude: '53,3498' },
+      { longitude: '-181' },
+      { ratingValue: '5.5' },
+      { ratingValue: 'great' },
+      { reviewCount: '0' },
+      { reviewCount: '1.5' },
+    ]) {
+      expect(parse(bad).success, JSON.stringify(bad)).toBe(false);
+    }
+  });
+});

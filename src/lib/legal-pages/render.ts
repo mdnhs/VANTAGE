@@ -39,7 +39,7 @@ function textOf(node: TiptapNode): string {
   return (node.content ?? []).map(textOf).join('');
 }
 
-const BOILERPLATE = /^\s*(website|business name|last updated|effective date)\s*:|last updated\s*:/i;
+const BOILERPLATE = /^\s*(website|business name|last updated|effective date)\s*:/i;
 const NUMBERED_HEADING = /^\s*\d+[.)]\s/;
 
 const cut = (full: string, max: number) => {
