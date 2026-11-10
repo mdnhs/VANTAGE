@@ -21,7 +21,7 @@ export function FooterSocials({ socials }: { socials: FooterSocial[] }) {
               rel='noopener noreferrer'
               aria-label={name}
               title={name}
-              className='flex size-10 items-center justify-center rounded-[10px] bg-white transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+              className='flex size-10 items-center justify-center rounded-[10px] bg-[#f1f3f6] transition-transform duration-200 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none'
             >
               {social.icon ? (
                 // unoptimized: uploads are often SVG, which next/image will not optimise.
@@ -34,7 +34,7 @@ export function FooterSocials({ socials }: { socials: FooterSocial[] }) {
                   className='size-5 object-contain'
                 />
               ) : (
-                <span aria-hidden='true' className='text-[15px] leading-none font-semibold text-[#111113] uppercase'>
+                <span aria-hidden='true' className='text-[15px] leading-none font-semibold text-[#1b1f26] uppercase'>
                   {name.charAt(0)}
                 </span>
               )}

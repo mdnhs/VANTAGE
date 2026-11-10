@@ -2,12 +2,7 @@ import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { PortfolioHero } from '@/components/marketing/portfolio-hero';
 import { ProjectGrid } from '@/components/marketing/project-grid';
-import {
-  SECTION_BG,
-  SECTION_CONTAINER,
-  SECTION_PADDING,
-  SectionHeader,
-} from '@/components/marketing/ui/landing-primitives';
+import { SECTION_BG, SectionHeader } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { projectService } from '@/server/services/project-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
@@ -35,8 +30,10 @@ export default async function OurWorkPage() {
         videoEnabled={settings.ourWorkHeroVideoEnabled}
       />
 
-      <section className={`w-full ${SECTION_BG.raised} ${SECTION_PADDING}`}>
-        <div className={`${SECTION_CONTAINER} gap-10 sm:gap-12 lg:gap-16`}>
+      <section className={`w-full ${SECTION_BG.raised} py-14 sm:py-24 xl:bg-[#1b1f26] xl:py-[120px]`}>
+        <div
+          className={`mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-5 sm:gap-12 sm:px-6 lg:gap-16 lg:px-12 xl:gap-10 xl:px-0`}
+        >
           <SectionHeader
             eyebrow='Verified Results'
             title='Before & After'

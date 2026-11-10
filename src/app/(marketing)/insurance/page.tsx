@@ -46,7 +46,7 @@ export default async function InsurancePage() {
         <InsuranceCta line1={content.ctaLine1} accent={content.ctaAccent} subtext={content.ctaSubtext} />
         <section className={SECTION_BG.raised}>
           <div className={`${SECTION_CONTAINER} pb-12 sm:pb-16`}>
-            <p className='mx-auto max-w-[896px] border-t border-[#232328] pt-8 text-center font-site-body text-[10px] leading-[16px] tracking-[0.4px] text-[#737373] uppercase'>
+            <p className='mx-auto max-w-[896px] border-t border-[#2e343e] pt-8 text-center font-site-body text-[10px] leading-[16px] tracking-[0.4px] text-[#7d8591] uppercase'>
               {content.disclaimer}
             </p>
           </div>

@@ -51,7 +51,7 @@ export default async function Home() {
   ];
 
   return (
-    <div className='flex min-h-screen flex-col bg-[#111113] text-[#e5e2e1] antialiased selection:bg-brand selection:text-white'>
+    <div className='flex min-h-screen flex-col bg-[#1b1f26] text-[#f1f3f6] antialiased selection:bg-brand selection:text-[#f1f3f6]'>
       <PageJsonLd id='home' />
       <main className='grow'>
         <StitchHero

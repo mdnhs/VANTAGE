@@ -211,7 +211,7 @@ export function ChatHint({
       onBlurCapture={(event) => {
         if (!hovering.current && !root.current?.contains(event.relatedTarget as Node | null)) setExpanded(false);
       }}
-      className='relative w-[min(272px,calc(100vw-108px))] overflow-hidden rounded-[32px] border border-white/14 bg-[#17171a] text-white shadow-[0_18px_50px_-12px_rgb(0_0_0/0.8)] will-change-transform'
+      className='relative w-[min(272px,calc(100vw-108px))] overflow-hidden rounded-[32px] border border-white/14 bg-[#20252d] text-[#f1f3f6] shadow-[0_18px_50px_-12px_rgb(0_0_0/0.8)] will-change-transform'
     >
       <span
         ref={sheen}
@@ -227,7 +227,7 @@ export function ChatHint({
               <button
                 type='button'
                 onClick={() => onOpen(option.draft)}
-                className='group/option relative flex min-h-11 w-full cursor-pointer items-center overflow-hidden rounded-full px-4 text-left text-[14px] text-white/85 outline-none hover:text-white focus-visible:text-white'
+                className='group/option relative flex min-h-11 w-full cursor-pointer items-center overflow-hidden rounded-full px-4 text-left text-[14px] text-white/85 outline-none hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6]'
               >
                 <span
                   aria-hidden
@@ -268,7 +268,7 @@ export function ChatHint({
           type='button'
           onClick={dismiss}
           aria-label='Hide this message'
-          className='mr-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-white/45 outline-none hover:text-white focus-visible:text-white'
+          className='mr-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-white/45 outline-none hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6]'
         >
           <X className='size-4' aria-hidden />
         </button>

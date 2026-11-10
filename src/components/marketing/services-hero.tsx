@@ -1,3 +1,4 @@
+import { QuoteButton } from '@/components/marketing/quote-cta';
 import { ButtonLink, PageHero } from '@/components/marketing/ui/landing-primitives';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
@@ -31,7 +32,7 @@ export function ServicesHero({
       imageAlt={fallbackImage?.alt || 'Car body repair workshop in Dublin'}
       video={videoEnabled ? video : null}
     >
-      <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
+      <QuoteButton />
       <ButtonLink href='/process' variant='secondary'>
         Our process
       </ButtonLink>

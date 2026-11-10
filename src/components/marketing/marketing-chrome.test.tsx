@@ -92,13 +92,13 @@ describe('StitchHeader from navigation defaults', () => {
   it('lists mobile-only links in the mobile menu, then the wide quote button', async () => {
     header();
     fireEvent.click(screen.getByLabelText('Toggle navigation menu'));
-    await screen.findByRole('link', { name: /Request Free Quote Online/ });
+    await screen.findByRole('link', { name: /Get a Free Quote/ });
     const menu = within(screen.getByRole('dialog')).getByRole('navigation');
     const labels = within(menu)
       .getAllByRole('link')
       .map((a) => a.textContent);
     expect(labels.slice(0, 7)).toEqual(['Home', 'Services', 'Our Work', 'Insurance', 'Contact', 'About', 'Process']);
-    const wide = screen.getByRole('link', { name: /Request Free Quote Online/ });
+    const wide = screen.getByRole('link', { name: /Get a Free Quote/ });
     expect(wide.getAttribute('href')).toBe('/get-a-quote');
   });
 

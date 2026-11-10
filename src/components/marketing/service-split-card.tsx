@@ -25,7 +25,7 @@ export function ServiceSplitCards() {
       {SPLIT_SERVICES.map((service, index) => (
         <div
           key={service.title}
-          className={`group intersect-once flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1c1b1b] transition-colors duration-300 hover:border-brand/40 intersect:motion-preset-slide-up ${STAGGER_DELAY[index]}`}
+          className={`group intersect-once flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#20252d] transition-colors duration-300 hover:border-brand/40 intersect:motion-preset-slide-up ${STAGGER_DELAY[index]}`}
         >
           <div className='relative h-52 w-full overflow-hidden sm:h-64'>
             <Image
@@ -34,14 +34,14 @@ export function ServiceSplitCards() {
               fill
               className='object-cover transition-transform duration-500 group-hover:scale-105'
             />
-            <div className='absolute inset-0 bg-[#131313]/20' />
+            <div className='absolute inset-0 bg-[#1b1f26]/20' />
           </div>
 
           <div className='flex flex-col items-start gap-4 p-6 sm:p-8'>
-            <h3 className='font-site-heading text-xl font-semibold text-[#e5e2e1] uppercase sm:text-2xl'>
+            <h3 className='font-site-heading text-xl font-semibold text-[#f1f3f6] uppercase sm:text-2xl'>
               {service.title}
             </h3>
-            <p className='text-sm leading-relaxed text-neutral-400 sm:text-base sm:leading-6'>{service.description}</p>
+            <p className='text-sm leading-relaxed text-[#a4abb6] sm:text-base sm:leading-6'>{service.description}</p>
 
             <Link
               href='/get-a-quote'

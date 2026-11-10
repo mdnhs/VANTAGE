@@ -228,6 +228,18 @@
 }
 
 /* Admin search sections rise in once the panel has grown (src/components/admin/command/global-search.tsx) */
+/* The soft red ring that pulses out of the map pin on the Contact page. */
+@keyframes map-pulse {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
 /* A burst of shaking, then a pause, like a phone ringing. */
 @keyframes phone-ring {
   0%,

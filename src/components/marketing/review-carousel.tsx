@@ -39,10 +39,10 @@ export function ReviewCarousel({ children }: { children: ReactNode }) {
 
   const { index, pages } = state;
   const arrow =
-    'flex size-11 items-center justify-center rounded-full border border-[#2a2a30] bg-[#1b1b20] text-white transition-colors hover:border-brand hover:text-brand disabled:pointer-events-none disabled:opacity-30';
+    'flex size-11 items-center justify-center rounded-full border border-[#353c47] bg-[#262b34] text-[#f1f3f6] transition-colors hover:border-brand hover:text-brand disabled:pointer-events-none disabled:opacity-30';
 
   return (
-    <div className='flex flex-col gap-8'>
+    <div className='flex flex-col gap-4 sm:gap-8'>
       <div
         ref={trackRef}
         onScroll={measure}
@@ -50,14 +50,14 @@ export function ReviewCarousel({ children }: { children: ReactNode }) {
         role='region'
         aria-roledescription='carousel'
         aria-label='Customer reviews'
-        className='flex snap-x snap-mandatory [scrollbar-width:none] gap-6 overflow-x-auto scroll-smooth pb-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand [&::-webkit-scrollbar]:hidden [&>*]:w-full [&>*]:shrink-0 [&>*]:snap-start md:[&>*]:w-[calc((100%-1.5rem)/2)] lg:[&>*]:w-[calc((100%-3rem)/3)]'
+        className='flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto scroll-smooth pb-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand max-sm:-mx-5 max-sm:scroll-px-5 max-sm:px-5 sm:gap-6 [&::-webkit-scrollbar]:hidden [&>*]:w-[300px] [&>*]:shrink-0 [&>*]:snap-start sm:[&>*]:w-full md:[&>*]:w-[calc((100%-1.5rem)/2)] lg:[&>*]:w-[calc((100%-3rem)/3)]'
       >
         {children}
       </div>
 
       {pages > 1 && (
-        <div className='flex items-center justify-between gap-4'>
-          <div className='flex items-center gap-2' role='group' aria-label='Choose review'>
+        <div className='flex items-center justify-center gap-4 sm:justify-between'>
+          <div className='flex items-center gap-1.5 sm:gap-2' role='group' aria-label='Choose review'>
             {Array.from({ length: pages }, (_, i) => (
               <button
                 key={i}
@@ -65,11 +65,11 @@ export function ReviewCarousel({ children }: { children: ReactNode }) {
                 onClick={() => goTo(i)}
                 aria-label={`Show review ${i + 1}`}
                 aria-current={i === index}
-                className={`h-2 rounded-full transition-all ${i === index ? 'w-6 bg-brand' : 'w-2 bg-[#3a3a42] hover:bg-[#5a5a64]'}`}
+                className={`h-1.5 rounded-full transition-all sm:h-2 ${i === index ? 'w-[22px] bg-brand sm:w-6' : 'w-1.5 bg-[#4e5663] hover:bg-[#525a67] sm:w-2 sm:bg-[#3e4551]'}`}
               />
             ))}
           </div>
-          <div className='flex items-center gap-3'>
+          <div className='hidden items-center gap-3 sm:flex'>
             <button
               type='button'
               className={arrow}

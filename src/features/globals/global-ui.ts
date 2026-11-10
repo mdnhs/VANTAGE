@@ -79,6 +79,11 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     'hours.weekly': { widget: 'weekly-hours-groups', label: 'Opening times' },
     'hours.note': { description: 'Internal note about the hours (not shown on the site yet).' },
+    'hours.bankHolidays': {
+      label: 'Bank holidays line',
+      description:
+        'The last row of the opening-hours card on the Contact page, for example "Crash line only". Leave blank to hide the row.',
+    },
     'hours.summary': { description: 'Leave blank to generate it from the opening times.' },
     mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://', section: 'Address & map' },
   },
@@ -92,14 +97,16 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'links.$.href': { label: 'Link target', widget: 'text' },
     'links.$.mobileOnly': { label: 'Mobile menu only' },
     cta: {
-      label: 'Call to action',
+      label: 'Quote button',
       section: 'Quote button',
       sectionDescription:
-        'The header button was removed, so only the wide quote button in the mobile menu is shown: its "Mobile menu label" and "Mobile menu link". The other fields are kept but not used.',
+        'One wording for every "get a quote" button on the site (home hero, closing banner, service pages, mobile menu). The other fields are kept but no longer used.',
     },
-    'cta.shortLabel': { label: 'Short label', description: 'Used on small screens.' },
-    'cta.mobileLabel': { label: 'Mobile menu label' },
-    'cta.mobileHref': { label: 'Mobile menu link' },
+    'cta.label': { label: 'Button text', description: 'e.g. Get a Free Quote. Shown on every quote button.' },
+    'cta.href': { label: 'Link (not used)', widget: 'text' },
+    'cta.shortLabel': { label: 'Short label (not used)' },
+    'cta.mobileLabel': { label: 'Mobile menu label (not used)' },
+    'cta.mobileHref': { label: 'Mobile menu link (not used)', widget: 'text' },
   },
   footer: {
     // Brand: the logo column on the left of the footer.
@@ -224,6 +231,32 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     visitUs: {
       section: 'Visit us',
       sectionDescription: 'The map section at the bottom of the Contact page.',
+    },
+    'visitUs.hoursTitle': { label: 'Opening hours card: title', section: 'Visit us' },
+    'visitUs.openNow': {
+      label: 'Opening hours card: open badge',
+      description: 'Shown while the workshop is open, using the opening times in Settings > Contact.',
+      section: 'Visit us',
+    },
+    'visitUs.closedNow': {
+      label: 'Opening hours card: closed badge',
+      description: 'Shown outside the opening times.',
+      section: 'Visit us',
+    },
+    'visitUs.closedDay': {
+      label: 'Opening hours card: closed day',
+      description: 'Printed for days with no opening times, for example "Closed".',
+      section: 'Visit us',
+    },
+    'visitUs.bankHolidaysLabel': {
+      label: 'Opening hours card: bank holidays label',
+      description: 'The text of the row itself is set in Settings > Contact > Opening hours.',
+      section: 'Visit us',
+    },
+    'visitUs.directionsLabel': {
+      label: 'Opening hours card: directions button',
+      description: 'Opens the map address from Settings > Contact, or a map search for the address.',
+      section: 'Visit us',
     },
   },
   notifications: {

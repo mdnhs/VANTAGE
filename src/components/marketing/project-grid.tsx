@@ -24,9 +24,9 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
   const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
   return (
-    <article className='group relative flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'>
+    <article className='group relative flex flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:rounded-2xl'>
       {/* Photo with Before/After toggle */}
-      <div className='relative h-64 w-full shrink-0 overflow-hidden bg-black'>
+      <div className='relative h-[210px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
         {current && (
           <Image
             src={sizedSrc(current, 'w_800,h_512,c_fill')}
@@ -43,16 +43,16 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
             type='button'
             onClick={() => setMode((prev) => (prev === 'before' ? 'after' : 'before'))}
             aria-label={currentMode === 'after' ? 'Show before photo' : 'Show after photo'}
-            className='absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-[7px] font-site-body text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none'
+            className='absolute top-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-white/12 bg-[rgba(27,31,38,0.8)] px-3 py-[7px] font-site-body text-[10px] leading-normal whitespace-nowrap backdrop-blur-md transition-colors hover:border-brand focus-visible:border-brand focus-visible:outline-none'
           >
             <span
-              className={`tracking-[0.6px] ${currentMode === 'before' ? 'font-medium text-white' : 'text-[#737373]'}`}
+              className={`tracking-[0.6px] ${currentMode === 'before' ? 'font-medium text-[#f1f3f6]' : 'text-[#7d8591]'}`}
             >
               BEFORE
             </span>
-            <span className='text-[#737373]'>/</span>
+            <span className='text-[#7d8591]'>/</span>
             <span
-              className={`tracking-[0.6px] ${currentMode === 'after' ? 'font-medium text-white' : 'text-[#737373]'}`}
+              className={`tracking-[0.6px] ${currentMode === 'after' ? 'font-medium text-[#f1f3f6]' : 'text-[#7d8591]'}`}
             >
               AFTER
             </span>
@@ -71,12 +71,12 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
       </div>
 
       {/* Body */}
-      <div className='flex flex-1 flex-col justify-between gap-5 p-6'>
-        <div className='flex flex-col items-start gap-2.5'>
-          <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-[#b5b5b5] uppercase'>
+      <div className='flex flex-1 flex-col justify-between gap-5 p-[18px] sm:p-6'>
+        <div className='flex flex-col items-start gap-2 sm:gap-2.5'>
+          <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-brand uppercase sm:text-[#b9bfc9]'>
             {project.serviceCategory}
           </span>
-          <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
+          <h3 className='font-site-heading text-[17px] leading-normal font-semibold tracking-normal text-[#f1f3f6] sm:text-[22px] sm:leading-7 sm:font-bold sm:tracking-[-0.11px] xl:text-[26px] xl:leading-8 xl:tracking-[-0.13px]'>
             {/* Stretched over the whole card (the ::after layer), so a click anywhere opens the
                         project; the Before/After toggle sits above it with z-10. */}
             <Link
@@ -86,17 +86,19 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
               {project.title}
             </Link>
           </h3>
-          <p className='font-site-body text-sm leading-[22px] text-[#b5b5b5]'>{project.description}</p>
+          <p className='font-site-body text-sm leading-[1.5] text-[#a4abb6] sm:leading-[22px] sm:text-[#b9bfc9]'>
+            {project.description}
+          </p>
         </div>
 
-        <dl className='flex flex-col gap-2 border-t border-[#2a2a30] pt-4 font-site-body leading-normal'>
+        <dl className='font flex flex-col gap-2 border-t border-[#353c47] pt-3 font-site-body leading-normal sm:pt-4'>
           <div className='flex items-center justify-between gap-4'>
-            <dt className='text-[10px] tracking-[0.6px] text-[#999]'>VEHICLE</dt>
-            <dd className='text-right text-[13px] font-medium text-white'>{project.vehicleModel}</dd>
+            <dt className='text-[10px] tracking-[0.6px] text-[#999] xl:text-[#9aa1ac]'>VEHICLE</dt>
+            <dd className='text-right text-[13px] font-medium text-[#f1f3f6]'>{project.vehicleModel}</dd>
           </div>
           <div className='flex items-center justify-between gap-4'>
-            <dt className='text-[10px] tracking-[0.6px] text-[#999]'>COMPLETED</dt>
-            <dd className='text-right text-[13px] font-medium text-white'>
+            <dt className='text-[10px] tracking-[0.6px] text-[#999] xl:text-[#9aa1ac]'>COMPLETED</dt>
+            <dd className='text-right text-[13px] font-medium text-[#f1f3f6]'>
               {project.completedAt ? dateFormatter.format(new Date(project.completedAt)) : '—'}
             </dd>
           </div>
@@ -139,7 +141,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
   if (projects.length === 0) {
     return (
-      <p className='font-site-body text-base leading-[26px] text-[#b5b5b5]'>
+      <p className='font-site-body text-base leading-[26px] text-[#b9bfc9]'>
         No projects published yet — check back soon.
       </p>
     );
@@ -151,15 +153,15 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
   };
 
   return (
-    <div className='flex flex-col gap-10 sm:gap-12'>
+    <div className='flex flex-col gap-10 sm:gap-12 xl:gap-10'>
       <PortfolioFilters filters={filters} active={active} onChange={handleFilter} />
 
       {filtered.length === 0 ? (
-        <div className='rounded-2xl border border-[#2a2a30] bg-[#1b1b20] px-6 py-12 text-center font-site-body text-base leading-[26px] text-[#b5b5b5]'>
+        <div className='rounded-2xl border border-[#353c47] bg-[#262b34] px-6 py-12 text-center font-site-body text-base leading-[26px] text-[#b9bfc9]'>
           No {active.toLowerCase()} projects published yet.
         </div>
       ) : (
-        <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+        <div className='grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 xl:gap-6'>
           {filtered.slice(0, visible).map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}

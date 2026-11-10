@@ -6,7 +6,7 @@ export function fillCopy(
   template: string,
   values: Record<string, string>,
   wrap: (value: string, token: string) => ReactNode = (value, token) => (
-    <strong key={token} className='font-semibold text-white'>
+    <strong key={token} className='font-semibold text-[#f1f3f6]'>
       {value}
     </strong>
   ),

@@ -16,7 +16,7 @@ export function RevealContent({
       <span
         data-reveal-band
         aria-hidden
-        className={`pointer-events-none absolute inset-0 opacity-0 ${band === 'dark' ? 'bg-[#17171a]' : 'bg-brand'}`}
+        className={`pointer-events-none absolute inset-0 opacity-0 ${band === 'dark' ? 'bg-[#20252d]' : 'bg-brand'}`}
       />
       <span className='relative block min-w-0 overflow-hidden'>
         <span data-reveal-rise className={`flex items-center justify-center ${className}`}>

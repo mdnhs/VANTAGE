@@ -1,3 +1,4 @@
+import { QuoteButton } from '@/components/marketing/quote-cta';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchProcess } from '@/components/marketing/stitch-process';
@@ -5,6 +6,7 @@ import { ButtonLink, PageHero } from '@/components/marketing/ui/landing-primitiv
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { resolveProcessPageContent } from '@/features/process-page/content';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
+import { ProcessTimelineDesktop } from '@/components/marketing/desktop-step-timelines';
 import { PageAnimations } from '@/components/marketing/page-animations';
 import { sizedSrc } from '@/lib/media/public-image';
 
@@ -41,12 +43,19 @@ export default async function ProcessPage() {
         imageAlt={settings.processPageFallbackImage?.alt}
         video={settings.processPageVideoEnabled ? settings.processPageVideo : null}
       >
-        <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
+        <QuoteButton />
         <ButtonLink href='/services' variant='secondary'>
           Our services
         </ButtonLink>
       </PageHero>
-      <StitchProcess steps={steps} eyebrow='Phase by phase' title='Every Step, Fully Logged.' />
+      <div className='lg:hidden'>
+        <StitchProcess steps={steps} eyebrow='Phase by phase' title='Every Step, Fully Logged.' />
+      </div>
+      <ProcessTimelineDesktop
+        eyebrow='Phase by phase'
+        title='Every Step, Fully Logged.'
+        steps={steps.map((step) => ({ title: step.title, description: step.description }))}
+      />
       <PageAnimations />
     </main>
   );

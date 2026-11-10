@@ -19,7 +19,7 @@ export function PlainProse({ text }: { text: string }) {
         block.startsWith('## ') ? (
           <h2
             key={i}
-            className='mt-4 font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase sm:text-[28px] sm:leading-[34px]'
+            className='mt-4 font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase sm:text-[28px] sm:leading-[34px]'
           >
             {block.slice(3).trim()}
           </h2>

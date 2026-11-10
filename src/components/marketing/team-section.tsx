@@ -1,12 +1,12 @@
 import Image from 'next/image';
 import { sizedSrc } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/content';
-import {
-  SECTION_BG,
-  SECTION_CONTAINER,
-  SECTION_PADDING,
-  SectionHeader,
-} from '@/components/marketing/ui/landing-primitives';
+import { ScrollDots } from '@/components/marketing/scroll-dots';
+import { SectionHeader } from '@/components/marketing/ui/landing-primitives';
+
+// Mobile (Figma 390px) uses 20px gutters and 56px section padding; sm: and up match the shared tokens.
+const MOBILE_CONTAINER = 'mx-auto flex w-full max-w-[1200px] flex-col px-5 sm:px-6 lg:px-12 xl:px-0';
+const MOBILE_PADDING = 'py-14 sm:py-24 xl:py-[120px]';
 
 interface TeamSectionProps {
   title: string;
@@ -25,11 +25,14 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
   const { head, accent } = splitAccent(title);
 
   return (
-    <section className={`w-full ${SECTION_BG.base} ${SECTION_PADDING}`}>
-      <div className={`${SECTION_CONTAINER} gap-12 lg:gap-16`}>
+    <section className={`w-full bg-[#20252d] ${MOBILE_PADDING}`}>
+      <div className={`${MOBILE_CONTAINER} gap-6 sm:gap-12 lg:gap-16`}>
         <SectionHeader eyebrow='Our People' title={head} accent={accent} intro={subtext} />
 
-        <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+        <div
+          id='team-carousel'
+          className='-mx-5 flex snap-x snap-mandatory scroll-px-5 [scrollbar-width:none] gap-3 overflow-x-auto px-5 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden'
+        >
           {members.map((member, index) => {
             const photo = member.image
               ? sizedSrc(member.image, 'w_800,h_946,c_fill,g_face')
@@ -39,9 +42,9 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
             return (
               <article
                 key={`${member.name}-${index}`}
-                className='group flex flex-col overflow-hidden rounded-2xl border border-[#2a2a30] bg-[#1b1b20] transition-colors hover:border-brand/50'
+                className='group flex w-[260px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:w-auto sm:rounded-[20px]'
               >
-                <div className='relative h-[340px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
+                <div className='relative h-[280px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
                   {photo && (
                     <Image
                       src={photo}
@@ -52,14 +55,14 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
                       className='object-cover grayscale transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0'
                     />
                   )}
-                  <div className='absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(27,27,32,0)_0%,#1b1b20_100%)]' />
+                  <div className='absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(38,43,52,0)_0%,#1b1b20_100%)]' />
                 </div>
 
-                <div className='flex flex-col items-start gap-2 p-6'>
+                <div className='flex flex-col items-start gap-1 p-4 sm:gap-1.5 sm:p-6'>
                   <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-brand uppercase'>
                     {member.role}
                   </span>
-                  <h3 className='font-site-heading text-[22px] leading-7 font-bold tracking-[-0.11px] text-white'>
+                  <h3 className='font-site-heading text-[17px] leading-normal font-semibold tracking-[-0.11px] text-[#f1f3f6] sm:text-[22px] sm:leading-7 sm:font-bold'>
                     {member.name}
                   </h3>
                 </div>
@@ -67,6 +70,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
             );
           })}
         </div>
+        <ScrollDots targetId='team-carousel' count={members.length} />
       </div>
     </section>
   );

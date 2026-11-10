@@ -225,6 +225,7 @@ export function StitchServices({
 
   const trackRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(1);
+  const [dotIndex, setDotIndex] = useState(0);
   const [pageCount, setPageCount] = useState(Math.max(1, Math.ceil(cards.length / 4)));
 
   // One "page" = one viewport of cards (4 on desktop, 2 on tablet, 1 on mobile).
@@ -238,6 +239,16 @@ export function StitchServices({
     const current = el.scrollLeft >= maxScroll - 2 ? total : Math.min(total, Math.round(el.scrollLeft / step) + 1);
     setPageCount(total);
     setPage(current);
+
+    // Mobile dots: one per card.
+    const card = el.firstElementChild as HTMLElement | null;
+    const cardStep = card ? card.offsetWidth + gap : 1;
+    const lastIndex = Math.max(0, el.children.length - 1);
+    setDotIndex(
+      el.scrollLeft >= maxScroll - 2 && maxScroll > 0
+        ? lastIndex
+        : Math.min(lastIndex, Math.round(el.scrollLeft / cardStep)),
+    );
   }, []);
 
   useEffect(() => {
@@ -265,44 +276,44 @@ export function StitchServices({
   const progress = (page / pageCount) * 100;
 
   return (
-    <section id='services' className='bg-[#111113]'>
-      <div className='mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:gap-16 lg:px-12 xl:px-0 xl:py-[120px]'>
+    <section id='services' className='bg-[#1b1f26]'>
+      <div className='mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-5 py-12 sm:gap-12 sm:px-6 sm:py-24 lg:gap-16 lg:px-12 xl:px-0 xl:py-[120px]'>
         {/* Header */}
-        <div className='flex flex-col items-start justify-between gap-6 md:flex-row md:items-end'>
-          <div className='flex flex-col items-start gap-5'>
-            <span className='flex items-center gap-2.5 rounded-full border border-[#2a2a30] bg-[#1b1b20] py-[7px] pr-4 pl-3.5'>
+        <div className='flex flex-col items-start justify-between gap-3.5 sm:gap-6 md:flex-row md:items-end'>
+          <div className='flex flex-col items-start gap-3.5 sm:gap-5'>
+            <span className='flex items-center gap-2.5 rounded-full border border-[#353c47] bg-[#2e343e] py-1.5 pr-3 pl-2.5 sm:bg-[#262b34] sm:py-[7px] sm:pr-4 sm:pl-3.5'>
               <img src={DOT_SRC} alt='' width={6} height={6} className='size-1.5 shrink-0' />
-              <span className='font-site-body text-[11px] leading-normal font-normal tracking-[0.44px] whitespace-nowrap text-[#c6c6c6] uppercase'>
+              <span className='font-site-body text-[11px] leading-normal font-medium tracking-[0.06em] whitespace-nowrap text-[#c9ced6] uppercase sm:font-normal sm:tracking-[0.44px]'>
                 {displayEyebrow}
               </span>
             </span>
-            <h2 className='max-w-[474px] font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <h2 className='max-w-[474px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               {displayLine1} <span className='text-brand'>{displayAccent}</span>
             </h2>
           </div>
-          <p className='max-w-[440px] font-site-body text-base leading-[26px] font-normal text-[#b5b5b5]'>
+          <p className='max-w-[440px] font-site-body text-base leading-[1.55] font-normal text-[#b9bfc9] sm:leading-[26px]'>
             {displaySubtext}
           </p>
         </div>
 
         {/* Slider */}
-        <div className='flex flex-col gap-5'>
+        <div className='flex flex-col gap-4 sm:gap-5'>
           <div
             ref={trackRef}
             data-process-track
             role='region'
             aria-roledescription='carousel'
             aria-label='Services'
-            className='flex snap-x snap-mandatory [scrollbar-width:none] gap-5 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:hidden'
+            className='flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain sm:gap-5 [&::-webkit-scrollbar]:hidden'
           >
             {cards.map((card) => (
               <article
                 key={card.key}
-                className='group flex min-h-[351px] w-[85%] shrink-0 snap-start flex-col justify-between rounded-2xl bg-[#1b1b20] p-7 sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-60px)/4)]'
+                className='group flex min-h-[280px] w-[280px] shrink-0 snap-start flex-col justify-between rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:min-h-[351px] sm:w-[calc((100%-20px)/2)] sm:rounded-2xl sm:p-7 lg:w-[calc((100%-60px)/4)]'
               >
-                <div className='flex flex-col items-start gap-5 pb-6'>
+                <div className='flex flex-col items-start gap-3.5 sm:gap-5 sm:pb-6'>
                   <div className='flex w-full items-center justify-between'>
-                    <div className='flex items-center justify-center rounded-xl bg-white p-3 transition-transform duration-300 group-hover:scale-105'>
+                    <div className='flex size-11 items-center justify-center rounded-xl bg-[#f1f3f6] transition-transform duration-300 group-hover:scale-105 sm:size-auto sm:p-3'>
                       {card.iconSrc ? (
                         <Image src={card.iconSrc} alt='' width={24} height={24} className='size-6' />
                       ) : card.icon.kind === 'figma' ? (
@@ -318,28 +329,30 @@ export function StitchServices({
                           </span>
                         </span>
                       ) : (
-                        <card.icon.icon className='size-6 text-[#111113]' />
+                        <card.icon.icon className='size-6 text-[#1b1f26]' />
                       )}
                     </div>
                     {card.badge && (
-                      <span className='rounded-full border border-[#2a2a30] px-2.5 py-1 font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
+                      <span className='rounded-full border border-[#353c47] px-2.5 py-1 font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#c9ced6] uppercase'>
                         {card.badge}
                       </span>
                     )}
                   </div>
-                  <h3 className='font-site-heading text-xl leading-[26px] font-bold tracking-[-0.1px] text-white'>
+                  <h3 className='font-site-heading text-[18px] leading-snug font-semibold text-[#f1f3f6] sm:text-xl sm:leading-[26px] sm:font-bold sm:tracking-[-0.1px]'>
                     {card.name}
                   </h3>
-                  <p className='font-site-body text-sm leading-[22px] font-normal text-[#b5b5b5]'>{card.description}</p>
+                  <p className='font-site-body text-sm leading-[1.5] font-normal text-[#a4abb6] sm:leading-[22px] sm:text-[#b9bfc9]'>
+                    {card.description}
+                  </p>
                 </div>
 
-                <div className='flex items-center justify-between gap-3 border-t border-[#2a2a30] pt-4'>
-                  <span className='font-site-body text-[10px] leading-normal font-normal tracking-[0.4px] text-[#c6c6c6] uppercase'>
+                <div className='flex items-center justify-between gap-3 border-t border-[#353c47] pt-3.5 sm:pt-4'>
+                  <span className='font-site-body text-[11px] leading-normal font-medium tracking-[0.44px] text-[#9aa1ac] uppercase sm:text-[10px] sm:font-normal sm:tracking-[0.4px] sm:text-[#c9ced6]'>
                     {card.footnote}
                   </span>
                   <Link
                     href='/get-a-quote'
-                    className='flex shrink-0 items-center gap-0.5 rounded font-site-body text-xs leading-normal font-semibold text-brand transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
+                    className='flex shrink-0 items-center gap-0.5 rounded font-site-body text-sm leading-normal font-semibold text-brand transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none sm:text-xs'
                   >
                     Quote
                     <span className='relative block size-6 shrink-0 overflow-hidden transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5'>
@@ -353,16 +366,28 @@ export function StitchServices({
             ))}
           </div>
 
+          {/* Mobile pagination dots */}
+          <div className='flex items-center justify-center gap-1.5 sm:hidden' aria-hidden='true'>
+            {cards.map((card, i) => (
+              <span
+                key={card.key}
+                className={`h-1.5 rounded-[3px] transition-[width,background-color] duration-300 ${
+                  i === dotIndex ? 'w-[22px] bg-brand' : 'w-1.5 bg-[#4e5663]'
+                }`}
+              />
+            ))}
+          </div>
+
           {/* Slider controls */}
-          <div className='flex items-center justify-between pt-5'>
+          <div className='hidden items-center justify-between pt-5 sm:flex'>
             <div className='flex items-center gap-5'>
               <p
                 aria-live='polite'
-                className='font-site-body text-xs leading-normal font-medium tracking-[0.96px] whitespace-nowrap text-[#b5b5b5]'
+                className='font-site-body text-xs leading-normal font-medium tracking-[0.96px] whitespace-nowrap text-[#b9bfc9]'
               >
                 {pad(page)} / {pad(pageCount)}
               </p>
-              <div className='relative h-0.5 w-[120px] overflow-hidden bg-[#2a2a30] sm:w-40'>
+              <div className='relative h-0.5 w-[120px] overflow-hidden bg-[#353c47] sm:w-40'>
                 <div
                   className='absolute top-0 left-0 h-0.5 bg-linear-to-r from-brand via-brand-mid via-60% to-brand-pale transition-[width] duration-300'
                   style={{ width: `${progress}%` }}
@@ -376,7 +401,7 @@ export function StitchServices({
                 onClick={() => scrollByPage(-1)}
                 disabled={atStart}
                 aria-label='Previous services'
-                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#353c47] bg-[#262b34] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
                 <RevealContent band='brand'>
                   <span className='relative block size-6 rotate-180 overflow-hidden'>
@@ -392,7 +417,7 @@ export function StitchServices({
                 onClick={() => scrollByPage(1)}
                 disabled={atEnd}
                 aria-label='Next services'
-                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#2a2a30] bg-[#1b1b20] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+                className='relative flex size-[52px] items-center justify-center overflow-hidden rounded-[26px] border border-[#353c47] bg-[#262b34] transition hover:border-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
               >
                 <RevealContent band='brand'>
                   <span className='relative block size-6 overflow-hidden'>

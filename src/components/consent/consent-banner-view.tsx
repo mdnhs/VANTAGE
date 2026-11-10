@@ -8,7 +8,7 @@ export type ConsentCopy = Pick<
 
 // One class for every choice: equal prominence, no primary styling.
 const BUTTON =
-  'inline-flex min-h-11 items-center justify-center rounded-full border border-white/25 bg-transparent px-6 font-[family-name:var(--font-inter)] text-sm font-semibold text-white transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none';
+  'inline-flex min-h-11 items-center justify-center rounded-full border border-white/25 bg-transparent px-6 font-[family-name:var(--font-inter)] text-sm font-semibold text-[#f1f3f6] transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none';
 
 const ROWS = [
   ['necessary', 'Necessary'],
@@ -49,7 +49,7 @@ export function ConsentBannerView({
       className={`${inline ? 'absolute' : 'fixed'} inset-x-0 bottom-0 z-50`}
     >
       <div className='mx-auto w-full max-w-360 px-4 pb-4 sm:px-6'>
-        <div className='flex max-h-[85vh] flex-col gap-4 overflow-y-auto rounded-[20px] border border-[#232328] bg-[#161616] p-5 text-white shadow-lg sm:p-6'>
+        <div className='flex max-h-[85vh] flex-col gap-4 overflow-y-auto rounded-[20px] border border-[#2e343e] bg-[#20252d] p-5 text-[#f1f3f6] shadow-lg sm:p-6'>
           <h2
             id='vantage-consent-title'
             ref={headingRef}

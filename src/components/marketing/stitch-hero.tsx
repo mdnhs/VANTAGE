@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import Link from 'next/link';
+import { QuoteCtaText } from '@/components/marketing/quote-cta';
 import Image from 'next/image';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
@@ -55,9 +56,9 @@ export function StitchHero({
     : '/assets/marketing/stitch-hero.jpg';
 
   return (
-    <section className='relative w-full overflow-hidden bg-[#111113] font-site-body'>
+    <section className='relative w-full overflow-hidden bg-[#1b1f26] font-site-body'>
       {/* Background media */}
-      <div className='absolute inset-0 z-0'>
+      <div className='absolute inset-x-0 top-0 z-0 h-[420px] overflow-hidden sm:inset-0 sm:h-auto'>
         {showVideo && heroVideo ? (
           <video
             data-hero-media
@@ -82,20 +83,20 @@ export function StitchHero({
           />
         )}
         {/* Shade: top to bottom on phones, where the copy spans the width; left to right from sm up */}
-        <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(13,13,13,0.1)_0%,rgba(13,13,13,0.2)_22%,rgba(13,13,13,0.78)_52%,rgba(13,13,13,0.94)_100%)] sm:hidden' />
-        <div className='absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(13,13,13,0.9)_0%,rgba(13,13,13,0.75)_40%,rgba(13,13,13,0.3)_62%,rgba(13,13,13,0.1)_100%)] sm:block' />
-        {/* Fade to page */}
-        <div className='absolute inset-x-0 bottom-0 h-[120px] bg-[linear-gradient(180deg,rgba(20,20,20,0)_0%,rgba(20,20,20,0.45)_50%,#141414_100%)] sm:h-[260px]' />
+        <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(27,31,38,0.25)_0%,rgba(27,31,38,0.1)_45%,rgba(27,31,38,0.85)_80%,#1b1f26_100%)] sm:hidden' />
+        <div className='absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(27,31,38,0.9)_0%,rgba(27,31,38,0.75)_40%,rgba(27,31,38,0.3)_62%,rgba(27,31,38,0.1)_100%)] sm:block' />
+        {/* Fade to page (desktop; on phones the shade above already ends in the page colour) */}
+        <div className='absolute inset-x-0 bottom-0 hidden h-[260px] bg-[linear-gradient(180deg,rgba(27,31,38,0)_0%,rgba(27,31,38,0.45)_50%,#1b1f26_100%)] sm:block' />
       </div>
 
-      <div className='relative z-10 mx-auto flex w-full max-w-[1200px] flex-col gap-10 px-4 pt-10 pb-10 sm:gap-16 sm:px-6 sm:pt-32 sm:pb-14 lg:gap-[110px] lg:px-0 lg:pt-[150px] lg:pb-[88px]'>
+      <div className='relative z-10 mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-5 pt-[330px] pb-10 sm:gap-16 sm:px-6 sm:pt-32 sm:pb-14 lg:gap-[110px] lg:px-0 lg:pt-[150px] lg:pb-[88px]'>
         {/* First screen (copy at the bottom on phones so the background shows above it, centred from sm): header + this block fill the viewport (svh holds steady while a phone's address
             bar shows or hides). The offsets are the sticky header (73px, 97px from sm) plus this
             container's top padding (40px, 128px from sm, 150px from lg). Taller copy just grows past it. */}
-        <div className='relative flex min-h-[calc(100svh-113px)] flex-col justify-end pb-8 sm:min-h-[calc(100svh-225px)] sm:justify-center sm:pb-0 lg:min-h-[calc(100svh-247px)]'>
-          <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-5 sm:gap-6 lg:gap-8'>
+        <div className='relative flex flex-col justify-start sm:min-h-[calc(100svh-225px)] sm:justify-center lg:min-h-[calc(100svh-247px)]'>
+          <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-4 sm:gap-6 lg:gap-8'>
             {/* Eyebrow */}
-            <div className='inline-flex max-w-full items-center gap-2.5 rounded-[18px] border border-[#252525] bg-[#16161a] py-[7px] pr-4 pl-3.5 sm:rounded-full'>
+            <div className='inline-flex max-w-full items-center gap-2.5 rounded-[18px] border border-[#353c47] bg-[#2e343e] py-[7px] pr-3 pl-2.5 sm:rounded-full sm:border-[#2e343e] sm:bg-[#20252d] sm:pr-4 sm:pl-3.5'>
               <img
                 src='/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.svg'
                 alt=''
@@ -103,30 +104,30 @@ export function StitchHero({
                 height={6}
                 className='shrink-0'
               />
-              <span className='text-[10.5px] leading-snug tracking-[0.4px] text-[#d4d4d4] uppercase sm:text-[11px] sm:leading-normal sm:tracking-[0.44px]'>
+              <span className='text-[11px] leading-snug tracking-[0.06em] text-[#c9ced6] uppercase sm:leading-normal sm:tracking-[0.44px] sm:text-[#d5d9e0]'>
                 {eyebrow}
               </span>
             </div>
 
             {/* Heading */}
-            <h1 className='font-site-heading text-[clamp(30px,9.2vw,44px)] leading-[1.05] font-extrabold tracking-[-0.03em] uppercase sm:text-[64px] lg:text-[84px] lg:leading-[88px]'>
+            <h1 className='font-site-heading text-[clamp(34px,10.77vw,42px)] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[64px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[84px] lg:leading-[88px]'>
               {/* Plain spaces between the block lines keep the words apart for crawlers and screen readers. */}
-              <span className='block text-white'>{headlineLine1}</span>{' '}
-              <span className='block text-white'>{headlineLine2}</span>{' '}
+              <span className='block text-[#f1f3f6]'>{headlineLine1}</span>{' '}
+              <span className='block text-[#f1f3f6]'>{headlineLine2}</span>{' '}
               <span className='block text-brand'>{headlineAccent}</span>
             </h1>
 
             {/* Subheading */}
-            <p className='max-w-[600px] text-[15px] leading-[1.55] text-[#d4d4d4] sm:text-[18px] sm:leading-[29px]'>
+            <p className='max-w-[600px] text-[16px] leading-[1.55] text-[#c9ced6] sm:text-[18px] sm:leading-[29px] sm:text-[#d5d9e0]'>
               {subtext}
             </p>
 
             {/* CTAs */}
-            <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center'>
+            <div className='flex w-full flex-col gap-[10px] sm:w-auto sm:flex-row sm:items-center'>
               <Link
                 data-reveal-button
                 href='/get-a-quote'
-                className='group relative flex items-center justify-center gap-2.5 overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+                className='group relative flex min-h-[52px] items-center justify-center gap-2.5 overflow-hidden rounded-[12px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none sm:min-h-0 sm:rounded-[8px]'
               >
                 <RevealContent band='dark' className='gap-2.5'>
                   <span className='flex size-[18px] shrink-0 items-center justify-center'>
@@ -138,8 +139,8 @@ export function StitchHero({
                       className='max-w-none'
                     />
                   </span>
-                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
-                    Get a free estimate
+                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase'>
+                    <QuoteCtaText />
                   </span>
                   <span className='flex size-6 shrink-0 items-center justify-center transition-transform group-hover:translate-x-1'>
                     <img
@@ -156,7 +157,7 @@ export function StitchHero({
               <a
                 data-reveal-button
                 href='#work'
-                className='relative flex items-center justify-center gap-2.5 overflow-hidden rounded-[8px] border border-[#34343a] bg-[#16161a] px-6 py-4 transition-colors hover:border-brand hover:bg-[#1d1d22] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#111113] focus-visible:outline-none'
+                className='relative flex min-h-[52px] items-center justify-center gap-2.5 overflow-hidden rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-6 py-4 transition-colors hover:border-brand hover:bg-[#262b34] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none sm:min-h-0 sm:rounded-[8px] sm:bg-[#20252d]'
               >
                 <RevealContent band='brand' className='gap-2.5'>
                   <span className='flex size-[18px] shrink-0 items-center justify-center'>
@@ -168,7 +169,7 @@ export function StitchHero({
                       className='max-w-none'
                     />
                   </span>
-                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
+                  <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase'>
                     View our work
                   </span>
                 </RevealContent>
@@ -192,21 +193,25 @@ export function StitchHero({
         {trustRow.length > 0 && (
           <div
             data-hero-trust
-            className='grid grid-cols-2 gap-x-4 gap-y-5 border-t border-[#232328] pt-7 sm:gap-6 sm:pt-10 lg:grid-cols-4'
+            className='grid grid-cols-2 gap-[10px] sm:gap-6 sm:border-t sm:border-[#2e343e] sm:pt-10 lg:grid-cols-4'
           >
             {trustRow.map(({ icon, title, sub }, index) => (
               <div
                 key={`${title}-${index}`}
-                className='flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-3.5'
+                className='flex min-w-0 flex-col items-start gap-2.5 rounded-[14px] border border-[#353c47] bg-[rgba(38,43,52,0.9)] p-[14px] sm:flex-row sm:items-center sm:gap-3.5 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0'
               >
-                <div className='flex shrink-0 items-center justify-center rounded-[10px] bg-white p-[11px]'>
+                <div className='flex shrink-0 items-center justify-center rounded-[10px] bg-[#f1f3f6] p-[6px] sm:p-[11px]'>
                   <span className='flex size-5 items-center justify-center'>
                     <img src={icon.src} alt='' width={icon.width} height={icon.height} className='max-w-none' />
                   </span>
                 </div>
                 <div className='flex min-w-0 flex-col gap-[3px] leading-normal'>
-                  <span className='text-[14px] font-semibold text-white'>{title}</span>
-                  <span className='text-[10px] tracking-[0.4px] text-[#737373] uppercase'>{sub}</span>
+                  <span className='text-[14px] leading-[1.3] font-semibold text-[#f1f3f6] sm:leading-normal'>
+                    {title}
+                  </span>
+                  <span className='text-[12px] text-[#9aa1ac] sm:text-[10px] sm:tracking-[0.4px] sm:text-[#7d8591] sm:uppercase'>
+                    {sub}
+                  </span>
                 </div>
               </div>
             ))}

@@ -98,6 +98,8 @@ export const ContactGlobal = z.object({
       // How the site prints the hours; the structured list feeds JSON-LD.
       summary: s(500, 'Mon–Fri: 8:00 – 18:00'),
       note: s(200),
+      // The last row of the opening-hours card on the Contact page, e.g. "Crash line only". Blank hides it.
+      bankHolidays: s(100),
     })
     .prefault({}),
 });
@@ -328,7 +330,18 @@ export const MicrocopyGlobal = z.object({
       whatsapp: s(30, 'WhatsApp us'),
     })
     .prefault({}),
-  visitUs: z.object({ intro: s(160, 'Opening hours and directions to our Dublin workshop.') }).prefault({}),
+  visitUs: z
+    .object({
+      intro: s(160, 'Opening hours and directions to our Dublin workshop.'),
+      // The opening-hours card beside the map.
+      hoursTitle: s(40, 'Opening hours'),
+      openNow: s(20, 'Open now'),
+      closedNow: s(20, 'Closed now'),
+      closedDay: s(20, 'Closed'),
+      bankHolidaysLabel: s(40, 'Bank holidays'),
+      directionsLabel: s(40, 'Get directions'),
+    })
+    .prefault({}),
 });
 
 // -------------------------------------------------------------- operations

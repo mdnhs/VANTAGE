@@ -1,3 +1,4 @@
+import { QuoteButton } from '@/components/marketing/quote-cta';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: PageProps<'/our-work/[slug]'>
 
 function Photo({ image, alt, label }: { image: PublicImage; alt: string; label?: string }) {
   return (
-    <figure className='relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#2a2a30] bg-black'>
+    <figure className='relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#353c47] bg-black'>
       <Image
         src={sizedSrc(image, 'w_1200,h_900,c_fill')}
         alt={image.alt || alt}
@@ -47,7 +48,7 @@ function Photo({ image, alt, label }: { image: PublicImage; alt: string; label?:
         className='object-cover'
       />
       {label && (
-        <figcaption className='absolute top-4 left-4 rounded-full border border-white/12 bg-[rgba(17,17,19,0.8)] px-3 py-1.5 font-site-body text-[11px] tracking-[0.6px] text-white uppercase backdrop-blur-md'>
+        <figcaption className='absolute top-4 left-4 rounded-full border border-white/12 bg-[rgba(27,31,38,0.8)] px-3 py-1.5 font-site-body text-[11px] tracking-[0.6px] text-[#f1f3f6] uppercase backdrop-blur-md'>
           {label}
         </figcaption>
       )}
@@ -84,7 +85,7 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
         lines={[project.title]}
         subtext={project.vehicleModel}
       >
-        <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
+        <QuoteButton />
         {service && (
           <ButtonLink href={servicePath(service.slug)} variant='secondary'>
             About {service.name}
@@ -109,11 +110,11 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
             <dl className={`${CARD} flex flex-col gap-3 p-6 font-site-body`}>
               <div className='flex justify-between gap-4'>
                 <dt className='text-[11px] tracking-[0.6px] text-[#999] uppercase'>Vehicle</dt>
-                <dd className='text-right text-sm font-medium text-white'>{project.vehicleModel}</dd>
+                <dd className='text-right text-sm font-medium text-[#f1f3f6]'>{project.vehicleModel}</dd>
               </div>
               <div className='flex justify-between gap-4'>
                 <dt className='text-[11px] tracking-[0.6px] text-[#999] uppercase'>Service</dt>
-                <dd className='text-right text-sm font-medium text-white'>
+                <dd className='text-right text-sm font-medium text-[#f1f3f6]'>
                   {service ? (
                     <Link href={servicePath(service.slug)} className='underline-offset-4 hover:underline'>
                       {project.serviceCategory}
@@ -126,7 +127,7 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
               {project.completedAt && (
                 <div className='flex justify-between gap-4'>
                   <dt className='text-[11px] tracking-[0.6px] text-[#999] uppercase'>Completed</dt>
-                  <dd className='text-right text-sm font-medium text-white'>
+                  <dd className='text-right text-sm font-medium text-[#f1f3f6]'>
                     {dateFormatter.format(new Date(project.completedAt))}
                   </dd>
                 </div>
@@ -135,7 +136,7 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
           </div>
           {project.gallery.length > 0 && (
             <div className='flex flex-col gap-6'>
-              <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold text-white uppercase sm:text-[28px]'>
+              <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold text-[#f1f3f6] uppercase sm:text-[28px]'>
                 Gallery
               </h2>
               <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
@@ -145,7 +146,10 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
               </div>
             </div>
           )}
-          <Link href='/our-work' className='font-site-body text-sm text-[#b5b5b5] transition-colors hover:text-white'>
+          <Link
+            href='/our-work'
+            className='font-site-body text-sm text-[#b9bfc9] transition-colors hover:text-[#f1f3f6]'
+          >
             ← All projects
           </Link>
         </div>

@@ -1,3 +1,4 @@
+import { QuoteButton } from '@/components/marketing/quote-cta';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -76,7 +77,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         lines={[service.name]}
         subtext={service.description}
       >
-        <ButtonLink href='/get-a-quote'>Get a quote</ButtonLink>
+        <QuoteButton />
         <ButtonLink href='/services' variant='secondary'>
           All services
         </ButtonLink>
@@ -86,7 +87,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} gap-12 lg:gap-16`}>
           {/* Photo and card share one row height, like a block on the /services listing. */}
           <div className='grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2'>
-            <div className='relative min-h-[260px] overflow-hidden rounded-[20px] border border-[#2a2a30] bg-[#1b1b20] sm:min-h-[380px]'>
+            <div className='relative min-h-[260px] overflow-hidden rounded-[20px] border border-[#353c47] bg-[#262b34] sm:min-h-[380px]'>
               <Image
                 src={ownImage ?? FALLBACK_IMAGE}
                 alt={service.name}
@@ -103,34 +104,32 @@ export default async function ServiceDetailPage({ params }: Props) {
 
             <div className={`${CARD} flex flex-col gap-6 rounded-[20px] p-7 sm:p-10`}>
               {service.startingPrice != null && (
-                <p className='font-site-body text-sm tracking-[0.04em] text-[#8a8a93] uppercase'>
+                <p className='font-site-body text-sm tracking-[0.04em] text-[#9aa1ac] uppercase'>
                   From{' '}
-                  <span className='font-site-heading text-[32px] font-extrabold text-white normal-case'>
+                  <span className='font-site-heading text-[32px] font-extrabold text-[#f1f3f6] normal-case'>
                     €{service.startingPrice}
                   </span>
                 </p>
               )}
               {service.checklist.length > 0 && (
                 <div className='flex flex-col gap-4'>
-                  <h2 className='font-site-heading text-lg font-bold text-white uppercase'>What&apos;s included</h2>
+                  <h2 className='font-site-heading text-lg font-bold text-[#f1f3f6] uppercase'>What&apos;s included</h2>
                   <ul className='flex flex-col gap-3'>
                     {service.checklist.map((item) => (
                       <li key={item} className='flex items-start gap-3'>
                         <span className='mt-0.5 flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-1'>
-                          <Check aria-hidden className='size-3.5 text-white' />
+                          <Check aria-hidden className='size-3.5 text-[#f1f3f6]' />
                         </span>
-                        <span className='font-site-body text-[15px] leading-[22px] text-white'>{item}</span>
+                        <span className='font-site-body text-[15px] leading-[22px] text-[#f1f3f6]'>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              <p className='font-site-body text-[15px] leading-[24px] text-[#b5b5b5]'>
+              <p className='font-site-body text-[15px] leading-[24px] text-[#b9bfc9]'>
                 Send us your vehicle details and photos for a free, no-obligation estimate.
               </p>
-              <ButtonLink href='/get-a-quote' className='mt-auto w-full sm:w-auto'>
-                Get a quote
-              </ButtonLink>
+              <QuoteButton className='mt-auto w-full sm:w-auto' />
             </div>
           </div>
 

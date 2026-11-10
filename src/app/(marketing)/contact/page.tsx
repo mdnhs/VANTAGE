@@ -38,9 +38,11 @@ export default async function ContactPage() {
       {/* Same bg as the hero, so only bottom padding — the hero already supplies the top rhythm. */}
       <section className={SECTION_BG.base}>
         <div className={`${SECTION_CONTAINER} pb-16 sm:pb-24 xl:pb-[120px]`}>
-          <div className='grid grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-[80px]'>
+          <div className='grid grid-cols-1 items-start gap-0 sm:gap-12 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)] lg:gap-12'>
             <ContactInfo />
-            <ContactForm services={services} copy={copy} />
+            <div className='max-sm:-mx-5 max-sm:-mb-16 max-sm:bg-[#20252d] max-sm:px-5 max-sm:py-14'>
+              <ContactForm services={services} copy={copy} />
+            </div>
           </div>
         </div>
       </section>

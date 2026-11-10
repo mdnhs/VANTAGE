@@ -11,7 +11,6 @@ import { countUnread } from '../../lib/unread';
 import { VISITOR_STREAM_URL, visitorApi } from '../../services/visitor-api';
 import { ChatHint } from './chat-hint';
 import { useChatMoments } from './use-chat-moments';
-import { useClearOfControls } from './use-clear-of-controls';
 import { useWidgetMotion } from './use-widget-motion';
 
 // Remembers only UI state (no message text, no identity). The chat itself is proven by an httpOnly cookie.
@@ -35,7 +34,7 @@ const writeStored = (patch: Stored) => {
 };
 
 const FIELD =
-  'w-full rounded-[10px] border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[15px] text-white placeholder:text-white/45 focus-visible:border-white/40 focus-visible:outline-none';
+  'w-full rounded-[10px] border border-white/15 bg-white/[0.05] px-3 py-2.5 text-[15px] text-[#f1f3f6] placeholder:text-white/45 focus-visible:border-white/40 focus-visible:outline-none';
 
 export function SupportWidget({ retentionMonths }: { retentionMonths: number }) {
   const [ready, setReady] = useState(false);
@@ -54,8 +53,6 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
   const [typingGaveUp, setTypingGaveUp] = useState<string | null>(null);
 
   const { panel, launcher, chatIcon, closeIcon, panelMounted } = useWidgetMotion(ready, open);
-  const widgetRoot = useRef<HTMLDivElement>(null);
-  useClearOfControls(ready, open, widgetRoot, launcher);
   const composer = useRef<HTMLTextAreaElement>(null);
   const log = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
@@ -199,10 +196,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
         : 'We will reply as soon as we can';
 
   return (
-    <div
-      ref={widgetRoot}
-      className='fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 font-site-body sm:right-6 sm:bottom-6'
-    >
+    <div className='fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3 font-site-body sm:right-6 sm:bottom-6'>
       {panelMounted ? (
         <div
           ref={panel}
@@ -212,9 +206,9 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
           onKeyDown={(e) => {
             if (e.key === 'Escape') close();
           }}
-          className='flex h-[min(620px,calc(100dvh-112px))] w-[min(380px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#232328] bg-[#111113] text-white shadow-2xl'
+          className='flex h-[min(620px,calc(100dvh-112px))] w-[min(380px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#2e343e] bg-[#1b1f26] text-[#f1f3f6] shadow-2xl'
         >
-          <header data-chat-part className='flex items-center gap-3 border-b border-[#232328] px-4 py-3.5'>
+          <header data-chat-part className='flex items-center gap-3 border-b border-[#2e343e] px-4 py-3.5'>
             <span ref={avatar} className='relative grid size-10 shrink-0 place-items-center rounded-full bg-brand'>
               {conversation?.agentName ? (
                 <span className='text-[16px] font-semibold'>{conversation.agentName[0]?.toUpperCase()}</span>
@@ -224,7 +218,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
               {online ? (
                 <span
                   ref={onlineDot}
-                  className='absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-[#111113] bg-emerald-500'
+                  className='absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-[#1b1f26] bg-emerald-500'
                 />
               ) : null}
             </span>
@@ -238,7 +232,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
               type='button'
               onClick={close}
               aria-label='Close chat'
-              className='grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-white'
+              className='grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-[#f1f3f6]'
             >
               <X className='size-5' aria-hidden />
             </button>
@@ -322,7 +316,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
             ) : null}
           </div>
 
-          <div data-chat-part className='border-t border-[#232328] p-3'>
+          <div data-chat-part className='border-t border-[#2e343e] p-3'>
             {error ? (
               <p role='alert' className='mb-2 text-[13px] text-brand-soft'>
                 {error}
@@ -378,7 +372,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
             />
             <p className='mt-2 text-[12px] text-white/50'>
               This chat is kept for up to {retentionMonths} months so we can help you. See our{' '}
-              <Link href='/privacy-policy' className='underline underline-offset-2 hover:text-white'>
+              <Link href='/privacy-policy' className='underline underline-offset-2 hover:text-[#f1f3f6]'>
                 privacy policy
               </Link>
               .
@@ -409,7 +403,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
                 ? `Open chat, ${unread} new ${unread === 1 ? 'message' : 'messages'}`
                 : 'Open chat'
           }
-          className='relative grid size-16 cursor-pointer place-items-center rounded-full bg-brand text-white shadow-xl transition-colors hover:bg-brand-hover motion-reduce:transition-none'
+          className='relative grid size-16 cursor-pointer place-items-center rounded-full bg-brand text-[#f1f3f6] shadow-xl transition-colors hover:bg-brand-hover motion-reduce:transition-none'
         >
           <span ref={chatIcon} className='absolute inset-0 grid place-items-center'>
             <Headset className='size-7' aria-hidden />
@@ -420,12 +414,12 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
           {unread > 0 ? (
             <span
               ref={badge}
-              className='absolute -top-1 -left-1 grid h-6 min-w-6 place-items-center rounded-full bg-white px-1.5 text-[12px] font-bold text-[#111113]'
+              className='absolute -top-1 -left-1 grid h-6 min-w-6 place-items-center rounded-full bg-[#f1f3f6] px-1.5 text-[12px] font-bold text-[#1b1f26]'
             >
               {unread}
             </span>
           ) : online ? (
-            <span className='absolute top-0.5 right-0.5 size-4 rounded-full border-2 border-[#131313] bg-emerald-500' />
+            <span className='absolute top-0.5 right-0.5 size-4 rounded-full border-2 border-[#1b1f26] bg-emerald-500' />
           ) : null}
         </button>
       </div>

@@ -4,12 +4,7 @@ import { sizedSrc } from '@/lib/media/public-image';
 import { ServicesHero } from '@/components/marketing/services-hero';
 import { ServiceFeatureBlock } from '@/components/marketing/service-feature-block';
 import { ServicesFaq } from '@/components/marketing/services-faq';
-import {
-  SECTION_BG,
-  SECTION_CONTAINER,
-  SECTION_PADDING,
-  SectionHeader,
-} from '@/components/marketing/ui/landing-primitives';
+import { SECTION_BG, SectionHeader } from '@/components/marketing/ui/landing-primitives';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { getSetting } from '@/server/queries/get-setting';
 import { serviceService } from '@/server/services/service-service';
@@ -46,15 +41,17 @@ export default async function ServicesPage() {
       />
 
       {services.length > 0 && (
-        <section className={SECTION_BG.raised}>
-          <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} gap-12 lg:gap-16`}>
+        <section className={`${SECTION_BG.raised} xl:bg-[#1b1f26]`}>
+          <div
+            className={`mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-5 py-14 sm:gap-12 sm:px-6 sm:py-24 lg:gap-16 lg:px-12 xl:px-0 xl:py-[120px]`}
+          >
             <SectionHeader
               eyebrow='Specialist Autobody Divisions'
               title='What We'
               accent='Repair.'
               intro='Comprehensive bodywork, structural restoration and cosmetic refinement using factory-approved techniques.'
             />
-            <div className='flex flex-col gap-10 lg:gap-16'>
+            <div className='flex flex-col gap-5 sm:gap-10 lg:gap-16 xl:grid xl:grid-cols-4 xl:gap-5'>
               {services.map((service, index) => (
                 <ServiceFeatureBlock
                   key={service.id}

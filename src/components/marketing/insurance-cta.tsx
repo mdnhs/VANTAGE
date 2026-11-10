@@ -22,18 +22,18 @@ interface InsuranceCtaProps {
 export function InsuranceCta({ line1, accent, subtext }: InsuranceCtaProps) {
   return (
     <section className={SECTION_BG.raised}>
-      <div className={`${SECTION_CONTAINER} ${SECTION_PADDING}`}>
-        <div className='flex flex-col gap-10 rounded-[20px] border border-[#2a2a30] bg-[#1b1b20] p-7 sm:p-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16 lg:p-14'>
+      <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} max-sm:px-5 max-sm:py-14`}>
+        <div className='flex flex-col gap-7 rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:gap-10 sm:rounded-[20px] sm:p-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16 lg:p-14'>
           <div className='flex max-w-[640px] flex-col items-start gap-5'>
             <Eyebrow>Claims Specialists</Eyebrow>
-            <h2 className='font-site-heading text-[32px] leading-[38px] font-extrabold tracking-[-0.64px] text-white uppercase sm:text-[40px] sm:leading-[46px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <h2 className='font-site-heading text-[30px] leading-8 font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               <span className='block'>{line1}</span>
               <span className='block text-brand'>{accent}</span>
             </h2>
             <p className={`max-w-[520px] ${BODY_TEXT}`}>{subtext}</p>
           </div>
 
-          <div className='flex w-full flex-col gap-3 sm:w-auto sm:flex-row lg:shrink-0'>
+          <div className='flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:gap-3 lg:shrink-0'>
             <ButtonLink
               href='/get-a-quote'
               icon={

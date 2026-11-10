@@ -42,7 +42,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
           <span className='h-px w-8 bg-brand/50' />
           <span className='text-xs font-semibold tracking-[1.2px] text-brand uppercase'>Client Feedback</span>
         </div>
-        <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#e5e2e1] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+        <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#f1f3f6] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
           Trusted By
           <br />
           <span className='text-brand'>Our Customers.</span>
@@ -57,7 +57,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
           >
             <RatingStars rating={testimonial.rating} />
 
-            <p className='flex-1 text-sm leading-relaxed text-neutral-300 sm:text-base sm:leading-6'>
+            <p className='flex-1 text-sm leading-relaxed text-[#c9ced6] sm:text-base sm:leading-6'>
               &ldquo;{testimonial.reviewText}&rdquo;
             </p>
 
@@ -74,16 +74,16 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
                   className='size-11 shrink-0 rounded-full object-cover'
                 />
               ) : (
-                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#201f1f] font-site-heading text-sm font-semibold text-[#e5e2e1]'>
+                <div className='flex size-11 shrink-0 items-center justify-center rounded-full bg-[#20252d] font-site-heading text-sm font-semibold text-[#f1f3f6]'>
                   {initials(testimonial.customerName)}
                 </div>
               )}
               <div className='flex flex-col'>
-                <span className='font-site-heading text-sm font-semibold text-[#e5e2e1]'>
+                <span className='font-site-heading text-sm font-semibold text-[#f1f3f6]'>
                   {testimonial.customerName}
                 </span>
                 {testimonial.serviceReceived && (
-                  <span className='text-xs tracking-[0.4px] text-neutral-400 uppercase'>
+                  <span className='text-xs tracking-[0.4px] text-[#a4abb6] uppercase'>
                     {testimonial.serviceReceived}
                   </span>
                 )}

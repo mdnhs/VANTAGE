@@ -34,11 +34,12 @@ const MAX_PHOTOS = 4;
 type QuoteCopy = GlobalValue<'quoteForm'>;
 
 // Field classes copied from the homepage estimator so both forms read identically.
-const FIELD_LABEL = 'block text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
+const FIELD_LABEL =
+  'block text-[12px] leading-normal tracking-[0.48px] text-[#a4abb6] uppercase sm:text-[11px] sm:tracking-[0.66px]';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-brand focus:outline-none';
+  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[14px] py-[14px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[18px] sm:text-[14px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
 const BACK_LINK =
-  'self-start text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none';
+  'self-start text-[11px] leading-normal tracking-[0.66px] text-[#a4abb6] uppercase transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -99,21 +100,21 @@ function SubmitRow({
   busy?: boolean;
 }) {
   return (
-    <div className='flex w-full flex-col gap-[28px]'>
+    <div className='flex w-full flex-col gap-[18px] sm:gap-[28px]'>
       <button
         data-reveal-button
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className='group relative flex w-full items-center justify-center gap-[10px] overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+        className='group relative flex h-[52px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[15px]'
       >
         <RevealContent band='dark' className='gap-[10px]'>
           {busy ? (
-            <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-white' />
+            <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-[#f1f3f6]' />
           ) : (
             <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
           )}
-          <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-white uppercase'>
+          <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-[#f1f3f6] uppercase'>
             {label}
           </span>
           <FigmaIcon
@@ -126,11 +127,11 @@ function SubmitRow({
         </RevealContent>
       </button>
       <div className='flex w-full flex-col items-center gap-2 text-[12px] leading-normal sm:flex-row sm:justify-between'>
-        <span className='flex items-center gap-[6px] text-[#a1a1a1]'>
+        <span className='flex items-center gap-[6px] text-[#a4abb6]'>
           <ZapIcon />
           {responseTime}
         </span>
-        <span className='text-[#737373]'>{noCard}</span>
+        <span className='text-[#7d8591]'>{noCard}</span>
       </div>
     </div>
   );
@@ -156,7 +157,7 @@ function FormField({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col gap-[10px] ${className}`}>
+    <div className={`flex flex-col gap-2 sm:gap-[10px] ${className}`}>
       <label htmlFor={id} className={FIELD_LABEL}>
         {label}
         {required && ' *'}
@@ -176,7 +177,7 @@ function FormField({
 
 function FieldGroup({ label, htmlFor, children }: { label: string; htmlFor?: string; children: ReactNode }) {
   return (
-    <div className='flex w-full flex-col gap-[10px]'>
+    <div className='flex w-full flex-col gap-2 sm:gap-[10px]'>
       {htmlFor ? (
         <label htmlFor={htmlFor} className={FIELD_LABEL}>
           {label}
@@ -306,24 +307,24 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
                 <CheckIcon size={16} />
               </span>
               <span className='flex min-w-0 flex-1 flex-col gap-[4px]'>
-                <span className='text-[16px] leading-normal font-semibold text-white'>{b.title}</span>
-                <span className='text-[14px] leading-[22px] text-[#a1a1a1]'>{b.body}</span>
+                <span className='text-[16px] leading-normal font-semibold text-[#f1f3f6]'>{b.title}</span>
+                <span className='text-[14px] leading-[22px] text-[#a4abb6]'>{b.body}</span>
               </span>
             </li>
           ))}
         </ul>
         <div
           data-popout
-          className='flex w-full items-center gap-[12px] rounded-[12px] border border-[#232328] px-[16px] py-[14px]'
+          className='flex w-full items-center gap-[12px] rounded-[12px] border border-[#2e343e] px-[16px] py-[14px]'
         >
           <FigmaIcon src={ICONS.shield} size={20} inset='8.33% 12.5%' bleed='-4.5% -5%' />
-          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a1a1a1]'>{copy.privacyNote}</p>
+          <p className='min-w-0 flex-1 text-[13px] leading-[20px] text-[#a4abb6]'>{copy.privacyNote}</p>
         </div>
       </aside>
 
       <div
         data-quote-card
-        className='flex w-full min-w-0 flex-col gap-[28px] rounded-[20px] border border-[#232328] bg-[#161616] p-5 sm:p-[36px] lg:flex-1'
+        className='flex w-full min-w-0 flex-col gap-[18px] rounded-[20px] border border-[#353c47] bg-[#262b34] p-5 sm:gap-[28px] sm:border-[#2e343e] sm:bg-[#20252d] sm:p-[36px] lg:flex-1'
       >
         {/* Stepper */}
         <ol className='flex w-full items-center gap-2 sm:gap-[14px]'>
@@ -336,15 +337,15 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
               <>
                 <span
                   className={`flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] leading-normal font-medium ${
-                    isReached ? 'bg-brand text-white' : 'border border-[#404040] text-[#a1a1a1]'
+                    isReached ? 'bg-brand text-[#f1f3f6]' : 'border border-[#4e5663] text-[#a4abb6]'
                   }`}
                 >
                   {s.step}
                 </span>
                 <span
                   className={`text-[10px] leading-normal tracking-[0.44px] whitespace-nowrap uppercase sm:text-[11px] ${
-                    isActive ? 'text-white' : 'text-[#737373]'
-                  } ${canGoBack ? 'transition-colors group-hover:text-white' : ''}`}
+                    isActive ? 'text-[#f1f3f6]' : 'text-[#7d8591]'
+                  } ${canGoBack ? 'transition-colors group-hover:text-[#f1f3f6]' : ''}`}
                 >
                   <span className='sm:hidden'>{s.short}</span>
                   <span className='hidden sm:inline'>{s.label}</span>
@@ -353,7 +354,7 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
             );
             return (
               <li key={s.step} className='contents' aria-current={isActive ? 'step' : undefined}>
-                {idx > 0 && <span aria-hidden className='h-px min-w-2 flex-1 bg-[#323232]' />}
+                {idx > 0 && <span aria-hidden className='h-px min-w-2 flex-1 bg-[#353c47]' />}
                 {canGoBack ? (
                   <button
                     type='button'
@@ -375,10 +376,10 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
             <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
               <CheckIcon size={28} />
             </span>
-            <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+            <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase'>
               {copy.success.title}
             </h2>
-            <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
+            <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a4abb6]'>
               {fillCopy(copy.success.body, {
                 name,
                 vehicle: [make, model].filter(Boolean).join(' ') || copy.success.vehicleFallback,
@@ -389,7 +390,7 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
               data-reveal-button
               type='button'
               onClick={handleReset}
-              className='relative mt-6 overflow-hidden rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+              className='relative mt-6 overflow-hidden rounded-[8px] border border-[#353c47] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d5d9e0] uppercase transition-colors hover:border-[#4e5663] hover:bg-[#2e343e] hover:text-[#f1f3f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
             >
               <RevealContent band='brand'>{buttons.another}</RevealContent>
             </button>
@@ -398,13 +399,13 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
           <>
             {/* Registration plate */}
             <FieldGroup label={labels.registration} htmlFor='quote-reg'>
-              <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#323232] bg-[#111113] transition-colors focus-within:border-brand'>
-                <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch bg-[#2a2a2a] px-[14px] py-[12px] select-none'>
+              <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#353c47] bg-[#1b1f26] transition-colors focus-within:border-brand'>
+                <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch bg-[#2e343e] px-[14px] py-[12px] select-none'>
                   <span className='flex items-start gap-[2px]'>
                     <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
                     <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
                   </span>
-                  <span className='text-[12px] leading-normal font-medium text-white'>IRL</span>
+                  <span className='text-[12px] leading-normal font-medium text-[#f1f3f6]'>IRL</span>
                 </div>
                 <input
                   id='quote-reg'
@@ -412,10 +413,10 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
                   value={registration}
                   onChange={(e) => setRegistration(e.target.value.toUpperCase())}
                   placeholder={placeholders.registration}
-                  className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-site-heading text-[18px] leading-normal font-bold tracking-[0.66px] text-white uppercase placeholder:text-[#737373] focus:outline-none sm:px-[18px] sm:text-[22px]'
+                  className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-site-heading text-[18px] leading-normal font-bold tracking-[0.66px] text-[#f1f3f6] uppercase placeholder:text-[#7d8591] focus:outline-none sm:px-[18px] sm:text-[22px]'
                 />
               </div>
-              <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#737373]'>
+              <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#7d8591]'>
                 <ZapIcon />
                 {hints.registration}
               </p>
@@ -461,8 +462,8 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
                       onClick={() => setSelectedService(service.name)}
                       className={`flex min-w-0 flex-col items-center justify-center gap-[10px] rounded-[12px] border px-[12px] py-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                         isSelected
-                          ? 'border-white bg-white text-black'
-                          : 'border-[#323232] bg-[#111113] text-white hover:border-[#454545] hover:bg-[#16161a]'
+                          ? 'border-[#f1f3f6] bg-[#f1f3f6] text-black'
+                          : 'border-[#353c47] bg-[#1b1f26] text-[#f1f3f6] hover:border-[#4e5663] hover:bg-[#20252d]'
                       }`}
                     >
                       <Image
@@ -503,7 +504,7 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
 
             {/* Photo dropzone */}
             <FieldGroup label={labels.photos}>
-              <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed border-[#454545] px-[20px] py-[28px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#1a1a1d]'>
+              <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[14px] border border-dashed border-[#4e5663] px-[16px] py-[20px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#20252d] sm:rounded-[12px] sm:px-[20px] sm:py-[28px]'>
                 <input
                   type='file'
                   accept='image/jpeg,image/png,image/heic'
@@ -511,7 +512,7 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
                   className='sr-only'
                   onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, MAX_PHOTOS))}
                 />
-                <span className='flex items-center justify-center rounded-[12px] bg-[#242424] p-[12px] transition-colors group-hover:bg-[#2e2e2e]'>
+                <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[12px] transition-colors group-hover:bg-[#2e343e]'>
                   <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
                 </span>
                 {photoCount > 0 ? (
@@ -519,9 +520,9 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
                     ✓ {photoCount} photo{photoCount > 1 ? 's' : ''} attached
                   </span>
                 ) : (
-                  <span className='text-[14px] leading-normal font-medium text-white'>{hints.photoPrompt}</span>
+                  <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{hints.photoPrompt}</span>
                 )}
-                <span className='text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
+                <span className='text-[10px] leading-normal tracking-[0.4px] text-[#7d8591] uppercase'>
                   {hints.photoTypes}
                 </span>
               </label>

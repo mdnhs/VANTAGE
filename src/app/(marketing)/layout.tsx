@@ -1,5 +1,6 @@
 import { manrope, inter } from '@/lib/font';
 import { StitchHeader } from '@/components/marketing/stitch-header';
+import { QuoteCtaProvider } from '@/components/marketing/quote-cta';
 import { StitchCta } from '@/components/marketing/stitch-cta';
 import { MarketingFooter } from '@/components/marketing/footer';
 import { CookieSettingsSlot } from '@/features/tracking/components/cookie-settings-slot';
@@ -22,27 +23,29 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
   ]);
 
   return (
-    <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#131313] font-site-body`}>
-      <SiteThemeStyle />
-      <SmoothScroll />
-      <StitchHeader
-        navigation={navigation}
-        phone={settings.phone}
-        phoneHref={settings.phoneHref}
-        businessName={settings.businessName}
-        logo={settings.logo}
-        logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
-        logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
-      />
-      <div data-route-content>
-        {children}
-        <StitchCta phone={settings.phone} />
-        <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+    <QuoteCtaProvider label={navigation.cta.label}>
+      <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#1b1f26] font-site-body`}>
+        <SiteThemeStyle />
+        <SmoothScroll />
+        <StitchHeader
+          navigation={navigation}
+          phone={settings.phone}
+          phoneHref={settings.phoneHref}
+          businessName={settings.businessName}
+          logo={settings.logo}
+          logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
+          logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
+        />
+        <div data-route-content>
+          {children}
+          <StitchCta phone={settings.phone} />
+          <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+        </div>
+        <MarketingTracking />
+        <SupportWidget retentionMonths={chatRetentionMonths} />
+        <ButtonRevealLayer />
+        <RouteFade />
       </div>
-      <MarketingTracking />
-      <SupportWidget retentionMonths={chatRetentionMonths} />
-      <ButtonRevealLayer />
-      <RouteFade />
-    </div>
+    </QuoteCtaProvider>
   );
 }

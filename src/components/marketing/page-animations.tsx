@@ -88,6 +88,148 @@ function refreshWhenResized() {
 function setup() {
   const mm = gsap.matchMedia();
 
+  // Desktop timelines (lg and up). Insurance's seven steps (`[data-steps-h]`) pin in place and walk
+  // through the steps with the scroll: each number lights up, its rail draws on to the next, and
+  // the step's text comes up from dim. Process's vertical list (`[data-steps-v]`) is not pinned:
+  // each phase's number, rail and card follow the scroll as it passes.
+  mm.add('(min-width: 1024px) and (prefers-reduced-motion: no-preference)', () => {
+    const colours = (dots: (HTMLElement | null)[]) => {
+      const [first, second] = dots;
+      if (!first || !second) return null;
+      const active = getComputedStyle(first);
+      const rest = getComputedStyle(second);
+      return {
+        on: { backgroundColor: active.backgroundColor, borderColor: active.borderTopColor },
+        off: { backgroundColor: rest.backgroundColor, borderColor: rest.borderTopColor },
+      };
+    };
+
+    document.querySelectorAll<HTMLElement>('[data-steps-h]').forEach((list) => {
+      const section = list.closest('section');
+      const steps = gsap.utils.toArray<HTMLElement>('[data-timeline-step]', list);
+      const dots = steps.map((step) => step.querySelector<HTMLElement>('[data-timeline-dot]'));
+      const palette = colours(dots);
+      if (!section || !palette) return;
+
+      const timeline = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 97px',
+          end: `+=${steps.length * 170}`,
+          pin: true,
+          scrub: 0.6,
+          anticipatePin: 1,
+        },
+      });
+      steps.forEach((step, index) => {
+        const dot = dots[index];
+        const body = step.querySelector('[data-timeline-body]');
+        const fill = step.querySelector('[data-timeline-fill]');
+        if (dot) {
+          gsap.set(dot, palette.off);
+          timeline.to(dot, { ...palette.on, scale: 1.12, duration: 0.3 }, index);
+          timeline.to(dot, { scale: 1, duration: 0.2 }, index + 0.3);
+        }
+        if (body) {
+          gsap.set(body, { autoAlpha: 0.3, y: 14 });
+          timeline.to(body, { autoAlpha: 1, y: 0, duration: 0.5 }, index);
+        }
+        if (fill) timeline.fromTo(fill, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'none' }, index + 0.3);
+      });
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-steps-v]').forEach((list) => {
+      const steps = gsap.utils.toArray<HTMLElement>('[data-timeline-step]', list);
+      const dots = steps.map((step) => step.querySelector<HTMLElement>('[data-timeline-dot]'));
+      const palette = colours(dots);
+      if (!palette) return;
+
+      steps.forEach((step, index) => {
+        const dot = dots[index];
+        const body = step.querySelector('[data-timeline-body]');
+        const fill = step.querySelector('[data-timeline-fill]');
+        if (body) {
+          gsap.from(body, {
+            autoAlpha: 0,
+            y: 40,
+            duration: 0.7,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: step, start: 'top 85%', toggleActions: 'play none none reverse' },
+          });
+        }
+        if (dot) {
+          gsap.set(dot, palette.off);
+          gsap
+            .timeline({ scrollTrigger: { trigger: dot, start: 'top 65%', toggleActions: 'play none none reverse' } })
+            .to(dot, { ...palette.on, scale: 1.14, duration: 0.3, ease: 'back.out(2)' })
+            .to(dot, { scale: 1, duration: 0.2, ease: 'power2.out' });
+        }
+        if (fill) {
+          gsap.fromTo(
+            fill,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              ease: 'none',
+              scrollTrigger: { trigger: step, start: 'top 65%', end: 'bottom 65%', scrub: true },
+            },
+          );
+        }
+      });
+    });
+  });
+
+  // Phone timelines (`[data-timeline]`: the homepage, Process and Insurance phases): each step
+  // rises in as it is reached, its number turns brand red, and the rail fills down with the scroll.
+  mm.add('(max-width: 639px) and (prefers-reduced-motion: no-preference)', () => {
+    document.querySelectorAll<HTMLElement>('[data-timeline]').forEach((list) => {
+      const steps = gsap.utils.toArray<HTMLElement>('[data-timeline-step]', list);
+      const dots = steps.map((step) => step.querySelector<HTMLElement>('[data-timeline-dot]'));
+      const [first, second] = dots;
+      if (!first || !second) return;
+      // The first number is brand red and the second neutral in the markup: read both colours
+      // from them instead of repeating them here.
+      const active = getComputedStyle(first);
+      const rest = getComputedStyle(second);
+      const on = { backgroundColor: active.backgroundColor, borderColor: active.borderTopColor };
+      const off = { backgroundColor: rest.backgroundColor, borderColor: rest.borderTopColor };
+
+      steps.forEach((step, index) => {
+        const dot = dots[index];
+        const body = step.querySelector('[data-timeline-body]');
+        const fill = step.querySelector('[data-timeline-fill]');
+        if (body) {
+          gsap.from(body, {
+            autoAlpha: 0,
+            y: 28,
+            duration: 0.6,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: step, start: 'top 85%', toggleActions: 'play none none reverse' },
+          });
+        }
+        if (dot) {
+          gsap.set(dot, off);
+          gsap
+            .timeline({ scrollTrigger: { trigger: dot, start: 'top 65%', toggleActions: 'play none none reverse' } })
+            .to(dot, { ...on, scale: 1.14, duration: 0.3, ease: 'back.out(2)' })
+            .to(dot, { scale: 1, duration: 0.2, ease: 'power2.out' });
+        }
+        if (fill) {
+          gsap.fromTo(
+            fill,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              ease: 'none',
+              scrollTrigger: { trigger: step, start: 'top 65%', end: 'bottom 65%', scrub: true },
+            },
+          );
+        }
+      });
+    });
+  });
+
   mm.add('(prefers-reduced-motion: no-preference)', () => {
     let clipped: HTMLElement | null = null;
     const copy = document.querySelector<HTMLElement>('[data-hero-copy]');
@@ -124,16 +266,20 @@ function setup() {
       const trust = hero.querySelector('[data-hero-trust]');
       if (trust) intro.from(trust.children, { autoAlpha: 0, y: 20, stagger: 0.08, duration: 0.6 }, '-=0.4');
 
-      // Scrollytelling: the hero copy drifts up and dissolves as the page takes over.
-      gsap.to(copy, {
-        y: -120,
-        autoAlpha: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: hero, start: 'top top', end: '70% top', scrub: true },
-      });
+      // Scrollytelling: the hero copy drifts up and dissolves as the page takes over. Phones skip it:
+      // there the hero is a tall stack (photo on top, then the copy and buttons), not one screen.
+      const wide = window.matchMedia('(min-width: 640px)').matches;
+      if (wide) {
+        gsap.to(copy, {
+          y: -120,
+          autoAlpha: 0,
+          ease: 'none',
+          scrollTrigger: { trigger: hero, start: 'top top', end: '70% top', scrub: true },
+        });
+      }
 
       const media = hero.querySelector('[data-hero-media]');
-      if (media) {
+      if (media && wide) {
         gsap.fromTo(
           media,
           { scale: 1.08 },

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { QuoteCtaText } from '@/components/marketing/quote-cta';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 
 interface HeroSectionProps {
@@ -32,8 +33,8 @@ export function HeroSection({
             className='object-cover'
           />
         )}
-        <div className='absolute inset-0 bg-gradient-to-r from-[rgba(19,19,19,0.9)] via-[rgba(19,19,19,0.6)] via-50% to-[rgba(19,19,19,0)]' />
-        <div className='absolute inset-0 bg-gradient-to-t from-[#131313] to-transparent opacity-80' />
+        <div className='absolute inset-0 bg-gradient-to-r from-[rgba(27,31,38,0.9)] via-[rgba(27,31,38,0.6)] via-50% to-[rgba(27,31,38,0)]' />
+        <div className='absolute inset-0 bg-gradient-to-t from-[#1b1f26] to-transparent opacity-80' />
       </div>
 
       <div className='relative z-10 flex max-w-[768px] motion-preset-slide-up flex-col gap-6 motion-duration-700 sm:gap-8'>
@@ -45,7 +46,7 @@ export function HeroSection({
             </span>
           </div>
 
-          <h1 className='xs:text-4xl font-site-heading text-3xl leading-[1.1] font-extrabold tracking-tight text-white uppercase sm:text-5xl sm:tracking-[-1.28px] lg:text-[64px] lg:leading-[72px]'>
+          <h1 className='xs:text-4xl font-site-heading text-3xl leading-[1.1] font-extrabold tracking-tight text-[#f1f3f6] uppercase sm:text-5xl sm:tracking-[-1.28px] lg:text-[64px] lg:leading-[72px]'>
             We Restore
             <br />
             Your Car
@@ -53,7 +54,7 @@ export function HeroSection({
             <span className='text-brand'>To Its Best.</span>
           </h1>
 
-          <p className='max-w-[576px] text-sm leading-relaxed text-neutral-300 sm:text-lg sm:leading-7'>
+          <p className='max-w-[576px] text-sm leading-relaxed text-[#c9ced6] sm:text-lg sm:leading-7'>
             Professional crash repair, structural bodywork, precision paint, and high-end vehicle restoration in
             Ireland. Your vehicle, our obsession.
           </p>
@@ -62,14 +63,16 @@ export function HeroSection({
         <div className='flex w-full flex-col flex-wrap gap-4 pt-2 sm:w-auto sm:flex-row sm:pt-4'>
           <Link
             href='/get-a-quote'
-            className='group relative flex w-full items-center justify-center overflow-hidden bg-brand px-8 py-4 text-center text-xs font-bold tracking-[1.2px] text-white uppercase shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.3)] transition-all hover:-translate-y-1 hover:bg-brand-hover sm:w-auto'
+            className='group relative flex w-full items-center justify-center overflow-hidden bg-brand px-8 py-4 text-center text-xs font-bold tracking-[1.2px] text-[#f1f3f6] uppercase shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.3)] transition-all hover:-translate-y-1 hover:bg-brand-hover sm:w-auto'
           >
             <span className='absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-shimmer' />
-            <span className='relative'>Get a Free Quote</span>
+            <span className='relative'>
+              <QuoteCtaText />
+            </span>
           </Link>
           <Link
             href='#our-work'
-            className='flex w-full items-center justify-center border border-white/20 px-8 py-4 text-center text-xs font-semibold tracking-[1.2px] text-white uppercase transition-all hover:border-brand/50 hover:bg-white/5 hover:shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.15)] sm:w-auto'
+            className='flex w-full items-center justify-center border border-white/20 px-8 py-4 text-center text-xs font-semibold tracking-[1.2px] text-[#f1f3f6] uppercase transition-all hover:border-brand/50 hover:bg-white/5 hover:shadow-[0_4px_20px_rgb(var(--brand-rgb)/0.15)] sm:w-auto'
           >
             View Our Work
           </Link>

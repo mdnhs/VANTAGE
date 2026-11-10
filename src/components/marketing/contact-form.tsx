@@ -23,9 +23,10 @@ const ICONS = {
 };
 
 // Field classes copied from the homepage quote form so both forms read identically.
-const FIELD_LABEL = 'block text-[11px] leading-normal tracking-[0.66px] text-[#a1a1a1] uppercase';
+const FIELD_LABEL =
+  'block text-[12px] leading-normal tracking-[0.48px] text-[#a4abb6] uppercase sm:text-[11px] sm:tracking-[0.66px]';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#323232] bg-[#111113] px-[18px] py-[14px] text-[14px] text-white transition-colors placeholder:text-[#737373] focus:border-brand focus:outline-none';
+  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[14px] py-[14px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[18px] sm:text-[14px] lg:text-[15px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -66,7 +67,9 @@ function FormField({
   placeholder,
   type = 'text',
   required = false,
+  className = '',
 }: {
+  className?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -75,7 +78,7 @@ function FormField({
   required?: boolean;
 }) {
   return (
-    <label className='flex min-w-0 flex-col gap-[10px]'>
+    <label className={`flex min-w-0 flex-col gap-2 sm:gap-[10px] ${className}`}>
       <span className={FIELD_LABEL}>
         {label}
         {required && ' *'}
@@ -188,7 +191,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
 
   // Panel surface matches the homepage quote form card.
   const panel =
-    'flex w-full min-w-0 flex-col gap-[28px] rounded-[20px] border border-[#232328] bg-[#161616] p-5 sm:p-[36px]';
+    'flex w-full min-w-0 flex-col gap-[18px] rounded-[20px] border border-[#353c47] bg-[#262b34] p-5 sm:gap-[28px] sm:border-[#2e343e] sm:bg-[#20252d] sm:p-[36px] lg:gap-[22px] lg:p-10';
 
   if (submitted) {
     return (
@@ -197,17 +200,17 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
             <FigmaIcon src={ICONS.check} size={28} inset='27.08% 20.83%' bleed='-10.23% -8.04%' />
           </span>
-          <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+          <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase'>
             {copy.success.title}
           </h3>
-          <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a1a1a1]'>
+          <p className='mt-2 max-w-md text-[14px] leading-[22px] text-[#a4abb6]'>
             {fillCopy(copy.success.body, { name: firstName })}
           </p>
           <button
             data-reveal-button
             type='button'
             onClick={handleReset}
-            className='relative mt-6 overflow-hidden rounded-[8px] border border-[#323232] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d4d4d4] uppercase transition-colors hover:border-[#454545] hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+            className='relative mt-6 overflow-hidden rounded-[8px] border border-[#353c47] px-5 py-2.5 text-[11px] tracking-[0.66px] text-[#d5d9e0] uppercase transition-colors hover:border-[#4e5663] hover:bg-[#2e343e] hover:text-[#f1f3f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
           >
             <RevealContent band='brand'>{copy.sendAnother}</RevealContent>
           </button>
@@ -219,11 +222,11 @@ export function ContactForm({ services, copy }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className={panel}>
       <HoneypotField value={website} onChange={setWebsite} />
-      <div className='flex flex-col gap-2'>
-        <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-white uppercase'>
+      <div className='flex flex-col gap-2 lg:gap-[22px]'>
+        <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase lg:text-[32px] lg:leading-[38px] lg:tracking-[-0.64px]'>
           {copy.title}
         </h3>
-        <p className='text-[14px] leading-[22px] text-[#a1a1a1]'>{copy.intro}</p>
+        <p className='text-[14px] leading-[22px] text-[#a4abb6] lg:text-[15px] lg:leading-6'>{copy.intro}</p>
       </div>
 
       {errorMessage && (
@@ -236,7 +239,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         </div>
       )}
 
-      <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
+      <div className='grid grid-cols-2 gap-x-[10px] gap-y-[18px] sm:gap-[20px] lg:gap-x-4 lg:gap-y-[22px]'>
         <FormField
           label={labels.firstName}
           value={firstName}
@@ -257,6 +260,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           onChange={setEmail}
           placeholder={placeholders.email}
           type='email'
+          className='col-span-2 sm:col-span-1'
           required
         />
         <FormField
@@ -265,11 +269,12 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           onChange={setPhone}
           placeholder={placeholders.phone}
           type='tel'
+          className='col-span-2 sm:col-span-1'
           required
         />
       </div>
 
-      <label className='flex flex-col gap-[10px]'>
+      <label className='flex flex-col gap-2 sm:gap-[10px]'>
         <span className={FIELD_LABEL}>{labels.service}</span>
         <select value={service} onChange={(e) => setService(e.target.value)} className={FIELD_INPUT}>
           <option value=''>{placeholders.service}</option>
@@ -282,7 +287,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         </select>
       </label>
 
-      <label className='flex flex-col gap-[10px]'>
+      <label className='flex flex-col gap-2 sm:gap-[10px]'>
         <span className={FIELD_LABEL}>{labels.message} *</span>
         <textarea
           value={message}
@@ -294,7 +299,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
         />
       </label>
 
-      <div className='flex w-full flex-col gap-[10px]'>
+      <div className='flex w-full flex-col gap-2 sm:gap-[10px]'>
         <span className={FIELD_LABEL}>{labels.photos}</span>
         <label
           onDragOver={(e) => {
@@ -303,8 +308,8 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[12px] border border-dashed px-[20px] py-[28px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#1a1a1d] ${
-            isDragging ? 'border-brand bg-[#1a1a1d]' : 'border-[#454545]'
+          className={`group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[14px] border border-dashed px-[16px] py-[20px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#20252d] sm:rounded-[12px] sm:px-[20px] sm:py-[28px] ${
+            isDragging ? 'border-brand bg-[#20252d]' : 'border-[#4e5663]'
           }`}
         >
           <input
@@ -314,11 +319,11 @@ export function ContactForm({ services, copy }: ContactFormProps) {
             className='sr-only'
             onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
           />
-          <span className='flex items-center justify-center rounded-[12px] bg-[#242424] p-[12px] transition-colors group-hover:bg-[#2e2e2e]'>
+          <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[12px] transition-colors group-hover:bg-[#2e343e]'>
             <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
           </span>
-          <span className='text-[14px] leading-normal font-medium text-white'>{copy.dropzone.prompt}</span>
-          <span className='text-[10px] leading-normal tracking-[0.4px] text-[#737373] uppercase'>
+          <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{copy.dropzone.prompt}</span>
+          <span className='text-[10px] leading-normal tracking-[0.4px] text-[#7d8591] uppercase'>
             {copy.dropzone.hint}
           </span>
         </label>
@@ -327,14 +332,14 @@ export function ContactForm({ services, copy }: ContactFormProps) {
             {files.map((file, index) => (
               <li
                 key={`${file.name}-${index}`}
-                className='flex items-center gap-2 rounded-full border border-[#323232] bg-[#111113] py-1 pr-1.5 pl-3 text-[12px] text-[#d4d4d4]'
+                className='flex items-center gap-2 rounded-full border border-[#353c47] bg-[#1b1f26] py-1 pr-1.5 pl-3 text-[12px] text-[#d5d9e0]'
               >
                 <span className='max-w-[200px] truncate'>{file.name}</span>
                 <button
                   type='button'
                   aria-label={`Remove ${file.name}`}
                   onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
-                  className='flex size-5 items-center justify-center rounded-full text-[#a1a1a1] transition-colors hover:bg-[#232328] hover:text-white focus-visible:outline-2 focus-visible:outline-brand'
+                  className='flex size-5 items-center justify-center rounded-full text-[#a4abb6] transition-colors hover:bg-[#2e343e] hover:text-[#f1f3f6] focus-visible:outline-2 focus-visible:outline-brand'
                 >
                   <X aria-hidden className='size-3' />
                 </button>
@@ -345,20 +350,20 @@ export function ContactForm({ services, copy }: ContactFormProps) {
       </div>
 
       {/* Submit row — same button + meta line as the homepage quote form. */}
-      <div className='flex w-full flex-col gap-[28px]'>
+      <div className='flex w-full flex-col gap-[18px] sm:gap-[28px] lg:gap-[22px]'>
         <button
           data-reveal-button
           type='submit'
           disabled={isSubmitting}
-          className='group relative flex w-full items-center justify-center gap-[10px] overflow-hidden rounded-[8px] border border-brand bg-brand py-[15px] pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60'
+          className='group relative flex h-[52px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[15px]'
         >
           <RevealContent band='dark' className='gap-[10px]'>
             {isSubmitting ? (
-              <Loader2 aria-hidden className='size-[18px] animate-spin text-white' />
+              <Loader2 aria-hidden className='size-[18px] animate-spin text-[#f1f3f6]' />
             ) : (
               <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
             )}
-            <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-white uppercase'>
+            <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase'>
               {isSubmitting ? copy.submitting : copy.button}
             </span>
             <FigmaIcon
@@ -370,7 +375,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
             />
           </RevealContent>
         </button>
-        <p className='flex items-center justify-center gap-[6px] text-center text-[12px] leading-normal text-[#a1a1a1]'>
+        <p className='flex items-center justify-center gap-[6px] text-center text-[12px] leading-normal text-[#a4abb6] lg:justify-start lg:text-left lg:text-[13px] lg:text-[#7d8591]'>
           <FigmaIcon src={ICONS.zap} size={14} inset='12.5% 22.92%' bleed='-7.14% -9.89%' />
           {copy.responseNote}
         </p>
