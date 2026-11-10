@@ -5,6 +5,7 @@ import { llmsText } from './llms';
 describe('llmsText', () => {
   it('writes the llmstxt.org layout and skips empty sections', () => {
     const out = llmsText({
+      insurance: false,
       siteName: 'Vantage Autobody',
       summary: 'Crash repair\nin Dublin.',
       details: ['Phone: +353 1 234 5678', ''],
@@ -35,5 +36,25 @@ describe('llmsText', () => {
         '',
       ].join('\n'),
     );
+  });
+
+  it('leaves out insurance links and wording unless insurance is switched on', () => {
+    const input = {
+      siteName: 'Shop',
+      summary: '',
+      details: [],
+      pages: [
+        { title: 'Services', url: 'https://x.ie/services', description: 'What we repair' },
+        { title: 'Insurance Claim Repairs', url: 'https://x.ie/insurance', description: 'We deal with your insurer' },
+        { title: 'About', url: 'https://x.ie/about', description: 'Insurer-approved repairs since 1998' },
+      ],
+      services: [],
+      projects: [],
+      legal: [],
+    };
+    const off = llmsText({ ...input, insurance: false });
+    expect(off).toContain('/services');
+    expect(off).not.toMatch(/insur/i);
+    expect(llmsText({ ...input, insurance: true })).toContain('/insurance');
   });
 });

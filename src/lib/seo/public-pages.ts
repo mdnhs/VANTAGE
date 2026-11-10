@@ -3,7 +3,7 @@
 // Default titles and descriptions are keyword- and location-led and brand-neutral (default-parity.test.ts pins them).
 
 export const HOME_DESCRIPTION =
-  'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Insurer approved, with free quotes.';
+  'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Free, no-obligation quotes.';
 
 export const PUBLIC_PAGE_IDS = [
   'home',
@@ -117,7 +117,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'About Our Dublin Body Shop',
     crumb: 'About',
     description:
-      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and insurer-approved repairs.',
+      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and factory-standard repairs.',
     editorHref: '/dashboard/about',
     editorTab: true,
     pageKey: 'page.about',

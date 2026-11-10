@@ -10,11 +10,20 @@ export type LlmsInput = {
   services: LlmsLink[];
   projects: LlmsLink[];
   legal: LlmsLink[];
+  // The admin's "Show the Insurance page" switch: off drops insurance links and wording.
+  insurance: boolean;
 };
 
 const oneLine = (v: string) => v.replace(/\s+/g, ' ').trim();
 
-function section(heading: string, links: LlmsLink[]): string[] {
+const INSURANCE_WORDING = /insur|\bclaims?\b|\bloss adjuster/i;
+
+function section(heading: string, all: LlmsLink[], insurance: boolean): string[] {
+  const links = insurance
+    ? all
+    : all.filter(
+        (l) => !/\/insurance(?:[/?#]|$)/i.test(l.url) && !INSURANCE_WORDING.test(`${l.title} ${l.description ?? ''}`),
+      );
   if (!links.length) return [];
   return [
     `## ${heading}`,
@@ -33,10 +42,10 @@ export function llmsText(i: LlmsInput): string {
   const details = i.details.map(oneLine).filter(Boolean);
   if (details.length) lines.push(...details.map((d) => `- ${d}`), '');
   lines.push(
-    ...section('Pages', i.pages),
-    ...section('Services', i.services),
-    ...section('Recent work', i.projects),
-    ...section('Optional', i.legal),
+    ...section('Pages', i.pages, i.insurance),
+    ...section('Services', i.services, i.insurance),
+    ...section('Recent work', i.projects, i.insurance),
+    ...section('Optional', i.legal, i.insurance),
   );
   return `${lines.join('\n').trimEnd()}\n`;
 }

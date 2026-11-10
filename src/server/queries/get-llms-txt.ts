@@ -11,6 +11,7 @@ import { blank, pageDescription } from '@/lib/seo/metadata';
 import { PUBLIC_PAGE_LIST } from '@/lib/seo/public-pages';
 import { settingTag } from '@/server/lib/cache/settings-tags';
 import { isSelfCanonical } from '@/server/queries/get-page-seo';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { getSetting } from '@/server/queries/get-setting';
 import { legalPageService } from '@/server/services/legal-page-service';
 import { projectService } from '@/server/services/project-service';
@@ -56,6 +57,7 @@ export async function getLlmsTxt(): Promise<string | null> {
     .filter(Boolean)
     .join(', ');
   return llmsText({
+    insurance: await getInsuranceEnabled(),
     siteName: name,
     summary:
       blank(defaults.llms.summary) ??

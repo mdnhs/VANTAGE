@@ -15,7 +15,7 @@ const TODAY: Record<PublicPageId, { title: string; description: string; canonica
   home: {
     title: `${SITE} — Crash Repair & Car Restoration in Dublin`,
     description:
-      'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Insurer approved, with free quotes.',
+      'Crash repair, chassis reconstruction, laser alignment and vehicle restoration in Dublin, by OEM-certified technicians. Free, no-obligation quotes.',
     canonical: '/',
   },
   services: {
@@ -39,7 +39,7 @@ const TODAY: Record<PublicPageId, { title: string; description: string; canonica
   about: {
     title: `About Our Dublin Body Shop | ${SITE}`,
     description:
-      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and insurer-approved repairs.',
+      'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and factory-standard repairs.',
     canonical: '/about',
   },
   process: {
@@ -102,5 +102,13 @@ describe('default (no SEO rows) output', () => {
     const site = parseGlobal('site', { social: [{ platform: 'facebook', url }] });
     const node = businessNode({ origin: 'https://x.ie', site, contact: parseGlobal('contact', undefined), seo });
     expect((node as { sameAs?: string[] }).sameAs).toEqual([url]);
+  });
+});
+
+describe('default copy', () => {
+  it('never mentions insurance outside the Insurance page itself', () => {
+    for (const id of PUBLIC_PAGE_IDS.filter((x) => x !== 'insurance')) {
+      expect(`${TODAY[id].title} ${TODAY[id].description}`, id).not.toMatch(/insur/i);
+    }
   });
 });

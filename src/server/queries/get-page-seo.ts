@@ -76,7 +76,13 @@ const latest = (dates: (Date | null | undefined)[]) =>
 // Each entry is dated by its own stored rows (copy, SEO, and the services/projects it lists).
 export async function getSitemapEntries(): Promise<SitemapEntry[]> {
   'use cache';
-  cacheTag(settingTag('seo'), CACHE_TAGS.all('services'), CACHE_TAGS.all('projects'), CACHE_TAGS.all('legal-pages'));
+  cacheTag(
+    settingTag('seo'),
+    settingTag('site'),
+    CACHE_TAGS.all('services'),
+    CACHE_TAGS.all('projects'),
+    CACHE_TAGS.all('legal-pages'),
+  );
   for (const page of PUBLIC_PAGE_LIST) {
     cacheTag(settingTag(seoPageKey(page.id)));
     if (page.pageKey) cacheTag(settingTag(page.pageKey));
