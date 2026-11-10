@@ -132,14 +132,14 @@ describe('StitchHeader from navigation defaults', () => {
 });
 
 describe('forms from default copy', () => {
-  it('quote form shows the original step-1 copy', () => {
+  it('quote form shows its copy on one form', () => {
     render(<QuoteForm services={[]} copy={parseGlobal('quoteForm', {})} />);
     for (const text of [
-      'Vehicle & Service',
+      'Vehicle & Reg',
       'Irish Registration Number',
-      'Vehicle Make',
-      'Primary Service Required',
-      'Continue to damage details',
+      'Primary Repair Category',
+      'Upload Damage Photos (Up to 4 Angles)',
+      'Send my free quote request',
       'Helps us match OEM parts & paint code',
       'Average response time: 48 minutes',
       'No card required',
@@ -217,8 +217,6 @@ describe.each([['QuoteForm', 'quote']] as const)('generate_lead from %s', (_whic
   const run = async () => {
     const copy = parseGlobal('quoteForm', {});
     render(<QuoteForm services={[]} copy={copy} />);
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
@@ -371,7 +369,6 @@ describe('homepage quote section', () => {
 
   it('lets the customer describe the damage', () => {
     section();
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
     expect(screen.getByLabelText(copy.labels.damage)).toBeTruthy();
   });
 });

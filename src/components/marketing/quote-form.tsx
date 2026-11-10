@@ -1,9 +1,9 @@
 'use client';
 
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Search } from 'lucide-react';
 import { sizedSrc } from '@/lib/media/public-image';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
@@ -37,9 +37,7 @@ type QuoteCopy = GlobalValue<'quoteForm'>;
 const FIELD_LABEL =
   'block text-[12px] leading-normal tracking-[0.48px] text-[#a4abb6] uppercase sm:text-[11px] sm:tracking-[0.66px]';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[14px] py-[14px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[18px] sm:text-[14px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
-const BACK_LINK =
-  'self-start text-[11px] leading-normal tracking-[0.66px] text-[#a4abb6] uppercase transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none';
+  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[12px] py-[10px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[14px] sm:text-[14px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -100,13 +98,13 @@ function SubmitRow({
   busy?: boolean;
 }) {
   return (
-    <div className='flex w-full flex-col gap-[18px] sm:gap-[28px]'>
+    <div className='flex w-full flex-col gap-3 sm:gap-[16px]'>
       <button
         data-reveal-button
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className='group relative flex h-[52px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[15px]'
+        className='group relative flex h-[46px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[11px]'
       >
         <RevealContent band='dark' className='gap-[10px]'>
           {busy ? (
@@ -146,7 +144,9 @@ function FormField({
   type = 'text',
   required = false,
   className = '',
+  inputRef,
 }: {
+  inputRef?: React.Ref<HTMLInputElement>;
   id: string;
   label: string;
   value: string;
@@ -157,12 +157,13 @@ function FormField({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col gap-2 sm:gap-[10px] ${className}`}>
+    <div className={`flex flex-col gap-1.5 sm:gap-[6px] ${className}`}>
       <label htmlFor={id} className={FIELD_LABEL}>
         {label}
         {required && ' *'}
       </label>
       <input
+        ref={inputRef}
         id={id}
         type={type}
         required={required}
@@ -177,7 +178,7 @@ function FormField({
 
 function FieldGroup({ label, htmlFor, children }: { label: string; htmlFor?: string; children: ReactNode }) {
   return (
-    <div className='flex w-full flex-col gap-2 sm:gap-[10px]'>
+    <div className='flex w-full flex-col gap-1.5 sm:gap-[6px]'>
       {htmlFor ? (
         <label htmlFor={htmlFor} className={FIELD_LABEL}>
           {label}
@@ -200,7 +201,6 @@ interface QuoteFormProps {
 
 export function QuoteForm({ services, copy, intro, source = 'quote_page' }: QuoteFormProps) {
   const { labels, placeholders, hints, buttons } = copy;
-  const [currentStep, setCurrentStep] = useState(1);
 
   // Step 1: Vehicle & Service
   const [registration, setRegistration] = useState('');
@@ -208,6 +208,13 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
   const [selectedService, setSelectedService] = useState<string>(services[0]?.name ?? 'Crash & Collision Repair');
+
+  // There is no registration lookup service: the search button hands over to the make field.
+  const makeRef = useRef<HTMLInputElement>(null);
+  const uid = useId();
+  const carouselRef = useRef<HTMLDivElement>(null);
+  // One form, three stops: the stepper follows where the visitor is and what they have filled in.
+  const [focusedStep, setFocusedStep] = useState(1);
 
   // Step 2: Damage
   const [damageDescription, setDamageDescription] = useState('');
@@ -276,6 +283,20 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
     }
   };
 
+  const stepDone = [
+    registration.trim() !== '',
+    [make, model, year, damageDescription].some((v) => v.trim() !== ''),
+    name.trim() !== '' && phone.trim() !== '' && email.trim() !== '',
+  ];
+  const goToStep = (n: number) => {
+    setFocusedStep(n);
+    const section = document.getElementById(`${uid}-step-${n}`);
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    section
+      ?.querySelector<HTMLElement>('input:not([type=file]):not([tabindex="-1"]), textarea')
+      ?.focus({ preventScroll: true });
+  };
+
   const handleReset = () => {
     setRegistration('');
     setMake('');
@@ -286,11 +307,9 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
     setName('');
     setPhone('');
     setEmail('');
-    setCurrentStep(1);
+    setFocusedStep(1);
     setSubmitted(false);
   };
-
-  const activeStep = submitted ? 3 : currentStep;
 
   return (
     <div className='flex w-full flex-col gap-12 lg:flex-row lg:items-start lg:gap-[80px]'>
@@ -324,47 +343,45 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
 
       <div
         data-quote-card
-        className='flex w-full min-w-0 flex-col gap-[18px] rounded-[20px] border border-[#353c47] bg-[#262b34] p-5 sm:gap-[28px] sm:border-[#2e343e] sm:bg-[#20252d] sm:p-[36px] lg:flex-1'
+        className='flex w-full min-w-0 flex-col gap-[18px] rounded-[20px] border border-[#353c47] bg-[#262b34] p-4 sm:gap-[28px] sm:border-[#2e343e] sm:bg-[#20252d] sm:p-[24px] lg:flex-1'
       >
-        {/* Stepper */}
-        <ol className='flex w-full items-center gap-2 sm:gap-[14px]'>
+        <ol className='sticky top-20 z-10 -mx-1 flex w-full items-center gap-2 bg-inherit px-1 py-1 sm:static sm:mx-0 sm:gap-[14px] sm:p-0'>
           {copy.steps.map((label, idx) => {
-            const s = { step: idx + 1, label: label.label, short: label.short };
-            const isActive = activeStep === s.step;
-            const isReached = activeStep >= s.step;
-            const canGoBack = !submitted && s.step < currentStep;
+            const n = idx + 1;
+            const isActive = !submitted && focusedStep === n;
+            const isReached = submitted || isActive || stepDone[idx];
             const content = (
               <>
                 <span
-                  className={`flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] leading-normal font-medium ${
+                  className={`flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] leading-normal font-medium transition-colors ${
                     isReached ? 'bg-brand text-[#f1f3f6]' : 'border border-[#4e5663] text-[#a4abb6]'
                   }`}
                 >
-                  {s.step}
+                  {n}
                 </span>
                 <span
-                  className={`text-[10px] leading-normal tracking-[0.44px] whitespace-nowrap uppercase sm:text-[11px] ${
-                    isActive ? 'text-[#f1f3f6]' : 'text-[#7d8591]'
-                  } ${canGoBack ? 'transition-colors group-hover:text-[#f1f3f6]' : ''}`}
+                  className={`text-[10px] leading-normal tracking-[0.44px] whitespace-nowrap uppercase transition-colors sm:text-[11px] ${
+                    isActive ? 'text-[#f1f3f6]' : 'text-[#7d8591] group-hover:text-[#f1f3f6]'
+                  }`}
                 >
-                  <span className='sm:hidden'>{s.short}</span>
-                  <span className='hidden sm:inline'>{s.label}</span>
+                  <span className='sm:hidden'>{label.short}</span>
+                  <span className='hidden sm:inline'>{label.label}</span>
                 </span>
               </>
             );
             return (
-              <li key={s.step} className='contents' aria-current={isActive ? 'step' : undefined}>
+              <li key={n} className='contents' aria-current={isActive ? 'step' : undefined}>
                 {idx > 0 && <span aria-hidden className='h-px min-w-2 flex-1 bg-[#353c47]' />}
-                {canGoBack ? (
+                {submitted ? (
+                  <span className='flex shrink-0 items-center gap-[6px] sm:gap-[10px]'>{content}</span>
+                ) : (
                   <button
                     type='button'
-                    onClick={() => setCurrentStep(s.step)}
-                    className='group flex shrink-0 items-center gap-[6px] rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:gap-[10px]'
+                    onClick={() => goToStep(n)}
+                    className='group flex shrink-0 cursor-pointer items-center gap-[6px] rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:gap-[10px]'
                   >
                     {content}
                   </button>
-                ) : (
-                  <span className='flex shrink-0 items-center gap-[6px] sm:gap-[10px]'>{content}</span>
                 )}
               </li>
             );
@@ -395,185 +412,208 @@ export function QuoteForm({ services, copy, intro, source = 'quote_page' }: Quot
               <RevealContent band='brand'>{buttons.another}</RevealContent>
             </button>
           </div>
-        ) : currentStep === 1 ? (
-          <>
-            {/* Registration plate */}
-            <FieldGroup label={labels.registration} htmlFor='quote-reg'>
-              <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#353c47] bg-[#1b1f26] transition-colors focus-within:border-brand'>
-                <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch bg-[#2e343e] px-[14px] py-[12px] select-none'>
-                  <span className='flex items-start gap-[2px]'>
-                    <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
-                    <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
-                  </span>
-                  <span className='text-[12px] leading-normal font-medium text-[#f1f3f6]'>IRL</span>
-                </div>
-                <input
-                  id='quote-reg'
-                  type='text'
-                  value={registration}
-                  onChange={(e) => setRegistration(e.target.value.toUpperCase())}
-                  placeholder={placeholders.registration}
-                  className='w-full min-w-0 flex-1 bg-transparent px-3 py-[16px] font-site-heading text-[18px] leading-normal font-bold tracking-[0.66px] text-[#f1f3f6] uppercase placeholder:text-[#7d8591] focus:outline-none sm:px-[18px] sm:text-[22px]'
-                />
-              </div>
-              <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#7d8591]'>
-                <ZapIcon />
-                {hints.registration}
-              </p>
-            </FieldGroup>
-
-            {/* Vehicle details */}
-            <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-3'>
-              <FormField
-                id='quote-make'
-                label={labels.make}
-                value={make}
-                onChange={setMake}
-                placeholder={placeholders.make}
-              />
-              <FormField
-                id='quote-model'
-                label={labels.model}
-                value={model}
-                onChange={setModel}
-                placeholder={placeholders.model}
-              />
-              <FormField
-                id='quote-year'
-                label={labels.year}
-                value={year}
-                onChange={setYear}
-                placeholder={placeholders.year}
-                type='number'
-              />
-            </div>
-
-            {/* Service chips */}
-            <FieldGroup label={labels.service}>
-              <div className='grid w-full grid-cols-2 gap-[10px] sm:grid-cols-4' role='radiogroup'>
-                {services.map((service) => {
-                  const isSelected = service.name === selectedService;
-                  return (
-                    <button
-                      key={service.id}
-                      type='button'
-                      role='radio'
-                      aria-checked={isSelected}
-                      onClick={() => setSelectedService(service.name)}
-                      className={`flex min-w-0 flex-col items-center justify-center gap-[10px] rounded-[12px] border px-[12px] py-[16px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
-                        isSelected
-                          ? 'border-[#f1f3f6] bg-[#f1f3f6] text-black'
-                          : 'border-[#353c47] bg-[#1b1f26] text-[#f1f3f6] hover:border-[#4e5663] hover:bg-[#20252d]'
-                      }`}
-                    >
-                      <Image
-                        src={service.icon ? sizedSrc(service.icon, 'w_48,h_48') : DEFAULT_SERVICE_ICON}
-                        alt=''
-                        width={24}
-                        height={24}
-                        // CMS icons vary in colour; force them monochrome so they track the chip state.
-                        className={`size-6 brightness-0 ${isSelected ? '' : 'invert'}`}
-                      />
-                      <span className='text-center text-[13px] leading-[18px] font-medium'>{service.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </FieldGroup>
-
-            <SubmitRow
-              label={buttons.continueToDamage}
-              type='button'
-              onClick={() => setCurrentStep(2)}
-              responseTime={copy.responseTime}
-              noCard={copy.noCard}
-            />
-          </>
-        ) : currentStep === 2 ? (
-          <>
-            <FieldGroup label={labels.damage} htmlFor='quote-damage'>
-              <textarea
-                id='quote-damage'
-                rows={5}
-                value={damageDescription}
-                onChange={(e) => setDamageDescription(e.target.value)}
-                placeholder={placeholders.damage}
-                className={`${FIELD_INPUT} resize-y leading-[22px]`}
-              />
-            </FieldGroup>
-
-            {/* Photo dropzone */}
-            <FieldGroup label={labels.photos}>
-              <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[14px] border border-dashed border-[#4e5663] px-[16px] py-[20px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#20252d] sm:rounded-[12px] sm:px-[20px] sm:py-[28px]'>
-                <input
-                  type='file'
-                  accept='image/jpeg,image/png,image/heic'
-                  multiple
-                  className='sr-only'
-                  onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, MAX_PHOTOS))}
-                />
-                <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[12px] transition-colors group-hover:bg-[#2e343e]'>
-                  <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
-                </span>
-                {photoCount > 0 ? (
-                  <span className='text-[14px] leading-normal font-medium text-[#00d491]'>
-                    ✓ {photoCount} photo{photoCount > 1 ? 's' : ''} attached
-                  </span>
-                ) : (
-                  <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{hints.photoPrompt}</span>
-                )}
-                <span className='text-[10px] leading-normal tracking-[0.4px] text-[#7d8591] uppercase'>
-                  {hints.photoTypes}
-                </span>
-              </label>
-            </FieldGroup>
-
-            <button type='button' onClick={() => setCurrentStep(1)} className={BACK_LINK}>
-              {buttons.backToVehicle}
-            </button>
-            <SubmitRow
-              label={buttons.continueToContact}
-              type='button'
-              onClick={() => setCurrentStep(3)}
-              responseTime={copy.responseTime}
-              noCard={copy.noCard}
-            />
-          </>
         ) : (
-          <form onSubmit={handleSubmit} className='flex w-full flex-col gap-[28px]'>
-            <HoneypotField value={website} onChange={setWebsite} />
-            <div className='grid grid-cols-1 gap-[20px] sm:grid-cols-2'>
-              <FormField
-                id='quote-name'
-                label={labels.name}
-                value={name}
-                onChange={setName}
-                placeholder={placeholders.name}
-                required
-              />
-              <FormField
-                id='quote-phone'
-                label={labels.phone}
-                value={phone}
-                onChange={setPhone}
-                placeholder={placeholders.phone}
-                type='tel'
-                required
-              />
-              <FormField
-                id='quote-email'
-                label={labels.email}
-                value={email}
-                onChange={setEmail}
-                placeholder={placeholders.email}
-                type='email'
-                required
-                className='sm:col-span-2'
-              />
+          <form onSubmit={handleSubmit} className='flex w-full flex-col gap-3 sm:gap-[16px]'>
+            <div
+              id={`${uid}-step-1`}
+              onFocusCapture={() => setFocusedStep(1)}
+              className='flex w-full scroll-mt-24 flex-col gap-3 sm:gap-[16px]'
+            >
+              {/* Registration plate */}
+              <FieldGroup label={labels.registration} htmlFor='quote-reg'>
+                <div className='flex w-full items-center overflow-clip rounded-[12px] border border-[#3e4551] bg-[#1b1f26] pr-[6px] transition-colors focus-within:border-brand'>
+                  <div className='flex shrink-0 flex-col items-center justify-center gap-[2px] self-stretch border-r border-[#3e4551] bg-[#2e343e] px-[12px] py-[6px] select-none'>
+                    <span className='flex items-start gap-[2px]'>
+                      <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
+                      <FigmaIcon src={ICONS.star} size={9} inset='8.33%' bleed='-5.83% -5.85% -5.85% -5.84%' />
+                    </span>
+                    <span className='text-[12px] leading-normal font-medium text-[#f1f3f6]'>IRL</span>
+                  </div>
+                  <input
+                    id='quote-reg'
+                    type='text'
+                    value={registration}
+                    onChange={(e) => setRegistration(e.target.value.toUpperCase())}
+                    placeholder={placeholders.registration}
+                    className='w-full min-w-0 flex-1 bg-transparent px-3 py-[10px] font-site-heading text-[18px] leading-normal font-bold tracking-[0.66px] text-[#f1f3f6] uppercase placeholder:text-[16px] placeholder:font-medium placeholder:tracking-[0.3px] placeholder:text-[#7d8591] focus:outline-none sm:px-[14px] sm:text-[20px] sm:placeholder:text-[14px]'
+                  />
+                  <button
+                    type='button'
+                    aria-label={buttons.lookup}
+                    onClick={() => makeRef.current?.focus()}
+                    className='flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-[#2e343e] text-[#a4abb6] transition-colors hover:bg-[#3e4551] hover:text-[#f1f3f6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+                  >
+                    <Search aria-hidden className='size-[18px]' />
+                  </button>
+                </div>
+                <p className='flex items-center gap-[6px] text-[12px] leading-normal text-[#7d8591]'>
+                  <ZapIcon />
+                  {hints.registration}
+                </p>
+              </FieldGroup>
+
+              {/* Service chips */}
+              <FieldGroup label={labels.service}>
+                <div className='relative w-full'>
+                  <div
+                    ref={carouselRef}
+                    role='radiogroup'
+                    aria-label={labels.service}
+                    className='flex w-full snap-x snap-mandatory [scrollbar-width:none] gap-[10px] overflow-x-auto scroll-smooth pb-1 [&::-webkit-scrollbar]:hidden'
+                  >
+                    {services.map((service) => {
+                      const isSelected = service.name === selectedService;
+                      return (
+                        <button
+                          key={service.id}
+                          type='button'
+                          role='radio'
+                          aria-checked={isSelected}
+                          onClick={() => setSelectedService(service.name)}
+                          className={`flex w-[calc((100%-10px)/2)] shrink-0 snap-start flex-col items-center justify-center gap-[6px] rounded-[12px] border px-[10px] py-[10px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-[calc((100%-30px)/4)] ${
+                            isSelected
+                              ? 'border-[#f1f3f6] bg-[#f1f3f6] text-black'
+                              : 'border-[#353c47] bg-[#1b1f26] text-[#f1f3f6] hover:border-[#4e5663] hover:bg-[#20252d]'
+                          }`}
+                        >
+                          <Image
+                            src={service.icon ? sizedSrc(service.icon, 'w_48,h_48') : DEFAULT_SERVICE_ICON}
+                            alt=''
+                            width={24}
+                            height={24}
+                            // CMS icons vary in colour; force them monochrome so they track the chip state.
+                            className={`size-6 brightness-0 ${isSelected ? '' : 'invert'}`}
+                          />
+                          <span className='text-center text-[13px] leading-[18px] font-medium'>{service.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {services.length > 2 && (
+                    <div className='pointer-events-none absolute inset-x-0 top-0 bottom-1 flex items-center justify-between'>
+                      {([-1, 1] as const).map((dir) => (
+                        <button
+                          key={dir}
+                          type='button'
+                          aria-label={dir < 0 ? 'Previous categories' : 'Next categories'}
+                          onClick={() =>
+                            carouselRef.current?.scrollBy({ left: dir * carouselRef.current.clientWidth * 0.8 })
+                          }
+                          className={`pointer-events-auto flex size-8 cursor-pointer items-center justify-center rounded-full border border-[#4e5663] bg-[#1b1f26]/95 text-[#f1f3f6] shadow-[0_4px_12px_rgb(0_0_0/0.4)] transition-colors hover:bg-[#2e343e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${dir < 0 ? '-ml-3' : '-mr-3'}`}
+                        >
+                          {dir < 0 ? (
+                            <ChevronLeft aria-hidden className='size-4' />
+                          ) : (
+                            <ChevronRight aria-hidden className='size-4' />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </FieldGroup>
+
+              {/* Photo dropzone */}
+              <FieldGroup label={labels.photos}>
+                <label className='group flex w-full cursor-pointer flex-col items-center justify-center gap-[8px] rounded-[14px] border border-dashed border-[#4e5663] px-[16px] py-[12px] text-center transition-colors focus-within:border-brand hover:border-brand/70 hover:bg-[#20252d] sm:rounded-[12px] sm:px-[20px] sm:py-[14px]'>
+                  <input
+                    type='file'
+                    accept='image/jpeg,image/png,image/heic'
+                    multiple
+                    className='sr-only'
+                    onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, MAX_PHOTOS))}
+                  />
+                  <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[8px] transition-colors group-hover:bg-[#2e343e]'>
+                    <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
+                  </span>
+                  {photoCount > 0 ? (
+                    <span className='text-[14px] leading-normal font-medium text-[#00d491]'>
+                      ✓ {photoCount} photo{photoCount > 1 ? 's' : ''} attached
+                    </span>
+                  ) : (
+                    <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{hints.photoPrompt}</span>
+                  )}
+                  <span className='text-[10px] leading-normal tracking-[0.4px] text-[#7d8591] uppercase'>
+                    {hints.photoTypes}
+                  </span>
+                </label>
+              </FieldGroup>
             </div>
-            <button type='button' onClick={() => setCurrentStep(2)} className={BACK_LINK}>
-              {buttons.backToDamage}
-            </button>
+            <div
+              id={`${uid}-step-2`}
+              onFocusCapture={() => setFocusedStep(2)}
+              className='flex w-full scroll-mt-24 flex-col gap-3 sm:gap-[16px]'
+            >
+              {/* Vehicle details: the plate's lookup lands here */}
+              <div className='grid grid-cols-1 gap-[12px] sm:grid-cols-3'>
+                <FormField
+                  id='quote-make'
+                  inputRef={makeRef}
+                  label={labels.make}
+                  value={make}
+                  onChange={setMake}
+                  placeholder={placeholders.make}
+                />
+                <FormField
+                  id='quote-model'
+                  label={labels.model}
+                  value={model}
+                  onChange={setModel}
+                  placeholder={placeholders.model}
+                />
+                <FormField
+                  id='quote-year'
+                  label={labels.year}
+                  value={year}
+                  onChange={setYear}
+                  placeholder={placeholders.year}
+                  type='number'
+                />
+              </div>
+
+              <FieldGroup label={labels.damage} htmlFor='quote-damage'>
+                <textarea
+                  id='quote-damage'
+                  rows={5}
+                  value={damageDescription}
+                  onChange={(e) => setDamageDescription(e.target.value)}
+                  placeholder={placeholders.damage}
+                  className={`${FIELD_INPUT} resize-y leading-[22px]`}
+                />
+              </FieldGroup>
+            </div>
+            <HoneypotField value={website} onChange={setWebsite} />
+            <div id={`${uid}-step-3`} onFocusCapture={() => setFocusedStep(3)} className='scroll-mt-24'>
+              <div className='grid grid-cols-1 gap-[12px] sm:grid-cols-2'>
+                <FormField
+                  id='quote-name'
+                  label={labels.name}
+                  value={name}
+                  onChange={setName}
+                  placeholder={placeholders.name}
+                  required
+                />
+                <FormField
+                  id='quote-phone'
+                  label={labels.phone}
+                  value={phone}
+                  onChange={setPhone}
+                  placeholder={placeholders.phone}
+                  type='tel'
+                  required
+                />
+                <FormField
+                  id='quote-email'
+                  label={labels.email}
+                  value={email}
+                  onChange={setEmail}
+                  placeholder={placeholders.email}
+                  type='email'
+                  required
+                  className='sm:col-span-2'
+                />
+              </div>
+            </div>
             {errorMessage && (
               <p role='alert' className='text-[12px] text-brand-soft'>
                 {errorMessage}

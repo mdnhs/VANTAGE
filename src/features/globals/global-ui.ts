@@ -171,7 +171,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
   quoteForm: {
     steps: {
       section: 'Steps',
-      sectionDescription: 'The three steps shown above the quote form.',
+      sectionDescription: 'The three steps shown above the quote form. They follow the visitor down the single form.',
     },
     labels: {
       section: 'Field text',

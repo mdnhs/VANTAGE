@@ -184,8 +184,8 @@ export const QuoteFormGlobal = z.object({
     .array(z.object({ label: s(40), short: s(20) }))
     .length(3)
     .default([
-      { label: 'Vehicle & Service', short: 'Vehicle' },
-      { label: 'Damage & Photos', short: 'Damage' },
+      { label: 'Vehicle & Reg', short: 'Vehicle' },
+      { label: 'Damage Details', short: 'Damage' },
       { label: 'Contact', short: 'Contact' },
     ]),
   labels: z
@@ -194,7 +194,7 @@ export const QuoteFormGlobal = z.object({
       make: s(40, 'Vehicle Make'),
       model: s(40, 'Vehicle Model'),
       year: s(20, 'Year'),
-      service: s(60, 'Primary Service Required'),
+      service: s(60, 'Primary Repair Category'),
       damage: s(80, 'Describe the Vehicle Damage & Location'),
       photos: s(80, 'Upload Damage Photos (Up to 4 Angles)'),
       name: s(40, 'Your Full Name'),
@@ -226,10 +226,7 @@ export const QuoteFormGlobal = z.object({
     .prefault({}),
   buttons: z
     .object({
-      continueToDamage: s(60, 'Continue to damage details'),
-      continueToContact: s(60, 'Continue to contact'),
-      backToVehicle: s(60, '← Back to vehicle details'),
-      backToDamage: s(60, '← Back to damage details'),
+      lookup: s(60, 'Find my vehicle details'),
       submit: s(60, 'Send my free quote request'),
       submitting: s(60, 'Submitting request…'),
       another: s(60, '← Submit another request'),

@@ -19,8 +19,6 @@ describe('StitchEstimator on different pages', () => {
     render(
       <StitchEstimator services={[]} copy={copy} heading={parseGlobal('page.home', {}).quoteSection} source={source} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
@@ -43,8 +41,6 @@ describe('StitchEstimator error message', () => {
     vi.mocked(submitQuoteRequest).mockRejectedValue(new Error('nope'));
     const copy = parseGlobal('quoteForm', {});
     render(<StitchEstimator services={[]} copy={copy} heading={parseGlobal('page.home', {}).quoteSection} />);
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToDamage }));
-    fireEvent.click(screen.getByRole('button', { name: copy.buttons.continueToContact }));
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
     fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
