@@ -65,9 +65,8 @@ const toListItem = (row: SupportListRow): SupportListItemDto => ({
   needsHuman: row.needsHuman,
 });
 
-// The AI answers an open chat that no person holds and that has not asked for one.
-const aiMayAnswer = (row: SupportConversation) =>
-  row.status === 'open' && row.aiEnabled && !row.assignedTo && !row.needsHuman;
+// The AI answers an open chat that no person holds, even one flagged for a person (see the bot service).
+const aiMayAnswer = (row: SupportConversation) => row.status === 'open' && row.aiEnabled && !row.assignedTo;
 
 async function visitorView(row: SupportConversation): Promise<VisitorConversationDto> {
   const [detail, messages, aiActive] = await Promise.all([
