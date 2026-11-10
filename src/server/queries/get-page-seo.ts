@@ -44,6 +44,7 @@ export async function getPageMetadata(id: PublicPageId): Promise<Metadata> {
     defaults,
     siteName: settings.businessName,
     ogImage: own ?? defaultOg,
+    insurance: await getInsuranceEnabled(),
   });
 }
 

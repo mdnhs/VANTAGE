@@ -332,7 +332,7 @@ export function visibleNav(roles: readonly RoleName[], opts: NavOptions = {}): N
 }
 
 // Every page the actor may open, once each, labelled with its section.
-export function reachableLinks(roles: readonly RoleName[]): Destination[] {
+export function reachableLinks(roles: readonly RoleName[], opts: NavOptions = {}): Destination[] {
   const seen = new Set<string>();
   const out: Destination[] = [];
   const add = (link: NavLink, parent: string | null) => {
@@ -340,7 +340,7 @@ export function reachableLinks(roles: readonly RoleName[]): Destination[] {
     seen.add(link.href);
     out.push({ ...link, parent });
   };
-  for (const item of visibleNav(roles)) {
+  for (const item of visibleNav(roles, opts)) {
     if (item.children) {
       // A multi-page section is listed through its children; the parent href
       // may belong to a child the actor cannot open.
@@ -402,8 +402,12 @@ export function isActivePath(pathname: string, link: NavLink | NavItem): boolean
 
 // The section whose sub-navigation (rail) the path belongs to: only sections
 // with more than one link the actor can open.
-export function activeSection(pathname: string, roles: readonly RoleName[]): NavItem | undefined {
-  return visibleNav(roles).find((item) => (item.children?.length ?? 0) > 1 && isActivePath(pathname, item));
+export function activeSection(
+  pathname: string,
+  roles: readonly RoleName[],
+  opts: NavOptions = {},
+): NavItem | undefined {
+  return visibleNav(roles, opts).find((item) => (item.children?.length ?? 0) > 1 && isActivePath(pathname, item));
 }
 
 export function firstReachableHref(item: NavItem, roles: readonly RoleName[]): string | null {

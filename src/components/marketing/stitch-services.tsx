@@ -214,7 +214,9 @@ export function StitchServices({
   const insurance = useInsuranceEnabled();
   const cards =
     catalogItems && catalogItems.length > 0
-      ? catalogItems.map((item, i) => catalogItemToCard(item, i, insurance))
+      ? catalogItems
+          .filter((item) => visibleCopy(insurance, item.title, item.description))
+          .map((item, i) => catalogItemToCard(item, i, insurance))
       : services && services.length > 0
         ? services.map(toCard)
         : DEFAULT_SERVICES;

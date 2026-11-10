@@ -6,8 +6,8 @@ export type SearchHit = { id: string; kind: 'page'; label: string; href: string 
 
 // Pages the actor may open, matched on label, section and keywords. Records
 // (quotes, media) can join later as further hit kinds.
-export function searchNavigation(roles: readonly RoleName[], q: string): SearchHit[] {
-  return reachableLinks(roles)
+export function searchNavigation(roles: readonly RoleName[], q: string, insurance = false): SearchHit[] {
+  return reachableLinks(roles, { insurance })
     .filter((link) => matchesSearch(q, [link.label, link.parent ?? '', ...(link.keywords ?? [])]))
     .map((link) => ({
       id: `nav:${link.id}`,

@@ -57,4 +57,20 @@ describe('llmsText', () => {
     expect(off).not.toMatch(/insur/i);
     expect(llmsText({ ...input, insurance: true })).toContain('/insurance');
   });
+
+  it('keeps a page link but drops its insurance description, blanks an insurance summary, and lists rows as written', () => {
+    const out = llmsText({
+      insurance: false,
+      siteName: 'Shop',
+      summary: 'Insurer approved repairs',
+      details: [],
+      pages: [{ title: 'Home', url: 'https://x.ie/', description: 'Insurer approved, with free quotes' }],
+      services: [{ title: 'Respray', url: 'https://x.ie/services/respray', description: 'Insurance claim repairs' }],
+      projects: [],
+      legal: [],
+    });
+    expect(out).toContain('[Home](https://x.ie/)');
+    expect(out).toContain('[Respray](https://x.ie/services/respray): Insurance claim repairs');
+    expect(out).not.toContain('Insurer approved');
+  });
 });

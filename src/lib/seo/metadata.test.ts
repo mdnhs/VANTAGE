@@ -27,6 +27,34 @@ const image: PublicImage = {
   focal: { x: 0.5, y: 0.5 },
 };
 
+describe('insurance wording in saved SEO text', () => {
+  const saved = {
+    description: 'Insurer approved quotes',
+    ogTitle: 'Insurance repairs',
+    ogDescription: 'Claims handled',
+  };
+
+  it('is replaced by the clean defaults while insurance is switched off', () => {
+    const m = pageMetadata({ ...input('services', saved), insurance: false });
+    expect(m.description).toBe(PUBLIC_PAGES.services.description);
+    expect(m.openGraph?.title).toBe(`${PUBLIC_PAGES.services.title} | Vantage Autobody`);
+    expect(m.openGraph?.description).toBe(PUBLIC_PAGES.services.description);
+  });
+
+  it('falls back from a saved home description to the site default, then the registry text', () => {
+    const d = defaults();
+    d.defaultDescription = 'Insurance claims experts';
+    expect(
+      pageDescription({ ...input('home', { description: 'We handle your insurance claim' }, d), insurance: false }),
+    ).toBe(HOME_DESCRIPTION);
+  });
+
+  it('is shown unchanged when insurance is switched on, and by default (admin previews)', () => {
+    expect(pageMetadata({ ...input('services', saved), insurance: true }).description).toBe(saved.description);
+    expect(pageMetadata(input('services', saved)).description).toBe(saved.description);
+  });
+});
+
 describe('pageMetadata default state', () => {
   for (const id of PUBLIC_PAGE_IDS.filter((p) => p !== 'home')) {
     it(`${id} reproduces today's output`, () => {

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { useActor } from '@/contexts/actor-provider';
 import { activeSection, isActivePath } from '@/lib/admin/nav';
 import { cn } from '@/lib/utils';
@@ -14,7 +15,7 @@ import { cn } from '@/lib/utils';
 export function SectionRail({ children }: { children: React.ReactNode }) {
   const { roles } = useActor();
   const pathname = usePathname();
-  const section = activeSection(pathname, roles);
+  const section = activeSection(pathname, roles, { insurance: useInsuranceEnabled() });
   if (!section?.children) return children;
 
   // The deepest tab whose href covers the path wins.

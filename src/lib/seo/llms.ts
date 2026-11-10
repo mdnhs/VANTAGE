@@ -17,13 +17,16 @@ export type LlmsInput = {
 const oneLine = (v: string) => v.replace(/\s+/g, ' ').trim();
 
 const INSURANCE_WORDING = /insur|\bclaims?\b|\bloss adjuster/i;
+const INSURANCE_URL = /\/insurance(?:[/?#]|$)/i;
 
-function section(heading: string, all: LlmsLink[], insurance: boolean): string[] {
-  const links = insurance
+// Off: links to the Insurance page, or titled with insurance wording, are dropped; a description
+// that talks about insurance is left off the line and the link stays.
+function section(heading: string, all: LlmsLink[], hideInsurance: boolean): string[] {
+  const links = !hideInsurance
     ? all
-    : all.filter(
-        (l) => !/\/insurance(?:[/?#]|$)/i.test(l.url) && !INSURANCE_WORDING.test(`${l.title} ${l.description ?? ''}`),
-      );
+    : all
+        .filter((l) => !INSURANCE_URL.test(l.url) && !INSURANCE_WORDING.test(l.title))
+        .map((l) => (l.description && INSURANCE_WORDING.test(l.description) ? { ...l, description: null } : l));
   if (!links.length) return [];
   return [
     `## ${heading}`,
@@ -38,14 +41,17 @@ function section(heading: string, all: LlmsLink[], insurance: boolean): string[]
 
 export function llmsText(i: LlmsInput): string {
   const lines = [`# ${oneLine(i.siteName)}`, ''];
-  if (i.summary.trim()) lines.push(`> ${oneLine(i.summary)}`, '');
+  const summary = i.insurance || !INSURANCE_WORDING.test(i.summary) ? i.summary : '';
+  if (summary.trim()) lines.push(`> ${oneLine(summary)}`, '');
   const details = i.details.map(oneLine).filter(Boolean);
   if (details.length) lines.push(...details.map((d) => `- ${d}`), '');
   lines.push(
-    ...section('Pages', i.pages, i.insurance),
-    ...section('Services', i.services, i.insurance),
-    ...section('Recent work', i.projects, i.insurance),
-    ...section('Optional', i.legal, i.insurance),
+    // Only the site's own pages follow the switch; services, projects and legal pages are rows the
+    // owner published on purpose and are listed as written.
+    ...section('Pages', i.pages, !i.insurance),
+    ...section('Services', i.services, false),
+    ...section('Recent work', i.projects, false),
+    ...section('Optional', i.legal, false),
   );
   return `${lines.join('\n').trimEnd()}\n`;
 }

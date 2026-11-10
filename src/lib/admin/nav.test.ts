@@ -151,6 +151,18 @@ describe('canOpen', () => {
   });
 });
 
+describe('insurance switch in the rail and search', () => {
+  it('lists the Insurance page in search and the Website rail only when switched on', () => {
+    const hrefs = (opts?: { insurance?: boolean }) => reachableLinks(['owner'], opts).map((l) => l.href);
+    expect(hrefs()).not.toContain('/dashboard/insurance');
+    expect(hrefs({ insurance: true })).toContain('/dashboard/insurance');
+    const rail = (opts?: { insurance?: boolean }) =>
+      activeSection('/dashboard/about', ['owner'], opts)?.children?.map((c) => c.href) ?? [];
+    expect(rail()).not.toContain('/dashboard/insurance');
+    expect(rail({ insurance: true })).toContain('/dashboard/insurance');
+  });
+});
+
 describe('reachableLinks', () => {
   it('lists the AI assistant settings only for roles that can manage it', () => {
     expect(reachableLinks(['admin']).map((l) => l.href)).toContain('/dashboard/settings/ai-assistant');

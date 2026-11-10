@@ -7,6 +7,7 @@ import { zValidator } from '@/server/lib/validator';
 import { actorLimit } from '@/server/middleware/actor-limit';
 import { actorOf, can } from '@/server/middleware/auth';
 import { searchNavigation } from '@/server/services/admin-search-service';
+import { readEffectiveGlobal } from '@/server/services/globals-service';
 
 const SearchQuery = z.object({ q: z.string().trim().max(100).default('') });
 
@@ -17,5 +18,8 @@ export const adminSearch = new Hono<AppEnv>().get(
   can({ dashboard: ['view'] }),
   actorLimit('admin-search', { limit: 30, windowMs: 10_000 }),
   zValidator('query', SearchQuery),
-  (c) => ok(c, { items: searchNavigation(actorOf(c).roles, c.req.valid('query').q) }),
+  async (c) => {
+    const site = await readEffectiveGlobal('site');
+    return ok(c, { items: searchNavigation(actorOf(c).roles, c.req.valid('query').q, site.value.features.insurance) });
+  },
 );

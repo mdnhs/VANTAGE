@@ -4,6 +4,8 @@ import type { GlobalValue } from '@/lib/content/globals';
 import type { SeoPageKey } from '@/lib/content/globals-seo';
 import type { PublicImage } from '@/lib/media/public-image';
 
+import { visibleCopy } from '@/lib/features';
+
 import { HOME_DESCRIPTION, PUBLIC_PAGES, type PublicPageId } from './public-pages';
 import { documentTitle, effectiveTemplate } from './title';
 
@@ -26,27 +28,35 @@ export type PageSeoInput = {
   siteName: string;
   // The page's share image, else the site default; resolved by the caller. null -> generated card.
   ogImage: PublicImage | null;
+  // The admin's "Show the Insurance page" switch. Public callers pass it: off replaces saved text that
+  // talks about insurance with the clean defaults. Left out (admin previews, tests), text is shown as saved.
+  insurance?: boolean;
+};
+
+const clean = (v: string | null | undefined, insurance = true): string | null => {
+  const text = blank(v);
+  return text && visibleCopy(insurance, text) ? text : null;
 };
 
 // Own description; else home falls back to the site default then the registry text, the others to the registry text.
 export function pageDescription(i: PageSeoInput): string | null {
   const page = PUBLIC_PAGES[i.id];
-  const own = blank(i.seo.description);
+  const own = clean(i.seo.description, i.insurance);
   if (own) return own;
-  if (i.id === 'home') return blank(i.defaults.defaultDescription) ?? blank(HOME_DESCRIPTION);
+  if (i.id === 'home') return clean(i.defaults.defaultDescription, i.insurance) ?? blank(HOME_DESCRIPTION);
   return blank(page.description);
 }
 
 export function pageMetadata(i: PageSeoInput): Metadata {
   const page = PUBLIC_PAGES[i.id];
   const title = documentTitle(
-    { id: i.id, seoTitle: i.seo.title },
+    { id: i.id, seoTitle: clean(i.seo.title, i.insurance) ?? '' },
     { titleTemplate: i.defaults.titleTemplate, siteName: i.siteName },
   );
   const description = pageDescription(i) ?? undefined;
   const canonical = blank(i.seo.canonical) ?? page.path;
-  const ogTitle = blank(i.seo.ogTitle) ?? title;
-  const ogDescription = blank(i.seo.ogDescription) ?? description;
+  const ogTitle = clean(i.seo.ogTitle, i.insurance) ?? title;
+  const ogDescription = clean(i.seo.ogDescription, i.insurance) ?? description;
   const image = i.ogImage
     ? {
         url: i.ogImage.src,

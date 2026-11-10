@@ -53,9 +53,10 @@ export async function getLlmsTxt(): Promise<string | null> {
   // What the sitemap lists: rows not set noindex and not pointing their canonical elsewhere.
   const listable = (row: { noindex: boolean; canonical: string | null }, path: string) =>
     !row.noindex && isSelfCanonical(row.canonical ?? '', path);
+  const insurance = await getInsuranceEnabled();
   const address = formatAddress(contact.address);
   return llmsText({
-    insurance: await getInsuranceEnabled(),
+    insurance,
     siteName: name,
     summary:
       blank(defaults.llms.summary) ??
@@ -65,6 +66,7 @@ export async function getLlmsTxt(): Promise<string | null> {
         defaults,
         siteName: name,
         ogImage: null,
+        insurance,
       }) ??
       '',
     details: [
@@ -77,7 +79,7 @@ export async function getLlmsTxt(): Promise<string | null> {
     pages: pages.map(({ page, seo }) => ({
       title: blank(seo.title) ?? (page.id === 'home' ? name : page.title),
       url: url(page.path),
-      description: pageDescription({ id: page.id, seo, defaults, siteName: name, ogImage: null }),
+      description: pageDescription({ id: page.id, seo, defaults, siteName: name, ogImage: null, insurance }),
     })),
     services: services
       .filter((s) => listable(s, servicePath(s.slug)))

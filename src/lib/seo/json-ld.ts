@@ -63,7 +63,7 @@ export function businessNode(i: {
   imageUrl?: string | null;
 }): LocalBusiness {
   const { address, phone, hours } = i.contact;
-  const { areaServed } = i.seo.business;
+  const areaServed = i.seo.business.areaServed.map((a) => a.trim()).filter(Boolean);
   const geo = geoOf(i.seo.business.latitude, i.seo.business.longitude);
   const rating = ratingOf(i.seo.business.ratingValue, i.seo.business.reviewCount);
   const sameAs = [...new Set([...i.seo.business.sameAs, ...i.site.social.map((s) => s.url)])];

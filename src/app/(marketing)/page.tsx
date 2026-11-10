@@ -1,3 +1,5 @@
+import { visibleCopy } from '@/lib/features';
+import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { getPageMetadata } from '@/server/queries/get-page-seo';
 import { PageJsonLd } from '@/components/seo/page-json-ld';
 import { StitchHero } from '@/components/marketing/stitch-hero';
@@ -20,6 +22,9 @@ export async function generateMetadata() {
   return getPageMetadata('home');
 }
 
+const QUOTE_SUBTEXT_NEUTRAL =
+  'No need to take time off work or drive in with damage. Upload three photos and our Dublin estimators will issue an itemised quote with estimated completion dates.';
+
 export default async function Home() {
   const [
     settings,
@@ -31,6 +36,7 @@ export default async function Home() {
     services,
     quoteCopy,
     homePage,
+    insurance,
   ] = await Promise.all([
     siteSettingsService.getPublic(),
     homepageCatalogService.listEnabled(),
@@ -41,14 +47,19 @@ export default async function Home() {
     serviceService.listPublished(),
     getSetting('quoteForm'),
     getSetting('page.home'),
+    getInsuranceEnabled(),
   ]);
 
+  // A badge about insurance is blanked in place (its icon slot stays) while the switch is off.
   const trustItems = [
     { title: settings.trustBadge1Title ?? '', subtitle: settings.trustBadge1Subtitle ?? '' },
     { title: settings.trustBadge2Title ?? '', subtitle: settings.trustBadge2Subtitle ?? '' },
     { title: settings.trustBadge3Title ?? '', subtitle: settings.trustBadge3Subtitle ?? '' },
     { title: settings.trustBadge4Title ?? '', subtitle: settings.trustBadge4Subtitle ?? '' },
-  ];
+  ].map((item) => (visibleCopy(insurance, item.title, item.subtitle) ? item : { title: '', subtitle: '' }));
+  const quoteHeading = visibleCopy(insurance, homePage.quoteSection.subtext)
+    ? homePage.quoteSection
+    : { ...homePage.quoteSection, subtext: QUOTE_SUBTEXT_NEUTRAL };
 
   return (
     <div className='flex min-h-screen flex-col bg-[#1b1f26] text-[#f1f3f6] antialiased selection:bg-brand selection:text-[#f1f3f6]'>
@@ -72,10 +83,10 @@ export default async function Home() {
           headlineAccent={settings.catalogHeadlineAccent}
           subtext={settings.catalogSubtext}
         />
-        <StitchEstimator services={services} copy={quoteCopy} heading={homePage.quoteSection} />
+        <StitchEstimator services={services} copy={quoteCopy} heading={quoteHeading} />
         <StitchCaseStudies projects={featuredProjects} />
         <StitchProcess steps={processSteps} />
-        <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} />
+        <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} insurance={insurance} />
         <PageAnimations />
       </main>
     </div>

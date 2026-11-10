@@ -108,6 +108,13 @@ describe('businessNode admin fields', () => {
     expect(n.geo).toEqual({ '@type': 'GeoCoordinates', latitude: 53.3498, longitude: -6.2603 });
   });
 
+  it('ignores blank rows in the areas served', () => {
+    expect(node((s) => void (s.business.areaServed = ['', '  '])).areaServed).toBeUndefined();
+    expect(node((s) => void (s.business.areaServed = ['', 'Dublin'])).areaServed).toEqual([
+      { '@type': 'City', name: 'Dublin' },
+    ]);
+  });
+
   it('needs both coordinates, and valid ones, for geo', () => {
     expect(node((s) => void (s.business.latitude = '53.3')).geo).toBeUndefined();
     expect(

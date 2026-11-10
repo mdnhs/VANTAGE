@@ -1,3 +1,4 @@
+import { visibleCopy } from '@/lib/features';
 import Image from 'next/image';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
 import type { TestimonialPublic } from '@/features/testimonials/types';
@@ -7,6 +8,8 @@ interface StitchSocialProofProps {
   testimonials: TestimonialPublic[];
   // Kept for API compatibility; the current design has no insurer strip, so logos are not rendered.
   partnerLogos: PartnerLogoPublic[];
+  // The admin's "Show the Insurance page" switch; off drops the built-in review about an insurer.
+  insurance?: boolean;
 }
 
 interface ReviewCard {
@@ -61,8 +64,11 @@ function toReviewCard(testimonial: TestimonialPublic): ReviewCard {
 }
 
 // Cards = featured testimonials from the CMS; design defaults render when none exist.
-export function StitchSocialProof({ testimonials }: StitchSocialProofProps) {
-  const reviews = testimonials.length > 0 ? testimonials.map(toReviewCard) : DEFAULT_REVIEWS;
+export function StitchSocialProof({ testimonials, insurance = false }: StitchSocialProofProps) {
+  const reviews =
+    testimonials.length > 0
+      ? testimonials.map(toReviewCard)
+      : DEFAULT_REVIEWS.filter((r) => visibleCopy(insurance, r.text, r.badge));
 
   return (
     <section id='insurance' className='bg-[#1b1f26] sm:bg-[#20252d]'>
