@@ -29,7 +29,7 @@ export function TypingIndicator({ name }: { name: string }) {
           />
         ))}
       </span>
-      <span className='text-[13px] text-white/55'>{name} is typing…</span>
+      <span className='sr-only'>{name} is typing…</span>
     </motion.div>
   );
 }

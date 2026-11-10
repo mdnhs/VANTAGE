@@ -22,7 +22,7 @@ import { notifyTeamNeedsHuman } from '@/server/services/support-notify';
 
 const HISTORY = 20;
 const MAX_OUTPUT_TOKENS = 400;
-const TIMEOUT_MS = 20_000;
+const TIMEOUT_MS = 40_000;
 const KNOWLEDGE_TTL_MS = 60_000;
 const ACTIVE_TTL_MS = 15_000;
 
