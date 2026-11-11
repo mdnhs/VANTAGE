@@ -80,7 +80,11 @@ export default async function Home() {
           headlineAccent={settings.catalogHeadlineAccent}
           subtext={settings.catalogSubtext}
         />
-        <StitchEstimator copy={quoteCopy} heading={quoteHeading} />
+        <StitchEstimator
+          copy={quoteCopy}
+          heading={quoteHeading}
+          whatsappNumber={settings.whatsappNumber || settings.phone}
+        />
         <StitchCaseStudies projects={featuredProjects} />
         <StitchProcess steps={processSteps.filter((step) => visibleCopy(insurance, step.title, step.description))} />
         <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} insurance={insurance} />

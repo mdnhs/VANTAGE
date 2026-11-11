@@ -1,3 +1,4 @@
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
 import { visibleCopy } from '@/lib/features';
 import Image from 'next/image';
 import { BadgeCheck, Crosshair, SprayCan, type LucideIcon } from 'lucide-react';
@@ -57,7 +58,7 @@ export function StandardsSection({ eyebrow, title, image, items, insurance = fal
               .map((item, index) => {
                 const Icon = ICONS[index % ICONS.length];
                 return (
-                  <article
+                  <TiltArticle
                     key={`${item.title}-${index}`}
                     className='group flex gap-3 transition-colors duration-300 hover:border-brand/60 sm:gap-5 sm:rounded-2xl sm:border sm:border-[#353c47] sm:bg-[#262b34] sm:p-6 lg:gap-4 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0'
                   >
@@ -75,7 +76,7 @@ export function StandardsSection({ eyebrow, title, image, items, insurance = fal
                         {item.description}
                       </p>
                     </div>
-                  </article>
+                  </TiltArticle>
                 );
               })}
           </div>

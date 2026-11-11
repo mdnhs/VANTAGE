@@ -1,3 +1,4 @@
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 /* eslint-disable @next/next/no-img-element */
 import {
   BODY_TEXT,
@@ -26,10 +27,10 @@ export function InsuranceCta({ line1, accent, subtext }: InsuranceCtaProps) {
         <div className='flex flex-col gap-7 rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:gap-10 sm:rounded-[20px] sm:p-10 lg:flex-row lg:items-end lg:justify-between lg:gap-16 lg:p-14'>
           <div className='flex max-w-[640px] flex-col items-start gap-5'>
             <Eyebrow>Claims Specialists</Eyebrow>
-            <h2 className='font-site-heading text-[30px] leading-8 font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <SectionTitle className='font-site-heading text-[30px] leading-8 font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               <span className='block'>{line1}</span>
               <span className='block text-brand'>{accent}</span>
-            </h2>
+            </SectionTitle>
             <p className={`max-w-[520px] ${BODY_TEXT}`}>{subtext}</p>
           </div>
 

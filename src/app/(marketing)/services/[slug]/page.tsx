@@ -66,7 +66,6 @@ export default async function ServiceDetailPage({ params }: Props) {
             description: service.description,
             image: imageUrl,
             areaServed: contact.address.city || null,
-            startingPrice: service.startingPrice,
           }),
         ])}
       />
@@ -77,7 +76,6 @@ export default async function ServiceDetailPage({ params }: Props) {
         lines={[service.name]}
         subtext={service.description}
       >
-        <QuoteButton />
         <ButtonLink href='/services' variant='secondary'>
           All services
         </ButtonLink>
@@ -103,14 +101,6 @@ export default async function ServiceDetailPage({ params }: Props) {
             </div>
 
             <div className={`${CARD} flex flex-col gap-6 rounded-[20px] p-7 sm:p-10`}>
-              {service.startingPrice != null && (
-                <p className='font-site-body text-sm tracking-[0.04em] text-[#9aa1ac] uppercase'>
-                  From{' '}
-                  <span className='font-site-heading text-[32px] font-extrabold text-[#f1f3f6] normal-case'>
-                    €{service.startingPrice}
-                  </span>
-                </p>
-              )}
               {service.checklist.length > 0 && (
                 <div className='flex flex-col gap-4'>
                   <h2 className='font-site-heading text-lg font-bold text-[#f1f3f6] uppercase'>What&apos;s included</h2>

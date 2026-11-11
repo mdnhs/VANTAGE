@@ -1,3 +1,5 @@
+import { ClipReveal } from '@/components/marketing/ui/reveal';
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
 import Image from 'next/image';
 import { sizedSrc } from '@/lib/media/public-image';
 import { ABOUT_FALLBACK_IMAGES, type AboutPageTeamMember } from '@/features/about-page/content';
@@ -40,11 +42,11 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
             const focal = member.image?.id ? member.image.focal : null;
 
             return (
-              <article
+              <TiltArticle
                 key={`${member.name}-${index}`}
                 className='group flex w-[260px] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:w-auto sm:rounded-[20px]'
               >
-                <div className='relative h-[280px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
+                <ClipReveal className='relative h-[280px] w-full shrink-0 overflow-hidden bg-black sm:h-[380px] lg:h-[400px]'>
                   {photo && (
                     <Image
                       src={photo}
@@ -56,7 +58,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
                     />
                   )}
                   <div className='absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(38,43,52,0)_0%,#1b1b20_100%)]' />
-                </div>
+                </ClipReveal>
 
                 <div className='flex flex-col items-start gap-1 p-4 sm:gap-1.5 sm:p-6'>
                   <span className='font-site-body text-[11px] leading-normal tracking-[0.88px] text-brand uppercase'>
@@ -66,7 +68,7 @@ export function TeamSection({ title, subtext, members }: TeamSectionProps) {
                     {member.name}
                   </h3>
                 </div>
-              </article>
+              </TiltArticle>
             );
           })}
         </div>

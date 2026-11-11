@@ -5,7 +5,11 @@ import { visibleCopy } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { PRESS } from '@/components/marketing/ui/motion-link';
+import { DrawCheck } from '@/components/marketing/ui/reveal';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
+import { whatsappHref } from '@/lib/content/phone';
 import { submitQuoteRequest } from '@/features/quote-requests/services/api';
 import { track } from '@/lib/tracking/track';
 import type { GlobalValue } from '@/lib/content/globals';
@@ -24,6 +28,7 @@ const ICONS = {
   upload: '/assets/landing/d67c13a6cce7df3d3e67ee755b356d94c1f1ca8e.svg',
   quote: '/assets/landing/77f4614fe4f24a8e612134c222c8e6b222b0af4f.svg',
   arrow: '/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg',
+  whatsapp: '/assets/landing/09936fdd2159e847dcf168e3160a539c758f5211.svg',
 };
 
 const MAX_PHOTOS = 4;
@@ -34,7 +39,7 @@ type QuoteCopy = GlobalValue<'quoteForm'>;
 const FIELD_LABEL =
   'block text-[12px] leading-normal tracking-[0.48px] text-[#a4abb6] uppercase sm:text-[11px] sm:tracking-[0.66px]';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[12px] py-[10px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[14px] sm:text-[14px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
+  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[12px] py-[10px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[14px] sm:text-[14px] transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-[#7d8591] focus:border-brand focus:shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.2)] focus:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -85,9 +90,14 @@ function SubmitRow({
   busy,
   responseTime,
   noCard,
+  whatsappHref,
+  whatsappLabel,
 }: {
   responseTime: string;
   noCard: string;
+  // The business's WhatsApp chat link; when set, a second button sits beside the submit button.
+  whatsappHref?: string;
+  whatsappLabel: string;
   label: string;
   type: 'button' | 'submit';
   onClick?: () => void;
@@ -96,31 +106,62 @@ function SubmitRow({
 }) {
   return (
     <div className='flex w-full flex-col gap-3 sm:gap-[16px]'>
-      <button
-        data-reveal-button
-        type={type}
-        onClick={onClick}
-        disabled={disabled}
-        className='group relative flex h-[46px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[11px]'
-      >
-        <RevealContent band='dark' className='gap-[10px]'>
-          {busy ? (
-            <Loader2 aria-hidden className='size-[18px] shrink-0 animate-spin text-[#f1f3f6]' />
-          ) : (
-            <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
-          )}
-          <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-[#f1f3f6] uppercase'>
-            {label}
-          </span>
-          <FigmaIcon
-            src={ICONS.arrow}
-            size={24}
-            inset='25% 37.5%'
-            bleed='-6.25% -12.5%'
-            className='transition-transform group-hover:translate-x-1'
-          />
-        </RevealContent>
-      </button>
+      <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-stretch'>
+        <motion.button
+          {...PRESS}
+          data-reveal-button
+          type={type}
+          onClick={onClick}
+          disabled={disabled}
+          className='group relative flex h-[46px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:flex-1 sm:rounded-[8px] sm:py-[11px]'
+        >
+          <RevealContent band='dark' className='gap-[10px]'>
+            <AnimatePresence mode='wait' initial={false}>
+              <motion.span
+                key={busy ? 'busy' : 'idle'}
+                initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: 45 }}
+                transition={{ duration: 0.16 }}
+                className='flex shrink-0'
+              >
+                {busy ? (
+                  <Loader2 aria-hidden className='size-[18px] animate-spin text-[#f1f3f6]' />
+                ) : (
+                  <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
+                )}
+              </motion.span>
+            </AnimatePresence>
+            <span className='truncate text-[13px] leading-normal font-semibold tracking-[1.04px] text-[#f1f3f6] uppercase'>
+              {label}
+            </span>
+            <FigmaIcon
+              src={ICONS.arrow}
+              size={24}
+              inset='25% 37.5%'
+              bleed='-6.25% -12.5%'
+              className='transition-transform group-hover:translate-x-1'
+            />
+          </RevealContent>
+        </motion.button>
+
+        {whatsappHref && (
+          <motion.a
+            {...PRESS}
+            href={whatsappHref}
+            target='_blank'
+            rel='noopener noreferrer'
+            data-reveal-button
+            className='relative flex h-[46px] w-full items-center justify-center overflow-hidden rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[21px] text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase transition-colors hover:border-white/[0.28] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:h-auto sm:w-auto sm:shrink-0 sm:rounded-[8px] sm:py-[11px]'
+          >
+            <RevealContent band='brand' className='gap-[10px]'>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={ICONS.whatsapp} alt='' width={22} height={22} className='block size-[22px] shrink-0' />
+              {whatsappLabel}
+            </RevealContent>
+          </motion.a>
+        )}
+      </div>
       <div className='flex w-full flex-col items-center gap-2 text-[12px] leading-normal sm:flex-row sm:justify-between'>
         <span className='flex items-center gap-[6px] text-[#a4abb6]'>
           <ZapIcon />
@@ -162,10 +203,12 @@ interface QuoteFormProps {
   source?: 'quote_page' | 'homepage_estimator';
   // Editable in Settings > Forms & microcopy; the defaults are the original copy.
   copy: QuoteCopy;
+  // The business's own WhatsApp number (for the "WhatsApp photos" button); no button when empty.
+  whatsappNumber?: string | null;
 }
 
 // The quote form asks for two things: the customer's WhatsApp number and photos of the damage.
-export function QuoteForm({ copy, intro, source = 'quote_page' }: QuoteFormProps) {
+export function QuoteForm({ copy, intro, source = 'quote_page', whatsappNumber }: QuoteFormProps) {
   const { labels, placeholders, hints, buttons } = copy;
   const insurance = useInsuranceEnabled();
 
@@ -269,10 +312,20 @@ export function QuoteForm({ copy, intro, source = 'quote_page' }: QuoteFormProps
         className='flex w-full min-w-0 flex-col gap-[18px] rounded-[20px] border border-[#353c47] bg-[#262b34] p-4 sm:gap-[28px] sm:border-[#2e343e] sm:bg-[#20252d] sm:p-[24px] lg:flex-1'
       >
         {submitted ? (
-          <div className='flex flex-col items-center justify-center py-10 text-center'>
-            <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
-              <CheckIcon size={28} />
-            </span>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+            className='flex flex-col items-center justify-center py-10 text-center'
+          >
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 14, delay: 0.12 }}
+              className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'
+            >
+              <DrawCheck size={28} />
+            </motion.span>
             <h2 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase'>
               {copy.success.title}
             </h2>
@@ -287,7 +340,7 @@ export function QuoteForm({ copy, intro, source = 'quote_page' }: QuoteFormProps
             >
               <RevealContent band='brand'>{buttons.another}</RevealContent>
             </button>
-          </div>
+          </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className='flex w-full flex-col gap-3 sm:gap-[16px] lg:flex-1'>
             {/* WhatsApp number */}
@@ -319,13 +372,19 @@ export function QuoteForm({ copy, intro, source = 'quote_page' }: QuoteFormProps
                   className='sr-only'
                   onChange={(e) => setPhotos(Array.from(e.target.files ?? []).slice(0, MAX_PHOTOS))}
                 />
-                <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[8px] transition-colors group-hover:bg-[#2e343e]'>
+                <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[8px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-1 group-hover:scale-110'>
                   <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
                 </span>
                 {photoCount > 0 ? (
-                  <span className='text-[14px] leading-normal font-medium text-[#00d491]'>
+                  <motion.span
+                    key={photoCount}
+                    initial={{ opacity: 0, scale: 0.85, y: 6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+                    className='text-[14px] leading-normal font-medium text-[#00d491]'
+                  >
                     ✓ {photoCount} photo{photoCount > 1 ? 's' : ''} attached
-                  </span>
+                  </motion.span>
                 ) : (
                   <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{hints.photoPrompt}</span>
                 )}
@@ -337,14 +396,22 @@ export function QuoteForm({ copy, intro, source = 'quote_page' }: QuoteFormProps
 
             <HoneypotField value={website} onChange={setWebsite} />
             {errorMessage && (
-              <p role='alert' className='text-[12px] text-brand-soft'>
+              <motion.p
+                role='alert'
+                className='text-[12px] text-brand-soft'
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0, x: [0, -6, 6, -4, 4, 0] }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              >
                 {errorMessage}
-              </p>
+              </motion.p>
             )}
             <SubmitRow
               label={isSubmitting ? buttons.submitting : buttons.submit}
               type='submit'
               responseTime={copy.responseTime}
+              whatsappHref={whatsappNumber ? whatsappHref(whatsappNumber) : undefined}
+              whatsappLabel={buttons.whatsapp}
               noCard={copy.noCard}
               disabled={isSubmitting}
               busy={isSubmitting}

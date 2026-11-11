@@ -70,7 +70,7 @@ async function knowledge(): Promise<string> {
       name: s.name,
       description: s.description,
       checklist: s.checklist,
-      startingPrice: s.startingPrice,
+      startingPrice: null,
     })),
     contact: {
       phone: contact.phone.display,

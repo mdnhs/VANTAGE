@@ -226,6 +226,7 @@ export const QuoteFormGlobal = z.object({
       submit: s(60, 'Send my free quote request'),
       submitting: s(60, 'Submitting request…'),
       another: s(60, '← Submit another request'),
+      whatsapp: s(40, 'WhatsApp photos'),
     })
     .prefault({}),
   responseTime: s(80, 'Average response time: 48 minutes'),
@@ -290,6 +291,7 @@ export const ContactFormGlobal = z.object({
     .prefault({}),
   button: s(40, 'Submit enquiry'),
   submitting: s(40, 'Submitting…'),
+  whatsappButton: s(40, 'WhatsApp photos'),
   responseNote: s(120, 'We aim to respond to all enquiries within 24 hours.'),
   sendAnother: s(60, '← Send another message'),
   success: z

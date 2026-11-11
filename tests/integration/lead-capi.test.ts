@@ -40,7 +40,10 @@ const tracking = (enhanced = false) => ({
 
 const save = (key: string, value: unknown) => settingsRepository.save(key, { version: 0, value }, null);
 
-const quote = { name: 'Pat Murphy', email: 'pat@example.com', phone: '0871234567' };
+// The public quote form sends a WhatsApp number and a photo, no name or email.
+const PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+const quote = { phone: '0871234567', photoUrls: [PHOTO] };
 const contact = { firstName: 'Pat', lastName: 'Q', email: 'pat@example.com', phone: '0871234567', message: 'hi' };
 
 const post = (path: string, body: unknown, cookie?: string) =>
@@ -95,7 +98,8 @@ describe('quote request lead conversion', () => {
     await db.execute(sql`truncate table settings`);
     await save('consent', { enabled: true });
     await save('tracking', tracking(true));
-    await post('/quotes', { ...quote, eventId: randomUUID(), sourcePath: '/get-a-quote' }, consentCookie());
+    // The quote form has no email any more, so the contact form (which does) carries this check.
+    await post('/contacts', { ...contact, eventId: randomUUID(), sourcePath: '/contact' }, consentCookie());
     await settleNotifications();
     expect((sentBody().data[0]!.user_data as Record<string, unknown>).em).toBeDefined();
   });
@@ -168,7 +172,7 @@ describe('quote request lead conversion', () => {
     const intake = await sessionCookie('intake');
     const res = await post(
       '/quotes/admin',
-      { ...quote, eventId: randomUUID(), sourcePath: '/get-a-quote' },
+      { ...quote, name: 'Pat Murphy', email: 'pat@example.com', eventId: randomUUID(), sourcePath: '/get-a-quote' },
       `${intake}; ${consentCookie()}`,
     );
     expect(res.status).toBe(201);

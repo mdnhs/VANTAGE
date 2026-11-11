@@ -1,5 +1,9 @@
 'use client';
 
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+
+import { SectionTitle } from '@/components/marketing/ui/section-title';
+
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -139,7 +143,7 @@ export function StitchProcess({
               {eyebrow}
             </span>
           </span>
-          <h2 className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+          <SectionTitle className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
             {headLine}
             {accentLine && (
               <>
@@ -147,7 +151,7 @@ export function StitchProcess({
                 <span className='text-brand'>{accentLine}</span>
               </>
             )}
-          </h2>
+          </SectionTitle>
           {subtext && (
             <p className='max-w-[560px] font-site-body text-base leading-[1.55] text-[#b9bfc9] sm:leading-[26px]'>
               {subtext}
@@ -245,14 +249,14 @@ export function StitchProcess({
         ref={trackRef}
         data-process-track
         onScroll={sync}
-        className={`mt-7 hidden snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto sm:mt-12 sm:flex sm:gap-5 [&::-webkit-scrollbar]:hidden ${TRACK_GUTTER}`}
+        className={`mt-5 -mb-2 hidden snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto py-2 sm:mt-10 sm:flex sm:gap-5 [&::-webkit-scrollbar]:hidden ${TRACK_GUTTER}`}
       >
         {steps.map((step, index) => {
           const icon = STEP_ICONS[index % STEP_ICONS.length];
           const isActive = index === activeIndex;
 
           return (
-            <article
+            <TiltArticle
               key={step.id}
               className='flex w-[85vw] max-w-[400px] shrink-0 snap-start flex-col gap-8 rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:w-[400px] sm:gap-14 sm:rounded-[20px] sm:p-8'
             >
@@ -289,7 +293,7 @@ export function StitchProcess({
                   {step.description}
                 </p>
               </div>
-            </article>
+            </TiltArticle>
           );
         })}
       </div>

@@ -3,11 +3,15 @@
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState, type CSSProperties, type DragEvent } from 'react';
 import { AlertCircle, Loader2, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { PRESS } from '@/components/marketing/ui/motion-link';
+import { DrawCheck } from '@/components/marketing/ui/reveal';
 import type { ServicePublic } from '@/features/services/types';
 import type { GlobalValue } from '@/lib/content/globals';
 import { fillCopy } from '@/components/marketing/ui/copy-template';
 import { imageFileToDataUrl } from '@/lib/image-to-data-url';
 import { submitContactMessage } from '@/features/contact-messages/services/api';
+import { whatsappHref } from '@/lib/content/phone';
 import { track } from '@/lib/tracking/track';
 import { newEventId } from '@/lib/tracking/event-id';
 import { HoneypotField } from '@/components/marketing/honeypot-field';
@@ -20,13 +24,14 @@ const ICONS = {
   upload: '/assets/landing/d67c13a6cce7df3d3e67ee755b356d94c1f1ca8e.svg',
   quote: '/assets/landing/77f4614fe4f24a8e612134c222c8e6b222b0af4f.svg',
   arrow: '/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg',
+  whatsapp: '/assets/landing/09936fdd2159e847dcf168e3160a539c758f5211.svg',
 };
 
 // Field classes copied from the homepage quote form so both forms read identically.
 const FIELD_LABEL =
   'block text-[12px] leading-normal tracking-[0.48px] text-[#a4abb6] uppercase sm:text-[11px] sm:tracking-[0.66px]';
 const FIELD_INPUT =
-  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[14px] py-[14px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[18px] sm:text-[14px] lg:text-[15px] transition-colors placeholder:text-[#7d8591] focus:border-brand focus:outline-none';
+  'w-full rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[14px] py-[14px] text-[16px] text-[#f1f3f6] sm:border-[#353c47] sm:bg-[#1b1f26] sm:px-[18px] sm:text-[14px] lg:text-[15px] transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-[#7d8591] focus:border-brand focus:shadow-[0_0_0_3px_rgb(var(--brand-rgb)/0.2)] focus:outline-none';
 
 /** Reproduces Figma's icon frame: fixed box → glyph inset → stroke bleed → svg. */
 function FigmaIcon({
@@ -99,9 +104,11 @@ interface ContactFormProps {
   services: ServicePublic[];
   // Editable in Settings > Forms & microcopy; the defaults are the original copy.
   copy: GlobalValue<'contactForm'>;
+  // The business's own WhatsApp number (for the "WhatsApp photos" button); no button when empty.
+  whatsappNumber?: string | null;
 }
 
-export function ContactForm({ services, copy }: ContactFormProps) {
+export function ContactForm({ services, copy, whatsappNumber }: ContactFormProps) {
   const { labels, placeholders } = copy;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -196,10 +203,20 @@ export function ContactForm({ services, copy }: ContactFormProps) {
   if (submitted) {
     return (
       <div className={panel}>
-        <div className='flex flex-col items-center justify-center py-10 text-center'>
-          <span className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'>
-            <FigmaIcon src={ICONS.check} size={28} inset='27.08% 20.83%' bleed='-10.23% -8.04%' />
-          </span>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 14 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+          className='flex flex-col items-center justify-center py-10 text-center'
+        >
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 14, delay: 0.12 }}
+            className='mb-4 flex items-center justify-center rounded-full bg-[#055e45] p-[12px]'
+          >
+            <DrawCheck size={28} />
+          </motion.span>
           <h3 className='font-site-heading text-[24px] leading-[30px] font-extrabold tracking-[-0.48px] text-[#f1f3f6] uppercase'>
             {copy.success.title}
           </h3>
@@ -214,7 +231,7 @@ export function ContactForm({ services, copy }: ContactFormProps) {
           >
             <RevealContent band='brand'>{copy.sendAnother}</RevealContent>
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -230,13 +247,16 @@ export function ContactForm({ services, copy }: ContactFormProps) {
       </div>
 
       {errorMessage && (
-        <div
+        <motion.div
           role='alert'
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0, x: [0, -6, 6, -4, 4, 0] }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           className='flex items-center gap-2 rounded-[12px] border border-brand/40 bg-brand/10 px-4 py-3 text-[13px] text-brand-soft'
         >
           <AlertCircle aria-hidden className='size-4 shrink-0 text-brand' />
           <span>{errorMessage}</span>
-        </div>
+        </motion.div>
       )}
 
       <div className='grid grid-cols-2 gap-x-[10px] gap-y-[18px] sm:gap-[20px] lg:gap-x-4 lg:gap-y-[22px]'>
@@ -319,7 +339,9 @@ export function ContactForm({ services, copy }: ContactFormProps) {
             className='sr-only'
             onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
           />
-          <span className='flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[12px] transition-colors group-hover:bg-[#2e343e]'>
+          <span
+            className={`flex items-center justify-center rounded-[12px] bg-[#2e343e] p-[12px] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-y-1 group-hover:scale-110 ${isDragging ? '-translate-y-2 scale-125' : ''}`}
+          >
             <FigmaIcon src={ICONS.upload} size={22} inset='12.5%' bleed='-4.55%' />
           </span>
           <span className='text-[14px] leading-normal font-medium text-[#f1f3f6]'>{copy.dropzone.prompt}</span>
@@ -351,30 +373,60 @@ export function ContactForm({ services, copy }: ContactFormProps) {
 
       {/* Submit row — same button + meta line as the homepage quote form. */}
       <div className='flex w-full flex-col gap-[18px] sm:gap-[28px] lg:gap-[22px]'>
-        <button
-          data-reveal-button
-          type='submit'
-          disabled={isSubmitting}
-          className='group relative flex h-[52px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:rounded-[8px] sm:py-[15px]'
-        >
-          <RevealContent band='dark' className='gap-[10px]'>
-            {isSubmitting ? (
-              <Loader2 aria-hidden className='size-[18px] animate-spin text-[#f1f3f6]' />
-            ) : (
-              <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
-            )}
-            <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase'>
-              {isSubmitting ? copy.submitting : copy.button}
-            </span>
-            <FigmaIcon
-              src={ICONS.arrow}
-              size={24}
-              inset='25% 37.5%'
-              bleed='-6.25% -12.5%'
-              className='transition-transform group-hover:translate-x-1'
-            />
-          </RevealContent>
-        </button>
+        <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-stretch'>
+          <motion.button
+            {...PRESS}
+            data-reveal-button
+            type='submit'
+            disabled={isSubmitting}
+            className='group relative flex h-[52px] w-full items-center justify-center gap-[10px] overflow-hidden rounded-[12px] border border-brand bg-brand py-0 pr-[21px] pl-[23px] drop-shadow-[0px_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-60 sm:h-auto sm:flex-1 sm:rounded-[8px] sm:py-[15px]'
+          >
+            <RevealContent band='dark' className='gap-[10px]'>
+              <AnimatePresence mode='wait' initial={false}>
+                <motion.span
+                  key={isSubmitting ? 'busy' : 'idle'}
+                  initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.5, rotate: 45 }}
+                  transition={{ duration: 0.16 }}
+                  className='flex shrink-0'
+                >
+                  {isSubmitting ? (
+                    <Loader2 aria-hidden className='size-[18px] animate-spin text-[#f1f3f6]' />
+                  ) : (
+                    <FigmaIcon src={ICONS.quote} size={18} inset='8.33%' bleed='-3.75%' />
+                  )}
+                </motion.span>
+              </AnimatePresence>
+              <span className='text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase'>
+                {isSubmitting ? copy.submitting : copy.button}
+              </span>
+              <FigmaIcon
+                src={ICONS.arrow}
+                size={24}
+                inset='25% 37.5%'
+                bleed='-6.25% -12.5%'
+                className='transition-transform group-hover:translate-x-1'
+              />
+            </RevealContent>
+          </motion.button>
+          {whatsappNumber && (
+            <motion.a
+              {...PRESS}
+              href={whatsappHref(whatsappNumber)}
+              target='_blank'
+              rel='noopener noreferrer'
+              data-reveal-button
+              className='relative flex h-[52px] w-full items-center justify-center overflow-hidden rounded-[12px] border border-[#3e4551] bg-[#2e343e] px-[21px] text-[13px] leading-normal font-semibold tracking-[1.04px] whitespace-nowrap text-[#f1f3f6] uppercase transition-colors hover:border-white/[0.28] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none sm:h-auto sm:w-auto sm:shrink-0 sm:rounded-[8px] sm:py-[15px]'
+            >
+              <RevealContent band='brand' className='gap-[10px]'>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ICONS.whatsapp} alt='' width={22} height={22} className='block size-[22px] shrink-0' />
+                {copy.whatsappButton}
+              </RevealContent>
+            </motion.a>
+          )}
+        </div>
         <p className='flex items-center justify-center gap-[6px] text-center text-[12px] leading-normal text-[#a4abb6] lg:justify-start lg:text-left lg:text-[13px] lg:text-[#7d8591]'>
           <FigmaIcon src={ICONS.zap} size={14} inset='12.5% 22.92%' bleed='-7.14% -9.89%' />
           {copy.responseNote}

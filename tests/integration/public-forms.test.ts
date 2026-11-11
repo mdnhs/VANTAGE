@@ -14,7 +14,10 @@ const post = (path: string, body: unknown, cookie?: string) =>
     body: JSON.stringify(stamped(body)),
   });
 
-const base = { name: 'Pat', email: 'pat@example.com', phone: '0871234567' };
+// The public form sends a WhatsApp number and at least one photo; the admin endpoint also takes a name and email.
+const PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+const base = { name: 'Pat', email: 'pat@example.com', phone: '0871234567', photoUrls: [PHOTO] };
 
 describe('public quote form', () => {
   beforeEach(async () => {

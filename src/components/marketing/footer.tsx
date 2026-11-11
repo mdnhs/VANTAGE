@@ -2,6 +2,7 @@ import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { visibleLink } from '@/lib/features';
 import Image from 'next/image';
 import Link from 'next/link';
+import { RevealGroup, RevealItem } from '@/components/marketing/ui/reveal';
 import { sizedSrc } from '@/lib/media/public-image';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { LottieLogo } from '@/components/ui/lottie-logo';
@@ -18,13 +19,13 @@ const ICON_PHONE = '/assets/landing/3b54265d82d0a684fc845549256367dc317ab2f3.svg
 const ICON_MAIL = '/assets/landing/505ab23bbd9ddac293e2e54e3a46ff892cc018d4.svg';
 
 const linkClass =
-  'text-[13px] leading-[normal] text-[#a4abb6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px]';
+  'link-draw text-[13px] leading-[normal] text-[#a4abb6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px]';
 const columnLinkClass =
-  'py-2.5 text-[15px] leading-[normal] text-[#c9ced6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:py-0 sm:text-[14px] sm:text-[#a4abb6]';
+  'link-draw py-2.5 text-[15px] leading-[normal] text-[#c9ced6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:py-0 sm:text-[14px] sm:text-[#a4abb6]';
 const headingClass =
   'text-[11px] leading-[normal] font-medium tracking-[0.88px] text-[#9aa1ac] uppercase sm:font-normal sm:text-[#f1f3f6]';
 const contactRowClass =
-  'flex items-center gap-[12px] max-sm:w-full max-sm:rounded-[12px] max-sm:border max-sm:border-[#353c47] max-sm:bg-[#262b34] max-sm:px-3 max-sm:py-2.5';
+  'group/row flex items-center gap-[12px] max-sm:w-full max-sm:rounded-[12px] max-sm:border max-sm:border-[#353c47] max-sm:bg-[#262b34] max-sm:px-3 max-sm:py-2.5';
 
 // 18px icon box; inner insets reproduce Figma's group + stroke-bleed geometry
 function ContactIcon({
@@ -33,7 +34,9 @@ function ContactIcon({
   height,
   group,
   bleed,
+  hover = '',
 }: {
+  hover?: string;
   src: string;
   width: number;
   height: number;
@@ -41,7 +44,9 @@ function ContactIcon({
   bleed: string;
 }) {
   return (
-    <span className='relative block size-[18px] shrink-0 overflow-clip'>
+    <span
+      className={`relative block size-[18px] shrink-0 overflow-clip transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${hover}`}
+    >
       <span className={`absolute ${group}`}>
         <span className={`absolute ${bleed}`}>
           <Image src={src} alt='' width={width} height={height} unoptimized className='block size-full max-w-none' />
@@ -91,9 +96,9 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
 
   return (
     <footer className='border-t border-[#353c47] bg-[#171a20] sm:border-[#2e343e] sm:bg-[#1b1f26]'>
-      <div className='mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-5 pt-12 pb-10 sm:gap-12 sm:px-6 sm:pt-20 lg:gap-[64px] lg:px-10 lg:pt-[96px] lg:pb-[40px] xl:px-0'>
+      <RevealGroup className='mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-5 pt-12 pb-10 sm:gap-12 sm:px-6 sm:pt-20 lg:gap-[64px] lg:px-10 lg:pt-[96px] lg:pb-[40px] xl:px-0'>
         {/* Footer columns */}
-        <div className='grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-12 sm:gap-x-6 sm:gap-y-10 lg:flex lg:items-start lg:gap-[48px]'>
+        <RevealItem className='grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-12 sm:gap-x-6 sm:gap-y-10 lg:flex lg:items-start lg:gap-[48px]'>
           {/* Brand */}
           <div className='col-span-2 flex flex-col items-start gap-[14px] sm:col-span-1 sm:gap-[20px] lg:w-[320px] lg:shrink-0'>
             <Link href='/' aria-label={settings.businessName} className='block'>
@@ -142,10 +147,16 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
                   height={16.125}
                   group='inset-[8.33%_12.49%_8.33%_12.5%]'
                   bleed='inset-[-3.75%_-4.17%]'
+                  hover='group-hover/row:-translate-y-1'
                 />
-                <span className='text-[15px] leading-[normal] font-semibold text-[#f1f3f6] sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='link-draw text-[15px] leading-[normal] font-semibold text-[#f1f3f6] transition-colors focus-visible:outline-none sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'
+                >
                   {settings.address}
-                </span>
+                </a>
               </div>
               <div className={contactRowClass}>
                 <ContactIcon
@@ -154,10 +165,11 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
                   height={14.625}
                   group='inset-[12.5%]'
                   bleed='inset-[-4.17%]'
+                  hover='motion-safe:group-hover/row:animate-[phone-ring_1.4s_ease-in-out_infinite]'
                 />
                 <Link
                   href={settings.phoneHref}
-                  className='text-[15px] leading-[normal] font-semibold break-all text-[#f1f3f6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'
+                  className='link-draw text-[15px] leading-[normal] font-semibold break-all text-[#f1f3f6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'
                 >
                   {settings.phone}
                 </Link>
@@ -169,10 +181,11 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
                   height={13.875}
                   group='inset-[14.58%_8.33%]'
                   bleed='inset-[-4.41%_-3.75%]'
+                  hover='group-hover/row:-rotate-12 group-hover/row:scale-110'
                 />
                 <Link
                   href={`mailto:${settings.email}`}
-                  className='text-[15px] leading-[normal] font-semibold break-all text-[#f1f3f6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'
+                  className='link-draw text-[15px] leading-[normal] font-semibold break-all text-[#f1f3f6] transition-colors hover:text-[#f1f3f6] focus-visible:text-[#f1f3f6] focus-visible:outline-none sm:text-[14px] sm:font-normal sm:text-[#d5d9e0]'
                 >
                   {settings.email}
                 </Link>
@@ -182,10 +195,10 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
               )}
             </div>
           </div>
-        </div>
+        </RevealItem>
 
         {/* Legal bar */}
-        <div className='flex flex-col-reverse items-start justify-between gap-3 border-t border-[#353c47] pt-5 sm:flex-row sm:items-center sm:gap-4 sm:border-[#2e343e] sm:pt-[28px]'>
+        <RevealItem className='flex flex-col-reverse items-start justify-between gap-3 border-t border-[#353c47] pt-5 sm:flex-row sm:items-center sm:gap-4 sm:border-[#2e343e] sm:pt-[28px]'>
           <span className='text-[12px] leading-[normal] text-[#7d8591] sm:text-[11px] sm:tracking-[0.22px]'>
             © 2026 {footer.copyrightName || settings.businessName}. {footer.legalNote}
           </span>
@@ -197,8 +210,8 @@ export async function MarketingFooter({ cookieSettings }: { cookieSettings?: Rea
             ))}
             {cookieSettings}
           </div>
-        </div>
-      </div>
+        </RevealItem>
+      </RevealGroup>
     </footer>
   );
 }

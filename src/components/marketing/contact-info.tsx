@@ -1,3 +1,4 @@
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, Mail, MapPin, Phone, type LucideIcon } from 'lucide-react';
@@ -24,7 +25,7 @@ function InfoCard({
   className?: string;
 }) {
   return (
-    <article
+    <TiltArticle
       className={`${CARD} group flex min-w-0 flex-col items-start gap-3.5 p-[17px] transition-colors duration-300 hover:border-brand/60 sm:flex-row sm:items-center sm:gap-5 sm:p-6 lg:gap-[18px] ${className}`}
     >
       <span className='flex shrink-0 items-center justify-center rounded-xl bg-[#f1f3f6] p-2.5 transition duration-300 group-hover:scale-105 sm:p-3'>
@@ -35,7 +36,7 @@ function InfoCard({
         {children}
       </div>
       <ArrowUpRight aria-hidden className='hidden size-5 shrink-0 text-[#7d8591] sm:block' />
-    </article>
+    </TiltArticle>
   );
 }
 

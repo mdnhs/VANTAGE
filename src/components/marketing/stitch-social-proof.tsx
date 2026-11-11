@@ -1,3 +1,5 @@
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 import { visibleCopy } from '@/lib/features';
 import Image from 'next/image';
 import type { PartnerLogoPublic } from '@/features/partner-logos/types';
@@ -82,9 +84,9 @@ export function StitchSocialProof({ testimonials, insurance = false }: StitchSoc
                 What Dublin Drivers Say
               </span>
             </div>
-            <h2 className='max-w-[499px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
+            <SectionTitle className='max-w-[499px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
               Trusted by <span className='text-brand'>180+ local drivers.</span>
-            </h2>
+            </SectionTitle>
           </div>
           <p className='max-w-[440px] font-site-body text-base leading-[1.55] text-[#b9bfc9] sm:leading-[26px]'>
             Rated 4.9 on Google for craftsmanship, communication and a hassle-free repair.
@@ -94,9 +96,9 @@ export function StitchSocialProof({ testimonials, insurance = false }: StitchSoc
         {/* Reviews */}
         <ReviewCarousel>
           {reviews.map((review) => (
-            <article
+            <TiltArticle
               key={review.key}
-              className='flex min-h-[290px] flex-col justify-between rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:min-h-0 sm:rounded-2xl sm:p-7 lg:min-h-[309px]'
+              className='flex min-h-[290px] flex-col justify-between rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 transition-[border-color,box-shadow] duration-300 ease-out hover:border-brand/50 hover:shadow-[0_14px_22px_-10px_rgba(0,0,0,0.55)] sm:min-h-0 sm:rounded-2xl sm:p-7 lg:min-h-[309px]'
             >
               <div className='flex flex-col gap-3.5 sm:gap-5 sm:pb-2'>
                 <div className='flex gap-[3px]' role='img' aria-label={`${review.rating} out of 5 stars`}>
@@ -131,7 +133,7 @@ export function StitchSocialProof({ testimonials, insurance = false }: StitchSoc
                   {review.badge}
                 </span>
               </div>
-            </article>
+            </TiltArticle>
           ))}
         </ReviewCarousel>
       </div>

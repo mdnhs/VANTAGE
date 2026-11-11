@@ -34,7 +34,12 @@ export function OpenNowBadge({
         open ? 'border-[#00d492]/40 bg-[#00d492]/[0.14] text-[#00d492]' : 'border-[#3e4551] bg-[#2e343e] text-[#a4abb6]'
       }`}
     >
-      <span aria-hidden='true' className={`size-1.5 rounded-full ${open ? 'bg-[#00d492]' : 'bg-[#7d8591]'}`} />
+      <span aria-hidden='true' className='relative flex size-1.5'>
+        {open && (
+          <span className='absolute inline-flex size-full rounded-full bg-[#00d492] opacity-70 motion-safe:animate-ping' />
+        )}
+        <span className={`relative inline-flex size-1.5 rounded-full ${open ? 'bg-[#00d492]' : 'bg-[#7d8591]'}`} />
+      </span>
       {open ? openLabel : closedLabel}
     </span>
   );

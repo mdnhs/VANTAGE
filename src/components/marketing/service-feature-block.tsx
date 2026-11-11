@@ -1,8 +1,11 @@
-import { QUOTE_HREF, QuoteButton } from '@/components/marketing/quote-cta';
+import { ClipReveal } from '@/components/marketing/ui/reveal';
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+import { MotionLink } from '@/components/marketing/ui/motion-link';
+import { QUOTE_HREF } from '@/components/marketing/quote-cta';
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image';
 import Link from 'next/link';
-import { BODY_TEXT, ButtonLink, CARD } from '@/components/marketing/ui/landing-primitives';
+import { BODY_TEXT, CARD } from '@/components/marketing/ui/landing-primitives';
 
 const ASSET = '/assets/landing';
 const CHECK_SRC = `${ASSET}/af900d3d05a78ce1eaa2cfe4e4134d654de6e007.svg`;
@@ -56,8 +59,8 @@ export function ServiceFeatureBlock({
   const number = String(index + 1).padStart(2, '0');
 
   return (
-    <article className='group grid grid-cols-1 items-stretch gap-3 sm:gap-5 lg:grid-cols-2 xl:h-full xl:grid-cols-1'>
-      <div
+    <TiltArticle className='group grid grid-cols-1 items-stretch gap-3 sm:gap-5 lg:grid-cols-2 xl:h-full xl:grid-cols-1'>
+      <ClipReveal
         className={`relative min-h-[200px] overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] sm:min-h-[380px] sm:rounded-[20px] xl:hidden ${
           reverse ? 'lg:order-2' : ''
         }`}
@@ -77,7 +80,7 @@ export function ServiceFeatureBlock({
         >
           {number}
         </span>
-      </div>
+      </ClipReveal>
 
       <div
         className={`${CARD} flex flex-col items-start gap-[14px] rounded-[18px] p-5 sm:gap-6 sm:rounded-[20px] sm:p-10 xl:h-full xl:gap-[18px] xl:rounded-2xl xl:p-[26px] ${reverse ? 'lg:order-1 xl:order-none' : ''}`}
@@ -127,22 +130,15 @@ export function ServiceFeatureBlock({
           </ul>
         )}
 
-        <div className='mt-auto flex w-full flex-col gap-3 sm:w-auto sm:flex-row xl:hidden'>
-          <ButtonLink href={href} variant='secondary' className='w-full sm:w-auto'>
-            Learn more
-          </ButtonLink>
-          <QuoteButton className='w-full sm:w-auto' />
-        </div>
-
-        {/* Desktop card footer: quote link on the left, round arrow to the service page on the right. */}
-        <div className='mt-auto hidden w-full items-center justify-between xl:flex'>
+        {/* Card footer, same on every screen size: quote link on the left, round arrow to the service page on the right. */}
+        <div className='mt-auto flex w-full items-center justify-between'>
           <Link
             href={QUOTE_HREF}
             className='rounded font-site-body text-[13px] leading-normal font-semibold text-[#f1f3f6] transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
           >
             Get a quote
           </Link>
-          <Link
+          <MotionLink
             href={href}
             aria-label={`Learn more about ${heading}`}
             className='flex size-9 items-center justify-center rounded-full bg-brand transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#262b34] focus-visible:outline-none'
@@ -152,9 +148,9 @@ export function ServiceFeatureBlock({
                 <img src={ARROW_WHITE_SRC} alt='' width={9.25} height={9.25} className='block max-w-none' />
               </span>
             </span>
-          </Link>
+          </MotionLink>
         </div>
       </div>
-    </article>
+    </TiltArticle>
   );
 }

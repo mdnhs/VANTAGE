@@ -1,5 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import { RevealContent } from './reveal-content';
+import { MotionLink } from './motion-link';
+import { ScrollCue } from './scroll-cue';
+import { SectionTitle } from './section-title';
+import { HeroCopy, HeroHeading, HeroItem, HeroLine, HeroMedia } from './hero-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment, type ComponentProps, type ReactNode } from 'react';
@@ -78,7 +82,10 @@ export function SectionHeader({
     >
       <div className={`flex flex-col gap-3.5 sm:gap-5 ${centered ? 'items-center' : 'items-start'}`}>
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <Tag className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+        <SectionTitle
+          as={Tag}
+          className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'
+        >
           {title}
           {accent && (
             <>
@@ -86,7 +93,7 @@ export function SectionHeader({
               <span className='text-brand'>{accent}</span>
             </>
           )}
-        </Tag>
+        </SectionTitle>
         {centered && intro && <p className={`max-w-[620px] ${BODY_TEXT}`}>{intro}</p>}
       </div>
       {!centered && (intro || aside) && (
@@ -127,7 +134,7 @@ export function ButtonLink({
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link
+    <MotionLink
       data-reveal-button
       {...props}
       className={`relative overflow-hidden ${variant === 'primary' ? BUTTON_PRIMARY : BUTTON_SECONDARY} ${className}`}
@@ -137,7 +144,7 @@ export function ButtonLink({
         <span>{children}</span>
         {arrow && <Arrow />}
       </RevealContent>
-    </Link>
+    </MotionLink>
   );
 }
 
@@ -221,31 +228,31 @@ export function PageHero({
     >
       {hasMedia && (
         <div className='absolute inset-x-0 top-0 h-[300px] overflow-hidden sm:inset-0 sm:h-auto'>
-          {video ? (
-            <video
-              data-hero-media
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster={imageSrc ?? undefined}
-              className='h-full w-full object-cover object-[68%_50%] sm:object-center'
-            >
-              <source src={video.src} type={video.mimeType ?? 'video/mp4'} />
-            </video>
-          ) : (
-            imageSrc && (
-              <Image
-                data-hero-media
-                src={imageSrc}
-                alt={imageAlt}
-                fill
-                priority
-                sizes='100vw'
-                className='object-cover object-[68%_50%] sm:object-center'
-              />
-            )
-          )}
+          <HeroMedia>
+            {video ? (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={imageSrc ?? undefined}
+                className='h-full w-full object-cover object-[68%_50%] sm:object-center'
+              >
+                <source src={video.src} type={video.mimeType ?? 'video/mp4'} />
+              </video>
+            ) : (
+              imageSrc && (
+                <Image
+                  src={imageSrc}
+                  alt={imageAlt}
+                  fill
+                  priority
+                  sizes='100vw'
+                  className='object-cover object-[68%_50%] sm:object-center'
+                />
+              )
+            )}
+          </HeroMedia>
           {/* Shade: top to bottom on phones, where the copy sits low and spans the width; left to right from sm up */}
           <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(27,31,38,0.35)_0%,rgba(27,31,38,0.45)_50%,#1b1f26_100%)] sm:hidden' />
           <div className='absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(27,31,38,0.9)_0%,rgba(27,31,38,0.75)_40%,rgba(27,31,38,0.3)_62%,rgba(27,31,38,0.1)_100%)] sm:block' />
@@ -257,49 +264,40 @@ export function PageHero({
       >
         {/* Outside data-hero-copy: PageAnimations reads that block's children as [eyebrow, heading, ...] */}
         {page && <HeroBreadcrumb page={page} current={current} />}
-        <div
-          data-hero-copy
-          className='flex w-full max-w-[760px] flex-col items-start gap-3.5 sm:gap-6 lg:max-w-none lg:gap-7'
-        >
-          <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
-          <h1 className='font-site-heading text-[clamp(30px,9.23vw,36px)] leading-[1.04] font-extrabold tracking-[-0.02em] uppercase sm:text-[56px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[76px] lg:leading-[80px]'>
+        <HeroCopy className='flex w-full max-w-[760px] flex-col items-start gap-3.5 sm:gap-6 lg:max-w-none lg:gap-7'>
+          <HeroItem>
+            <Eyebrow tone='hero'>{eyebrow}</Eyebrow>
+          </HeroItem>
+          <HeroHeading className='font-site-heading text-[clamp(30px,9.23vw,36px)] leading-[1.04] font-extrabold tracking-[-0.02em] uppercase sm:text-[56px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[76px] lg:leading-[80px]'>
             {lines.map((line, index) => (
               <Fragment key={index}>
                 {/* Each line is its own block, so the space is invisible but keeps the words apart
                     for crawlers, SEO tools and screen readers ("Repair" + "& Respray"). */}
                 {index > 0 ? ' ' : null}
-                <span
-                  className={`block ${index === accentIndex && lines.length > 1 ? 'text-brand' : 'text-[#f1f3f6]'}`}
-                >
+                <HeroLine className={index === accentIndex && lines.length > 1 ? 'text-brand' : 'text-[#f1f3f6]'}>
                   {line}
-                </span>
+                </HeroLine>
               </Fragment>
             ))}
-          </h1>
+          </HeroHeading>
           {subtext && (
-            <p className='max-w-[600px] font-site-body text-[16px] leading-[1.55] text-[#c9ced6] sm:text-[18px] sm:leading-[29px] sm:text-[#d5d9e0] lg:max-w-[620px]'>
-              {subtext}
-            </p>
+            <HeroItem>
+              <p className='max-w-[600px] font-site-body text-[16px] leading-[1.55] text-[#c9ced6] sm:text-[18px] sm:leading-[29px] sm:text-[#d5d9e0] lg:max-w-[620px]'>
+                {subtext}
+              </p>
+            </HeroItem>
           )}
           {children && (
-            <div className='flex w-full flex-col gap-[10px] max-sm:mt-1.5 sm:w-auto sm:flex-row sm:items-center sm:gap-3 lg:pt-1'>
+            <HeroItem
+              kind='pop'
+              className='flex w-full flex-col gap-[10px] max-sm:mt-1.5 sm:w-auto sm:flex-row sm:items-center sm:gap-3 lg:pt-1'
+            >
               {children}
-            </div>
+            </HeroItem>
           )}
-        </div>
+        </HeroCopy>
         {/* Scroll cue under a full-screen hero (PageAnimations draws the line and fades it on scroll) */}
-        {hasMedia && (
-          <div
-            data-scroll-cue
-            aria-hidden='true'
-            className='pointer-events-none absolute bottom-3 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex [@media(max-height:760px)]:hidden'
-          >
-            <span className='font-site-body text-[10px] tracking-[0.2em] text-white/55 uppercase'>Scroll</span>
-            <span className='relative block h-9 w-px overflow-hidden bg-white/15'>
-              <span data-cue-line className='absolute inset-0 block bg-white/70' />
-            </span>
-          </div>
-        )}
+        {hasMedia && <ScrollCue />}
       </div>
     </section>
   );

@@ -1,3 +1,4 @@
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 import type { ComponentProps } from 'react';
 
 import type { GlobalValue } from '@/lib/content/globals';
@@ -12,7 +13,8 @@ export function StitchEstimator({
   copy,
   heading,
   source = 'homepage_estimator',
-}: Pick<ComponentProps<typeof QuoteForm>, 'copy' | 'source'> & {
+  whatsappNumber,
+}: Pick<ComponentProps<typeof QuoteForm>, 'copy' | 'source' | 'whatsappNumber'> & {
   heading: GlobalValue<'page.home'>['quoteSection'];
 }) {
   return (
@@ -25,6 +27,7 @@ export function StitchEstimator({
         <QuoteForm
           copy={copy}
           source={source}
+          whatsappNumber={whatsappNumber}
           intro={
             // Two levels deep on purpose: the page's scroll reveal picks up the heading block from here.
             <div>
@@ -37,9 +40,9 @@ export function StitchEstimator({
                   </span>
                 </div>
 
-                <h2 className='w-full font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
+                <SectionTitle className='w-full font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[48px] sm:leading-[54px] sm:tracking-[-0.96px]'>
                   {heading.line1} <span className='text-brand'>{heading.accent}</span>
-                </h2>
+                </SectionTitle>
 
                 <p className='w-full text-[16px] leading-[26px] text-[#a4abb6]'>{heading.subtext}</p>
               </div>

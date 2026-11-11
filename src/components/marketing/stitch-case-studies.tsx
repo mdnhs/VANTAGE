@@ -1,5 +1,11 @@
 'use client';
 
+import { ClipReveal } from '@/components/marketing/ui/reveal';
+
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+
+import { SectionTitle } from '@/components/marketing/ui/section-title';
+
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -57,9 +63,9 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                 Verified Results
               </span>
             </span>
-            <h2 className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <SectionTitle className='max-w-[560px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               BEFORE &amp; AFTER <span className='text-brand'>RESTORATION PROOF.</span>
-            </h2>
+            </SectionTitle>
           </div>
           <p className='max-w-[440px] font-site-body text-base leading-[1.55] text-[#b9bfc9] sm:leading-[26px]'>
             Zero flaws, undetectable colour transitions and exact factory panel gaps, inspected under 2,000-lumen
@@ -74,12 +80,12 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
             const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
             return (
-              <article
+              <TiltArticle
                 key={project.id}
                 className='group relative flex flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 max-sm:w-[310px] max-sm:shrink-0 max-sm:snap-start sm:rounded-2xl'
               >
                 {/* Photo with Before/After toggle */}
-                <div className='relative h-[200px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
+                <ClipReveal className='relative h-[200px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
                   {current && (
                     <Image
                       src={sizedSrc(current, 'w_800,h_512,c_fill')}
@@ -119,7 +125,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                   >
                     {currentMode === 'after' ? 'COMPLETED' : 'ACCIDENT INTAKE'}
                   </div>
-                </div>
+                </ClipReveal>
 
                 {/* Body */}
                 <div className='flex flex-1 flex-col justify-between gap-5 p-[18px] sm:p-6'>
@@ -155,7 +161,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                     </div>
                   </dl>
                 </div>
-              </article>
+              </TiltArticle>
             );
           })}
         </div>

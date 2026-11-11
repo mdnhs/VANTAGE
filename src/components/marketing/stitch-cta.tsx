@@ -1,3 +1,4 @@
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 import Image from 'next/image';
 import Link from 'next/link';
 import { QuoteCtaText } from '@/components/marketing/quote-cta';
@@ -66,9 +67,9 @@ export function StitchCta({ phone }: { phone: string }) {
           </div>
 
           {/* Heading */}
-          <h2 className='relative w-full max-w-[820px] text-center font-site-heading text-[28px] leading-[1.12] font-extrabold text-[#f1f3f6] sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
+          <SectionTitle className='relative w-full max-w-[820px] text-center font-site-heading text-[28px] leading-[1.12] font-extrabold text-[#f1f3f6] sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
             READY TO RESTORE YOUR VEHICLE TO <span className='text-brand'>FLAWLESS STANDARD?</span>
-          </h2>
+          </SectionTitle>
 
           {/* Body */}
           <p className='relative w-full max-w-[620px] text-center text-[15px] leading-[1.55] text-[#b9bfc9] sm:text-[17px] sm:leading-[24px] sm:leading-[27px] sm:text-white/[0.66]'>

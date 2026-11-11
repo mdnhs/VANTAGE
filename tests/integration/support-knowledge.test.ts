@@ -65,7 +65,9 @@ describe('support knowledge', () => {
 
     const text = (await supportKnowledgeService.contextFor('Do you repair alloy wheels?')) ?? '';
     expect(text).toContain('Business, contact and opening hours');
-    expect(text).toContain('Alloy Wheel Refurbishment (from €85)');
+    expect(text).toContain('Alloy Wheel Refurbishment');
+    // Prices are not published on the site, so they never reach the assistant.
+    expect(text).not.toContain('€85');
     // "repair" also matches the dent service, but the alloy service ranks first.
     expect(text.indexOf('Alloy Wheel Refurbishment')).toBeLessThan(text.indexOf('Zorblax'));
   });
@@ -75,7 +77,8 @@ describe('support knowledge', () => {
     await addService('Dent Repair', 'Paintless dent removal', 95);
     await syncNow(id);
     const text = (await supportKnowledgeService.contextFor('hello can you help me?')) ?? '';
-    expect(text).toContain('Dent Repair (from €95)');
+    expect(text).toContain('Dent Repair');
+    expect(text).not.toContain('€95');
   });
 
   it('drops content that was removed from the site on the next sync', async () => {

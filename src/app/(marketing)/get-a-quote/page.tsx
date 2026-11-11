@@ -32,7 +32,12 @@ export default async function GetAQuotePage() {
         imageAlt={settings.quoteHeroFallbackImage?.alt}
         video={settings.quoteHeroVideoEnabled ? settings.quoteHeroVideo : null}
       />
-      <StitchEstimator copy={copy} heading={home.quoteSection} source='quote_page' />
+      <StitchEstimator
+        copy={copy}
+        heading={home.quoteSection}
+        source='quote_page'
+        whatsappNumber={settings.whatsappNumber || settings.phone}
+      />
       <PageAnimations />
       <ScrollToQuoteForm />
     </main>

@@ -11,8 +11,8 @@ gsap.registerPlugin(ScrollTrigger);
 const HEADER_OFFSET = 97;
 
 // GSAP motion for every marketing page, applied over the server-rendered sections without
-// wiring refs into each one: a hero intro timeline (`[data-hero-copy]`), a slow hero-media
-// parallax, and scroll reveals for every later section's heading block and cards.
+// wiring refs into each one: scroll reveals for every later section's heading block and cards,
+// the pinned timelines and carousels. The hero itself is animated with motion (ui/hero-motion.tsx).
 // Reduced-motion users get static content.
 //
 // Render it as the LAST child of each marketing page's <main>, not in the layout: with
@@ -118,7 +118,7 @@ function setup() {
           start: 'top 97px',
           end: `+=${steps.length * 170}`,
           pin: true,
-          scrub: 0.6,
+          scrub: 0.35,
           anticipatePin: 1,
         },
       });
@@ -231,85 +231,9 @@ function setup() {
   });
 
   mm.add('(prefers-reduced-motion: no-preference)', () => {
-    let clipped: HTMLElement | null = null;
-    const copy = document.querySelector<HTMLElement>('[data-hero-copy]');
-    const hero = copy?.closest('section');
-
-    if (copy && hero) {
-      const intro = gsap.timeline({ defaults: { ease: 'power3.out', duration: 0.9 } });
-      const [eyebrow, heading, ...rest] = Array.from(copy.children);
-      intro
-        .from(eyebrow, { autoAlpha: 0, y: -16, duration: 0.6 })
-        .from(
-          heading.children,
-          {
-            autoAlpha: 0,
-            yPercent: 110,
-            rotate: 2.5,
-            transformOrigin: '0% 100%',
-            stagger: 0.14,
-            duration: 1.05,
-            ease: 'power4.out',
-            // Each line rises out of a mask; the clip comes off afterwards so nothing stays cut.
-            onStart: () => {
-              clipped = heading as HTMLElement;
-              clipped.style.overflow = 'hidden';
-            },
-            onComplete: () => {
-              if (clipped) clipped.style.overflow = '';
-            },
-          },
-          '-=0.3',
-        )
-        .from(rest, { autoAlpha: 0, y: 24, stagger: 0.12 }, '-=0.55');
-
-      const trust = hero.querySelector('[data-hero-trust]');
-      if (trust) intro.from(trust.children, { autoAlpha: 0, y: 20, stagger: 0.08, duration: 0.6 }, '-=0.4');
-
-      // Scrollytelling: the hero copy drifts up and dissolves as the page takes over. Phones skip it:
-      // there the hero is a tall stack (photo on top, then the copy and buttons), not one screen.
-      const wide = window.matchMedia('(min-width: 640px)').matches;
-      if (wide) {
-        gsap.to(copy, {
-          y: -120,
-          autoAlpha: 0,
-          ease: 'none',
-          scrollTrigger: { trigger: hero, start: 'top top', end: '70% top', scrub: true },
-        });
-      }
-
-      const media = hero.querySelector('[data-hero-media]');
-      if (media && wide) {
-        gsap.fromTo(
-          media,
-          { scale: 1.08 },
-          {
-            scale: 1.04,
-            yPercent: 12,
-            ease: 'none',
-            scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
-          },
-        );
-      }
-    }
-
-    // The "scroll" cue under a full-screen hero: a line that draws and wipes, gone once the page moves.
-    const cue = hero?.querySelector<HTMLElement>('[data-scroll-cue]');
-    const cueLine = cue?.querySelector<HTMLElement>('[data-cue-line]');
-    if (hero && cue) {
-      if (cueLine) {
-        gsap
-          .timeline({ repeat: -1, repeatDelay: 0.15, defaults: { duration: 0.9, ease: 'power2.inOut' } })
-          .fromTo(cueLine, { scaleY: 0, transformOrigin: '50% 0%' }, { scaleY: 1 })
-          .set(cueLine, { transformOrigin: '50% 100%' })
-          .to(cueLine, { scaleY: 0 });
-      }
-      gsap.to(cue, {
-        autoAlpha: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: hero, start: 'top top', end: '+=140', scrub: true },
-      });
-    }
+    // The hero (intro, scroll drift, media parallax, scroll cue) is animated with motion in
+    // ui/hero-motion.tsx; it is only located here so the scroll reveals below skip it.
+    const hero = document.querySelector<HTMLElement>('[data-hero-copy]')?.closest('section');
 
     // Every section after the hero, including the closing CTA rendered by the layout.
     const sections = Array.from(document.querySelectorAll<HTMLElement>('main section, section#contact')).filter(
@@ -322,8 +246,10 @@ function setup() {
         const intro = Array.from(
           heading.parentElement?.parentElement?.querySelectorAll(':scope > p, :scope > div > p') ?? [],
         );
+        // Titles wrapped in SectionTitle animate themselves with motion; the eyebrow and intro around
+        // them still come in here.
         const headingBlock = [heading.previousElementSibling, heading, ...intro].filter(
-          (el): el is Element => Boolean(el) && !el!.closest('article, form'),
+          (el): el is Element => Boolean(el) && !el!.closest('article, form') && !el!.hasAttribute('data-motion-title'),
         );
         gsap.from(headingBlock, {
           autoAlpha: 0,
@@ -395,25 +321,13 @@ function setup() {
         },
       );
     }
-
-    return () => {
-      if (clipped) clipped.style.overflow = '';
-    };
   });
 
-  // Reading aids: a progress line along the top edge, big step numbers that drift against the
+  // Reading aids: big step numbers that drift against the
   // scroll, and body copy that lights up word by word as it is read. Everything is restored on
   // cleanup, and the words stay in the DOM at partial opacity so crawlers and readers see them.
   mm.add('(prefers-reduced-motion: no-preference)', () => {
     const cleanups: Array<() => void> = [];
-
-    const bar = document.createElement('div');
-    bar.setAttribute('aria-hidden', 'true');
-    bar.style.cssText =
-      'position:fixed;top:0;left:0;right:0;height:3px;z-index:45;pointer-events:none;transform-origin:0 50%;transform:scaleX(0);background:rgb(var(--brand-rgb))';
-    document.body.appendChild(bar);
-    cleanups.push(() => bar.remove());
-    gsap.to(bar, { scaleX: 1, ease: 'none', scrollTrigger: { start: 0, end: 'max', scrub: 0.25 } });
 
     document.querySelectorAll<HTMLElement>('[data-drift]').forEach((el) => {
       gsap.fromTo(
@@ -526,10 +440,25 @@ function setup() {
       // How far hovering has lifted each card out of its dimmed resting state (0 to 1).
       const lifted = new Map(cards.map((card) => [card, { amount: 0 }]));
 
+      // Where each card sits along the track, measured once (and again after a resize) so the
+      // per-frame work below is plain arithmetic instead of a layout read for every card.
+      let restLeft: number[] = [];
+      let cardWidths: number[] = [];
+      const measure = () => {
+        const trackRect = track.getBoundingClientRect();
+        const padding = parseFloat(getComputedStyle(track).paddingLeft);
+        restLeft = cards.map((card) => card.getBoundingClientRect().left - trackRect.left - padding + track.scrollLeft);
+        cardWidths = cards.map((card) => card.offsetWidth);
+      };
+      measure();
+      // The cards are scaled and dimmed on every scroll frame: keep them on their own layers.
+      cards.forEach((card) => {
+        card.style.willChange = 'scale, filter';
+      });
+
       const focusCards = () => {
-        const trackLeft = track.getBoundingClientRect().left + parseFloat(getComputedStyle(track).paddingLeft);
-        cards.forEach((card) => {
-          const offset = (card.getBoundingClientRect().left - trackLeft) / card.offsetWidth;
+        cards.forEach((card, index) => {
+          const offset = (restLeft[index] - track.scrollLeft) / cardWidths[index];
           // 0 while the card is at or right of the focus line, → 1 once fully scrolled past it.
           const passed = gsap.utils.clamp(0, 1, -offset);
           // 0 on the focus line, → 1 a card's width ahead of it: the cards to come wait dimmed behind.
@@ -577,8 +506,15 @@ function setup() {
           // GSAP skips pin spacing when the parent is a flex container (the process page's
           // <main>), which lets the sections below scroll up over the pinned one.
           pinSpacing: true,
-          scrub: 0.6,
+          // Light scrub: the page is already eased by Lenis, a long scrub on top made the cards trail
+          // the scroll and then lurch to a stop.
+          scrub: 0.3,
+          anticipatePin: 1,
           invalidateOnRefresh: true,
+          onRefresh: () => {
+            measure();
+            focusCards();
+          },
           // Created after the reveal triggers further down the page — refresh it first so their
           // start positions include the pin spacing.
           refreshPriority: 1,
@@ -611,6 +547,7 @@ function setup() {
         cards.forEach((card) => {
           card.style.scale = '';
           card.style.filter = '';
+          card.style.willChange = '';
         });
       });
     });

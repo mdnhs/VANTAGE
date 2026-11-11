@@ -1,7 +1,10 @@
 'use client';
 
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -24,19 +27,31 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
   const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
 
   return (
-    <article className='group relative flex flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:rounded-2xl'>
+    <TiltArticle className='group relative flex flex-1 flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:rounded-2xl'>
       {/* Photo with Before/After toggle */}
       <div className='relative h-[210px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
-        {current && (
-          <Image
-            src={sizedSrc(current, 'w_800,h_512,c_fill')}
-            style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
-            alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
-            fill
-            sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
-            className='object-cover transition-transform duration-500 group-hover:scale-105'
-          />
-        )}
+        {/* Before and after crossfade (with a slight settle) instead of swapping in one frame. */}
+        <AnimatePresence initial={false}>
+          {current && (
+            <motion.div
+              key={currentMode}
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className='absolute inset-0'
+            >
+              <Image
+                src={sizedSrc(current, 'w_800,h_512,c_fill')}
+                style={{ objectPosition: `${current.focal.x * 100}% ${current.focal.y * 100}%` }}
+                alt={`${project.title} — ${currentMode === 'after' ? 'after' : 'before'} restoration`}
+                fill
+                sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw'
+                className='object-cover transition-transform duration-500 group-hover:scale-105'
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {hasBefore && (
           <button
@@ -104,7 +119,7 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
           </div>
         </dl>
       </div>
-    </article>
+    </TiltArticle>
   );
 }
 
@@ -162,9 +177,22 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
         </div>
       ) : (
         <div className='grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 xl:gap-6'>
-          {filtered.slice(0, visible).map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
+          {/* Cards leaving a filter fade out, the rest glide into their new spots, new ones pop in. */}
+          <AnimatePresence mode='popLayout' initial={false}>
+            {filtered.slice(0, visible).map((project) => (
+              <motion.div
+                key={project.id}
+                layout
+                initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 32, mass: 0.9 }}
+                className='flex flex-col'
+              >
+                <ProjectCard project={project} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 

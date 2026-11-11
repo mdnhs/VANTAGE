@@ -216,7 +216,7 @@ describe('supportBotService.maybeReply', () => {
     await supportBotService.maybeReply('c1');
     const sentToModel = JSON.stringify(seen[0]);
     expect(sentToModel).toContain('Dent repair');
-    expect(sentToModel).toContain('from €450');
+    expect(sentToModel).not.toContain('from €450');
     expect(sentToModel).toContain('Keep answers short.');
     expect(sentToModel).toMatch(/never reveal/i);
     expect(sentToModel).toContain('Aoife');

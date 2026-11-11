@@ -20,6 +20,9 @@ let ownerId: string;
 let owner: string;
 
 const rows = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action));
+// The public quote form sends a WhatsApp number and a photo.
+const PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 const body = async (res: Response) => (await res.json()) as { data: { id: string } & Record<string, unknown> };
 
 const seedQuote = async () => {
@@ -113,7 +116,7 @@ describe('quote and contact mutations', () => {
   it('does not audit the public submissions', async () => {
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
+      body: stamped({ phone: '0871234567', photoUrls: [PHOTO] }),
     });
     expect(res.status).toBe(201);
     expect(await rows('quote.create')).toHaveLength(0);

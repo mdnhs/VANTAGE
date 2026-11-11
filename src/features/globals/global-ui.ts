@@ -217,6 +217,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       sectionDescription: 'The send button and the small notes around it.',
     },
     submitting: { section: 'Buttons & notes' },
+    whatsappButton: { section: 'Buttons & notes' },
     responseNote: { section: 'Buttons & notes' },
     sendAnother: { section: 'Buttons & notes' },
     success: {

@@ -37,7 +37,7 @@ function contactSection(c: KnowledgeInput['contact']) {
 }
 
 function serviceBlock(s: KnowledgeInput['services'][number], descriptionMax: number) {
-  const price = s.startingPrice != null ? ` (from €${s.startingPrice})` : '';
+  const price = '';
   const checklist = s.checklist.map((c) => oneLine(c, 100)).filter(Boolean);
   return [
     `- ${oneLine(s.name, 120)}${price}: ${oneLine(s.description, descriptionMax)}`,

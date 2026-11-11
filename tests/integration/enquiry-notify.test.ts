@@ -13,6 +13,10 @@ import { quoteRequestService } from '@/server/services/quote-request-service';
 
 import { call, createTestUser, signInCookie, stamped } from '../support/session';
 
+// The public quote form sends a WhatsApp number and a photo.
+const PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
 const QUOTE = {
   name: 'Pat Murphy',
   email: 'pat@example.com',
@@ -64,7 +68,7 @@ describe('SMTP not configured', () => {
   it('a public quote still saves and returns 201; nothing is sent, nothing throws', async () => {
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
+      body: stamped({ phone: '0871234567', photoUrls: [PHOTO] }),
     });
     expect(res.status).toBe(201);
     expect(await db.select().from(quoteRequests)).toHaveLength(1);
@@ -216,7 +220,7 @@ describe('SMTP configured (injected transport)', () => {
     await saveSetting('notifications', { recipients: ['staff@example.com'] });
     const res = await call('/quotes', undefined, {
       method: 'POST',
-      body: stamped({ name: 'Pat', email: 'pat@example.com', phone: '0871234567' }),
+      body: stamped({ phone: '0871234567', photoUrls: [PHOTO] }),
     });
     expect(res.status).toBe(201);
     await settleNotifications();

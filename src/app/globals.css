@@ -276,3 +276,51 @@
     transform: translateY(4px);
   }
 }
+
+/* Link hover: the underline draws in from the left (and wipes out to the right on leave), the text
+   brightens and slides a few pixels along. */
+.link-draw {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 100% 100%;
+  background-size: 0% 1px;
+  padding-bottom: 2px;
+  transition:
+    background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    translate 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.25s ease;
+}
+.link-draw:hover,
+.link-draw:focus-visible {
+  background-position: 0% 100%;
+  background-size: 100% 1px;
+  translate: 5px 0;
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .link-draw:hover,
+  .link-draw:focus-visible {
+    translate: none;
+  }
+}
+
+/* FAQ answers: each line comes up one after the other when its panel opens. */
+@keyframes faq-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+[data-slot='accordion-content'][data-open] .faq-line {
+  animation: faq-line-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='accordion-content'][data-open] .faq-line {
+    animation: none;
+  }
+}

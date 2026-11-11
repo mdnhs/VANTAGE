@@ -13,7 +13,7 @@ const contact = {
 const base = { siteName: 'Vantage Body Repairs', services: [], contact, reviews: [] };
 
 describe('buildKnowledge', () => {
-  it('prints a starting price as "from €N" and nothing when there is none', () => {
+  it('never prints a price, even when a service still has one stored', () => {
     const text = buildKnowledge({
       ...base,
       services: [
@@ -22,7 +22,7 @@ describe('buildKnowledge', () => {
       ],
     });
     expect(text).toContain('Dent repair');
-    expect(text).toContain('from €450');
+    expect(text).not.toContain('€');
     expect(text).toContain('Free quote');
     const respray = text.split('\n').filter((l) => l.includes('Respray'));
     expect(respray.join('\n')).not.toContain('€');

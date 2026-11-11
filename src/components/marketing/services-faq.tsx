@@ -28,8 +28,16 @@ export function ServicesFaq({ faq, insurance = false }: ServicesFaqProps) {
               <AccordionTrigger className='items-center gap-6 px-6 py-5 font-site-heading text-lg font-bold text-[#f1f3f6] hover:no-underline **:data-[slot=accordion-trigger-icon]:size-5 **:data-[slot=accordion-trigger-icon]:text-brand sm:px-8 sm:py-6 sm:text-xl'>
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className='max-w-[860px] px-6 pb-5 font-site-body text-base leading-[26px] whitespace-pre-line text-[#b9bfc9] sm:px-8 sm:pb-6'>
-                {item.answer}
+              <AccordionContent className='max-w-[860px] px-6 pb-5 font-site-body text-base leading-[26px] text-[#b9bfc9] sm:px-8 sm:pb-6'>
+                {item.answer.split('\n').map((line, lineIndex) => (
+                  <span
+                    key={lineIndex}
+                    className='faq-line block min-h-[1lh]'
+                    style={{ '--i': lineIndex } as React.CSSProperties}
+                  >
+                    {line}
+                  </span>
+                ))}
               </AccordionContent>
             </AccordionItem>
           ))}

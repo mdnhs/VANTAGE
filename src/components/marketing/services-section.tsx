@@ -1,3 +1,4 @@
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 import Image from 'next/image';
 import Link from 'next/link';
 import { sizedSrc } from '@/lib/media/public-image';
@@ -26,11 +27,11 @@ export function ServicesSection({ services }: ServicesSectionProps) {
             <span className='h-px w-8 bg-brand/50' />
             <span className='text-xs font-semibold tracking-[1.2px] text-brand uppercase'>Core Capabilities</span>
           </div>
-          <h2 className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#f1f3f6] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
+          <SectionTitle className='xs:text-3xl font-site-heading text-2xl leading-[1.2] font-bold tracking-[-1px] text-[#f1f3f6] uppercase sm:text-4xl lg:text-[40px] lg:leading-[48px]'>
             Engineered To
             <br />
             <span className='text-brand'>Perfection.</span>
-          </h2>
+          </SectionTitle>
         </div>
 
         <Link

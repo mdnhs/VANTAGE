@@ -22,7 +22,13 @@ vi.mock('next/cache', async (importOriginal) => ({
   updateTag: vi.fn(),
 }));
 
-const quote = { name: 'Pat Murphy', email: 'pat@example.com', phone: '0871234567' };
+// The public quote form sends a WhatsApp number and a photo.
+const PHOTO =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+const quote = { phone: '0871234567', photoUrls: [PHOTO] };
+// A stored row, as the admin sees it: the table still requires a name and an email.
+const quoteRow = { name: 'WhatsApp enquiry', email: '', phone: '0871234567' };
 const contact = { firstName: 'Pat', lastName: 'Q', email: 'pat@example.com', phone: '0871234567', message: 'hi' };
 const stampAge = (ms: number) => issueStamp(Date.now() - ms);
 
@@ -241,7 +247,7 @@ describe('admin lists, stats and status changes', () => {
     const owner = await sessionCookie('owner');
     const [q] = await db
       .insert(quoteRequests)
-      .values({ ...quote, invoiceNumber: 'INV-1' })
+      .values({ ...quoteRow, invoiceNumber: 'INV-1' })
       .returning();
     const res = await call(`/quotes/${q!.id}`, owner, { method: 'PATCH', body: { status: 'spam' } });
     expect(res.status).toBe(422);
@@ -252,7 +258,7 @@ describe('admin lists, stats and status changes', () => {
     // Billing sent in the same patch counts too.
     const [p] = await db
       .insert(quoteRequests)
-      .values({ ...quote })
+      .values({ ...quoteRow })
       .returning();
     const same = await call(`/quotes/${p!.id}`, owner, { method: 'PATCH', body: { status: 'spam', paidAmount: 20 } });
     expect(same.status).toBe(422);
@@ -261,7 +267,7 @@ describe('admin lists, stats and status changes', () => {
   it('refuses a status change during View-as', async () => {
     const owner = await sessionCookie('owner');
     const intake = await createTestUser('intake');
-    const [q] = await db.insert(quoteRequests).values(quote).returning();
+    const [q] = await db.insert(quoteRequests).values(quoteRow).returning();
     const viewing = await viewAsCookie(owner, intake.id);
     const res = await call(`/quotes/${q!.id}`, viewing, { method: 'PATCH', body: { status: 'spam' } });
     expect(res.status).toBe(403);
@@ -273,8 +279,8 @@ describe('retention', () => {
   it('does not count a 60-day-old spam quote that has billing data', async () => {
     const old = new Date(Date.now() - 60 * 86_400_000);
     await db.insert(quoteRequests).values([
-      { ...quote, status: 'spam', paidAmount: '50.00', createdAt: old, updatedAt: old },
-      { ...quote, status: 'spam', createdAt: old, updatedAt: old },
+      { ...quoteRow, status: 'spam', paidAmount: '50.00', createdAt: old, updatedAt: old },
+      { ...quoteRow, status: 'spam', createdAt: old, updatedAt: old },
     ]);
     const result = await runRetention({ dryRun: true });
     expect(result.quotes.spam).toBe(1);

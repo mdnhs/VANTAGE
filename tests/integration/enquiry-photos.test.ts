@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 import sharp from 'sharp';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -153,14 +153,10 @@ describe('enquiry photos through the media pipeline', () => {
   });
 
   it('a quote with only photo_urls returns photos: []', async () => {
-    const res = await post('/quotes', quote);
-    expect(res.status).toBe(201);
-    const [row] = await db.select().from(quoteRequests);
+    // A row written before photos had their own table: only the legacy photo_urls column is set.
     const legacy = 'https://res.cloudinary.com/demo/image/upload/v1/vantage/quotes/old.jpg';
-    await db
-      .update(quoteRequests)
-      .set({ photoUrls: [legacy] })
-      .where(eq(quoteRequests.id, row!.id));
+    await db.insert(quoteRequests).values({ ...quote, photoUrls: [legacy] });
+    const [row] = await db.select().from(quoteRequests);
 
     const detail = (await (await get(`/quotes/${row!.id}`, cookie)).json()) as {
       data: { photos: { id: string | null; url: string; width: number | null }[] };

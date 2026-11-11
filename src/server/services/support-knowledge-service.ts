@@ -37,7 +37,8 @@ const MAX_REVIEWS = 20;
 
 type Step = { label: string; run: () => Promise<KnowledgeChunk[]> };
 
-const price = (n: number | null) => (n != null ? ` (from €${n})` : '');
+// Prices are not published on the site, so none are copied into the AI's memory.
+const price = (_n: number | null) => '';
 
 // One entry per source. Adding a new kind of website content to the AI's memory is one more step here.
 const STEPS: Step[] = [

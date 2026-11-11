@@ -1,3 +1,17 @@
+import { ScrollCue } from '@/components/marketing/ui/scroll-cue';
+import {
+  HeroCopy,
+  HeroHeading,
+  HeroIcon,
+  HeroItem,
+  HeroLine,
+  HeroMedia,
+  HeroRule,
+  HeroStagger,
+  HeroTrustItem,
+  HeroTrustText,
+  CountText,
+} from '@/components/marketing/ui/hero-motion';
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
 import Link from 'next/link';
@@ -59,29 +73,29 @@ export function StitchHero({
     <section className='relative w-full overflow-hidden bg-[#1b1f26] font-site-body'>
       {/* Background media */}
       <div className='absolute inset-x-0 top-0 z-0 h-[420px] overflow-hidden sm:inset-0 sm:h-auto'>
-        {showVideo && heroVideo ? (
-          <video
-            data-hero-media
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={fallbackImageSrc}
-            className='h-full w-full object-cover object-[68%_50%] sm:object-center'
-          >
-            <source src={heroVideo.src} type={heroVideo.mimeType ?? 'video/mp4'} />
-          </video>
-        ) : (
-          <Image
-            data-hero-media
-            src={fallbackImageSrc}
-            alt='Precision car body repair workshop in Dublin'
-            fill
-            priority
-            sizes='100vw'
-            className='object-cover object-[68%_50%] sm:object-center'
-          />
-        )}
+        <HeroMedia>
+          {showVideo && heroVideo ? (
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={fallbackImageSrc}
+              className='h-full w-full object-cover object-[68%_50%] sm:object-center'
+            >
+              <source src={heroVideo.src} type={heroVideo.mimeType ?? 'video/mp4'} />
+            </video>
+          ) : (
+            <Image
+              src={fallbackImageSrc}
+              alt='Precision car body repair workshop in Dublin'
+              fill
+              priority
+              sizes='100vw'
+              className='object-cover object-[68%_50%] sm:object-center'
+            />
+          )}
+        </HeroMedia>
         {/* Shade: top to bottom on phones, where the copy spans the width; left to right from sm up */}
         <div className='absolute inset-0 bg-[linear-gradient(180deg,rgba(27,31,38,0.25)_0%,rgba(27,31,38,0.1)_45%,rgba(27,31,38,0.85)_80%,#1b1f26_100%)] sm:hidden' />
         <div className='absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(27,31,38,0.9)_0%,rgba(27,31,38,0.75)_40%,rgba(27,31,38,0.3)_62%,rgba(27,31,38,0.1)_100%)] sm:block' />
@@ -94,36 +108,40 @@ export function StitchHero({
             bar shows or hides). The offsets are the sticky header (73px, 97px from sm) plus this
             container's top padding (40px, 128px from sm, 150px from lg). Taller copy just grows past it. */}
         <div className='relative flex flex-col justify-start sm:min-h-[calc(100svh-225px)] sm:justify-center lg:min-h-[calc(100svh-247px)]'>
-          <div data-hero-copy className='flex w-full max-w-[760px] flex-col items-start gap-4 sm:gap-6 lg:gap-8'>
+          <HeroCopy className='flex w-full max-w-[760px] flex-col items-start gap-4 sm:gap-6 lg:gap-8'>
             {/* Eyebrow */}
-            <div className='inline-flex max-w-full items-center gap-2.5 rounded-[18px] border border-[#353c47] bg-[#2e343e] py-[7px] pr-3 pl-2.5 sm:rounded-full sm:border-[#2e343e] sm:bg-[#20252d] sm:pr-4 sm:pl-3.5'>
-              <img
-                src='/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.svg'
-                alt=''
-                width={6}
-                height={6}
-                className='shrink-0'
-              />
-              <span className='text-[11px] leading-snug tracking-[0.06em] text-[#c9ced6] uppercase sm:leading-normal sm:tracking-[0.44px] sm:text-[#d5d9e0]'>
-                {eyebrow}
-              </span>
-            </div>
+            <HeroItem>
+              <div className='inline-flex max-w-full items-center gap-2.5 rounded-[18px] border border-[#353c47] bg-[#2e343e] py-[7px] pr-3 pl-2.5 sm:rounded-full sm:border-[#2e343e] sm:bg-[#20252d] sm:pr-4 sm:pl-3.5'>
+                <img
+                  src='/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.svg'
+                  alt=''
+                  width={6}
+                  height={6}
+                  className='shrink-0'
+                />
+                <span className='text-[11px] leading-snug tracking-[0.06em] text-[#c9ced6] uppercase sm:leading-normal sm:tracking-[0.44px] sm:text-[#d5d9e0]'>
+                  {eyebrow}
+                </span>
+              </div>
+            </HeroItem>
 
             {/* Heading */}
-            <h1 className='font-site-heading text-[clamp(34px,10.77vw,42px)] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[64px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[84px] lg:leading-[88px]'>
+            <HeroHeading className='font-site-heading text-[clamp(34px,10.77vw,42px)] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[64px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[84px] lg:leading-[88px]'>
               {/* Plain spaces between the block lines keep the words apart for crawlers and screen readers. */}
-              <span className='block text-[#f1f3f6]'>{headlineLine1}</span>{' '}
-              <span className='block text-[#f1f3f6]'>{headlineLine2}</span>{' '}
-              <span className='block text-brand'>{headlineAccent}</span>
-            </h1>
+              <HeroLine className='text-[#f1f3f6]'>{headlineLine1}</HeroLine>{' '}
+              <HeroLine className='text-[#f1f3f6]'>{headlineLine2}</HeroLine>{' '}
+              <HeroLine className='text-brand'>{headlineAccent}</HeroLine>
+            </HeroHeading>
 
             {/* Subheading */}
-            <p className='max-w-[600px] text-[16px] leading-[1.55] text-[#c9ced6] sm:text-[18px] sm:leading-[29px] sm:text-[#d5d9e0]'>
-              {subtext}
-            </p>
+            <HeroItem>
+              <p className='max-w-[600px] text-[16px] leading-[1.55] text-[#c9ced6] sm:text-[18px] sm:leading-[29px] sm:text-[#d5d9e0]'>
+                {subtext}
+              </p>
+            </HeroItem>
 
             {/* CTAs */}
-            <div className='flex w-full flex-col gap-[10px] sm:w-auto sm:flex-row sm:items-center'>
+            <HeroItem kind='pop' className='flex w-full flex-col gap-[10px] sm:w-auto sm:flex-row sm:items-center'>
               <Link
                 data-reveal-button
                 href='/get-a-quote'
@@ -174,48 +192,40 @@ export function StitchHero({
                   </span>
                 </RevealContent>
               </a>
-            </div>
-          </div>
+            </HeroItem>
+          </HeroCopy>
           {/* Scroll cue (PageAnimations draws the line and fades it away on scroll) */}
-          <div
-            data-scroll-cue
-            aria-hidden='true'
-            className='pointer-events-none absolute bottom-3 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 lg:flex [@media(max-height:760px)]:hidden'
-          >
-            <span className='text-[10px] tracking-[0.2em] text-white/55 uppercase'>Scroll</span>
-            <span className='relative block h-9 w-px overflow-hidden bg-white/15'>
-              <span data-cue-line className='absolute inset-0 block bg-white/70' />
-            </span>
-          </div>
+          <ScrollCue />
         </div>
 
         {/* Trust row */}
         {trustRow.length > 0 && (
-          <div
-            data-hero-trust
-            className='grid grid-cols-2 gap-[10px] sm:gap-6 sm:border-t sm:border-[#2e343e] sm:pt-10 lg:grid-cols-4'
-          >
+          <HeroStagger className='grid grid-cols-2 gap-[10px] sm:gap-6 sm:pt-10 lg:grid-cols-4'>
+            <HeroRule className='max-sm:hidden' />
             {trustRow.map(({ icon, title, sub }, index) => (
-              <div
+              <HeroTrustItem
                 key={`${title}-${index}`}
                 className='flex min-w-0 flex-col items-start gap-2.5 rounded-[14px] border border-[#353c47] bg-[rgba(38,43,52,0.9)] p-[14px] sm:flex-row sm:items-center sm:gap-3.5 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0'
               >
-                <div className='flex shrink-0 items-center justify-center rounded-[10px] bg-[#f1f3f6] p-[6px] sm:p-[11px]'>
+                <HeroIcon className='flex shrink-0 items-center justify-center rounded-[10px] bg-[#f1f3f6] p-[6px] sm:p-[11px]'>
                   <span className='flex size-5 items-center justify-center'>
                     <img src={icon.src} alt='' width={icon.width} height={icon.height} className='max-w-none' />
                   </span>
-                </div>
+                </HeroIcon>
                 <div className='flex min-w-0 flex-col gap-[3px] leading-normal'>
-                  <span className='text-[14px] leading-[1.3] font-semibold text-[#f1f3f6] sm:leading-normal'>
-                    {title}
-                  </span>
-                  <span className='text-[12px] text-[#9aa1ac] sm:text-[10px] sm:tracking-[0.4px] sm:text-[#7d8591] sm:uppercase'>
-                    {sub}
-                  </span>
+                  <HeroTrustText className='text-[14px] leading-[1.3] font-semibold text-[#f1f3f6] sm:leading-normal'>
+                    <CountText text={title} />
+                  </HeroTrustText>
+                  <HeroTrustText
+                    delay={0.42}
+                    className='text-[12px] text-[#9aa1ac] sm:text-[10px] sm:tracking-[0.4px] sm:text-[#7d8591] sm:uppercase'
+                  >
+                    <CountText text={sub} delay={0.55} />
+                  </HeroTrustText>
                 </div>
-              </div>
+              </HeroTrustItem>
             ))}
-          </div>
+          </HeroStagger>
         )}
       </div>
     </section>

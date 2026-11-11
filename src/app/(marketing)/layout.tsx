@@ -3,6 +3,10 @@ import { getInsuranceEnabled } from '@/server/queries/get-features';
 import { manrope, inter } from '@/lib/font';
 import { StitchHeader } from '@/components/marketing/stitch-header';
 import { QuoteCtaProvider } from '@/components/marketing/quote-cta';
+import { SiteMotion } from '@/components/marketing/ui/motion-link';
+import { SiteCursor } from '@/components/marketing/ui/site-cursor';
+import { PageCurtain } from '@/components/marketing/ui/page-curtain';
+import { ScrollProgress } from '@/components/marketing/ui/scroll-progress';
 import { StitchCta } from '@/components/marketing/stitch-cta';
 import { MarketingFooter } from '@/components/marketing/footer';
 import { CookieSettingsSlot } from '@/features/tracking/components/cookie-settings-slot';
@@ -28,28 +32,33 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
   return (
     <InsuranceProvider enabled={insurance}>
       <QuoteCtaProvider label={navigation.cta.label}>
-        <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#1b1f26] font-site-body`}>
-          <SiteThemeStyle />
-          <SmoothScroll />
-          <StitchHeader
-            navigation={navigation}
-            phone={settings.phone}
-            phoneHref={settings.phoneHref}
-            businessName={settings.businessName}
-            logo={settings.logo}
-            logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
-            logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
-          />
-          <div data-route-content>
-            {children}
-            <StitchCta phone={settings.phone} />
-            <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+        <SiteMotion>
+          <div className={`${manrope.variable} ${inter.variable} min-w-0 overflow-x-clip bg-[#1b1f26] font-site-body`}>
+            <SiteThemeStyle />
+            <SmoothScroll />
+            <StitchHeader
+              navigation={navigation}
+              phone={settings.phone}
+              phoneHref={settings.phoneHref}
+              businessName={settings.businessName}
+              logo={settings.logo}
+              logoLottieJson={'logoLottieJson' in settings ? settings.logoLottieJson : null}
+              logoUseLottie={'logoUseLottie' in settings ? Boolean(settings.logoUseLottie) : false}
+            />
+            <div data-route-content>
+              {children}
+              <StitchCta phone={settings.phone} />
+              <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
+            </div>
+            <MarketingTracking />
+            <SupportWidget retentionMonths={chatRetentionMonths} />
+            <ButtonRevealLayer />
+            <RouteFade />
+            <PageCurtain />
+            <SiteCursor />
+            <ScrollProgress />
           </div>
-          <MarketingTracking />
-          <SupportWidget retentionMonths={chatRetentionMonths} />
-          <ButtonRevealLayer />
-          <RouteFade />
-        </div>
+        </SiteMotion>
       </QuoteCtaProvider>
     </InsuranceProvider>
   );

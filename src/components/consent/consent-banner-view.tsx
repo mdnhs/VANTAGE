@@ -1,3 +1,6 @@
+'use client';
+
+import { motion } from 'motion/react';
 import type { GlobalValue } from '@/lib/content/globals';
 import type { ConsentChoice } from '@/lib/tracking/consent';
 
@@ -41,7 +44,10 @@ export function ConsentBannerView({
   inline?: boolean;
 }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 48 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 26, delay: 0.2 }}
       role='dialog'
       aria-modal='false'
       aria-labelledby='vantage-consent-title'
@@ -118,6 +124,6 @@ export function ConsentBannerView({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

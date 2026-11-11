@@ -3,7 +3,17 @@
 import { useInsuranceEnabled } from '@/contexts/insurance-context';
 import { visibleLink } from '@/lib/features';
 import { RevealContent } from '@/components/marketing/ui/reveal-content';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from 'motion/react';
+import { PRESS, useMagnet } from '@/components/marketing/ui/motion-link';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -85,10 +95,57 @@ export function StitchHeader({
   );
   const mobileLinks = navigation.links.filter((link) => link.label && link.href && visibleLink(link, insurance));
   const phoneHref = phoneHrefProp ?? telHref(phone);
+  const pathname = usePathname();
+  const reduceMotion = useReducedMotion();
+  const phoneMagnet = useMagnet();
+  const navRef = useRef<HTMLElement>(null);
+  const linkRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const lastIndex = useRef(-1);
+  // Liquid underline: the two ends are separate motion values with different springs, so the line
+  // stretches toward the new link (leading edge fast, trailing edge slow) and then settles.
+  const lineLeft = useMotionValue(0);
+  const lineRight = useMotionValue(0);
+  const lineOpacity = useMotionValue(0);
+  const activeIndex = desktopLinks.findIndex((link) => pathname === link.href);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    const link = activeIndex >= 0 ? linkRefs.current[activeIndex] : null;
+    if (!nav || !link) {
+      lineOpacity.set(0);
+      lastIndex.current = -1;
+      return;
+    }
+    const place = (animated: boolean) => {
+      const center = link.offsetLeft + link.offsetWidth / 2;
+      const left = center - 8;
+      const right = nav.clientWidth - (center + 8);
+      const previous = lastIndex.current;
+      lastIndex.current = activeIndex;
+      lineOpacity.set(1);
+      if (!animated || reduceMotion || previous < 0) {
+        lineLeft.set(left);
+        lineRight.set(right);
+        return;
+      }
+      const lead = { type: 'spring' as const, stiffness: 520, damping: 38 };
+      const lag = { type: 'spring' as const, stiffness: 190, damping: 26 };
+      const movingRight = activeIndex > previous;
+      animate(lineLeft, left, movingRight ? lag : lead);
+      animate(lineRight, right, movingRight ? lead : lag);
+    };
+    place(true);
+    const observer = new ResizeObserver(() => place(false));
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [activeIndex, desktopLinks.length, reduceMotion, lineLeft, lineRight, lineOpacity]);
   const logoSrc = logo ? sizedSrc(logo, 'h_240') : FALLBACK_LOGO;
 
-  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Past the top of the page the bar tightens and gains a soft shadow and blur.
+  const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, 'change', (y) => setScrolled(y > 24));
 
   const logoImage = (
     <Image
@@ -103,7 +160,14 @@ export function StitchHeader({
 
   return (
     // MAIN STICKY NAVIGATION
-    <header className='sticky top-0 z-40 w-full border-b border-[#353c47] bg-[rgba(27,31,38,0.94)] backdrop-blur-[8px] sm:border-[#2e343e] sm:bg-[#1b1f26] sm:backdrop-blur-none'>
+    <header
+      className={`sticky top-0 z-40 w-full border-b border-[#353c47] bg-[rgba(27,31,38,0.94)] backdrop-blur-[8px] transition-shadow duration-300 ease-out sm:border-[#2e343e] sm:bg-[#1b1f26] sm:backdrop-blur-none ${
+        scrolled ? 'shadow-[0_10px_30px_rgba(0,0,0,0.35)]' : 'shadow-none'
+      }`}
+    >
+      {/* The bar's height never changes on scroll: the page's pinned sections and the 97px in-page
+          anchor offset are measured against it, and a bar that resized would shift the page under
+          the visitor's finger. */}
       <div className='mx-auto flex w-full max-w-[1200px] items-center justify-between gap-4 py-2 pr-4 pl-5 sm:px-6 sm:py-3 lg:px-10 xl:px-0'>
         {/* Logo */}
         <Link
@@ -124,39 +188,46 @@ export function StitchHeader({
         </Link>
 
         {/* Desktop Nav Links */}
-        <nav className='hidden items-center gap-[36px] lg:flex'>
-          {desktopLinks.map((link) => {
+        <nav ref={navRef} className='relative hidden items-center gap-[36px] lg:flex'>
+          {desktopLinks.map((link, index) => {
             const active = pathname === link.href;
             return (
               <Link
                 key={`${link.label}-${link.href}`}
+                ref={(el) => {
+                  linkRefs.current[index] = el;
+                }}
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
-                className={`relative text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors focus-visible:text-[#f1f3f6] focus-visible:outline-none ${
+                className={`relative text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-300 ease-out focus-visible:text-[#f1f3f6] focus-visible:outline-none ${
                   active ? 'text-[#f1f3f6]' : 'text-[#a4abb6] hover:text-[#f1f3f6]'
                 }`}
               >
                 {link.label}
-                {active && (
-                  <span
-                    aria-hidden
-                    className='absolute -bottom-2 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-brand'
-                  />
-                )}
               </Link>
             );
           })}
+          <motion.span
+            aria-hidden
+            style={{ left: lineLeft, right: lineRight, opacity: lineOpacity }}
+            className='pointer-events-none absolute -bottom-2 h-0.5 rounded-full bg-brand'
+          />
         </nav>
 
         {/* Right actions */}
         <div className='flex items-center gap-2 sm:gap-[32px]'>
-          <a
+          <motion.a
+            {...PRESS}
+            {...phoneMagnet}
+            data-reveal-button
             href={phoneHref}
-            className='group hidden items-center gap-[10px] rounded-[8px] border border-brand bg-brand px-[18px] py-[10px] text-[14px] leading-normal font-semibold whitespace-nowrap text-[#f1f3f6] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none md:flex'
+            className='relative hidden items-center overflow-hidden rounded-[8px] border border-brand bg-brand px-[18px] py-[10px] text-[14px] leading-normal font-semibold whitespace-nowrap text-[#f1f3f6] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none md:flex'
           >
-            <PhoneIcon className='motion-safe:group-hover:animate-[phone-ring_1.4s_ease-in-out_infinite] motion-safe:group-focus-visible:animate-[phone-ring_1.4s_ease-in-out_infinite]' />
-            <span>{phone}</span>
-          </a>
+            <RevealContent band='dark' className='gap-[10px]'>
+              <PhoneIcon />
+              <span>{phone}</span>
+            </RevealContent>
+          </motion.a>
 
           {/* Phones only: round call button next to the menu button */}
           <a
@@ -173,12 +244,24 @@ export function StitchHeader({
               className='flex size-[40px] items-center justify-center rounded-[12px] border border-[#353c47] bg-[#2e343e] text-[#f1f3f6] transition-colors hover:border-[#3e4551] hover:text-[#f1f3f6] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none sm:size-[42px] sm:rounded-[8px] sm:border-[#2e343e] sm:bg-transparent sm:text-[#a4abb6] lg:hidden'
               aria-label='Toggle navigation menu'
             >
-              <Menu className='size-5' />
+              {/* The bars and the cross swap with a quarter turn, so the button reads as one control. */}
+              <AnimatePresence mode='wait' initial={false}>
+                <motion.span
+                  key={mobileMenuOpen ? 'close' : 'open'}
+                  initial={{ rotate: mobileMenuOpen ? -90 : 90, scale: 0.4, opacity: 0 }}
+                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                  exit={{ rotate: mobileMenuOpen ? 90 : -90, scale: 0.4, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className='flex'
+                >
+                  {mobileMenuOpen ? <X className='size-5' /> : <Menu className='size-5' />}
+                </motion.span>
+              </AnimatePresence>
             </SheetTrigger>
             <SheetContent
               side='right'
               showCloseButton={false}
-              className='w-full gap-0 border-[#2e343e] bg-[#1b1f26] p-0 text-[#f1f3f6] sm:w-[85%] sm:max-w-sm lg:hidden'
+              className='w-full gap-0 border-[#2e343e] bg-[#1b1f26] p-0 text-[#f1f3f6] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] sm:w-[85%] sm:max-w-sm lg:hidden'
             >
               <div className='flex items-center justify-between border-b border-[#353c47] py-[10px] pr-4 pl-5 sm:px-5 sm:py-4'>
                 <SheetTitle className='text-[11px] font-normal tracking-[0.88px] text-[#f1f3f6] uppercase'>
@@ -188,32 +271,46 @@ export function StitchHeader({
                   className='flex size-[44px] items-center justify-center rounded-[12px] border border-[#353c47] bg-[#2e343e] text-[#f1f3f6] transition-colors hover:border-[#3e4551] hover:text-[#f1f3f6] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none sm:size-[38px] sm:rounded-[8px] sm:border-[#2e343e] sm:bg-transparent sm:text-[#a4abb6]'
                   aria-label='Close navigation menu'
                 >
-                  <X className='size-5' />
+                  <motion.span
+                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.1 }}
+                    whileTap={{ rotate: 90, scale: 0.85 }}
+                    className='flex'
+                  >
+                    <X className='size-5' />
+                  </motion.span>
                 </SheetClose>
               </div>
               <nav className='flex flex-col px-5 py-3 sm:py-0'>
-                {mobileLinks.map((link) => {
+                {mobileLinks.map((link, linkIndex) => {
                   const active = pathname === link.href;
                   return (
-                    <Link
+                    <motion.div
                       key={`${link.label}-${link.href}`}
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      aria-current={active ? 'page' : undefined}
-                      className={`flex h-14 items-center justify-between border-b border-[#353c47] px-1 font-site-heading text-[22px] leading-[normal] font-extrabold transition-colors sm:h-auto sm:border-[#2e343e] sm:px-0 sm:py-[14px] sm:font-site-body sm:text-[15px] sm:font-medium ${
-                        active ? 'text-[#f1f3f6]' : 'text-[#c9ced6] hover:text-[#f1f3f6] sm:text-[#a4abb6]'
-                      }`}
+                      initial={{ opacity: 0, x: 28 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 30, delay: 0.06 + linkIndex * 0.05 }}
                     >
-                      <span className='flex items-center gap-[10px]'>
-                        {active && <span className='size-[6px] rounded-full bg-brand sm:hidden' />}
-                        {link.label}
-                      </span>
-                      {active && <span className='hidden size-[6px] rounded-full bg-brand sm:block' />}
-                      <ChevronRight
-                        aria-hidden
-                        className={`size-[18px] shrink-0 sm:hidden ${active ? 'text-brand' : 'text-[#a4abb6]'}`}
-                      />
-                    </Link>
+                      <Link
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        aria-current={active ? 'page' : undefined}
+                        className={`flex h-14 items-center justify-between border-b border-[#353c47] px-1 font-site-heading text-[22px] leading-[normal] font-extrabold transition-colors sm:h-auto sm:border-[#2e343e] sm:px-0 sm:py-[14px] sm:font-site-body sm:text-[15px] sm:font-medium ${
+                          active ? 'text-[#f1f3f6]' : 'text-[#c9ced6] hover:text-[#f1f3f6] sm:text-[#a4abb6]'
+                        }`}
+                      >
+                        <span className='flex items-center gap-[10px]'>
+                          {active && <span className='size-[6px] rounded-full bg-brand sm:hidden' />}
+                          {link.label}
+                        </span>
+                        {active && <span className='hidden size-[6px] rounded-full bg-brand sm:block' />}
+                        <ChevronRight
+                          aria-hidden
+                          className={`size-[18px] shrink-0 sm:hidden ${active ? 'text-brand' : 'text-[#a4abb6]'}`}
+                        />
+                      </Link>
+                    </motion.div>
                   );
                 })}
               </nav>

@@ -41,7 +41,7 @@ export default async function ContactPage() {
           <div className='grid grid-cols-1 items-start gap-0 sm:gap-12 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)] lg:gap-12'>
             <ContactInfo />
             <div className='max-sm:-mx-5 max-sm:-mb-16 max-sm:bg-[#20252d] max-sm:px-5 max-sm:py-14'>
-              <ContactForm services={services} copy={copy} />
+              <ContactForm services={services} copy={copy} whatsappNumber={settings.whatsappNumber || settings.phone} />
             </div>
           </div>
         </div>

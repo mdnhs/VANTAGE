@@ -1,4 +1,8 @@
 'use client';
+
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
+
+import { SectionTitle } from '@/components/marketing/ui/section-title';
 /* eslint-disable @next/next/no-img-element -- Figma SVG icons render at intrinsic size */
 
 import { useInsuranceEnabled } from '@/contexts/insurance-context';
@@ -173,7 +177,7 @@ function toCard(service: ServicePublic, index: number): ServiceCard {
     key: service.id,
     name: service.name,
     description: service.description,
-    badge: service.startingPrice != null ? `From €${service.startingPrice}` : null,
+    badge: null,
     footnote: 'Free Estimate',
     icon: fallbackIcon(index),
     iconSrc: service.icon ? sizedSrc(service.icon, 'w_48,h_48') : null,
@@ -292,9 +296,9 @@ export function StitchServices({
                 {displayEyebrow}
               </span>
             </span>
-            <h2 className='max-w-[474px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
+            <SectionTitle className='max-w-[474px] font-site-heading text-[30px] leading-[1.08] font-extrabold tracking-[-0.3px] text-[#f1f3f6] uppercase sm:text-[40px] sm:leading-[46px] sm:tracking-[-0.64px] lg:text-[48px] lg:leading-[54px] lg:tracking-[-0.96px]'>
               {displayLine1} <span className='text-brand'>{displayAccent}</span>
-            </h2>
+            </SectionTitle>
           </div>
           <p className='max-w-[440px] font-site-body text-base leading-[1.55] font-normal text-[#b9bfc9] sm:leading-[26px]'>
             {displaySubtext}
@@ -309,10 +313,10 @@ export function StitchServices({
             role='region'
             aria-roledescription='carousel'
             aria-label='Services'
-            className='flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain sm:gap-5 [&::-webkit-scrollbar]:hidden'
+            className='-my-2 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto overscroll-x-contain py-2 sm:gap-5 [&::-webkit-scrollbar]:hidden'
           >
             {cards.map((card) => (
-              <article
+              <TiltArticle
                 key={card.key}
                 className='group flex min-h-[280px] w-[280px] shrink-0 snap-start flex-col justify-between rounded-[18px] border border-[#353c47] bg-[#262b34] p-5 sm:min-h-[351px] sm:w-[calc((100%-20px)/2)] sm:rounded-2xl sm:p-7 lg:w-[calc((100%-60px)/4)]'
               >
@@ -367,7 +371,7 @@ export function StitchServices({
                     </span>
                   </Link>
                 </div>
-              </article>
+              </TiltArticle>
             ))}
           </div>
 

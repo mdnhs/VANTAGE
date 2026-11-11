@@ -1,3 +1,4 @@
+import { TiltArticle } from '@/components/marketing/ui/tilt-article';
 import { CarFront, FileText, MessagesSquare, type LucideIcon } from 'lucide-react';
 import {
   CARD,
@@ -38,7 +39,7 @@ export function CoordinationSection({ title, subtext, features }: CoordinationSe
           {features.map((feature, index) => {
             const Icon = ICONS[index % ICONS.length];
             return (
-              <article
+              <TiltArticle
                 key={`${feature.title}-${index}`}
                 className={`group grid grid-cols-[40px_1fr] items-start gap-x-3.5 gap-y-1 p-[18px] transition-colors duration-300 hover:border-brand/60 sm:flex sm:flex-col sm:items-stretch sm:gap-5 sm:p-7 ${CARD}`}
               >
@@ -58,7 +59,7 @@ export function CoordinationSection({ title, subtext, features }: CoordinationSe
                     {feature.description}
                   </p>
                 </div>
-              </article>
+              </TiltArticle>
             );
           })}
         </div>
