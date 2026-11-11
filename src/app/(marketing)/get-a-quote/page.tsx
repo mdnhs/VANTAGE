@@ -4,7 +4,6 @@ import { StitchEstimator } from '@/components/marketing/stitch-estimator';
 import { PageHero } from '@/components/marketing/ui/landing-primitives';
 import { sizedSrc } from '@/lib/media/public-image';
 import { getSetting } from '@/server/queries/get-setting';
-import { serviceService } from '@/server/services/service-service';
 import { siteSettingsService } from '@/server/services/site-settings-service';
 import { PageAnimations } from '@/components/marketing/page-animations';
 import { ScrollToQuoteForm } from '@/components/marketing/scroll-to-quote-form';
@@ -14,8 +13,7 @@ export async function generateMetadata() {
 }
 
 export default async function GetAQuotePage() {
-  const [services, copy, page, home, settings] = await Promise.all([
-    serviceService.listPublished(),
+  const [copy, page, home, settings] = await Promise.all([
     getSetting('quoteForm'),
     getSetting('page.get-a-quote'),
     getSetting('page.home'),
@@ -34,7 +32,7 @@ export default async function GetAQuotePage() {
         imageAlt={settings.quoteHeroFallbackImage?.alt}
         video={settings.quoteHeroVideoEnabled ? settings.quoteHeroVideo : null}
       />
-      <StitchEstimator services={services} copy={copy} heading={home.quoteSection} source='quote_page' />
+      <StitchEstimator copy={copy} heading={home.quoteSection} source='quote_page' />
       <PageAnimations />
       <ScrollToQuoteForm />
     </main>

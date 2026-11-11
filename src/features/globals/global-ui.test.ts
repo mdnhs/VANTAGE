@@ -200,7 +200,7 @@ describe('settings pages are organised into tabs', () => {
     contact: ['Phone & email', 'Address & map', 'Opening hours'],
     navigation: ['Menu links', 'Quote button'],
     footer: ['Brand', 'Social media', 'Link columns', 'Contact column', 'Bottom bar'],
-    quoteForm: ['Steps', 'Field text', 'Buttons', 'Reassurance', 'After sending'],
+    quoteForm: ['Field text', 'Buttons', 'Reassurance', 'After sending'],
     contactForm: ['Heading', 'Fields', 'Buttons & notes', 'After sending'],
     microcopy: ['Contact info', 'Visit us'],
     notifications: ['Recipients', 'Auto-reply'],

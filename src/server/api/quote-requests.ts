@@ -28,6 +28,8 @@ const PUBLIC_BODY_LIMIT = bodyLimit({
   },
 });
 
+const WHATSAPP_ENQUIRY_NAME = 'WhatsApp enquiry';
+
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export const quoteRequests = new Hono<AppEnv>()
@@ -35,7 +37,16 @@ export const quoteRequests = new Hono<AppEnv>()
   .post('/', rateLimit(30, 60_000), PUBLIC_BODY_LIMIT, zValidator('json', publicQuoteRequestSchema), async (c) => {
     // Fill the admin-field defaults (status 'new', unassigned, unpaid) server-side.
     const { photoUrls, eventId, sourcePath, website, stamp, ...fields } = c.req.valid('json');
-    const input = createQuoteRequestSchema.parse(fields);
+    // The form collects no name or email: the row carries a fixed label and an empty email, which
+    // keeps the auto-reply off and tells the admin to answer on WhatsApp.
+    const input = {
+      ...createQuoteRequestSchema.parse({
+        ...fields,
+        name: WHATSAPP_ENQUIRY_NAME,
+        email: 'whatsapp@placeholder.invalid',
+      }),
+      email: '',
+    };
     // A bot gets the same 201 as a visitor, but its row is filed as spam: no photos stored,
     // no email, no lead conversion.
     const spamReason = classifySubmission({ website, stamp }) ?? undefined;

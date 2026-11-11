@@ -132,11 +132,17 @@ export function StitchHeader({
                 key={`${link.label}-${link.href}`}
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
-                className={`text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors focus-visible:text-[#f1f3f6] focus-visible:outline-none ${
+                className={`relative text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors focus-visible:text-[#f1f3f6] focus-visible:outline-none ${
                   active ? 'text-[#f1f3f6]' : 'text-[#a4abb6] hover:text-[#f1f3f6]'
                 }`}
               >
                 {link.label}
+                {active && (
+                  <span
+                    aria-hidden
+                    className='absolute -bottom-2 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-brand'
+                  />
+                )}
               </Link>
             );
           })}
@@ -146,7 +152,7 @@ export function StitchHeader({
         <div className='flex items-center gap-2 sm:gap-[32px]'>
           <a
             href={phoneHref}
-            className='group hidden items-center gap-[10px] text-[14px] leading-[normal] font-semibold whitespace-nowrap text-[#f1f3f6] transition-colors hover:text-brand focus-visible:text-brand focus-visible:outline-none md:flex'
+            className='group hidden items-center gap-[10px] rounded-[8px] border border-brand bg-brand px-[18px] py-[10px] text-[14px] leading-normal font-semibold whitespace-nowrap text-[#f1f3f6] shadow-[0_8px_14px_rgb(var(--brand-rgb)/0.35)] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b1f26] focus-visible:outline-none md:flex'
           >
             <PhoneIcon className='motion-safe:group-hover:animate-[phone-ring_1.4s_ease-in-out_infinite] motion-safe:group-focus-visible:animate-[phone-ring_1.4s_ease-in-out_infinite]' />
             <span>{phone}</span>
@@ -156,7 +162,7 @@ export function StitchHeader({
           <a
             href={phoneHref}
             aria-label='Call us'
-            className='flex size-[40px] items-center justify-center rounded-[12px] border border-[#353c47] bg-[#2e343e] text-[#f1f3f6] transition-colors hover:border-[#3e4551] focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none sm:hidden'
+            className='flex size-[40px] items-center justify-center rounded-[12px] border border-brand bg-brand text-[#f1f3f6] transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:hidden'
           >
             <PhoneIcon className='size-[20px]' />
           </a>

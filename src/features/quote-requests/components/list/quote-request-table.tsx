@@ -152,7 +152,9 @@ export function QuoteRequestTable({ initialData, initialStats }: QuoteRequestTab
                       <div className='flex flex-col'>
                         <span className='font-medium text-foreground'>{quote.name}</span>
                         <span className='text-xs text-muted-foreground'>{quote.phone}</span>
-                        <span className='max-w-[180px] truncate text-xs text-muted-foreground'>{quote.email}</span>
+                        {quote.email && (
+                          <span className='max-w-[180px] truncate text-xs text-muted-foreground'>{quote.email}</span>
+                        )}
                       </div>
                     </td>
 

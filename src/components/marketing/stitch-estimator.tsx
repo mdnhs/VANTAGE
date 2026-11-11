@@ -9,11 +9,10 @@ const EYEBROW_DOT = '/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.sv
 // The quote section: heading and reassurance on the left, the form on the right. Shown on the
 // homepage for visitors who decide while scrolling, and on /get-a-quote, where every button leads.
 export function StitchEstimator({
-  services,
   copy,
   heading,
   source = 'homepage_estimator',
-}: Pick<ComponentProps<typeof QuoteForm>, 'services' | 'copy' | 'source'> & {
+}: Pick<ComponentProps<typeof QuoteForm>, 'copy' | 'source'> & {
   heading: GlobalValue<'page.home'>['quoteSection'];
 }) {
   return (
@@ -24,7 +23,6 @@ export function StitchEstimator({
     >
       <div className='mx-auto w-full max-w-[1200px]'>
         <QuoteForm
-          services={services}
           copy={copy}
           source={source}
           intro={

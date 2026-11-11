@@ -203,53 +203,26 @@ export const FooterGlobal = z.object({
 // ------------------------------------------------------------------- forms
 
 export const QuoteFormGlobal = z.object({
-  steps: z
-    .array(z.object({ label: s(40), short: s(20) }))
-    .length(3)
-    .default([
-      { label: 'Vehicle & Reg', short: 'Vehicle' },
-      { label: 'Damage Details', short: 'Damage' },
-      { label: 'Contact', short: 'Contact' },
-    ]),
   labels: z
     .object({
-      registration: s(60, 'Irish Registration Number'),
-      make: s(40, 'Vehicle Make'),
-      model: s(40, 'Vehicle Model'),
-      year: s(20, 'Year'),
-      service: s(60, 'Primary Repair Category'),
-      damage: s(80, 'Describe the Vehicle Damage & Location'),
+      whatsapp: s(40, 'Your WhatsApp Number'),
       photos: s(80, 'Upload Damage Photos (Up to 4 Angles)'),
-      name: s(40, 'Your Full Name'),
-      phone: s(40, 'Phone Number'),
-      email: s(40, 'Email Address'),
     })
     .prefault({}),
   placeholders: z
     .object({
-      registration: s(60, 'e.g. 231-D-48912'),
-      make: s(60, 'e.g. BMW / Audi'),
-      model: s(60, 'e.g. 3 Series / M4'),
-      year: s(20, 'YYYY'),
-      damage: s(
-        200,
-        'e.g. Scrape along passenger side front bumper and wing from parking incident. Original paint is creased...',
-      ),
-      name: s(60, 'e.g. Liam Murphy'),
-      phone: s(60, '+353 87 123 4567'),
-      email: s(60, 'name@example.ie'),
+      whatsapp: s(60, '+353 87 123 4567'),
     })
     .prefault({}),
   hints: z
     .object({
-      registration: s(120, 'Helps us match OEM parts & paint code'),
+      whatsapp: s(120, 'We reply on WhatsApp with your estimate'),
       photoPrompt: s(120, 'Tap to upload photos or drag & drop here'),
       photoTypes: s(80, 'JPEG, PNG or HEIC · Max 25MB'),
     })
     .prefault({}),
   buttons: z
     .object({
-      lookup: s(60, 'Find my vehicle details'),
       submit: s(60, 'Send my free quote request'),
       submitting: s(60, 'Submitting request…'),
       another: s(60, '← Submit another request'),
@@ -265,21 +238,20 @@ export const QuoteFormGlobal = z.object({
       { title: 'Direct insurance support', body: 'We work directly with your insurer so you are not out of pocket.' },
       { title: 'Replacement car provision', body: 'Keep moving while your vehicle is in our Dublin workshop.' },
     ]),
-  privacyNote: s(240, 'Privacy guarantee: your registration and contact details are used only for your quote.'),
+  privacyNote: s(240, 'Privacy guarantee: your number and photos are used only for your quote.'),
   success: z
     .object({
       title: s(80, 'Quote request received'),
-      // {name}, {vehicle} and {phone} are replaced.
+      // {phone} is replaced.
       body: s(
         400,
-        'Thank you, {name}! Our Dublin master technicians have received your details for {vehicle}. We will contact you at {phone} within 48 minutes with your estimate.',
+        'Thank you! Our Dublin master technicians have your photos. We will message you on WhatsApp at {phone} within 48 minutes with your estimate.',
       ),
-      vehicleFallback: s(40, 'your vehicle'),
     })
     .prefault({}),
   errors: z
     .object({
-      required: s(160, 'Please fill in your name, phone number, and email.'),
+      required: s(160, 'Please add your WhatsApp number and at least one photo.'),
       generic: s(160, 'Failed to submit quote request. Please try again.'),
     })
     .prefault({}),

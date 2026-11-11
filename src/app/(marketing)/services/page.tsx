@@ -67,7 +67,6 @@ export default async function ServicesPage() {
                   description={service.description}
                   checklist={service.checklist}
                   iconSrc={service.icon ? sizedSrc(service.icon, 'w_48,h_48') : undefined}
-                  startingPrice={service.startingPrice}
                   href={`/services/${service.slug}`}
                 />
               ))}

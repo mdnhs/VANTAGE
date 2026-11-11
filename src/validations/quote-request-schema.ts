@@ -76,24 +76,16 @@ export const createQuoteRequestSchema = z.object({
 // assignment, payment, invoice, inspection, cost, notes) are stripped by pick().
 export const publicPhotoUrlsSchema = z.array(photoDataUrlSchema).max(4).optional();
 
+// The public quote form asks for two things only: a WhatsApp number (stored in `phone`) and
+// the damage photos. Everything else is filled server-side or left empty. Admin-only columns
+// (status, assignment, payment, invoice, inspection, cost, notes) are never accepted here.
 export const publicQuoteRequestSchema = createQuoteRequestSchema
   .pick({
-    name: true,
-    email: true,
     phone: true,
-    address: true,
-    city: true,
-    eircode: true,
-    registration: true,
-    make: true,
-    model: true,
-    year: true,
-    serviceType: true,
-    description: true,
     source: true,
   })
   .extend({
-    photoUrls: publicPhotoUrlsSchema,
+    photoUrls: z.array(photoDataUrlSchema).min(1, 'Add at least one photo').max(4),
     eventId: z.uuid().optional(),
     sourcePath: z.string().max(300).optional(),
     // Spam checks: the hidden field and the signed form stamp. Both are stripped before create.

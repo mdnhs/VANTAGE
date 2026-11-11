@@ -1,10 +1,12 @@
-import { QuoteButton } from '@/components/marketing/quote-cta';
+import { QUOTE_HREF, QuoteButton } from '@/components/marketing/quote-cta';
 /* eslint-disable @next/next/no-img-element */
 import Image from 'next/image';
+import Link from 'next/link';
 import { BODY_TEXT, ButtonLink, CARD } from '@/components/marketing/ui/landing-primitives';
 
 const ASSET = '/assets/landing';
 const CHECK_SRC = `${ASSET}/af900d3d05a78ce1eaa2cfe4e4134d654de6e007.svg`;
+const ARROW_WHITE_SRC = `${ASSET}/service-arrow-white.svg`;
 
 // Figma service icon set (same as the homepage services cards), assigned by display position.
 // `inset` places the vector group inside the 24px icon frame.
@@ -34,7 +36,6 @@ type ServiceFeatureBlockProps = {
   checklist: string[];
   iconSrc?: string | null;
   imagePosition?: string;
-  startingPrice?: number | null;
   /** The service's own /services/<slug> page. */
   href: string;
 };
@@ -49,7 +50,6 @@ export function ServiceFeatureBlock({
   checklist,
   iconSrc,
   imagePosition,
-  startingPrice,
   href,
 }: ServiceFeatureBlockProps) {
   const icon = FIGMA_ICONS[index % FIGMA_ICONS.length];
@@ -94,14 +94,12 @@ export function ServiceFeatureBlock({
               </span>
             )}
           </div>
-          {startingPrice != null && (
-            <span className='rounded-full border border-[#353c47] px-2.5 py-1 font-site-body text-[10px] leading-normal tracking-[0.4px] text-[#c9ced6] uppercase xl:border-white/12 xl:bg-white/6 xl:px-3 xl:py-1.5 xl:text-[13px] xl:font-bold xl:tracking-normal xl:text-[#f1f3f6]'>
-              From €{startingPrice}
-            </span>
-          )}
         </div>
 
         <div className='flex flex-col gap-2 sm:gap-3 xl:gap-2.5'>
+          <p className='hidden font-site-body text-[11px] leading-normal font-semibold tracking-[0.88px] text-brand uppercase xl:block'>
+            Division {number}
+          </p>
           <h3 className='font-site-heading text-[18px] leading-normal font-semibold tracking-normal text-[#f1f3f6] normal-case sm:text-[32px] sm:leading-[38px] sm:font-extrabold sm:tracking-[-0.52px] sm:uppercase xl:text-[20px] xl:leading-[26px] xl:font-bold xl:tracking-[-0.1px] xl:normal-case'>
             {heading}
           </h3>
@@ -112,7 +110,7 @@ export function ServiceFeatureBlock({
           <ul className='flex w-full flex-col gap-2 border-t border-[#353c47] pt-[14px] sm:gap-4 sm:border-[#2e343e] sm:pt-6 xl:gap-2.5 xl:border-[#353c47] xl:pt-[18px]'>
             {checklist.map((label) => (
               <li key={label} className='flex items-start gap-2 sm:gap-4 xl:items-center xl:gap-2.5'>
-                <span className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-1.5 xl:p-0'>
+                <span className='flex shrink-0 items-center justify-center rounded-full bg-[#055e45] p-1.5 xl:bg-transparent xl:p-0'>
                   <span aria-hidden className='relative block size-4 shrink-0 overflow-clip'>
                     <span className='absolute inset-[27.08%_20.83%] block'>
                       <span className='absolute inset-[-10.23%_-8.04%] block'>
@@ -129,11 +127,32 @@ export function ServiceFeatureBlock({
           </ul>
         )}
 
-        <div className='mt-auto flex w-full flex-col gap-3 sm:w-auto sm:flex-row xl:w-full xl:flex-col'>
-          <ButtonLink href={href} variant='secondary' className='w-full sm:w-auto xl:w-full'>
+        <div className='mt-auto flex w-full flex-col gap-3 sm:w-auto sm:flex-row xl:hidden'>
+          <ButtonLink href={href} variant='secondary' className='w-full sm:w-auto'>
             Learn more
           </ButtonLink>
-          <QuoteButton className='w-full sm:w-auto xl:w-full' />
+          <QuoteButton className='w-full sm:w-auto' />
+        </div>
+
+        {/* Desktop card footer: quote link on the left, round arrow to the service page on the right. */}
+        <div className='mt-auto hidden w-full items-center justify-between xl:flex'>
+          <Link
+            href={QUOTE_HREF}
+            className='rounded font-site-body text-[13px] leading-normal font-semibold text-[#f1f3f6] transition-colors hover:text-brand-mid focus-visible:ring-2 focus-visible:ring-brand focus-visible:outline-none'
+          >
+            Get a quote
+          </Link>
+          <Link
+            href={href}
+            aria-label={`Learn more about ${heading}`}
+            className='flex size-9 items-center justify-center rounded-full bg-brand transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-[#262b34] focus-visible:outline-none'
+          >
+            <span className='relative block size-[18px] shrink-0 overflow-hidden transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5'>
+              <span className='absolute inset-[27.08%] flex items-center justify-center'>
+                <img src={ARROW_WHITE_SRC} alt='' width={9.25} height={9.25} className='block max-w-none' />
+              </span>
+            </span>
+          </Link>
         </div>
       </div>
     </article>

@@ -1,5 +1,6 @@
 'use client';
 
+import { whatsappHref } from '@/features/quote-requests/utils/whatsapp';
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -282,7 +283,7 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
         <div className='flex items-center gap-1 sm:gap-1.5'>
           {/* WhatsApp Direct */}
           <a
-            href={`https://wa.me/${phoneDigits.replace('+', '')}`}
+            href={whatsappHref(quote.phone)}
             target='_blank'
             rel='noopener noreferrer'
             title='Chat with customer on WhatsApp'
@@ -308,18 +309,22 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
             <span className='hidden sm:inline'>Call</span>
           </a>
 
-          {/* Email Reply */}
-          <a
-            href={replyMailto(quote.email, quoteReplySubject(siteName))}
-            title='Reply via email'
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'sm' }),
-              'h-8 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Mail className='size-3.5' />
-            <span className='hidden sm:inline'>Email</span>
-          </a>
+          {quote.email && (
+            <>
+              {/* Email Reply */}
+              <a
+                href={replyMailto(quote.email, quoteReplySubject(siteName))}
+                title='Reply via email'
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  'h-8 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Mail className='size-3.5' />
+                <span className='hidden sm:inline'>Email</span>
+              </a>
+            </>
+          )}
 
           {/* Full Page Link */}
           <Link
@@ -392,10 +397,14 @@ export function QuoteInboxDetail({ quote, onCloseMobile, onDeleted }: QuoteInbox
               </div>
 
               <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
-                <a href={`mailto:${quote.email}`} className='hover:text-foreground hover:underline'>
-                  {quote.email}
-                </a>
-                <span>•</span>
+                {quote.email && (
+                  <>
+                    <a href={`mailto:${quote.email}`} className='hover:text-foreground hover:underline'>
+                      {quote.email}
+                    </a>
+                    <span>•</span>
+                  </>
+                )}
                 <a href={`tel:${phoneDigits}`} className='font-mono hover:text-foreground hover:underline'>
                   {quote.phone}
                 </a>

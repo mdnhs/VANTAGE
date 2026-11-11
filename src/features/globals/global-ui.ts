@@ -175,13 +175,10 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     'legalLinks.$': { widget: 'link' },
   },
   quoteForm: {
-    steps: {
-      section: 'Steps',
-      sectionDescription: 'The three steps shown above the quote form. They follow the visitor down the single form.',
-    },
     labels: {
       section: 'Field text',
-      sectionDescription: 'The labels, example text and hints for the quote form fields.',
+      sectionDescription:
+        'The labels, example text and hints for the two quote form fields: WhatsApp number and photos.',
     },
     placeholders: { section: 'Field text' },
     hints: { section: 'Field text' },
@@ -201,7 +198,7 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       sectionDescription: 'What visitors see once they send the form, or when something goes wrong.',
     },
     errors: { section: 'After sending' },
-    'success.body': { description: '"{name}", "{vehicle}" and "{phone}" are replaced.' },
+    'success.body': { description: '"{phone}" is replaced with the WhatsApp number the visitor entered.' },
   },
   contactForm: {
     title: {

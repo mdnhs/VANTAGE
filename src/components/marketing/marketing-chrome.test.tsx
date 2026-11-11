@@ -18,6 +18,7 @@ import { fillCopy } from './ui/copy-template';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/services' }));
 vi.mock('@/features/contact-messages/services/api', () => ({ submitContactMessage: vi.fn() }));
+vi.mock('@/lib/image-to-data-url', () => ({ imageFileToDataUrl: vi.fn(async () => 'data:image/png;base64,eA==') }));
 vi.mock('@/features/quote-requests/services/api', () => ({ submitQuoteRequest: vi.fn() }));
 vi.mock('@/server/services/site-settings-service', () => ({
   siteSettingsService: {
@@ -153,22 +154,22 @@ describe('StitchHeader from navigation defaults', () => {
 
 describe('forms from default copy', () => {
   it('quote form shows its copy on one form', () => {
-    render(<QuoteForm services={[]} copy={parseGlobal('quoteForm', {})} />);
+    render(<QuoteForm copy={parseGlobal('quoteForm', {})} />);
     for (const text of [
-      'Vehicle & Reg',
-      'Irish Registration Number',
-      'Primary Repair Category',
-      'Upload Damage Photos (Up to 4 Angles)',
+      /^Your WhatsApp Number/,
+      /^Upload Damage Photos \(Up to 4 Angles\)/,
       'Send my free quote request',
-      'Helps us match OEM parts & paint code',
+      'We reply on WhatsApp with your estimate',
       'Average response time: 48 minutes',
       'No card required',
       'No-obligation & 100% free',
-      'Privacy guarantee: your registration and contact details are used only for your quote.',
+      'Privacy guarantee: your number and photos are used only for your quote.',
     ]) {
       expect(screen.getAllByText(text).length).toBeGreaterThan(0);
     }
-    expect(screen.getByPlaceholderText('e.g. 231-D-48912')).toBeTruthy();
+    expect(screen.getByPlaceholderText('+353 87 123 4567')).toBeTruthy();
+    expect(screen.queryByText('Vehicle & Reg')).toBeNull();
+    expect(screen.queryByPlaceholderText('name@example.ie')).toBeNull();
   });
 
   it('contact form shows the original copy', () => {
@@ -236,10 +237,11 @@ describe('generate_lead from the contact form', () => {
 describe.each([['QuoteForm', 'quote']] as const)('generate_lead from %s', (_which, formId) => {
   const run = async () => {
     const copy = parseGlobal('quoteForm', {});
-    render(<QuoteForm services={[]} copy={copy} />);
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
+    render(<QuoteForm copy={copy} />);
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.whatsapp), { target: { value: '0871234567' } });
+    fireEvent.change(document.querySelector('input[type=file]')!, {
+      target: { files: [new File(['x'], 'damage.png', { type: 'image/png' })] },
+    });
     fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
     await waitFor(() => expect(submitQuoteRequest).toHaveBeenCalledTimes(1));
   };
@@ -360,8 +362,7 @@ describe('MarketingFooter legal pages', () => {
 describe('homepage quote section', () => {
   const copy = parseGlobal('quoteForm', {});
   const heading = parseGlobal('page.home', {}).quoteSection;
-  const section = (over = {}) =>
-    render(<StitchEstimator services={[]} copy={copy} heading={{ ...heading, ...over }} />);
+  const section = (over = {}) => render(<StitchEstimator copy={copy} heading={{ ...heading, ...over }} />);
 
   it('is the #estimator target every quote button points at', () => {
     const { container } = section();
@@ -376,19 +377,11 @@ describe('homepage quote section', () => {
     expect(screen.getByText('Edited badge')).toBeTruthy();
   });
 
-  it('starts with an empty registration, never a sample one', () => {
+  it('asks only for a WhatsApp number and photos', () => {
     section();
-    expect((screen.getByLabelText(copy.labels.registration) as HTMLInputElement).value).toBe('');
-  });
-
-  it('has no pretend vehicle lookup', () => {
-    section();
-    expect(screen.queryByRole('button', { name: /look up registration/i })).toBeNull();
-    expect(screen.queryByText(/Auto-fills year/i)).toBeNull();
-  });
-
-  it('lets the customer describe the damage', () => {
-    section();
-    expect(screen.getByLabelText(copy.labels.damage)).toBeTruthy();
+    expect((screen.getByLabelText(new RegExp(copy.labels.whatsapp)) as HTMLInputElement).value).toBe('');
+    expect(document.querySelector('input[type=file]')).not.toBeNull();
+    expect(document.querySelectorAll('form input:not([type=hidden]):not([type=file])')).toHaveLength(2); // number + honeypot
+    expect(document.querySelector('form textarea')).toBeNull();
   });
 });

@@ -86,7 +86,12 @@ export async function sendEnquiryEmails(enquiry: Enquiry): Promise<NotifyOutcome
   if (recipients.length) {
     const noun = enquiry.kind === 'quote' ? 'quote request' : 'enquiry';
     const rows = enquiry.details.filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`);
-    const paragraphs = [`Name: ${enquiry.name}`, `Email: ${enquiry.email}`, `Phone: ${enquiry.phone}`, ...rows];
+    const paragraphs = [
+      `Name: ${enquiry.name}`,
+      ...(enquiry.email ? [`Email: ${enquiry.email}`] : []),
+      `Phone: ${enquiry.phone}`,
+      ...rows,
+    ];
     if (notifications.includeMessage && enquiry.message) paragraphs.push(enquiry.message);
     const { html, text } = renderEmail({
       heading: `New ${noun}`,

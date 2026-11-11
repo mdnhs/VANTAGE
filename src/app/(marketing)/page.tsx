@@ -14,7 +14,6 @@ import { partnerLogoService } from '@/server/services/partner-logo-service';
 import { homepageCatalogService } from '@/server/services/homepage-catalog-service';
 import { homepageProcessStepService } from '@/server/services/homepage-process-step-service';
 import { projectService } from '@/server/services/project-service';
-import { serviceService } from '@/server/services/service-service';
 import { getSetting } from '@/server/queries/get-setting';
 import { PageAnimations } from '@/components/marketing/page-animations';
 
@@ -33,7 +32,6 @@ export default async function Home() {
     partnerLogos,
     processSteps,
     featuredProjects,
-    services,
     quoteCopy,
     homePage,
     insurance,
@@ -44,7 +42,6 @@ export default async function Home() {
     partnerLogoService.listEnabled(),
     homepageProcessStepService.listEnabled(),
     projectService.listFeatured(),
-    serviceService.listPublished(),
     getSetting('quoteForm'),
     getSetting('page.home'),
     getInsuranceEnabled(),
@@ -83,7 +80,7 @@ export default async function Home() {
           headlineAccent={settings.catalogHeadlineAccent}
           subtext={settings.catalogSubtext}
         />
-        <StitchEstimator services={services} copy={quoteCopy} heading={quoteHeading} />
+        <StitchEstimator copy={quoteCopy} heading={quoteHeading} />
         <StitchCaseStudies projects={featuredProjects} />
         <StitchProcess steps={processSteps.filter((step) => visibleCopy(insurance, step.title, step.description))} />
         <StitchSocialProof testimonials={testimonials} partnerLogos={partnerLogos} insurance={insurance} />

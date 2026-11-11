@@ -1,5 +1,6 @@
 'use client';
 
+import { whatsappHref } from '@/features/quote-requests/utils/whatsapp';
 import { PageHeader, TOOLBAR_ACTION } from '@/components/admin/dashboard/page-header';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -217,7 +218,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
         actions={
           <>
             <a
-              href={`https://wa.me/${phoneDigits.replace('+', '')}`}
+              href={whatsappHref(initialQuote.phone)}
               target='_blank'
               rel='noopener noreferrer'
               className={cn(
@@ -242,13 +243,15 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
               <span>Call Customer</span>
             </a>
 
-            <a
-              href={replyMailto(initialQuote.email, quoteReplySubject(siteName))}
-              className={cn(buttonVariants({ variant: 'outline' }), TOOLBAR_ACTION)}
-            >
-              <Mail />
-              <span>Email</span>
-            </a>
+            {initialQuote.email && (
+              <a
+                href={replyMailto(initialQuote.email, quoteReplySubject(siteName))}
+                className={cn(buttonVariants({ variant: 'outline' }), TOOLBAR_ACTION)}
+              >
+                <Mail />
+                <span>Email</span>
+              </a>
+            )}
 
             <Button
               type='button'
@@ -331,7 +334,7 @@ export function QuoteDetailView({ quote: initialQuote }: QuoteDetailViewProps) {
             <div className='flex justify-between border-b border-border pb-2'>
               <span className='text-muted-foreground'>Email</span>
               <span className='max-w-[160px] truncate font-medium' title={initialQuote.email}>
-                {initialQuote.email}
+                {initialQuote.email || 'Not given'}
               </span>
             </div>
             <div className='flex flex-col gap-1 border-b border-border pb-2'>

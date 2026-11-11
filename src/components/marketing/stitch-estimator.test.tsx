@@ -8,6 +8,7 @@ import { parseGlobal } from '@/lib/content/globals';
 import { StitchEstimator } from './stitch-estimator';
 
 vi.mock('@/features/quote-requests/services/api', () => ({ submitQuoteRequest: vi.fn() }));
+vi.mock('@/lib/image-to-data-url', () => ({ imageFileToDataUrl: vi.fn(async () => 'data:image/png;base64,eA==') }));
 
 afterEach(cleanup);
 
@@ -16,12 +17,11 @@ describe('StitchEstimator on different pages', () => {
     vi.mocked(submitQuoteRequest).mockReset();
     vi.mocked(submitQuoteRequest).mockResolvedValue({} as never);
     const copy = parseGlobal('quoteForm', {});
-    render(
-      <StitchEstimator services={[]} copy={copy} heading={parseGlobal('page.home', {}).quoteSection} source={source} />,
-    );
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
+    render(<StitchEstimator copy={copy} heading={parseGlobal('page.home', {}).quoteSection} source={source} />);
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.whatsapp), { target: { value: '0871234567' } });
+    fireEvent.change(document.querySelector('input[type=file]')!, {
+      target: { files: [new File(['x'], 'damage.png', { type: 'image/png' })] },
+    });
     fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
     await waitFor(() => expect(submitQuoteRequest).toHaveBeenCalledTimes(1));
     return vi.mocked(submitQuoteRequest).mock.calls[0]![0].source;
@@ -40,10 +40,11 @@ describe('StitchEstimator error message', () => {
   it('draws the error in the readable brand-soft token', async () => {
     vi.mocked(submitQuoteRequest).mockRejectedValue(new Error('nope'));
     const copy = parseGlobal('quoteForm', {});
-    render(<StitchEstimator services={[]} copy={copy} heading={parseGlobal('page.home', {}).quoteSection} />);
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.name), { target: { value: 'Pat' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.phone), { target: { value: '0871234567' } });
-    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.email), { target: { value: 'p@example.com' } });
+    render(<StitchEstimator copy={copy} heading={parseGlobal('page.home', {}).quoteSection} />);
+    fireEvent.change(screen.getByPlaceholderText(copy.placeholders.whatsapp), { target: { value: '0871234567' } });
+    fireEvent.change(document.querySelector('input[type=file]')!, {
+      target: { files: [new File(['x'], 'damage.png', { type: 'image/png' })] },
+    });
     fireEvent.click(screen.getByRole('button', { name: copy.buttons.submit }));
     await waitFor(() => expect(submitQuoteRequest).toHaveBeenCalledTimes(1));
     const message = await screen.findByText('nope');
