@@ -20,8 +20,8 @@ export function JsonFileWidget({ field, value, onChange, error }: WidgetProps<st
 
   async function pick(file: File | undefined) {
     if (!file) return;
-    if (file.size > 2_000_000) {
-      setProblem('Animations can be up to 2 MB');
+    if (file.size > 2_500_000) {
+      setProblem('Animations can be up to 2.5 MB');
       return;
     }
     const result = readJsonText(await file.text());

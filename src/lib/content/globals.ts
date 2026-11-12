@@ -71,7 +71,7 @@ export const SiteGlobal = z.object({
   lottieLogo: z
     .object({
       enabled: z.boolean().default(false),
-      json: z.string().max(2_000_000).nullable().default(null),
+      json: z.string().max(2_500_000).nullable().default(null),
     })
     .prefault({}),
   social: z
