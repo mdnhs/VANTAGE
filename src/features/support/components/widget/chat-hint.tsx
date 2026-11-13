@@ -220,7 +220,7 @@ export function ChatHint({
       onBlurCapture={(event) => {
         if (!hovering.current && !root.current?.contains(event.relatedTarget as Node | null)) setExpanded(false);
       }}
-      className='relative w-[min(272px,calc(100vw-108px))] overflow-hidden rounded-[32px] border border-white/14 bg-[#20252d] text-[#f1f3f6] shadow-[0_18px_50px_-12px_rgb(0_0_0/0.8)] will-change-transform'
+      className='relative w-[min(272px,calc(100vw-108px))] overflow-hidden rounded-[32px] border border-white/14 bg-[#20252d]/55 text-[#f1f3f6] shadow-[0_18px_50px_-12px_rgb(0_0_0/0.8)] backdrop-blur-2xl backdrop-saturate-150 will-change-transform'
     >
       <span
         ref={sheen}

@@ -20,8 +20,23 @@ describe('LinkifiedText', () => {
   });
 
   it('leaves text without links, and non-http schemes, alone', () => {
-    render(<LinkifiedText text='Call 0852785974 or javascript:alert(1)' />);
+    render(<LinkifiedText text='Open 2026-11-08, javascript:alert(1)' />);
     expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  it('turns a phone number into a tel: link and a WhatsApp number into a wa.me link', () => {
+    render(<LinkifiedText text={'📞 Phone: 0852785974\n💬 WhatsApp: +353 894400191\nThanks'} />);
+    const phone = screen.getByRole('link', { name: '0852785974' });
+    expect(phone.getAttribute('href')).toBe('tel:+353852785974');
+    const wa = screen.getByRole('link', { name: '+353 894400191' });
+    expect(wa.getAttribute('href')).toBe('https://wa.me/353894400191');
+    expect(wa.getAttribute('target')).toBe('_blank');
+  });
+
+  it('turns an email address into a mailto: link, leaving trailing punctuation outside', () => {
+    render(<LinkifiedText text='Email info@autopaintshop.ie.' />);
+    const link = screen.getByRole('link', { name: 'info@autopaintshop.ie' });
+    expect(link.getAttribute('href')).toBe('mailto:info@autopaintshop.ie');
   });
 
   it('turns a site path into a link on the current origin', () => {

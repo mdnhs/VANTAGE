@@ -209,9 +209,9 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
           onKeyDown={(e) => {
             if (e.key === 'Escape') close();
           }}
-          className='flex h-[min(520px,calc(100dvh-112px))] w-[min(340px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#2e343e] bg-[#1b1f26] text-[#f1f3f6] shadow-2xl'
+          className='flex h-[min(520px,calc(100dvh-112px))] w-[min(340px,calc(100vw-32px))] flex-col overflow-hidden rounded-[18px] border border-[#2e343e] bg-[#20252d]/55 text-[#f1f3f6] shadow-2xl backdrop-blur-2xl backdrop-saturate-150'
         >
-          <header data-chat-part className='flex items-center gap-3 border-b border-[#2e343e] px-4 py-3.5'>
+          <header data-chat-part className='flex items-center gap-3 border-b border-[#2e343e] bg-[#20252d] px-4 py-3.5'>
             <span ref={avatar} className='relative grid size-10 shrink-0 place-items-center rounded-full bg-brand'>
               {conversation?.agentName ? (
                 <span className='text-[16px] font-semibold'>{conversation.agentName[0]?.toUpperCase()}</span>
@@ -221,7 +221,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
               {online ? (
                 <span
                   ref={onlineDot}
-                  className='absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-[#1b1f26] bg-emerald-500'
+                  className='absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-[#20252d] bg-emerald-500'
                 />
               ) : null}
             </span>
@@ -315,7 +315,7 @@ export function SupportWidget({ retentionMonths }: { retentionMonths: number }) 
             ) : null}
           </div>
 
-          <div data-chat-part className='border-t border-[#2e343e] p-3'>
+          <div data-chat-part className='border-t border-[#2e343e] bg-[#20252d] p-3'>
             {error ? (
               <p role='alert' className='mb-2 text-[13px] text-brand-soft'>
                 {error}
