@@ -163,6 +163,23 @@ async function publicRoute(request: NextRequest) {
   return NextResponse.next();
 }
 
+// Admin screens that moved under their section (/dashboard/home-page ->
+// /dashboard/website/home-page): old bookmarks and links land on the new address.
+const MOVED_ADMIN: ReadonlyArray<readonly [RegExp, string]> = [
+  [
+    /^\/dashboard\/(home-page|services|legal-pages|projects|insurance|about|process-page|contact-page|homepage-catalogs|homepage-process-steps|partner-logos|testimonials)(?=\/|$)/,
+    '/dashboard/website/$1',
+  ],
+  [/^\/dashboard\/(quotes|contacts)(?=\/|$)/, '/dashboard/enquiries/$1'],
+];
+
+export function movedAdminPath(pathname: string): string | null {
+  for (const [pattern, to] of MOVED_ADMIN) {
+    if (pattern.test(pathname)) return pathname.replace(pattern, to);
+  }
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
   const wrongHost = await canonicalHost(request);
   if (wrongHost) return wrongHost;
@@ -170,6 +187,8 @@ export async function proxy(request: NextRequest) {
   const signedIn = hasSessionCookie(request);
 
   if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    const moved = movedAdminPath(pathname);
+    if (moved) return noindex(redirectTo(`${moved}${search}`, request));
     const adminPath = safeNext(`${pathname}${search}`);
     if (!signedIn) {
       return noindex(redirectTo(`${APP_ROUTES.auth.login}?next=${encodeURIComponent(adminPath)}`, request));

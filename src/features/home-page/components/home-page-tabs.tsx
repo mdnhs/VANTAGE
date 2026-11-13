@@ -1,7 +1,7 @@
 'use client';
 
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, useInsideTabs } from '@/components/ui/tabs';
 import { useCan } from '@/contexts/actor-provider';
 import { GlobalEditor } from '@/features/globals/components/global-editor';
 import { PageSeoTab } from '@/features/seo/components/page-seo-tab';
@@ -46,10 +46,12 @@ export function HomePageTabs({ catalogItems, processSteps, testimonials, partner
     parseAsStringLiteral(values).withDefault('copy').withOptions({ clearOnDefault: true }),
   );
 
+  // Inside another tab panel: a box row with no underline (see useInsideTabs).
+  const nested = useInsideTabs();
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value as (typeof values)[number])} className='gap-6'>
       {/* Horizontal here: the outer "Website pages" menu already owns the left column. */}
-      <div className='border-b border-border'>
+      <div className={nested ? undefined : 'border-b border-border'}>
         <TabsList variant='line' className='h-auto w-fit max-w-full flex-wrap justify-start'>
           {sections.map((section) => (
             <TabsTrigger key={section.value} value={section.value}>

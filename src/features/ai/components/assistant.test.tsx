@@ -10,7 +10,7 @@ import { AiAssistant } from './assistant';
 
 const mocks = vi.hoisted(() => ({ actor: null as unknown as MePayload }));
 vi.mock('@/contexts/actor-provider', () => ({ useActor: () => mocks.actor }));
-vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard/about' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard/website/about' }));
 vi.mock('@ai-sdk/react', () => {
   return {
     useChat: () => ({

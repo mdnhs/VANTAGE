@@ -62,7 +62,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     title: 'Crash Repair & Car Restoration in Dublin',
     crumb: 'Home',
     description: HOME_DESCRIPTION,
-    editorHref: '/dashboard/home-page',
+    editorHref: '/dashboard/website/home-page',
     editorTab: true,
     pageKey: 'page.home',
     hasH1: true,
@@ -76,7 +76,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Services',
     description:
       'Collision repair, resprays, laser chassis alignment and restoration in Dublin, using OEM-approved methods. Get a free, no-obligation quote.',
-    editorHref: '/dashboard/services',
+    editorHref: '/dashboard/website/services',
     editorTab: true,
     pageKey: 'page.services',
     hasH1: true,
@@ -90,7 +90,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Our Work',
     description:
       'Before and after photos of our crash repairs, resprays and restorations in Dublin: factory panel gaps and colour matches you cannot tell apart.',
-    editorHref: '/dashboard/projects',
+    editorHref: '/dashboard/website/projects',
     editorTab: true,
     pageKey: 'page.our-work',
     hasH1: true,
@@ -104,7 +104,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Insurance',
     description:
       'Accident repairs coordinated with your insurer: we deal with the assessors and the paperwork, and repair your car to factory standard in Dublin.',
-    editorHref: '/dashboard/insurance',
+    editorHref: '/dashboard/website/insurance',
     editorTab: true,
     pageKey: 'page.insurance',
     hasH1: true,
@@ -118,7 +118,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'About',
     description:
       'Founded in 1998, our Dublin body shop treats collision repair as a precision craft, with OEM-certified technicians and factory-standard repairs.',
-    editorHref: '/dashboard/about',
+    editorHref: '/dashboard/website/about',
     editorTab: true,
     pageKey: 'page.about',
     hasH1: true,
@@ -132,7 +132,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Our Process',
     description:
       'From digital triage to a multi-point handoff inspection, every step of your car body repair is logged and shared with you. See how we work.',
-    editorHref: '/dashboard/process-page',
+    editorHref: '/dashboard/website/process-page',
     editorTab: true,
     pageKey: 'page.process',
     hasH1: true,
@@ -146,7 +146,7 @@ export const PUBLIC_PAGES: Record<PublicPageId, PublicPage> = {
     crumb: 'Contact',
     description:
       'Call, message or visit our Dublin body shop. Book an inspection for a precise repair estimate, or ask our technicians a question.',
-    editorHref: '/dashboard/contact-page',
+    editorHref: '/dashboard/website/contact-page',
     editorTab: true,
     pageKey: 'page.contact',
     hasH1: true,

@@ -1,18 +1,18 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { useForm, type DefaultValues, type FieldValues, type Resolver } from 'react-hook-form';
 import type * as z from 'zod';
 
 import { FORM_ACTION } from '@/components/admin/dashboard/page-header';
 import { Button } from '@/components/ui/button';
-import { FieldGroup } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { SectionTabs } from '@/components/admin/section-tabs';
 
 import { toFields, type FieldOverrides, type FormField } from './to-fields';
-import { FieldWidget } from './widgets';
+import { SectionCard } from './section-card';
+import { FieldGrid, FieldWidget } from './widgets';
 
 import { submitResultErrors, type SubmitResult } from './helpers';
 
@@ -48,6 +48,9 @@ export function SchemaForm<S extends z.ZodObject>({
   onValuesChange,
   readOnly = false,
   sectionTabs = false,
+  leafTitle,
+  toolbar,
+  disabled = false,
 }: {
   schema: S;
   defaultValues: z.input<S>;
@@ -63,11 +66,20 @@ export function SchemaForm<S extends z.ZodObject>({
   // stays mounted, so a field on a hidden tab still validates, and a failed save opens the tab of
   // the first error and marks each tab that has one.
   sectionTabs?: boolean;
+  // Title of the card drawn around top-level fields that sit outside any group or section.
+  // Left out, those fields render without a card.
+  leafTitle?: string;
+  // A small control (e.g. History) placed in the tab row, or in the first card's header, instead
+  // of on a row of its own. It stays clickable when the fields are disabled.
+  toolbar?: ReactNode;
+  // Read-only: every field is disabled (the toolbar is not).
+  disabled?: boolean;
 }) {
   // Callers pass inline `overrides` literals and unstable callbacks: key the
   // field tree on the overrides' content and read the callback through a ref,
   // so neither recomputes the JSON Schema or resubscribes every render.
   const overridesKey = JSON.stringify(overrides ?? {});
+  const formId = useId();
   const fields = useMemo(() => toFields(schema, JSON.parse(overridesKey) as FieldOverrides), [schema, overridesKey]);
   const blocks = useMemo(() => groupBySection(fields), [fields]);
   const sectioned = blocks.filter((block) => block.section);
@@ -129,66 +141,122 @@ export function SchemaForm<S extends z.ZodObject>({
     fields.filter((field) => field.section && field.name in form.formState.errors).map((field) => field.section),
   );
 
+  // Fields sit in their own disabled fieldsets, so a read-only form keeps its toolbar usable.
+  const guard = (node: ReactElement, key?: string) => (
+    <fieldset key={key} disabled={disabled} className='min-w-0'>
+      {node}
+    </fieldset>
+  );
+  // The toolbar goes into the header of the first card drawn (forms without tabs).
+  let toolbarLeft = !tabbed && toolbar !== undefined;
+  const takeToolbar = () => {
+    if (!toolbarLeft) return undefined;
+    toolbarLeft = false;
+    return toolbar;
+  };
+
+  // A run of top-level fields: leaf fields share a grid, and each group or list (a page's
+  // "Top banner", "Team", "FAQ") becomes its own titled card. `data-section` lets an editor's
+  // outline scroll to it by name.
+  const renderFields = (list: FormField[], key: string, nested = false): ReactElement[] => {
+    const out: ReactElement[] = [];
+    let leaves: FormField[] = [];
+    const flush = () => {
+      if (leaves.length > 0) {
+        const grid = guard(
+          <FieldGrid key={`${key}-${out.length}`} fields={leaves} control={form.control} />,
+          `${key}-${out.length}-guard`,
+        );
+        // Loose top-level fields get a card of their own too, so a page whose banner fields sit at
+        // the top level (no group) looks like every other section.
+        out.push(
+          leafTitle && !nested ? (
+            <SectionCard
+              key={`${key}-${out.length}`}
+              title={leafTitle}
+              titleId={`${formId}-${key}-${out.length}`}
+              action={takeToolbar()}
+            >
+              {grid}
+            </SectionCard>
+          ) : (
+            grid
+          ),
+        );
+      }
+      leaves = [];
+    };
+    for (const field of list) {
+      if ((field.widget === 'group' || field.widget === 'list') && !field.nullable) {
+        flush();
+        out.push(
+          <SectionCard
+            key={field.name}
+            data-section={field.name}
+            nested={nested}
+            title={field.label}
+            description={field.description}
+            titleId={`${formId}-${field.name}`}
+            action={nested ? undefined : takeToolbar()}
+          >
+            {guard(<FieldWidget field={field} control={form.control} bare />)}
+          </SectionCard>,
+        );
+      } else {
+        leaves.push(field);
+      }
+    }
+    flush();
+    return out;
+  };
+
+  const sectionCard = (block: FieldBlock, index: number) => (
+    <SectionCard
+      key={`${block.section}-${index}`}
+      data-section={block.section}
+      title={block.section!}
+      description={block.description}
+      titleId={`${formId}-section-${index}`}
+      action={takeToolbar()}
+    >
+      <div className='flex flex-col gap-5'>{renderFields(block.fields, `section-${index}`, true)}</div>
+    </SectionCard>
+  );
+
   return (
     <form onSubmit={submit} noValidate className='flex flex-col gap-6'>
       {tabbed ? (
         <>
           {blocks
             .filter((block) => !block.section)
-            .map((block, index) => (
-              <FieldGroup key={`plain-${index}`}>
-                {block.fields.map((field) => (
-                  <FieldWidget key={field.name} field={field} control={form.control} />
-                ))}
-              </FieldGroup>
-            ))}
+            .flatMap((block, index) => renderFields(block.fields, `plain-${index}`))}
           <SectionTabs
+            action={toolbar}
             value={activeTab}
             onValueChange={setOpenTab}
-            tabs={sectioned.map((block) => ({
+            tabs={sectioned.map((block, index) => ({
               value: block.section!,
               label: block.section!,
-              description: block.description,
               invalid: erroredSections.has(block.section),
-              content: (
-                <FieldGroup>
-                  {block.fields.map((field) => (
-                    <FieldWidget key={field.name} field={field} control={form.control} />
-                  ))}
-                </FieldGroup>
-              ),
+              content: sectionCard(block, index),
             }))}
           />
         </>
       ) : (
-        blocks.map((block, index) =>
-          block.section ? (
-            <section
-              key={`${block.section}-${index}`}
-              data-section={block.section}
-              aria-labelledby={`section-${index}`}
-              className='flex scroll-mt-4 flex-col gap-5 rounded-xl border p-4 sm:p-5'
-            >
-              <div className='flex flex-col gap-1'>
-                <h3 id={`section-${index}`} className='text-base font-semibold'>
-                  {block.section}
-                </h3>
-                {block.description ? <p className='text-sm text-muted-foreground'>{block.description}</p> : null}
-              </div>
-              <FieldGroup>
-                {block.fields.map((field) => (
-                  <FieldWidget key={field.name} field={field} control={form.control} />
-                ))}
-              </FieldGroup>
-            </section>
-          ) : (
-            <FieldGroup key={`plain-${index}`}>
-              {block.fields.map((field) => (
-                <FieldWidget key={field.name} field={field} control={form.control} />
-              ))}
-            </FieldGroup>
-          ),
-        )
+        (() => {
+          const drawn = blocks.flatMap((block, index) =>
+            block.section ? [sectionCard(block, index)] : renderFields(block.fields, `plain-${index}`),
+          );
+          // No card to carry the toolbar: give it a row after all.
+          return toolbarLeft
+            ? [
+                <div key='toolbar' className='flex justify-end'>
+                  {toolbar}
+                </div>,
+                ...drawn,
+              ]
+            : drawn;
+        })()
       )}
       {rootError ? (
         <p role='alert' className='text-sm text-destructive'>

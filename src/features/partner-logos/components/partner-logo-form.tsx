@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -81,54 +81,49 @@ export function PartnerLogoForm({
 
   return (
     <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Partner logo details</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='companyName'>Company name</Label>
-            <Input
-              id='companyName'
-              value={form.companyName}
-              onChange={(e) => setField('companyName', e.target.value)}
-              required
-            />
-          </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='websiteUrl'>Website URL</Label>
-            <Input
-              id='websiteUrl'
-              type='url'
-              value={form.websiteUrl}
-              onChange={(e) => setField('websiteUrl', e.target.value)}
-              placeholder='https://example.com'
-            />
-          </div>
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isEnabled'
-              checked={form.isEnabled}
-              onCheckedChange={(checked) => setField('isEnabled', checked)}
-            />
-            <Label htmlFor='isEnabled'>Visible on the public site</Label>
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Logo</Label>
-            <MediaField
-              kind='image'
-              label='Logo'
-              value={slotRef(form.logoMediaId, initialData?.logoMediaId)}
-              onChange={(ref) => setField('logoMediaId', ref?.id)}
-            />
-            {(logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
-              <p className='text-sm text-destructive'>
-                {logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]}
-              </p>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+      <SectionCard title={'Partner logo details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='companyName'>Company name</Label>
+          <Input
+            id='companyName'
+            value={form.companyName}
+            onChange={(e) => setField('companyName', e.target.value)}
+            required
+          />
+        </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='websiteUrl'>Website URL</Label>
+          <Input
+            id='websiteUrl'
+            type='url'
+            value={form.websiteUrl}
+            onChange={(e) => setField('websiteUrl', e.target.value)}
+            placeholder='https://example.com'
+          />
+        </div>
+        <div className='flex items-center gap-3 pt-6'>
+          <Switch
+            id='isEnabled'
+            checked={form.isEnabled}
+            onCheckedChange={(checked) => setField('isEnabled', checked)}
+          />
+          <Label htmlFor='isEnabled'>Visible on the public site</Label>
+        </div>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label>Logo</Label>
+          <MediaField
+            kind='image'
+            label='Logo'
+            value={slotRef(form.logoMediaId, initialData?.logoMediaId)}
+            onChange={(ref) => setField('logoMediaId', ref?.id)}
+          />
+          {(logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+            <p className='text-sm text-destructive'>
+              {logoError ?? submitCauses?.logoMediaId?.[0] ?? submitCauses?._media?.[0]}
+            </p>
+          ) : null}
+        </div>
+      </SectionCard>
 
       {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
 

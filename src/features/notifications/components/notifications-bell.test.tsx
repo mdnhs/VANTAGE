@@ -12,7 +12,7 @@ const item = (i: number, unread = true): NotificationItem => ({
   kind: 'quote',
   title: 'New quote request',
   description: `From Person${i}`,
-  href: `/dashboard/quotes/${i}`,
+  href: `/dashboard/enquiries/quotes/${i}`,
   at: new Date().toISOString(),
   unread,
 });
@@ -90,7 +90,7 @@ describe('NotificationsBell', () => {
     await screen.findByText('From Person0');
     expect(screen.getByText('From Person1')).toBeTruthy();
     expect(screen.getAllByText('New quote request')).toHaveLength(2);
-    expect(screen.getByText('From Person0').closest('a')?.getAttribute('href')).toBe('/dashboard/quotes/0');
+    expect(screen.getByText('From Person0').closest('a')?.getAttribute('href')).toBe('/dashboard/enquiries/quotes/0');
     await waitFor(() => expect(seenCalls).toBe(1));
     await screen.findByRole('button', { name: 'Notifications' });
     expect(screen.getAllByText('(new)')).toHaveLength(2);

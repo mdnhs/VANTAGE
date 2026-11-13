@@ -20,7 +20,7 @@ const health: SeoHealth = {
       path: '/services',
       check: 'title-length',
       message: 'Title is too short',
-      fixHref: '/dashboard/services?tab=seo',
+      fixHref: '/dashboard/website/services?tab=seo',
     },
     {
       kind: 'page',
@@ -29,7 +29,7 @@ const health: SeoHealth = {
       path: '/services',
       check: 'description',
       message: 'Description is missing',
-      fixHref: '/dashboard/services?tab=seo',
+      fixHref: '/dashboard/website/services?tab=seo',
     },
     {
       kind: 'media',
@@ -98,7 +98,7 @@ describe('SeoOverviewView', () => {
     expect(within(list).getAllByText('Services')).toHaveLength(1);
     expect(within(list).getByText('/services')).toBeTruthy();
     const fix = screen.getByRole('link', { name: 'Fix: Title is too short (Services)' });
-    expect(fix.getAttribute('href')).toBe('/dashboard/services?tab=seo');
+    expect(fix.getAttribute('href')).toBe('/dashboard/website/services?tab=seo');
     expect(screen.getByRole('link', { name: 'Fix: Description is missing (Services)' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Fix: Image has no alt text (hero.jpg)' }).getAttribute('href')).toBe(
       '/dashboard/media?missingAlt=true&q=hero.jpg',

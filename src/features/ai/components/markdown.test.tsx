@@ -29,10 +29,10 @@ describe('Markdown (no raw HTML, ever)', () => {
 
   it('links only safe URLs', () => {
     const { container } = render(
-      <Markdown text={'[ok](https://example.ie/a) [bad](javascript:alert(1)) [rel](/dashboard/about)'} />,
+      <Markdown text={'[ok](https://example.ie/a) [bad](javascript:alert(1)) [rel](/dashboard/website/about)'} />,
     );
     const links = [...container.querySelectorAll('a')];
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['https://example.ie/a', '/dashboard/about']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['https://example.ie/a', '/dashboard/website/about']);
     expect(links[0]!.getAttribute('rel')).toContain('noopener');
     expect(container.textContent).toContain('bad (javascript:alert(1))');
     expect(safeHref('//evil.example')).toBeNull();

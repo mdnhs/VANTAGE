@@ -10,6 +10,8 @@ import { useActor, useCan } from '@/contexts/actor-provider';
 import { useSaveGlobal } from '@/features/globals/hooks/api/mutation/use-save-global';
 import { useGlobal } from '@/features/globals/hooks/api/query/use-global';
 import { appHostFrom, type PreferredHost } from '@/lib/seo/canonical-host';
+import { Globe } from 'lucide-react';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 
 const isPreferred = (value: unknown): value is PreferredHost => value === 'off' || value === 'apex' || value === 'www';
 
@@ -50,16 +52,12 @@ export function PreferredAddressCard() {
   }
 
   return (
-    <section aria-labelledby='preferred-address-title' className='flex flex-col gap-4 rounded-lg border p-4 sm:p-5'>
-      <div className='flex flex-col gap-1'>
-        <h2 id='preferred-address-title' className='text-base font-semibold'>
-          Preferred address
-        </h2>
-        <p className='text-sm text-muted-foreground'>
-          http://, https://, with and without www are four addresses to Google. Choose one: the other three are sent to
-          it with a permanent (301) redirect, so search results gather on a single address.
-        </p>
-      </div>
+    <SectionCard
+      title='Preferred address'
+      icon={Globe}
+      description='http://, https://, with and without www are four addresses to Google. Choose one: the other three are sent to it with a permanent (301) redirect, so search results gather on a single address.'
+      bodyClassName='flex flex-col gap-4'
+    >
       <Field>
         <FieldLabel htmlFor='preferred-address'>Main address</FieldLabel>
         <Select
@@ -91,6 +89,6 @@ export function PreferredAddressCard() {
           </Button>
         </div>
       ) : null}
-    </section>
+    </SectionCard>
   );
 }

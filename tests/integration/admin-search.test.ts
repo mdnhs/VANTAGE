@@ -41,7 +41,7 @@ describe('GET /admin/search', () => {
       id: 'nav:enquiries-quotes',
       kind: 'page',
       label: 'Enquiries › Quote requests',
-      href: '/dashboard/quotes',
+      href: '/dashboard/enquiries/quotes',
     });
   });
 

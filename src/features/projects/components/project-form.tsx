@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthorOnly } from '@/components/admin/author-gate';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -160,127 +160,117 @@ export function ProjectForm({
             label: 'Details',
             content: (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Project details</CardTitle>
-                  </CardHeader>
-                  <CardContent className='grid gap-4 sm:grid-cols-2'>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='title'>Title</Label>
-                      <Input
-                        id='title'
-                        value={form.title}
-                        onChange={(e) => handleTitleChange(e.target.value)}
-                        required
+                <SectionCard title={'Project details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='title'>Title</Label>
+                    <Input id='title' value={form.title} onChange={(e) => handleTitleChange(e.target.value)} required />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='slug'>Slug</Label>
+                    <Input
+                      id='slug'
+                      value={form.slug}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        setField('slug', e.target.value);
+                      }}
+                      pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='vehicleModel'>Vehicle model</Label>
+                    <Input
+                      id='vehicleModel'
+                      value={form.vehicleModel}
+                      onChange={(e) => setField('vehicleModel', e.target.value)}
+                      placeholder='e.g. BMW 3 Series'
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='serviceCategory'>Category</Label>
+                    <Input
+                      id='serviceCategory'
+                      list='project-category-suggestions'
+                      value={form.serviceCategory}
+                      onChange={(e) => setField('serviceCategory', e.target.value)}
+                      placeholder='e.g. Crash Repair'
+                      required
+                    />
+                    <datalist id='project-category-suggestions'>
+                      {CATEGORY_SUGGESTIONS.map((category) => (
+                        <option key={category} value={category} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label htmlFor='description'>Description</Label>
+                    <Textarea
+                      id='description'
+                      value={form.description}
+                      onChange={(e) => setField('description', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='completedAt'>Completed on</Label>
+                    <Input
+                      id='completedAt'
+                      type='date'
+                      value={form.completedAt}
+                      onChange={(e) => setField('completedAt', e.target.value)}
+                    />
+                  </div>
+                  {!authorOnly && (
+                    <div className='flex items-center gap-3 pt-6'>
+                      <Switch
+                        id='isFeatured'
+                        checked={form.isFeatured}
+                        onCheckedChange={(checked) => setField('isFeatured', checked)}
                       />
+                      <Label htmlFor='isFeatured'>Feature on homepage</Label>
                     </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='slug'>Slug</Label>
-                      <Input
-                        id='slug'
-                        value={form.slug}
-                        onChange={(e) => {
-                          setSlugTouched(true);
-                          setField('slug', e.target.value);
-                        }}
-                        pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
-                        required
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='vehicleModel'>Vehicle model</Label>
-                      <Input
-                        id='vehicleModel'
-                        value={form.vehicleModel}
-                        onChange={(e) => setField('vehicleModel', e.target.value)}
-                        placeholder='e.g. BMW 3 Series'
-                        required
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='serviceCategory'>Category</Label>
-                      <Input
-                        id='serviceCategory'
-                        list='project-category-suggestions'
-                        value={form.serviceCategory}
-                        onChange={(e) => setField('serviceCategory', e.target.value)}
-                        placeholder='e.g. Crash Repair'
-                        required
-                      />
-                      <datalist id='project-category-suggestions'>
-                        {CATEGORY_SUGGESTIONS.map((category) => (
-                          <option key={category} value={category} />
-                        ))}
-                      </datalist>
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label htmlFor='description'>Description</Label>
-                      <Textarea
-                        id='description'
-                        value={form.description}
-                        onChange={(e) => setField('description', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='completedAt'>Completed on</Label>
-                      <Input
-                        id='completedAt'
-                        type='date'
-                        value={form.completedAt}
-                        onChange={(e) => setField('completedAt', e.target.value)}
-                      />
-                    </div>
-                    {!authorOnly && (
-                      <div className='flex items-center gap-3 pt-6'>
-                        <Switch
-                          id='isFeatured'
-                          checked={form.isFeatured}
-                          onCheckedChange={(checked) => setField('isFeatured', checked)}
-                        />
-                        <Label htmlFor='isFeatured'>Feature on homepage</Label>
-                      </div>
-                    )}
+                  )}
 
-                    <div className='flex flex-col gap-1.5'>
-                      <Label>Before</Label>
-                      <MediaField
-                        kind='image'
-                        label='Before'
-                        value={slotRef(form.beforeImageMediaId, initialData?.beforeImageMediaId)}
-                        onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
-                      />
-                      {(imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
-                        <p className='text-sm text-destructive'>
-                          {imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label>After</Label>
-                      <MediaField
-                        kind='image'
-                        label='After'
-                        value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId)}
-                        onChange={(ref) => setField('afterImageMediaId', ref?.id)}
-                      />
-                      {(imageError.after ?? submitCauses?.afterImageMediaId?.[0]) ? (
-                        <p className='text-sm text-destructive'>
-                          {imageError.after ?? submitCauses?.afterImageMediaId?.[0]}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label>Gallery (up to 10 images)</Label>
-                      <MediaGalleryField
-                        label='Gallery image'
-                        max={10}
-                        value={form.galleryMediaIds}
-                        onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label>Before</Label>
+                    <MediaField
+                      kind='image'
+                      label='Before'
+                      value={slotRef(form.beforeImageMediaId, initialData?.beforeImageMediaId)}
+                      onChange={(ref) => setField('beforeImageMediaId', ref?.id)}
+                    />
+                    {(imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]) ? (
+                      <p className='text-sm text-destructive'>
+                        {imageError.before ?? submitCauses?.beforeImageMediaId?.[0] ?? submitCauses?._media?.[0]}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label>After</Label>
+                    <MediaField
+                      kind='image'
+                      label='After'
+                      value={slotRef(form.afterImageMediaId, initialData?.afterImageMediaId)}
+                      onChange={(ref) => setField('afterImageMediaId', ref?.id)}
+                    />
+                    {(imageError.after ?? submitCauses?.afterImageMediaId?.[0]) ? (
+                      <p className='text-sm text-destructive'>
+                        {imageError.after ?? submitCauses?.afterImageMediaId?.[0]}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label>Gallery (up to 10 images)</Label>
+                    <MediaGalleryField
+                      label='Gallery image'
+                      max={10}
+                      value={form.galleryMediaIds}
+                      onChange={(ids) => setForm((prev) => ({ ...prev, galleryMediaIds: ids, galleryTouched: true }))}
+                    />
+                  </div>
+                </SectionCard>
               </>
             ),
           },

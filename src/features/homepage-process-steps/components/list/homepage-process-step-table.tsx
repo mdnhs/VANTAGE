@@ -86,7 +86,7 @@ export function HomepageProcessStepTable({ initialData }: HomepageProcessStepTab
   }
 
   return (
-    <div className='overflow-x-auto rounded-lg border border-border'>
+    <div className='overflow-x-auto rounded-lg border border-border bg-card shadow-xs'>
       <table className='w-full text-sm'>
         <thead>
           <tr className='border-b border-border bg-muted/50 text-left text-muted-foreground'>

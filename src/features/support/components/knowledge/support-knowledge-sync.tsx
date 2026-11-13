@@ -9,6 +9,7 @@ import { useCan } from '@/contexts/actor-provider';
 import { GLOBAL_ACCESS } from '@/lib/content/global-access';
 
 import { useSupportKnowledge, useSyncSupportKnowledge } from '../../hooks/use-support';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 
 const when = (iso: string) => new Date(iso).toLocaleString('en-IE', { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -21,13 +22,12 @@ export function SupportKnowledgeSync() {
   const data = knowledge.data;
   if (knowledge.isError) {
     return (
-      <section aria-label='AI memory' className='flex flex-col items-start gap-2'>
-        <h2 className='text-base font-medium'>AI memory</h2>
+      <SectionCard title='AI memory' bodyClassName='flex flex-col items-start gap-2'>
         <p role='alert' className='text-sm text-destructive'>
           Could not load the AI memory status ({knowledge.error.message}). If this persists, the database may be missing
           the latest migration.
         </p>
-      </section>
+      </SectionCard>
     );
   }
   if (!data) return null;
@@ -36,15 +36,12 @@ export function SupportKnowledgeSync() {
   const percent = data.total > 0 ? Math.round((data.done / data.total) * 100) : 0;
 
   return (
-    <section aria-label='AI memory' className='flex flex-col items-start gap-3'>
-      <div className='flex flex-wrap items-center gap-2'>
-        <h2 className='text-base font-medium'>AI memory</h2>
-        {data.stale && !running ? <Badge variant='outline'>Sync needed</Badge> : null}
-      </div>
-      <p className='text-sm text-muted-foreground'>
-        Copies your services, prices, contact details, opening hours, process, projects, reviews and page text into the
-        AI&apos;s memory. The chat AI answers from this, so sync after you change the website.
-      </p>
+    <SectionCard
+      title='AI memory'
+      description='Copies your services, prices, contact details, opening hours, process, projects, reviews and page text into the AI’s memory. The chat AI answers from this, so sync after you change the website.'
+      action={data.stale && !running ? <Badge variant='outline'>Sync needed</Badge> : undefined}
+      bodyClassName='flex flex-col items-start gap-3'
+    >
       <Button variant='outline' disabled={!canSync || running} onClick={() => sync.mutate()}>
         <DatabaseZapIcon data-icon='inline-start' />
         {running ? 'Syncing…' : 'Sync website data'}
@@ -69,6 +66,6 @@ export function SupportKnowledgeSync() {
           Not synced yet. Until then the AI reads your live content directly.
         </p>
       )}
-    </section>
+    </SectionCard>
   );
 }

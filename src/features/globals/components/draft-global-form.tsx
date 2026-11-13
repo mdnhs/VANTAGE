@@ -143,6 +143,7 @@ export function DraftGlobalForm({
             overrides={GLOBAL_FIELD_UI[settingKey]}
             defaultValues={(discarded ? value : (doc.draft ?? value)) as never}
             submitLabel='Publish changes'
+            leafTitle='Top banner'
             readOnly={!canUpdate}
             onValuesChange={canUpdate ? (next) => autosave.schedule(next) : undefined}
             onSubmit={async (next) => {

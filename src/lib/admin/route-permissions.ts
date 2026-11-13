@@ -26,8 +26,15 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
   // exact "may open any settings page" gate (the section itself is any-of).
   ['/dashboard/settings', { globals: ['read'] }],
 
-  ['/dashboard/quotes/[id]', { quote: ['read'] }],
-  ['/dashboard/contacts/[id]', { contact: ['read'] }],
+  // Section indexes forward to the first sub-page the role may open (each child carries its own gate).
+  ['/dashboard/website', { dashboard: ['view'] }],
+  ['/dashboard/enquiries', { dashboard: ['view'] }],
+
+  // Each help article; the article's own permission is checked by the page.
+  ['/dashboard/help/[id]', HELP_LINK.permission],
+
+  ['/dashboard/enquiries/quotes/[id]', { quote: ['read'] }],
+  ['/dashboard/enquiries/contacts/[id]', { contact: ['read'] }],
   ['/dashboard/seo/pages/[id]', { seo: ['read'] }],
 
   // Content records: list / create / edit.
@@ -42,9 +49,9 @@ const ROUTES: ReadonlyArray<readonly [pattern: string, permissions: Permissions]
       'homepage-process-steps',
     ] as const
   ).flatMap((name): Array<readonly [string, Permissions]> => [
-    [`/dashboard/${name}`, { content: ['read'] }],
-    [`/dashboard/${name}/create`, { content: ['create'] }],
-    [`/dashboard/${name}/[id]/edit`, { content: ['update'] }],
+    [`/dashboard/website/${name}`, { content: ['read'] }],
+    [`/dashboard/website/${name}/create`, { content: ['create'] }],
+    [`/dashboard/website/${name}/[id]/edit`, { content: ['update'] }],
   ]),
 ];
 

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -61,69 +61,59 @@ export function LegalPageForm({
             label: 'Page',
             content: (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Page details</CardTitle>
-                  </CardHeader>
-                  <CardContent className='grid gap-4 sm:grid-cols-2'>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='title'>Title</Label>
+                <SectionCard title={'Page details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='title'>Title</Label>
+                    <Input
+                      id='title'
+                      value={title}
+                      maxLength={160}
+                      onChange={(e) => {
+                        setTitle(e.target.value);
+                        if (!slugTouched) setSlug(slugify(e.target.value));
+                      }}
+                      placeholder='Privacy Policy'
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='slug'>Address</Label>
+                    <div className='flex items-center gap-1'>
+                      <span className='text-sm text-muted-foreground'>/</span>
                       <Input
-                        id='title'
-                        value={title}
-                        maxLength={160}
+                        id='slug'
+                        value={slug}
+                        maxLength={140}
                         onChange={(e) => {
-                          setTitle(e.target.value);
-                          if (!slugTouched) setSlug(slugify(e.target.value));
+                          setSlugTouched(true);
+                          setSlug(e.target.value);
                         }}
-                        placeholder='Privacy Policy'
+                        pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
+                        title='Lowercase letters, numbers and hyphens, e.g. privacy-policy'
+                        aria-invalid={Boolean(slugError)}
+                        aria-describedby='slug-help'
                         required
                       />
                     </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='slug'>Address</Label>
-                      <div className='flex items-center gap-1'>
-                        <span className='text-sm text-muted-foreground'>/</span>
-                        <Input
-                          id='slug'
-                          value={slug}
-                          maxLength={140}
-                          onChange={(e) => {
-                            setSlugTouched(true);
-                            setSlug(e.target.value);
-                          }}
-                          pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
-                          title='Lowercase letters, numbers and hyphens, e.g. privacy-policy'
-                          aria-invalid={Boolean(slugError)}
-                          aria-describedby='slug-help'
-                          required
-                        />
-                      </div>
-                      <p
-                        id='slug-help'
-                        className={slugError ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}
-                      >
-                        {slugError ??
-                          (renamesLivePage
-                            ? `The old address /${initialData!.slug} will redirect here.`
-                            : 'Lowercase letters, numbers and hyphens.')}
-                      </p>
-                    </div>
-                    <div className='flex items-center gap-3 sm:col-span-2'>
-                      <Switch id='published' checked={published} onCheckedChange={setPublished} />
-                      <Label htmlFor='published'>Published — shown on the site and linked from the footer</Label>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <p
+                      id='slug-help'
+                      className={slugError ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}
+                    >
+                      {slugError ??
+                        (renamesLivePage
+                          ? `The old address /${initialData!.slug} will redirect here.`
+                          : 'Lowercase letters, numbers and hyphens.')}
+                    </p>
+                  </div>
+                  <div className='flex items-center gap-3 sm:col-span-2'>
+                    <Switch id='published' checked={published} onCheckedChange={setPublished} />
+                    <Label htmlFor='published'>Published — shown on the site and linked from the footer</Label>
+                  </div>
+                </SectionCard>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Content</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <LegalPageEditor initialContent={content} onChange={setContent} />
-                  </CardContent>
-                </Card>
+                <SectionCard title={'Content'}>
+                  <LegalPageEditor initialContent={content} onChange={setContent} />
+                </SectionCard>
               </>
             ),
           },

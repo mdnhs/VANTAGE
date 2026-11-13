@@ -18,7 +18,11 @@ import { UserMenu } from './user-menu';
 export function Topbar({ siteUrl }: { siteUrl: string }) {
   const canReadQuotes = useCan({ quote: ['read'] });
   const canReadContacts = useCan({ contact: ['read'] });
-  const enquiriesHref = canReadQuotes ? '/dashboard/quotes' : canReadContacts ? '/dashboard/contacts' : null;
+  const enquiriesHref = canReadQuotes
+    ? '/dashboard/enquiries/quotes'
+    : canReadContacts
+      ? '/dashboard/enquiries/contacts'
+      : null;
   return (
     <header className='flex h-[72px] shrink-0 items-center gap-2 rounded-card bg-sidebar px-3 sm:gap-3 sm:px-5'>
       <SidebarTrigger aria-label='Toggle navigation' className='size-10 rounded-full' />

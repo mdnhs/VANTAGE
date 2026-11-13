@@ -15,23 +15,23 @@ describe('SectionRail', () => {
     state.pathname = '/dashboard';
   });
 
-  it('shows the Website children for a path under /dashboard/services', () => {
-    state.pathname = '/dashboard/services/abc/edit';
+  it('shows the Website children for a path under /dashboard/website/services', () => {
+    state.pathname = '/dashboard/website/services/abc/edit';
     const html = render();
     expect(html).toContain('aria-label="Website"');
     expect(html).toContain('Home page');
     expect(html).toContain('Our work');
     expect(html).toMatch(
-      /href="\/dashboard\/services"[^>]*aria-current="page"|aria-current="page"[^>]*href="\/dashboard\/services"/,
+      /href="\/dashboard\/website\/services"[^>]*aria-current="page"|aria-current="page"[^>]*href="\/dashboard\/website\/services"/,
     );
     expect(html).toContain('content-here');
   });
 
   it('pins the tabs on desktop without stretching them to the page height', () => {
-    state.pathname = '/dashboard/process-page';
+    state.pathname = '/dashboard/website/process-page';
     const nav = render().match(/<nav[^>]*>/)?.[0] ?? '';
     expect(nav).toContain('lg:sticky');
-    expect(nav).toContain('lg:top-8');
+    expect(nav).toContain('lg:top-0');
     expect(nav).toContain('lg:self-start');
   });
 

@@ -38,7 +38,7 @@ describe('chatRequestBody (history stays on the server)', () => {
   });
   const conv = '6f1c1a0e-1b2c-4d3e-8f4a-5b6c7d8e9f00';
   const context = {
-    path: '/dashboard/about',
+    path: '/dashboard/website/about',
     entity: { type: 'page' as const, key: 'page.about' as const },
   };
 

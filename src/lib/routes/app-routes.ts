@@ -16,57 +16,57 @@ export const APP_ROUTES = {
       index: '/dashboard/settings',
     },
     services: {
-      index: '/dashboard/services',
-      create: '/dashboard/services/create',
-      edit: (id: string) => `/dashboard/services/${id}/edit`,
+      index: '/dashboard/website/services',
+      create: '/dashboard/website/services/create',
+      edit: (id: string) => `/dashboard/website/services/${id}/edit`,
     },
     legalPages: {
-      index: '/dashboard/legal-pages',
-      create: '/dashboard/legal-pages/create',
-      edit: (id: string) => `/dashboard/legal-pages/${id}/edit`,
+      index: '/dashboard/website/legal-pages',
+      create: '/dashboard/website/legal-pages/create',
+      edit: (id: string) => `/dashboard/website/legal-pages/${id}/edit`,
     },
     projects: {
-      index: '/dashboard/projects',
-      create: '/dashboard/projects/create',
-      edit: (id: string) => `/dashboard/projects/${id}/edit`,
+      index: '/dashboard/website/projects',
+      create: '/dashboard/website/projects/create',
+      edit: (id: string) => `/dashboard/website/projects/${id}/edit`,
     },
     homePage: {
-      index: '/dashboard/home-page',
+      index: '/dashboard/website/home-page',
     },
     insurance: {
-      index: '/dashboard/insurance',
+      index: '/dashboard/website/insurance',
     },
     about: {
-      index: '/dashboard/about',
+      index: '/dashboard/website/about',
     },
     processPage: {
-      index: '/dashboard/process-page',
+      index: '/dashboard/website/process-page',
     },
     contactPage: {
-      index: '/dashboard/contact-page',
+      index: '/dashboard/website/contact-page',
     },
     // `index` points back at the relevant Home page tab — process steps/testimonials/
     // partner logos no longer have their own standalone list page, only create/edit (used by
     // the table's "Cancel").
     testimonials: {
-      index: '/dashboard/home-page?tab=testimonials',
-      create: '/dashboard/testimonials/create',
-      edit: (id: string) => `/dashboard/testimonials/${id}/edit`,
+      index: '/dashboard/website/home-page?tab=testimonials',
+      create: '/dashboard/website/testimonials/create',
+      edit: (id: string) => `/dashboard/website/testimonials/${id}/edit`,
     },
     partnerLogos: {
-      index: '/dashboard/home-page?tab=partner-logos',
-      create: '/dashboard/partner-logos/create',
-      edit: (id: string) => `/dashboard/partner-logos/${id}/edit`,
+      index: '/dashboard/website/home-page?tab=partner-logos',
+      create: '/dashboard/website/partner-logos/create',
+      edit: (id: string) => `/dashboard/website/partner-logos/${id}/edit`,
     },
     homepageCatalogs: {
-      index: '/dashboard/home-page?tab=catalog',
-      create: '/dashboard/homepage-catalogs/create',
-      edit: (id: string) => `/dashboard/homepage-catalogs/${id}/edit`,
+      index: '/dashboard/website/home-page?tab=catalog',
+      create: '/dashboard/website/homepage-catalogs/create',
+      edit: (id: string) => `/dashboard/website/homepage-catalogs/${id}/edit`,
     },
     homepageProcessSteps: {
-      index: '/dashboard/home-page?tab=process',
-      create: '/dashboard/homepage-process-steps/create',
-      edit: (id: string) => `/dashboard/homepage-process-steps/${id}/edit`,
+      index: '/dashboard/website/home-page?tab=process',
+      create: '/dashboard/website/homepage-process-steps/create',
+      edit: (id: string) => `/dashboard/website/homepage-process-steps/${id}/edit`,
     },
     users: {
       index: '/dashboard/users',
@@ -74,12 +74,12 @@ export const APP_ROUTES = {
   },
   leads: {
     quotes: {
-      index: '/dashboard/quotes',
-      details: (id: string) => `/dashboard/quotes/${id}`,
+      index: '/dashboard/enquiries/quotes',
+      details: (id: string) => `/dashboard/enquiries/quotes/${id}`,
     },
     contacts: {
-      index: '/dashboard/contacts',
-      details: (id: string) => `/dashboard/contacts/${id}`,
+      index: '/dashboard/enquiries/contacts',
+      details: (id: string) => `/dashboard/enquiries/contacts/${id}`,
     },
     support: {
       index: '/dashboard/support',

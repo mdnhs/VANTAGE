@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { FieldDescription } from '@/components/ui/field';
 import { Label } from '@/components/ui/label';
@@ -129,106 +129,100 @@ export function ServiceForm({
             label: 'Details',
             content: (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Service details</CardTitle>
-                  </CardHeader>
-                  <CardContent className='grid gap-4 sm:grid-cols-2'>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='name'>Name</Label>
-                      <FieldDescription>The service title, on the Services page and its own page.</FieldDescription>
-                      <Input id='name' value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
-                    </div>
-                    <div className='flex flex-col gap-1.5'>
-                      <Label htmlFor='slug'>Page address</Label>
-                      <FieldDescription>
-                        The page lives at /services/{form.slug || '…'}. Lowercase words joined by hyphens.
-                      </FieldDescription>
-                      <Input
-                        id='slug'
-                        value={form.slug}
-                        onChange={(e) => {
-                          setSlugTouched(true);
-                          setField('slug', e.target.value);
-                        }}
-                        pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
-                        required
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label htmlFor='description'>Short description</Label>
-                      <FieldDescription>
-                        A sentence or two, on the service card and under the title of its own page.
-                      </FieldDescription>
-                      <Textarea
-                        id='description'
-                        value={form.description}
-                        onChange={(e) => setField('description', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label htmlFor='checklist'>What&apos;s included</Label>
-                      <FieldDescription>One item per line; each gets a green tick.</FieldDescription>
-                      <Textarea
-                        id='checklist'
-                        value={form.checklist}
-                        onChange={(e) => setField('checklist', e.target.value)}
-                        placeholder={'Structural Realignment\nLaser Chassis Measuring'}
-                        rows={5}
-                      />
-                    </div>
-                    <div className='flex items-center gap-3 pt-6'>
-                      <Switch
-                        id='isEnabled'
-                        checked={form.isEnabled}
-                        onCheckedChange={(checked) => setField('isEnabled', checked)}
-                      />
-                      <Label htmlFor='isEnabled'>Show on the website</Label>
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label>Icon</Label>
-                      <FieldDescription>Small icon on the service card. Empty uses a built-in icon.</FieldDescription>
-                      <MediaField
-                        kind='image'
-                        label='Icon'
-                        nullable
-                        value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
-                        onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
-                      />
-                    </div>
-                    <div className='flex flex-col gap-1.5 sm:col-span-2'>
-                      <Label>Photo</Label>
-                      <FieldDescription>
-                        On the service card and its own page. Empty uses a built-in workshop photo.
-                      </FieldDescription>
-                      <MediaField
-                        kind='image'
-                        label='Image'
-                        nullable
-                        value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
-                        onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                <SectionCard title={'Service details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='name'>Name</Label>
+                    <FieldDescription>The service title, on the Services page and its own page.</FieldDescription>
+                    <Input id='name' value={form.name} onChange={(e) => handleNameChange(e.target.value)} required />
+                  </div>
+                  <div className='flex flex-col gap-1.5'>
+                    <Label htmlFor='slug'>Page address</Label>
+                    <FieldDescription>
+                      The page lives at /services/{form.slug || '…'}. Lowercase words joined by hyphens.
+                    </FieldDescription>
+                    <Input
+                      id='slug'
+                      value={form.slug}
+                      onChange={(e) => {
+                        setSlugTouched(true);
+                        setField('slug', e.target.value);
+                      }}
+                      pattern='^[a-z0-9]+(-[a-z0-9]+)*$'
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label htmlFor='description'>Short description</Label>
+                    <FieldDescription>
+                      A sentence or two, on the service card and under the title of its own page.
+                    </FieldDescription>
+                    <Textarea
+                      id='description'
+                      value={form.description}
+                      onChange={(e) => setField('description', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label htmlFor='checklist'>What&apos;s included</Label>
+                    <FieldDescription>One item per line; each gets a green tick.</FieldDescription>
+                    <Textarea
+                      id='checklist'
+                      value={form.checklist}
+                      onChange={(e) => setField('checklist', e.target.value)}
+                      placeholder={'Structural Realignment\nLaser Chassis Measuring'}
+                      rows={5}
+                    />
+                  </div>
+                  <div className='flex items-center gap-3 pt-6'>
+                    <Switch
+                      id='isEnabled'
+                      checked={form.isEnabled}
+                      onCheckedChange={(checked) => setField('isEnabled', checked)}
+                    />
+                    <Label htmlFor='isEnabled'>Show on the website</Label>
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label>Icon</Label>
+                    <FieldDescription>Small icon on the service card. Empty uses a built-in icon.</FieldDescription>
+                    <MediaField
+                      kind='image'
+                      label='Icon'
+                      nullable
+                      value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
+                      onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
+                    />
+                  </div>
+                  <div className='flex flex-col gap-1.5 sm:col-span-2'>
+                    <Label>Photo</Label>
+                    <FieldDescription>
+                      On the service card and its own page. Empty uses a built-in workshop photo.
+                    </FieldDescription>
+                    <MediaField
+                      kind='image'
+                      label='Image'
+                      nullable
+                      value={slotRef(form.imageMediaId, initialData?.imageMediaId)}
+                      onChange={(ref) => setField('imageMediaId', ref?.id ?? null)}
+                    />
+                  </div>
+                </SectionCard>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>More about this service</CardTitle>
-                    <CardDescription>
+                <SectionCard
+                  title={'More about this service'}
+                  description={
+                    <>
                       Longer text for this service&apos;s own page, shown below the photo. Use headings and lists to
                       break it up. Leave empty if the short description is enough.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <RichTextEditor
-                      initialContent={form.content}
-                      onChange={(doc) => setField('content', doc)}
-                      ariaLabel='Detail page content'
-                    />
-                  </CardContent>
-                </Card>
+                    </>
+                  }
+                >
+                  <RichTextEditor
+                    initialContent={form.content}
+                    onChange={(doc) => setField('content', doc)}
+                    ariaLabel='Detail page content'
+                  />
+                </SectionCard>
               </>
             ),
           },

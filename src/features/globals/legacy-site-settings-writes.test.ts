@@ -80,7 +80,7 @@ describe('legacy site-settings write path is gone', () => {
   });
 
   it('every website page editor renders GlobalEditor for its page.* key', () => {
-    const site = 'app/(main)/(protected)/(dashboard_layout)/dashboard/(site)';
+    const site = 'app/(main)/(protected)/(dashboard_layout)/dashboard/website';
     const pages: Record<string, string> = {
       [`${site}/about/page.tsx`]: 'page.about',
       [`${site}/insurance/page.tsx`]: 'page.insurance',

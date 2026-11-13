@@ -17,6 +17,10 @@ describe('isPaletteShortcut', () => {
     expect(isPaletteShortcut(key({ ctrlKey: true, key: 'K' }))).toBe(true);
   });
 
+  it('ignores a keydown with no key (Chrome autofill) instead of throwing', () => {
+    expect(isPaletteShortcut(key({ metaKey: true, key: undefined }))).toBe(false);
+  });
+
   it('ignores a bare k, other keys, and alt or shift chords', () => {
     expect(isPaletteShortcut(key())).toBe(false);
     expect(isPaletteShortcut(key({ metaKey: true, key: 'j' }))).toBe(false);

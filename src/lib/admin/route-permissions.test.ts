@@ -52,17 +52,17 @@ describe('permissionFor', () => {
 
   it('maps representative routes to MK-style permissions', () => {
     expect(permissionFor('/dashboard')).toEqual({ dashboard: ['view'] });
-    expect(permissionFor('/dashboard/quotes/q1')).toEqual({ quote: ['read'] });
-    expect(permissionFor('/dashboard/contacts')).toEqual({ contact: ['read'] });
+    expect(permissionFor('/dashboard/enquiries/quotes/q1')).toEqual({ quote: ['read'] });
+    expect(permissionFor('/dashboard/enquiries/contacts')).toEqual({ contact: ['read'] });
     expect(permissionFor('/dashboard/seo/pages/contact')).toEqual({ seo: ['read'] });
     expect(permissionFor('/dashboard/settings')).toEqual({ globals: ['read'] });
     expect(permissionFor('/dashboard/settings/identity')).toEqual({ settings: ['read'] });
     expect(permissionFor('/dashboard/settings/privacy')).toEqual({ settings: ['read'] });
     expect(permissionFor('/dashboard/settings/footer')).toEqual({ globals: ['read'] });
-    expect(permissionFor('/dashboard/home-page')).toEqual({ page: ['read'] });
-    expect(permissionFor('/dashboard/services')).toEqual({ content: ['read'] });
-    expect(permissionFor('/dashboard/services/create')).toEqual({ content: ['create'] });
-    expect(permissionFor('/dashboard/services/s1/edit')).toEqual({ content: ['update'] });
+    expect(permissionFor('/dashboard/website/home-page')).toEqual({ page: ['read'] });
+    expect(permissionFor('/dashboard/website/services')).toEqual({ content: ['read'] });
+    expect(permissionFor('/dashboard/website/services/create')).toEqual({ content: ['create'] });
+    expect(permissionFor('/dashboard/website/services/s1/edit')).toEqual({ content: ['update'] });
     expect(permissionFor('/dashboard/users')).toEqual({ user: ['list'] });
     expect(() => permissionFor('/dashboard/admins')).toThrow(/No permission mapped/);
   });
@@ -78,8 +78,8 @@ describe('permissionFor', () => {
   });
 
   it('ignores a query string and trailing slash', () => {
-    expect(permissionFor('/dashboard/home-page?tab=catalog')).toEqual({ page: ['read'] });
-    expect(permissionFor('/dashboard/quotes/')).toEqual({ quote: ['read'] });
+    expect(permissionFor('/dashboard/website/home-page?tab=catalog')).toEqual({ page: ['read'] });
+    expect(permissionFor('/dashboard/enquiries/quotes/')).toEqual({ quote: ['read'] });
   });
 
   it('throws for an unknown route', () => {

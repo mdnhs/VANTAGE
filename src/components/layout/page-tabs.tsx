@@ -2,7 +2,7 @@
 
 import { useMemo, type ReactNode } from 'react';
 import { parseAsStringLiteral, useQueryState } from 'nuqs';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, useInsideTabs } from '@/components/ui/tabs';
 
 export interface PageTab {
   value: string;
@@ -19,9 +19,11 @@ export function PageTabs({ tabs }: { tabs: PageTab[] }) {
     parseAsStringLiteral(values).withDefault(values[0]).withOptions({ clearOnDefault: true }),
   );
 
+  // Inside another tab panel: a box row with no underline (see useInsideTabs).
+  const nested = useInsideTabs();
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value)} className='gap-6'>
-      <div className='border-b border-border'>
+      <div className={nested ? undefined : 'border-b border-border'}>
         <TabsList variant='line' className='h-auto w-fit max-w-full flex-wrap justify-start'>
           {tabs.map((item) => (
             <TabsTrigger key={item.value} value={item.value}>

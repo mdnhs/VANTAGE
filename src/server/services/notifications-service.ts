@@ -51,7 +51,7 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
         kind: 'quote',
         title: 'New quote request',
         description: `From ${firstName(r.name)}`,
-        href: `/dashboard/quotes/${r.id}`,
+        href: `/dashboard/enquiries/quotes/${r.id}`,
         at: r.createdAt.toISOString(),
       });
     }
@@ -70,7 +70,7 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
         kind: 'contact',
         title: 'New contact message',
         description: `From ${firstName(r.firstName)}`,
-        href: `/dashboard/contacts/${r.id}`,
+        href: `/dashboard/enquiries/contacts/${r.id}`,
         at: r.createdAt.toISOString(),
       });
     }
@@ -136,7 +136,7 @@ export async function listNotifications(actor: Actor, now: Date = new Date()): P
           kind: 'delivery_failed',
           title: "An enquiry email didn't send",
           description: r.summary,
-          href: `/dashboard/${r.entityType === 'quote' ? 'quotes' : 'contacts'}/${r.entityId}`,
+          href: `/dashboard/enquiries/${r.entityType === 'quote' ? 'quotes' : 'contacts'}/${r.entityId}`,
           at: r.createdAt.toISOString(),
         });
       }

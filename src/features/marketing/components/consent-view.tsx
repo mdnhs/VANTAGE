@@ -27,9 +27,10 @@ export function ConsentView() {
       <GlobalEditor
         title='Consent banner'
         keys={['consent']}
+        stacked
         onValuesChange={(values) => setDraft(values as Partial<GlobalValue<'consent'>>)}
       />
-      <DashboardCard title='Preview' className='xl:sticky xl:top-6'>
+      <DashboardCard title='Preview' className='xl:sticky xl:top-0'>
         <div className='flex gap-2'>
           {(
             [

@@ -4,7 +4,7 @@ import { safeNext } from './safe-next';
 
 describe('safeNext', () => {
   it('keeps dashboard paths with query and hash', () => {
-    expect(safeNext('/dashboard/quotes?a=1#x')).toBe('/dashboard/quotes?a=1#x');
+    expect(safeNext('/dashboard/enquiries/quotes?a=1#x')).toBe('/dashboard/enquiries/quotes?a=1#x');
     expect(safeNext('/dashboard')).toBe('/dashboard');
   });
 

@@ -289,15 +289,46 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
   seo: {
     titleTemplate: {
       label: 'Title template',
+      section: 'Titles & descriptions',
+      sectionDescription: 'Used for any page that leaves its own empty.',
       description: '"%s" is replaced by the page title. Blank uses "%s | business name".',
     },
-    defaultTitle: { label: 'Default title', description: 'Blank uses the business name.' },
+    defaultTitle: {
+      label: 'Default title',
+      description: 'Blank uses the business name.',
+      section: 'Titles & descriptions',
+    },
     defaultDescription: {
       label: 'Default description',
+      section: 'Titles & descriptions',
       description: 'Blank uses the business name and opening hours.',
     },
-    defaultOgImage: { label: 'Default share image' },
-    twitterHandle: { label: 'X / Twitter handle' },
+    defaultOgImage: {
+      label: 'Default share image',
+      section: 'Social sharing',
+      sectionDescription: 'The card used when a page has no share image of its own.',
+    },
+    twitterHandle: { label: 'X / Twitter handle', section: 'Social sharing' },
+    robots: {
+      label: 'Search engines',
+      section: 'Indexing',
+      sectionDescription: 'Whether search engines list the site, and its main address.',
+      options: [
+        { value: 'index', label: 'List the site' },
+        { value: 'noindex', label: 'Hide the whole site' },
+      ],
+    },
+    preferredHost: {
+      label: 'Preferred address',
+      section: 'Indexing',
+      description: 'Also under SEO, Redirects.',
+      options: [
+        { value: 'off', label: 'Off: keep all addresses working' },
+        { value: 'apex', label: 'Without www' },
+        { value: 'www', label: 'With www' },
+      ],
+    },
+    verification: { label: 'Search engine verification' },
     'verification.google': { label: 'Google Search Console code' },
     'verification.bing': { label: 'Bing Webmaster code' },
     business: { label: 'Business details (structured data)' },

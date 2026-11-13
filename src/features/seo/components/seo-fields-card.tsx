@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -86,92 +86,92 @@ export function SeoFieldsCard({
     errors?.[key]?.length ? <p className='text-sm text-destructive'>{errors[key]!.join(' ')}</p> : null;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Search &amp; sharing</CardTitle>
-        <p className='text-sm text-muted-foreground'>
+    <SectionCard
+      title='Search & sharing'
+      description={
+        <>
           For the page at <code>{path}</code>. Blank fields fall back to the page&apos;s own name and text.
+        </>
+      }
+      bodyClassName='grid gap-4 sm:grid-cols-2'
+    >
+      <div className='flex flex-col gap-1.5 sm:col-span-2'>
+        <Label htmlFor='seoTitle'>SEO title</Label>
+        <Input
+          id='seoTitle'
+          value={value.seoTitle}
+          onChange={(e) => set('seoTitle', e.target.value)}
+          placeholder={fallbackTitle}
+          maxLength={70}
+        />
+        <CharCount value={value.seoTitle} range={TITLE_RANGE} />
+        {error('seoTitle')}
+      </div>
+      <div className='flex flex-col gap-1.5 sm:col-span-2'>
+        <Label htmlFor='seoDescription'>Meta description</Label>
+        <Textarea
+          id='seoDescription'
+          value={value.seoDescription}
+          onChange={(e) => set('seoDescription', e.target.value)}
+          rows={3}
+          maxLength={200}
+        />
+        <CharCount value={value.seoDescription} range={DESCRIPTION_RANGE} />
+        {error('seoDescription')}
+      </div>
+      <div className='flex flex-col gap-1.5'>
+        <Label htmlFor='ogTitle'>Social title</Label>
+        <Input
+          id='ogTitle'
+          value={value.ogTitle}
+          onChange={(e) => set('ogTitle', e.target.value)}
+          placeholder='Same as the SEO title'
+          maxLength={70}
+        />
+        {error('ogTitle')}
+      </div>
+      <div className='flex flex-col gap-1.5'>
+        <Label htmlFor='ogDescription'>Social description</Label>
+        <Textarea
+          id='ogDescription'
+          value={value.ogDescription}
+          onChange={(e) => set('ogDescription', e.target.value)}
+          placeholder='Same as the meta description'
+          rows={2}
+          maxLength={200}
+        />
+        {error('ogDescription')}
+      </div>
+      <div className='flex flex-col gap-1.5 sm:col-span-2'>
+        <Label>Social share image</Label>
+        <MediaField
+          kind='image'
+          label='Social share image'
+          nullable
+          value={slotRef(value.ogImageMediaId, rowOgImageMediaId)}
+          onChange={(ref) => set('ogImageMediaId', ref?.id ?? null)}
+        />
+        <p className='text-xs text-muted-foreground'>
+          At least 1200×630 (1.91:1). {imageHint ?? 'Blank uses the site default share image.'}
         </p>
-      </CardHeader>
-      <CardContent className='grid gap-4 sm:grid-cols-2'>
-        <div className='flex flex-col gap-1.5 sm:col-span-2'>
-          <Label htmlFor='seoTitle'>SEO title</Label>
-          <Input
-            id='seoTitle'
-            value={value.seoTitle}
-            onChange={(e) => set('seoTitle', e.target.value)}
-            placeholder={fallbackTitle}
-            maxLength={70}
-          />
-          <CharCount value={value.seoTitle} range={TITLE_RANGE} />
-          {error('seoTitle')}
-        </div>
-        <div className='flex flex-col gap-1.5 sm:col-span-2'>
-          <Label htmlFor='seoDescription'>Meta description</Label>
-          <Textarea
-            id='seoDescription'
-            value={value.seoDescription}
-            onChange={(e) => set('seoDescription', e.target.value)}
-            rows={3}
-            maxLength={200}
-          />
-          <CharCount value={value.seoDescription} range={DESCRIPTION_RANGE} />
-          {error('seoDescription')}
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='ogTitle'>Social title</Label>
-          <Input
-            id='ogTitle'
-            value={value.ogTitle}
-            onChange={(e) => set('ogTitle', e.target.value)}
-            placeholder='Same as the SEO title'
-            maxLength={70}
-          />
-          {error('ogTitle')}
-        </div>
-        <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='ogDescription'>Social description</Label>
-          <Textarea
-            id='ogDescription'
-            value={value.ogDescription}
-            onChange={(e) => set('ogDescription', e.target.value)}
-            placeholder='Same as the meta description'
-            rows={2}
-            maxLength={200}
-          />
-          {error('ogDescription')}
-        </div>
-        <div className='flex flex-col gap-1.5 sm:col-span-2'>
-          <Label>Social share image</Label>
-          <MediaField
-            kind='image'
-            label='Social share image'
-            nullable
-            value={slotRef(value.ogImageMediaId, rowOgImageMediaId)}
-            onChange={(ref) => set('ogImageMediaId', ref?.id ?? null)}
-          />
-          <p className='text-xs text-muted-foreground'>
-            At least 1200×630 (1.91:1). {imageHint ?? 'Blank uses the site default share image.'}
-          </p>
-          {error('ogImageMediaId')}
-        </div>
-        <div className='flex flex-col gap-1.5 sm:col-span-2'>
-          <Label htmlFor='canonical'>Canonical address</Label>
-          <Input
-            id='canonical'
-            value={value.canonical}
-            onChange={(e) => set('canonical', e.target.value)}
-            placeholder={path}
-            maxLength={300}
-          />
-          <p className='text-xs text-muted-foreground'>Leave empty to use this page&apos;s own address.</p>
-          {error('canonical')}
-        </div>
-        <div className='flex items-center gap-3 sm:col-span-2'>
-          <Switch id='noindex' checked={value.noindex} onCheckedChange={(checked) => set('noindex', checked)} />
-          <Label htmlFor='noindex'>Hide from search engines</Label>
-        </div>
-      </CardContent>
-    </Card>
+        {error('ogImageMediaId')}
+      </div>
+      <div className='flex flex-col gap-1.5 sm:col-span-2'>
+        <Label htmlFor='canonical'>Canonical address</Label>
+        <Input
+          id='canonical'
+          value={value.canonical}
+          onChange={(e) => set('canonical', e.target.value)}
+          placeholder={path}
+          maxLength={300}
+        />
+        <p className='text-xs text-muted-foreground'>Leave empty to use this page&apos;s own address.</p>
+        {error('canonical')}
+      </div>
+      <div className='flex items-center gap-3 sm:col-span-2'>
+        <Switch id='noindex' checked={value.noindex} onCheckedChange={(checked) => set('noindex', checked)} />
+        <Label htmlFor='noindex'>Hide from search engines</Label>
+      </div>
+    </SectionCard>
   );
 }

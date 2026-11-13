@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -68,42 +68,37 @@ export function HomepageProcessStepForm({
 
   return (
     <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Process step details</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='title'>Title</Label>
-            <Input id='title' value={form.title} onChange={(e) => setField('title', e.target.value)} required />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='description'>Description</Label>
-            <Textarea
-              id='description'
-              value={form.description}
-              onChange={(e) => setField('description', e.target.value)}
-              required
-            />
-          </div>
-          <div className='flex items-center gap-3 pt-2'>
-            <Switch
-              id='isHighlighted'
-              checked={form.isHighlighted}
-              onCheckedChange={(checked) => setField('isHighlighted', checked)}
-            />
-            <Label htmlFor='isHighlighted'>Highlight this step (accent color)</Label>
-          </div>
-          <div className='flex items-center gap-3 pt-2'>
-            <Switch
-              id='isEnabled'
-              checked={form.isEnabled}
-              onCheckedChange={(checked) => setField('isEnabled', checked)}
-            />
-            <Label htmlFor='isEnabled'>Visible on public site</Label>
-          </div>
-        </CardContent>
-      </Card>
+      <SectionCard title={'Process step details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label htmlFor='title'>Title</Label>
+          <Input id='title' value={form.title} onChange={(e) => setField('title', e.target.value)} required />
+        </div>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label htmlFor='description'>Description</Label>
+          <Textarea
+            id='description'
+            value={form.description}
+            onChange={(e) => setField('description', e.target.value)}
+            required
+          />
+        </div>
+        <div className='flex items-center gap-3 pt-2'>
+          <Switch
+            id='isHighlighted'
+            checked={form.isHighlighted}
+            onCheckedChange={(checked) => setField('isHighlighted', checked)}
+          />
+          <Label htmlFor='isHighlighted'>Highlight this step (accent color)</Label>
+        </div>
+        <div className='flex items-center gap-3 pt-2'>
+          <Switch
+            id='isEnabled'
+            checked={form.isEnabled}
+            onCheckedChange={(checked) => setField('isEnabled', checked)}
+          />
+          <Label htmlFor='isEnabled'>Visible on public site</Label>
+        </div>
+      </SectionCard>
 
       {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
 

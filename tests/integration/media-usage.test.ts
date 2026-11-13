@@ -73,7 +73,7 @@ describe('mediaUsage', () => {
       .values({ name: 'Dents', slug: 'dents', description: 'd', iconMediaId: row.id })
       .returning();
     expect(await mediaUsage(db, row.id)).toEqual([
-      { kind: 'content', id: service!.id, label: 'Service "Dents"', href: '/dashboard/services' },
+      { kind: 'content', id: service!.id, label: 'Service "Dents"', href: '/dashboard/website/services' },
     ]);
   });
 
@@ -108,11 +108,16 @@ describe('mediaUsage', () => {
     expect(uses.every((u) => u.kind === 'content')).toBe(true);
     expect(uses).toEqual(
       expect.arrayContaining([
-        { kind: 'content', id: service!.id, label: 'Service "Paint"', href: '/dashboard/services' },
-        { kind: 'content', id: project!.id, label: 'Project "BMW"', href: '/dashboard/projects' },
-        { kind: 'content', id: logo!.id, label: 'Partner logo "Aviva"', href: '/dashboard/partner-logos' },
-        { kind: 'content', id: catalog!.id, label: 'Catalog card "Card"', href: '/dashboard/homepage-catalogs' },
-        { kind: 'content', id: testimonial!.id, label: 'Testimonial "Sam"', href: '/dashboard/testimonials' },
+        { kind: 'content', id: service!.id, label: 'Service "Paint"', href: '/dashboard/website/services' },
+        { kind: 'content', id: project!.id, label: 'Project "BMW"', href: '/dashboard/website/projects' },
+        { kind: 'content', id: logo!.id, label: 'Partner logo "Aviva"', href: '/dashboard/website/partner-logos' },
+        {
+          kind: 'content',
+          id: catalog!.id,
+          label: 'Catalog card "Card"',
+          href: '/dashboard/website/homepage-catalogs',
+        },
+        { kind: 'content', id: testimonial!.id, label: 'Testimonial "Sam"', href: '/dashboard/website/testimonials' },
       ]),
     );
     expect(uses).toHaveLength(5);
@@ -129,7 +134,7 @@ describe('mediaUsage', () => {
     });
     const uses = await mediaUsage(db, row.id);
     expect(uses.map((u) => u.label).sort()).toEqual(['Legal page "Privacy"', 'Service "Respray"']);
-    expect(uses.find((u) => u.label.startsWith('Legal'))?.href).toBe('/dashboard/legal-pages');
+    expect(uses.find((u) => u.label.startsWith('Legal'))?.href).toBe('/dashboard/website/legal-pages');
   });
 
   it('finds a project gallery image', async () => {
@@ -140,7 +145,7 @@ describe('mediaUsage', () => {
       .returning();
     await db.insert(projectGalleryImages).values({ projectId: project!.id, mediaId: row.id });
     expect(await mediaUsage(db, row.id)).toEqual([
-      { kind: 'content', id: project!.id, label: 'Project gallery "Civic"', href: '/dashboard/projects' },
+      { kind: 'content', id: project!.id, label: 'Project gallery "Civic"', href: '/dashboard/website/projects' },
     ]);
   });
 
@@ -156,7 +161,7 @@ describe('mediaUsage', () => {
         kind: 'enquiry',
         id: quote!.id,
         label: 'Quote request photo',
-        href: `/dashboard/quotes/${quote!.id}`,
+        href: `/dashboard/enquiries/quotes/${quote!.id}`,
       },
     ]);
   });

@@ -103,7 +103,7 @@ describe('SMTP not configured', () => {
       phone: row!.phone,
       details: [],
       message: null,
-      adminPath: '/dashboard/quotes',
+      adminPath: '/dashboard/enquiries/quotes',
     });
     expect(outcome.notification).toEqual({ delivered: false, reason: 'smtp_not_configured' });
   });
@@ -204,7 +204,7 @@ describe('SMTP configured (injected transport)', () => {
       phone: '1',
       details: [],
       message: null,
-      adminPath: '/dashboard/contacts',
+      adminPath: '/dashboard/enquiries/contacts',
     });
     expect(outcome.notification).toMatchObject({ delivered: true });
     expect(sent[0]!.html).not.toContain('<script>');
@@ -279,7 +279,7 @@ describe('delivery failure', () => {
     expect(dump).not.toContain('pat@example.com');
     const alert = sent.find((m) => m.to.includes(owner.email))!;
     expect(alert.subject).toBe('Email delivery failed: the new-enquiry notification');
-    expect(alert.text).toContain(`/dashboard/quotes/${row.id}`);
+    expect(alert.text).toContain(`/dashboard/enquiries/quotes/${row.id}`);
   });
 
   it('alert failure never loops', async () => {
@@ -324,8 +324,12 @@ describe('delivery failure', () => {
       source: 'contact_page',
     } as never))!;
     await settleNotifications();
-    expect(sent.find((m) => m.subject.startsWith('New quote'))!.text).toContain(`/dashboard/quotes/${quote.id}`);
-    expect(sent.find((m) => m.subject.startsWith('New enquiry'))!.text).toContain(`/dashboard/contacts/${contact.id}`);
+    expect(sent.find((m) => m.subject.startsWith('New quote'))!.text).toContain(
+      `/dashboard/enquiries/quotes/${quote.id}`,
+    );
+    expect(sent.find((m) => m.subject.startsWith('New enquiry'))!.text).toContain(
+      `/dashboard/enquiries/contacts/${contact.id}`,
+    );
   });
 });
 

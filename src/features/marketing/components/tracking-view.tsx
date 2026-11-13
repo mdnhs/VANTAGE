@@ -7,6 +7,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
+import { BarChart3, ServerCog, Tags, Target } from 'lucide-react';
+
 import { DashboardCard } from '@/components/admin/dashboard/dashboard-card';
 import { FORM_ACTION, PageHeader } from '@/components/admin/dashboard/page-header';
 import { CardSkeleton } from '@/components/admin/dashboard/skeletons';
@@ -27,6 +29,7 @@ import { useTracking } from '../hooks/api/query/use-tracking';
 import type { TrackingAdmin } from '../types';
 import { trackingKeys } from '../utils/query-keys';
 import { TrackingStatus } from './tracking-status';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 
 const idField = (pattern: RegExp, message: string) =>
   z
@@ -235,6 +238,10 @@ function TrackingForm({
         id={`${ids}-${name}`}
         placeholder={placeholder}
         autoComplete='off'
+        // Not a sign-in form: keep browsers and password managers from filling an email in here.
+        data-1p-ignore
+        data-lpignore='true'
+        data-bwignore
         aria-invalid={Boolean(errors[name]) || undefined}
         {...register(name)}
       />
@@ -257,96 +264,130 @@ function TrackingForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className='flex flex-col gap-6'>
-      <fieldset disabled={!canUpdate} className='min-w-0'>
-        <FieldGroup>
-          {text('gtmId', 'GTM container ID', 'GTM-XXXXXXX')}
-          {toggle('gtm', 'Load Google Tag Manager')}
-          {text('ga4Id', 'GA4 measurement ID', 'G-XXXXXXXXXX')}
-          {toggle('ga4', 'Send GA4 through GTM')}
-          {text('metaPixelId', 'Meta Pixel ID', '1234567890')}
-          {toggle('meta', 'Load the Meta Pixel')}
-          {toggle('capi', 'Send leads with the Conversions API')}
-          {text(
-            'testEventCode',
-            'Test event code',
-            'TEST12345',
-            'From Events Manager, Test events. Only used by the test button.',
-          )}
+      <fieldset disabled={!canUpdate} className='flex min-w-0 flex-col gap-5'>
+        <SectionCard
+          title='Google Tag Manager'
+          icon={Tags}
+          description='Loads your GTM container, which decides what reaches GA4 and Meta.'
+        >
+          <FieldGroup>
+            {text('gtmId', 'GTM container ID', 'GTM-XXXXXXX')}
+            {toggle('gtm', 'Load Google Tag Manager')}
+          </FieldGroup>
+        </SectionCard>
+        <SectionCard
+          title='Google Analytics 4'
+          icon={BarChart3}
+          description='Page views and leads, sent through Tag Manager.'
+        >
+          <FieldGroup>
+            {text('ga4Id', 'GA4 measurement ID', 'G-XXXXXXXXXX')}
+            {toggle('ga4', 'Send GA4 through GTM')}
+          </FieldGroup>
+        </SectionCard>
+        <SectionCard
+          title='Meta Pixel'
+          icon={Target}
+          description='Measures visits and leads from Facebook and Instagram ads.'
+        >
+          <FieldGroup>
+            {text('metaPixelId', 'Meta Pixel ID', '1234567890')}
+            {toggle('meta', 'Load the Meta Pixel')}
+          </FieldGroup>
+        </SectionCard>
+        <SectionCard
+          title='Conversions API'
+          icon={ServerCog}
+          description='Sends each lead to Meta from the server too, so ad blockers do not hide it.'
+        >
+          <FieldGroup>
+            {toggle('capi', 'Send leads with the Conversions API')}
+            {text(
+              'testEventCode',
+              'Test event code',
+              'TEST12345',
+              'From Events Manager, Test events. Only used by the test button.',
+            )}
 
-          <Field data-invalid={Boolean(errors.capiToken) || undefined}>
-            <FieldLabel htmlFor={`${ids}-capiToken`}>Conversions API access token</FieldLabel>
-            {!doc.keyAvailable ? <FieldDescription role='note'>{NO_KEY_NOTICE}</FieldDescription> : null}
-            {configured ? (
-              <div className='flex flex-wrap items-center gap-3'>
-                <span className='text-sm font-medium'>
-                  {removeToken
-                    ? 'Will be removed when you save'
-                    : doc.capiToken.readable === false
-                      ? "Configured, but can't be read"
-                      : 'Configured'}
-                </span>
-                <Button type='button' variant='outline' onClick={() => setRemoveToken((v) => !v)}>
-                  {removeToken ? 'Keep token' : 'Remove token'}
-                </Button>
-              </div>
-            ) : null}
-            <Input
-              id={`${ids}-capiToken`}
-              type='password'
-              autoComplete='off'
-              spellCheck={false}
-              disabled={!doc.keyAvailable || removeToken}
-              placeholder={configured ? TOKEN_PLACEHOLDER : ''}
-              className='max-w-md'
-              aria-invalid={Boolean(errors.capiToken) || undefined}
-              {...register('capiToken')}
-            />
-            <FieldDescription>Write-only: it is encrypted when saved and never shown again.</FieldDescription>
-            {errors.capiToken?.message ? <FieldError>{errors.capiToken.message}</FieldError> : null}
-          </Field>
+            <Field data-invalid={Boolean(errors.capiToken) || undefined}>
+              <FieldLabel htmlFor={`${ids}-capiToken`}>Conversions API access token</FieldLabel>
+              {!doc.keyAvailable ? <FieldDescription role='note'>{NO_KEY_NOTICE}</FieldDescription> : null}
+              {configured ? (
+                <div className='flex flex-wrap items-center gap-3'>
+                  <span className='text-sm font-medium'>
+                    {removeToken
+                      ? 'Will be removed when you save'
+                      : doc.capiToken.readable === false
+                        ? "Configured, but can't be read"
+                        : 'Configured'}
+                  </span>
+                  <Button type='button' variant='outline' onClick={() => setRemoveToken((v) => !v)}>
+                    {removeToken ? 'Keep token' : 'Remove token'}
+                  </Button>
+                </div>
+              ) : null}
+              <Input
+                id={`${ids}-capiToken`}
+                type='password'
+                // A new secret, not a saved password: browsers must not fill one in.
+                autoComplete='new-password'
+                data-1p-ignore
+                data-lpignore='true'
+                data-bwignore
+                spellCheck={false}
+                disabled={!doc.keyAvailable || removeToken}
+                placeholder={configured ? TOKEN_PLACEHOLDER : ''}
+                className='max-w-md'
+                aria-invalid={Boolean(errors.capiToken) || undefined}
+                {...register('capiToken')}
+              />
+              <FieldDescription>Write-only: it is encrypted when saved and never shown again.</FieldDescription>
+              {errors.capiToken?.message ? <FieldError>{errors.capiToken.message}</FieldError> : null}
+            </Field>
 
-          <section aria-label='Enhanced matching' className='flex flex-col gap-3 rounded-xl border p-4'>
-            <h2 className='text-card-title'>Enhanced matching</h2>
-            <p className='text-sm text-muted-foreground'>
-              Sends a hashed email and phone number with the lead to Meta. Only an owner can change this, and the choice
-              is recorded.
-            </p>
-            {saved.enhancedMatching.enabled ? (
-              <p className='text-sm'>Approved by {saved.enhancedMatching.acknowledgedBy}</p>
-            ) : null}
-            <Controller
-              control={control}
-              name='acknowledge'
-              render={({ field }) => (
-                <Field orientation='horizontal'>
-                  <Checkbox
-                    id={`${ids}-ack`}
-                    checked={field.value}
-                    disabled={!isOwner}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FieldLabel htmlFor={`${ids}-ack`}>{ACK_TEXT}</FieldLabel>
-                </Field>
-              )}
-            />
-            {errors.acknowledge?.message ? <FieldError>{errors.acknowledge.message}</FieldError> : null}
-            <Controller
-              control={control}
-              name='matching'
-              render={({ field }) => (
-                <Field orientation='horizontal'>
-                  <Switch
-                    id={`${ids}-matching`}
-                    checked={field.value}
-                    disabled={!isOwner || (!matching && !acknowledged)}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FieldLabel htmlFor={`${ids}-matching`}>Send hashed email and phone numbers with leads</FieldLabel>
-                </Field>
-              )}
-            />
-          </section>
-        </FieldGroup>
+            <SectionCard
+              nested
+              title='Enhanced matching'
+              description='Sends a hashed email and phone number with the lead to Meta. Only an owner can change this, and the choice is recorded.'
+              bodyClassName='flex flex-col gap-3'
+            >
+              {saved.enhancedMatching.enabled ? (
+                <p className='text-sm'>Approved by {saved.enhancedMatching.acknowledgedBy}</p>
+              ) : null}
+              <Controller
+                control={control}
+                name='acknowledge'
+                render={({ field }) => (
+                  <Field orientation='horizontal'>
+                    <Checkbox
+                      id={`${ids}-ack`}
+                      checked={field.value}
+                      disabled={!isOwner}
+                      onCheckedChange={field.onChange}
+                    />
+                    <FieldLabel htmlFor={`${ids}-ack`}>{ACK_TEXT}</FieldLabel>
+                  </Field>
+                )}
+              />
+              {errors.acknowledge?.message ? <FieldError>{errors.acknowledge.message}</FieldError> : null}
+              <Controller
+                control={control}
+                name='matching'
+                render={({ field }) => (
+                  <Field orientation='horizontal'>
+                    <Switch
+                      id={`${ids}-matching`}
+                      checked={field.value}
+                      disabled={!isOwner || (!matching && !acknowledged)}
+                      onCheckedChange={field.onChange}
+                    />
+                    <FieldLabel htmlFor={`${ids}-matching`}>Send hashed email and phone numbers with leads</FieldLabel>
+                  </Field>
+                )}
+              />
+            </SectionCard>
+          </FieldGroup>
+        </SectionCard>
       </fieldset>
       {formError ? (
         <p role='alert' className='text-sm text-destructive'>

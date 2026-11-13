@@ -32,8 +32,9 @@ export const PageSeoGlobal = z.object({
   ogTitle: s(70),
   ogDescription: s(200),
   ogImage: imageRefSchema.default(null),
-  canonical: Canonical,
   twitterCard: z.enum(TWITTER_CARDS).default('summary_large_image'),
+  // After the social fields: the admin form draws these keys in order, as sections.
+  canonical: Canonical,
   noindex: z.boolean().default(false),
 });
 

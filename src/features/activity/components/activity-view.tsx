@@ -202,7 +202,7 @@ export function ActivityView() {
         <>
           <div
             aria-busy={list.isFetching || undefined}
-            className={cn('overflow-x-auto rounded-lg border', list.isFetching && 'opacity-70')}
+            className={cn('overflow-x-auto rounded-lg border bg-card shadow-xs', list.isFetching && 'opacity-70')}
           >
             <Table>
               <TableCaption className='sr-only'>Activity log</TableCaption>

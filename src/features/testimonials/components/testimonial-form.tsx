@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -120,72 +120,67 @@ export function TestimonialForm({
 
   return (
     <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Testimonial details</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='customerName'>Customer name</Label>
-            <Input
-              id='customerName'
-              value={form.customerName}
-              onChange={(e) => setField('customerName', e.target.value)}
-              required
-            />
-          </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label>Rating</Label>
-            <RatingInput value={form.rating} onChange={(rating) => setField('rating', rating)} />
-          </div>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='reviewText'>Review</Label>
-            <Textarea
-              id='reviewText'
-              value={form.reviewText}
-              onChange={(e) => setField('reviewText', e.target.value)}
-              required
-            />
-          </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='serviceReceived'>Service received</Label>
-            <Input
-              id='serviceReceived'
-              value={form.serviceReceived}
-              onChange={(e) => setField('serviceReceived', e.target.value)}
-              placeholder='e.g. Full Respray'
-            />
-          </div>
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='receivedAt'>Service date</Label>
-            <Input
-              id='receivedAt'
-              type='date'
-              value={form.receivedAt}
-              onChange={(e) => setField('receivedAt', e.target.value)}
-            />
-          </div>
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isFeatured'
-              checked={form.isFeatured}
-              onCheckedChange={(checked) => setField('isFeatured', checked)}
-            />
-            <Label htmlFor='isFeatured'>Feature on homepage</Label>
-          </div>
+      <SectionCard title='Testimonial details' bodyClassName='grid gap-4 sm:grid-cols-2'>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='customerName'>Customer name</Label>
+          <Input
+            id='customerName'
+            value={form.customerName}
+            onChange={(e) => setField('customerName', e.target.value)}
+            required
+          />
+        </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label>Rating</Label>
+          <RatingInput value={form.rating} onChange={(rating) => setField('rating', rating)} />
+        </div>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label htmlFor='reviewText'>Review</Label>
+          <Textarea
+            id='reviewText'
+            value={form.reviewText}
+            onChange={(e) => setField('reviewText', e.target.value)}
+            required
+          />
+        </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='serviceReceived'>Service received</Label>
+          <Input
+            id='serviceReceived'
+            value={form.serviceReceived}
+            onChange={(e) => setField('serviceReceived', e.target.value)}
+            placeholder='e.g. Full Respray'
+          />
+        </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='receivedAt'>Service date</Label>
+          <Input
+            id='receivedAt'
+            type='date'
+            value={form.receivedAt}
+            onChange={(e) => setField('receivedAt', e.target.value)}
+          />
+        </div>
+        <div className='flex items-center gap-3 pt-6'>
+          <Switch
+            id='isFeatured'
+            checked={form.isFeatured}
+            onCheckedChange={(checked) => setField('isFeatured', checked)}
+          />
+          <Label htmlFor='isFeatured'>Feature on homepage</Label>
+        </div>
 
-          <div className='flex flex-col gap-1.5'>
-            <Label>Avatar (optional)</Label>
-            <MediaField
-              kind='image'
-              label='Avatar'
-              nullable
-              value={slotRef(form.avatarMediaId, initialData?.avatarMediaId)}
-              onChange={(ref) => setField('avatarMediaId', ref?.id ?? null)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <div className='flex flex-col gap-1.5'>
+          <Label>Avatar (optional)</Label>
+          <MediaField
+            kind='image'
+            label='Avatar'
+            nullable
+            value={slotRef(form.avatarMediaId, initialData?.avatarMediaId)}
+            onChange={(ref) => setField('avatarMediaId', ref?.id ?? null)}
+          />
+        </div>
+      </SectionCard>
 
       {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
 

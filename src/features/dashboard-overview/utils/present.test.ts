@@ -75,7 +75,11 @@ describe('kpisFor', () => {
       { ...base, enquiries: { value: 12, previous: 8 }, seoHealth: { score: 92, issues: 1 } },
       () => true,
     );
-    expect(kpis[0]).toMatchObject({ caption: 'vs the 30 days before', href: '/dashboard/quotes', variant: 'hero' });
+    expect(kpis[0]).toMatchObject({
+      caption: 'vs the 30 days before',
+      href: '/dashboard/enquiries/quotes',
+      variant: 'hero',
+    });
     expect(kpis[1]).toMatchObject({
       label: 'SEO health',
       value: '92%',
@@ -86,7 +90,7 @@ describe('kpisFor', () => {
 
   it('links contact-only viewers to the contacts inbox', () => {
     const kpis = kpisFor(base, (p) => Boolean(p.contact));
-    expect(kpis[0]?.href).toBe('/dashboard/contacts');
+    expect(kpis[0]?.href).toBe('/dashboard/enquiries/contacts');
   });
 
   it('leaves out the cards whose data the role does not get', () => {

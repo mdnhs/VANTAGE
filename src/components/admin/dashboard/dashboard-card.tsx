@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 
+import { CardIcon } from '@/components/admin/schema-form/section-card';
 import { cn } from '@/lib/utils';
 
 // A client component for the same reason as TitledSection: a server useId
@@ -25,9 +26,12 @@ export function DashboardCard({
       className={cn('flex min-w-0 flex-col gap-5 rounded-card bg-card p-5 text-card-foreground sm:p-6', className)}
     >
       <div className='flex items-center justify-between gap-3'>
-        <h2 id={id} className='text-card-title'>
-          {title}
-        </h2>
+        <div className='flex min-w-0 items-center gap-3'>
+          <CardIcon title={title} />
+          <h2 id={id} className='text-card-title'>
+            {title}
+          </h2>
+        </div>
         {action}
       </div>
       {children}

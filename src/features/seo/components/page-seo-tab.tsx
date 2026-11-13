@@ -28,6 +28,7 @@ export function PageSeoTab({ id }: { id: PublicPageId }) {
         title={`${PUBLIC_PAGES[id].label} SEO`}
         keys={[key]}
         embedded
+        stacked
         onValuesChange={(next) => setLive({ version, value: next as GlobalValue<SeoPageKey> })}
       />
       <SeoAside id={id} values={values} />

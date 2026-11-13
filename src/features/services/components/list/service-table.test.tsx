@@ -99,7 +99,7 @@ describe('ServiceTable', () => {
     expect(screen.getByText('No services yet')).toBeDefined();
     const createLink = screen.getByRole('link', { name: /Add service/i });
     expect(createLink).toBeDefined();
-    expect(createLink.getAttribute('href')).toBe('/dashboard/services/create');
+    expect(createLink.getAttribute('href')).toBe('/dashboard/website/services/create');
   });
 
   it('empty data for viewer shows no create link', () => {

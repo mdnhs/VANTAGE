@@ -63,7 +63,7 @@ describe('requirePermission', () => {
 
   it('sends a signed-in role without it to the in-panel no-access page, naming the page asked for', async () => {
     current = signedInAs('viewer');
-    requestHeaders.set('x-vantage-admin-path', '/dashboard/quotes?x=1');
+    requestHeaders.set('x-vantage-admin-path', '/dashboard/enquiries/quotes?x=1');
     await expect(requirePermission({ quote: ['read'] })).rejects.toThrow(
       'REDIRECT /dashboard/no-access?from=%2Fdashboard%2Fquotes%3Fx%3D1',
     );

@@ -151,8 +151,8 @@ describe('ChatInput', () => {
   it('takes a dashboard path and a page-key entity as context, nothing else', () => {
     const ok = (context: unknown) => ChatInput.safeParse({ text: 'hi', context }).success;
     expect(ok({ path: '/dashboard' })).toBe(true);
-    expect(ok({ path: '/dashboard/quotes' })).toBe(true);
-    expect(ok({ path: '/dashboard/about', entity: { type: 'page', key: 'page.about' } })).toBe(true);
+    expect(ok({ path: '/dashboard/enquiries/quotes' })).toBe(true);
+    expect(ok({ path: '/dashboard/website/about', entity: { type: 'page', key: 'page.about' } })).toBe(true);
     expect(ok({ path: '/about' })).toBe(false);
     expect(ok({ path: '/admin/pages' })).toBe(false);
     expect(ok({ path: '/dashboardx' })).toBe(false);
@@ -166,11 +166,11 @@ describe('ChatInput', () => {
 describe('VANTAGE rulings', () => {
   it('accepts a page-key entity and rejects other entity types', () => {
     expect(
-      ChatContext.safeParse({ path: '/dashboard/about', entity: { type: 'page', key: 'page.about' } }).success,
+      ChatContext.safeParse({ path: '/dashboard/website/about', entity: { type: 'page', key: 'page.about' } }).success,
     ).toBe(true);
     expect(
       ChatContext.safeParse({
-        path: '/dashboard/about',
+        path: '/dashboard/website/about',
         entity: { type: 'article', id: crypto.randomUUID() },
       }).success,
     ).toBe(false);

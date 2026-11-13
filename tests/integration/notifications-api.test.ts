@@ -141,7 +141,7 @@ describe('GET /admin/notifications', () => {
     await notify('delivery_failed', { enquiry: 'quote', enquiryId: quote.id, channel: 'auto_reply' });
     const u = await userWith('intake');
     const item = (await get(u.cookie)).dto!.items.find((i) => i.kind === 'delivery_failed')!;
-    expect(item.href).toBe(`/dashboard/quotes/${quote.id}`);
+    expect(item.href).toBe(`/dashboard/enquiries/quotes/${quote.id}`);
     expect(item.description).toBe('The auto-reply to the enquirer failed');
   });
 });
@@ -161,7 +161,7 @@ describe('feed edge cases', () => {
     const u = await userWith('owner');
     const items = (await get(u.cookie)).dto!.items.filter((i) => i.kind === 'delivery_failed');
     expect(items).toHaveLength(1);
-    expect(items[0]!.href).toBe(`/dashboard/quotes/${live.id}`);
+    expect(items[0]!.href).toBe(`/dashboard/enquiries/quotes/${live.id}`);
   });
 
   it('does not treat a quote id as a live contact', async () => {

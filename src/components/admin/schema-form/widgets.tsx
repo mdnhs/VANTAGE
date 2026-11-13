@@ -17,7 +17,6 @@ import {
   FieldContent,
   FieldDescription,
   FieldError,
-  FieldGroup,
   FieldLabel,
   FieldLegend,
   FieldSet,
@@ -27,6 +26,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 import { moveItem, parseNumberInput } from './helpers';
 import { emptyValue, rebase, type FormField } from './to-fields';
@@ -42,18 +42,60 @@ type Controlled = ControllerRenderProps<FieldValues, string>;
 // as a ref, and reading `value` from it during render as a ref read.
 type RenderInput = Omit<Controlled, 'ref'>;
 
-type Props = { field: FormField; control: Control<FieldValues> };
+type Props = {
+  field: FormField;
+  control: Control<FieldValues>;
+  // Drawn inside a SectionCard that already shows the title: keep the legend
+  // for screen readers only.
+  bare?: boolean;
+};
+
+// Widgets narrow enough to share a row with another one.
+const HALF: ReadonlySet<FormField['widget']> = new Set(['text', 'number', 'select', 'image', 'video']);
+
+// Which fields take the whole row: everything wide, plus a short field left
+// without a partner (an odd one out in a run of short fields), so no row has
+// a hole beside a field that could have filled it.
+export function fullWidthFields(fields: readonly FormField[]): boolean[] {
+  const half = fields.map((field) => HALF.has(field.widget) && !field.nullable);
+  const full = half.map((h) => !h);
+  let run: number[] = [];
+  const close = () => {
+    if (run.length % 2 === 1) full[run.at(-1)!] = true;
+    run = [];
+  };
+  half.forEach((h, index) => (h ? run.push(index) : close()));
+  close();
+  return full;
+}
+
+// Fields in one column, or two once their box is wide enough (a container
+// query, so a form squeezed beside a preview stays in one column).
+export function FieldGrid({ fields, control }: { fields: readonly FormField[]; control: Control<FieldValues> }) {
+  const full = fullWidthFields(fields);
+  return (
+    <div className='@container w-full'>
+      <div data-slot='field-group' className='grid w-full gap-5 @xl:grid-cols-2'>
+        {fields.map((field, index) => (
+          <div key={field.name} className={cn('min-w-0', full[index] && '@xl:col-span-2')}>
+            <FieldWidget field={field} control={control} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Object-valued fields that may be null get an explicit on/off switch.
 const TOGGLED: ReadonlySet<FormField['widget']> = new Set(['group', 'link']);
 
-export function FieldWidget({ field, control }: Props) {
+export function FieldWidget({ field, control, bare }: Props) {
   if (field.nullable && TOGGLED.has(field.widget)) return <NullableField field={field} control={control} />;
   switch (field.widget) {
     case 'group':
-      return <GroupWidget field={field} control={control} />;
+      return <GroupWidget field={field} control={control} bare={bare} />;
     case 'list':
-      return <ListWidget field={field} control={control} />;
+      return <ListWidget field={field} control={control} bare={bare} />;
     case 'link':
       return <LinkWidget field={field} control={control} />;
     default:
@@ -62,16 +104,12 @@ export function FieldWidget({ field, control }: Props) {
 }
 
 // `data-section` lets an editor's outline scroll to a group or list by its dotted path.
-function GroupWidget({ field, control }: Props) {
+function GroupWidget({ field, control, bare }: Props) {
   return (
-    <FieldSet data-section={field.name} className='scroll-mt-4'>
-      <FieldLegend>{field.label}</FieldLegend>
-      {field.description ? <FieldDescription>{field.description}</FieldDescription> : null}
-      <FieldGroup>
-        {(field.fields ?? []).map((child) => (
-          <FieldWidget key={child.name} field={child} control={control} />
-        ))}
-      </FieldGroup>
+    <FieldSet data-section={bare ? undefined : field.name} className='scroll-mt-4'>
+      <FieldLegend className={bare ? 'sr-only' : undefined}>{field.label}</FieldLegend>
+      {field.description && !bare ? <FieldDescription>{field.description}</FieldDescription> : null}
+      <FieldGrid fields={field.fields ?? []} control={control} />
     </FieldSet>
   );
 }
@@ -142,7 +180,7 @@ function LeafWidget({ field, control }: Props) {
 
 // Text items keep the Phase 2 inline row (input + up/down/remove). Any other
 // item (objects, images, textareas) renders as its own fieldset.
-function ListWidget({ field, control }: Props) {
+function ListWidget({ field, control, bare }: Props) {
   const id = useId();
   const { field: input, fieldState } = useController({
     name: field.name,
@@ -194,8 +232,14 @@ function ListWidget({ field, control }: Props) {
   // A link item (text + target) is one compact row, not a titled card.
   const linkRow = item.widget === 'link';
   return (
-    <FieldSet data-section={field.name} data-invalid={error ? true : undefined} className='scroll-mt-4'>
-      <FieldLegend variant='label'>{field.label}</FieldLegend>
+    <FieldSet
+      data-section={bare ? undefined : field.name}
+      data-invalid={error ? true : undefined}
+      className='scroll-mt-4'
+    >
+      <FieldLegend variant='label' className={bare ? 'sr-only' : undefined}>
+        {field.label}
+      </FieldLegend>
       <ol className='flex flex-col gap-3'>
         {items.map((_, index) => {
           const child = {
@@ -221,11 +265,7 @@ function ListWidget({ field, control }: Props) {
                   </div>
                   {child.widget === 'group' ? (
                     // The item's own fieldset already names the group.
-                    <FieldGroup>
-                      {(child.fields ?? []).map((inner) => (
-                        <FieldWidget key={inner.name} field={inner} control={control} />
-                      ))}
-                    </FieldGroup>
+                    <FieldGrid fields={child.fields ?? []} control={control} />
                   ) : (
                     <FieldWidget field={child} control={control} />
                   )}

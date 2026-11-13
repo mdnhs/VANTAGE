@@ -57,7 +57,7 @@ describe('computeSeoHealth', () => {
     const title = forPage(await computeSeoHealth(), 'services').find((i) => i.check === 'title-length');
     expect(title).toMatchObject({
       message: 'Title is 19 characters (aim for 30–60)',
-      fixHref: '/dashboard/services?tab=seo',
+      fixHref: '/dashboard/website/services?tab=seo',
       title: 'Services page',
       path: '/services',
     });

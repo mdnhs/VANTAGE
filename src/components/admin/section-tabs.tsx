@@ -2,7 +2,8 @@
 
 import { useState, type ReactNode } from 'react';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger, useInsideTabs } from '@/components/ui/tabs';
 
 export type SectionTab = {
   value: string;
@@ -23,16 +24,21 @@ export function SectionTabs({
   value,
   onValueChange,
   keepMounted = true,
+  action,
   className,
 }: {
   tabs: SectionTab[];
   value?: string;
   onValueChange?: (value: string) => void;
   keepMounted?: boolean;
+  // A small control at the right end of the tab row (e.g. History), so it needs no row of its own.
+  action?: ReactNode;
   className?: string;
 }) {
   const [own, setOwn] = useState(tabs[0]?.value ?? '');
   const active = value ?? own;
+  // Inside another tab panel: a box row with no underline (see useInsideTabs).
+  const nested = useInsideTabs();
   return (
     <Tabs
       value={active}
@@ -42,7 +48,7 @@ export function SectionTabs({
       }}
       className={className ?? 'gap-5'}
     >
-      <div className='border-b border-border'>
+      <div className={cn('flex flex-wrap items-end justify-between gap-3', !nested && 'border-b border-border')}>
         <TabsList variant='line' className='h-auto w-fit max-w-full flex-wrap justify-start'>
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
@@ -53,6 +59,7 @@ export function SectionTabs({
             </TabsTrigger>
           ))}
         </TabsList>
+        {action ? <div className={cn('shrink-0', !nested && 'pb-2')}>{action}</div> : null}
       </div>
       {tabs.map((tab) => (
         <TabsContent key={tab.value} value={tab.value} keepMounted={keepMounted} className='flex flex-col gap-5'>

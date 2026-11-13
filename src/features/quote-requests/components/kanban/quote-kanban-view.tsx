@@ -16,10 +16,12 @@ import {
   type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
+  type DragMoveEvent,
   type DragOverEvent,
   type DropAnimation,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { motion, useMotionValue, useSpring, useTransform, useVelocity } from 'motion/react';
 import { KanbanColumn } from './kanban-column';
 import { KanbanCard } from './kanban-card';
 import { PIPELINE_STATUSES, type PipelineStatus, type QuoteRequest, type QuoteStatus } from '../../types';
@@ -66,9 +68,10 @@ function buildColumnsState(quotesList: QuoteRequest[]): Record<PipelineStatus, Q
   return initial;
 }
 
+// Settling into the slot: a short spring-like ease with a touch of overshoot.
 const dropAnimationConfig: DropAnimation = {
-  duration: 220,
-  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+  duration: 260,
+  easing: 'cubic-bezier(0.2, 0.9, 0.3, 1.15)',
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
       active: {
@@ -83,6 +86,13 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
   const [columns, setColumns] = useState<Record<PipelineStatus, QuoteRequest[]>>(() => buildColumnsState(quotes));
   const [activeQuote, setActiveQuote] = useState<QuoteRequest | null>(null);
   const [overColumnStatus, setOverColumnStatus] = useState<PipelineStatus | null>(null);
+
+  // The dragged card leans the way it is pulled, like a sheet of paper held by one corner: the
+  // faster the pull, the more it tilts (up to 12°), and it springs upright when the pointer stops.
+  const dragX = useMotionValue(0);
+  const dragVelocity = useVelocity(dragX);
+  const lean = useTransform(dragVelocity, [-1600, 0, 1600], [-12, 0, 12], { clamp: true });
+  const tilt = useSpring(lean, { stiffness: 380, damping: 26, mass: 0.6 });
 
   // Ref to columns so drag handlers always inspect the latest state (synced after
   // render/commit, not during render - mutating a ref mid-render is disallowed).
@@ -159,6 +169,7 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
   }, []);
 
   const handleDragStart = ({ active }: DragStartEvent) => {
+    dragX.jump(0);
     const activeId = String(active.id);
     const startContainer = findContainer(activeId, columnsRef.current);
     initialContainerRef.current = startContainer;
@@ -170,6 +181,10 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
     }
     setActiveQuote(foundQuote);
     setOverColumnStatus(startContainer);
+  };
+
+  const handleDragMove = ({ delta }: DragMoveEvent) => {
+    dragX.set(delta.x);
   };
 
   const handleDragOver = ({ active, over }: DragOverEvent) => {
@@ -347,11 +362,12 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
       sensors={sensors}
       collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className='flex h-full w-full gap-3.5 overflow-x-auto pt-1 pb-4'>
+      <div className='flex h-full w-full snap-x snap-proximity gap-4 overflow-x-auto px-0.5 pt-2 pb-4'>
         {columnsData.map(({ status, quotes: colQuotes, totalVal }) => (
           <KanbanColumn
             key={status}
@@ -361,13 +377,25 @@ export function QuoteKanbanView({ quotes, onSelectQuote, onStatusChange }: Quote
             onSelectQuote={onSelectQuote}
             onStatusChange={handleStatusChangeWithOptimistic}
             isOverColumn={overColumnStatus === status}
+            dragging={activeQuote !== null}
           />
         ))}
       </div>
 
       {/* Smooth, elevated DragOverlay while moving cards across columns */}
       <DragOverlay dropAnimation={dropAnimationConfig}>
-        {activeQuote ? <KanbanCard quote={activeQuote} isOverlay /> : null}
+        {activeQuote ? (
+          // Picked up: the card springs up and casts a deep shadow, and leans with the pull.
+          <motion.div
+            style={{ rotate: tilt }}
+            initial={{ scale: 1, boxShadow: '0 1px 2px rgb(0 0 0 / 0.06)' }}
+            animate={{ scale: 1.04, boxShadow: '0 24px 48px -12px rgb(0 0 0 / 0.35)' }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+            className='rounded-xl'
+          >
+            <KanbanCard quote={activeQuote} isOverlay />
+          </motion.div>
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

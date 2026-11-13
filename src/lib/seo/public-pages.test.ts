@@ -72,8 +72,8 @@ describe('public page registry', () => {
   });
 
   it('builds the Fix link', () => {
-    expect(seoFixHref('about')).toBe('/dashboard/about?tab=seo');
-    expect(seoFixHref('contact')).toBe('/dashboard/contact-page?tab=seo');
+    expect(seoFixHref('about')).toBe('/dashboard/website/about?tab=seo');
+    expect(seoFixHref('contact')).toBe('/dashboard/website/contact-page?tab=seo');
     expect(seoFixHref('get-a-quote')).toBe('/dashboard/seo/pages/get-a-quote');
   });
 });

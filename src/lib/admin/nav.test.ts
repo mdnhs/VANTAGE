@@ -132,12 +132,12 @@ describe('any-of parents link to a child the actor can open', () => {
   it('contact-only actor: Enquiries opens Contact messages, not Quote requests', () => {
     const enquiries = visibleNavWith(only('contact')).find((i) => i.id === 'enquiries')!;
     expect(enquiries.children?.map((c) => c.id)).toEqual(['enquiries-contacts']);
-    expect(enquiries.href).toBe('/dashboard/contacts');
+    expect(enquiries.href).toBe('/dashboard/enquiries/contacts');
   });
 
   it('keeps the registered href when its own child is openable', () => {
-    expect(visibleNavWith(only('quote')).find((i) => i.id === 'enquiries')!.href).toBe('/dashboard/quotes');
-    expect(visibleNav(['owner']).find((i) => i.id === 'website')!.href).toBe('/dashboard/home-page');
+    expect(visibleNavWith(only('quote')).find((i) => i.id === 'enquiries')!.href).toBe('/dashboard/enquiries/quotes');
+    expect(visibleNav(['owner']).find((i) => i.id === 'website')!.href).toBe('/dashboard/website/home-page');
   });
 });
 
@@ -154,12 +154,12 @@ describe('canOpen', () => {
 describe('insurance switch in the rail and search', () => {
   it('lists the Insurance page in search and the Website rail only when switched on', () => {
     const hrefs = (opts?: { insurance?: boolean }) => reachableLinks(['owner'], opts).map((l) => l.href);
-    expect(hrefs()).not.toContain('/dashboard/insurance');
-    expect(hrefs({ insurance: true })).toContain('/dashboard/insurance');
+    expect(hrefs()).not.toContain('/dashboard/website/insurance');
+    expect(hrefs({ insurance: true })).toContain('/dashboard/website/insurance');
     const rail = (opts?: { insurance?: boolean }) =>
-      activeSection('/dashboard/about', ['owner'], opts)?.children?.map((c) => c.href) ?? [];
-    expect(rail()).not.toContain('/dashboard/insurance');
-    expect(rail({ insurance: true })).toContain('/dashboard/insurance');
+      activeSection('/dashboard/website/about', ['owner'], opts)?.children?.map((c) => c.href) ?? [];
+    expect(rail()).not.toContain('/dashboard/website/insurance');
+    expect(rail({ insurance: true })).toContain('/dashboard/website/insurance');
   });
 });
 
@@ -225,10 +225,10 @@ describe('registry vs page guard', () => {
 
 describe('linkForPath', () => {
   it('matches exact hrefs only and prefers a child over its parent', () => {
-    expect(linkForPath('/dashboard/quotes')?.id).toBe('enquiries-quotes');
+    expect(linkForPath('/dashboard/enquiries/quotes')?.id).toBe('enquiries-quotes');
     expect(linkForPath('/dashboard/seo')?.id).toBe('seo-overview');
-    expect(linkForPath('/dashboard/quotes?x=1')?.id).toBe('enquiries-quotes');
-    expect(linkForPath('/dashboard/quotes/123')).toBeUndefined();
+    expect(linkForPath('/dashboard/enquiries/quotes?x=1')?.id).toBe('enquiries-quotes');
+    expect(linkForPath('/dashboard/enquiries/quotes/123')).toBeUndefined();
     expect(linkForPath('/dashboard/help')?.id).toBe('help');
   });
 });
@@ -241,16 +241,16 @@ describe('isActivePath', () => {
 
   it('/dashboard is exact only', () => {
     expect(isActivePath('/dashboard', link('dashboard'))).toBe(true);
-    expect(isActivePath('/dashboard/quotes', link('dashboard'))).toBe(false);
+    expect(isActivePath('/dashboard/enquiries/quotes', link('dashboard'))).toBe(false);
   });
 
   it('deep links light the right link', () => {
-    expect(isActivePath('/dashboard/homepage-catalogs/x/edit', link('website-home'))).toBe(true);
-    expect(isActivePath('/dashboard/homepage-catalogs/x/edit', link('website-services'))).toBe(false);
-    expect(isActivePath('/dashboard/testimonials/create', link('website-home'))).toBe(true);
-    expect(isActivePath('/dashboard/services/abc/edit', link('website-services'))).toBe(true);
-    expect(isActivePath('/dashboard/quotes/123', link('enquiries-quotes'))).toBe(true);
-    expect(isActivePath('/dashboard/quotes/123', link('enquiries-contacts'))).toBe(false);
+    expect(isActivePath('/dashboard/website/homepage-catalogs/x/edit', link('website-home'))).toBe(true);
+    expect(isActivePath('/dashboard/website/homepage-catalogs/x/edit', link('website-services'))).toBe(false);
+    expect(isActivePath('/dashboard/website/testimonials/create', link('website-home'))).toBe(true);
+    expect(isActivePath('/dashboard/website/services/abc/edit', link('website-services'))).toBe(true);
+    expect(isActivePath('/dashboard/enquiries/quotes/123', link('enquiries-quotes'))).toBe(true);
+    expect(isActivePath('/dashboard/enquiries/quotes/123', link('enquiries-contacts'))).toBe(false);
   });
 
   it('does not match on a shared string prefix', () => {
@@ -265,16 +265,16 @@ describe('isActivePath', () => {
   });
 
   it('a section is active for any of its children', () => {
-    expect(isActivePath('/dashboard/contacts/9', link('enquiries'))).toBe(true);
-    expect(isActivePath('/dashboard/projects/create', link('website'))).toBe(true);
+    expect(isActivePath('/dashboard/enquiries/contacts/9', link('enquiries'))).toBe(true);
+    expect(isActivePath('/dashboard/website/projects/create', link('website'))).toBe(true);
     expect(isActivePath('/dashboard/media', link('website'))).toBe(false);
   });
 });
 
 describe('activeSection', () => {
   it('returns the section for deep links of a multi-link section', () => {
-    expect(activeSection('/dashboard/homepage-catalogs/x/edit', ['owner'])?.id).toBe('website');
-    expect(activeSection('/dashboard/quotes/123', ['owner'])?.id).toBe('enquiries');
+    expect(activeSection('/dashboard/website/homepage-catalogs/x/edit', ['owner'])?.id).toBe('website');
+    expect(activeSection('/dashboard/enquiries/quotes/123', ['owner'])?.id).toBe('enquiries');
     expect(activeSection('/dashboard/marketing/consent', ['owner'])?.id).toBe('marketing');
   });
 
@@ -284,7 +284,7 @@ describe('activeSection', () => {
     expect(activeSection('/dashboard/seo', ['owner'])?.id).toBe('seo');
     // viewer has two seo children, still a section; editor of one visible child is not.
     expect(activeSection('/dashboard/seo', ['viewer'])?.id).toBe('seo');
-    expect(activeSection('/dashboard/about', ['intake'])).toBeUndefined();
+    expect(activeSection('/dashboard/website/about', ['intake'])).toBeUndefined();
   });
 });
 
@@ -292,8 +292,8 @@ describe('firstReachableHref', () => {
   const item = (id: string) => NAV.find((i) => i.id === id)!;
 
   it('picks the first child the roles can open', () => {
-    expect(firstReachableHref(item('website'), ['owner'])).toBe('/dashboard/home-page');
-    expect(firstReachableHref(item('enquiries'), ['intake'])).toBe('/dashboard/quotes');
+    expect(firstReachableHref(item('website'), ['owner'])).toBe('/dashboard/website/home-page');
+    expect(firstReachableHref(item('enquiries'), ['intake'])).toBe('/dashboard/enquiries/quotes');
     expect(firstReachableHref(item('marketing'), ['marketer'])).toBe('/dashboard/marketing');
   });
 

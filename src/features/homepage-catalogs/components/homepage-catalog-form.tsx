@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SectionCard } from '@/components/admin/schema-form/section-card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -81,94 +81,89 @@ export function HomepageCatalogForm({
 
   return (
     <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-      <Card>
-        <CardHeader>
-          <CardTitle>Catalog item details</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='title'>Title</Label>
-            <Input
-              id='title'
-              value={form.title}
-              onChange={(e) => setField('title', e.target.value)}
-              placeholder='e.g. Crash & Collision Repair'
-              required
-            />
-          </div>
+      <SectionCard title={'Catalog item details'} bodyClassName='grid gap-4 sm:grid-cols-2'>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label htmlFor='title'>Title</Label>
+          <Input
+            id='title'
+            value={form.title}
+            onChange={(e) => setField('title', e.target.value)}
+            placeholder='e.g. Crash & Collision Repair'
+            required
+          />
+        </div>
 
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='badge'>Badge (optional)</Label>
-            <Input
-              id='badge'
-              value={form.badge}
-              onChange={(e) => setField('badge', e.target.value)}
-              placeholder='e.g. OEM Certified or Same Day PDR'
-            />
-          </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='badge'>Badge (optional)</Label>
+          <Input
+            id='badge'
+            value={form.badge}
+            onChange={(e) => setField('badge', e.target.value)}
+            placeholder='e.g. OEM Certified or Same Day PDR'
+          />
+        </div>
 
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='footnote'>Footnote</Label>
-            <Input
-              id='footnote'
-              value={form.footnote}
-              onChange={(e) => setField('footnote', e.target.value)}
-              placeholder='e.g. Insurance Approved or Free Estimate'
-            />
-          </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='footnote'>Footnote</Label>
+          <Input
+            id='footnote'
+            value={form.footnote}
+            onChange={(e) => setField('footnote', e.target.value)}
+            placeholder='e.g. Insurance Approved or Free Estimate'
+          />
+        </div>
 
-          <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='icon'>Preset Icon</Label>
-            <Select value={form.icon} onValueChange={(value) => setField('icon', value as HomepageCatalogIcon)}>
-              <SelectTrigger id='icon'>
-                <SelectValue placeholder='Select an icon' />
-              </SelectTrigger>
-              <SelectContent>
-                {HOMEPAGE_CATALOG_ICONS.map((icon) => (
-                  <SelectItem key={icon} value={icon}>
-                    {iconLabel(icon)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='icon'>Preset Icon</Label>
+          <Select value={form.icon} onValueChange={(value) => setField('icon', value as HomepageCatalogIcon)}>
+            <SelectTrigger id='icon'>
+              <SelectValue placeholder='Select an icon' />
+            </SelectTrigger>
+            <SelectContent>
+              {HOMEPAGE_CATALOG_ICONS.map((icon) => (
+                <SelectItem key={icon} value={icon}>
+                  {iconLabel(icon)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div className='flex items-center gap-3 pt-6'>
-            <Switch
-              id='isEnabled'
-              checked={form.isEnabled}
-              onCheckedChange={(checked) => setField('isEnabled', checked)}
-            />
-            <Label htmlFor='isEnabled'>Visible on homepage catalog</Label>
-          </div>
+        <div className='flex items-center gap-3 pt-6'>
+          <Switch
+            id='isEnabled'
+            checked={form.isEnabled}
+            onCheckedChange={(checked) => setField('isEnabled', checked)}
+          />
+          <Label htmlFor='isEnabled'>Visible on homepage catalog</Label>
+        </div>
 
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label htmlFor='description'>Description</Label>
-            <Textarea
-              id='description'
-              value={form.description}
-              onChange={(e) => setField('description', e.target.value)}
-              rows={3}
-              placeholder='Describe this service in 1-2 punchy sentences...'
-              required
-            />
-          </div>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label htmlFor='description'>Description</Label>
+          <Textarea
+            id='description'
+            value={form.description}
+            onChange={(e) => setField('description', e.target.value)}
+            rows={3}
+            placeholder='Describe this service in 1-2 punchy sentences...'
+            required
+          />
+        </div>
 
-          <div className='flex flex-col gap-1.5 sm:col-span-2'>
-            <Label>Custom Icon Image (optional override)</Label>
-            <p className='text-xs text-muted-foreground'>
-              Upload a custom SVG/PNG icon, or leave empty to use the preset icon chosen above.
-            </p>
-            <MediaField
-              kind='image'
-              label='Custom icon'
-              nullable
-              value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
-              onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+        <div className='flex flex-col gap-1.5 sm:col-span-2'>
+          <Label>Custom Icon Image (optional override)</Label>
+          <p className='text-xs text-muted-foreground'>
+            Upload a custom SVG/PNG icon, or leave empty to use the preset icon chosen above.
+          </p>
+          <MediaField
+            kind='image'
+            label='Custom icon'
+            nullable
+            value={slotRef(form.iconMediaId, initialData?.iconMediaId)}
+            onChange={(ref) => setField('iconMediaId', ref?.id ?? null)}
+          />
+        </div>
+      </SectionCard>
 
       {submitError && <p className='text-sm text-destructive'>{submitError}</p>}
 

@@ -142,7 +142,7 @@ const quoteEnquiry = (row: Omit<QuoteRequest, 'photoUrls'>): Enquiry => ({
     ['Registration', row.registration],
   ],
   message: row.description,
-  adminPath: `/dashboard/quotes/${row.id}`,
+  adminPath: `/dashboard/enquiries/quotes/${row.id}`,
 });
 
 const contactEnquiry = (row: Omit<ContactMessage, 'photoUrls'>): Enquiry => ({
@@ -153,7 +153,7 @@ const contactEnquiry = (row: Omit<ContactMessage, 'photoUrls'>): Enquiry => ({
   phone: row.phone,
   details: [['Service', row.service]],
   message: row.message,
-  adminPath: `/dashboard/contacts/${row.id}`,
+  adminPath: `/dashboard/enquiries/contacts/${row.id}`,
 });
 
 // Runs after the response when Next provides a request scope, else as a detached promise.

@@ -84,7 +84,7 @@ export function SeoAside({ id, values }: { id: PublicPageId; values: GlobalValue
   else if (image && !(image.width && image.height)) ogUnknown = 'Share image size unknown';
 
   return (
-    <aside className='flex flex-col gap-6 lg:sticky lg:top-4 lg:self-start'>
+    <aside className='flex flex-col gap-6 lg:sticky lg:top-0 lg:self-start'>
       <DashboardCard title='In search results'>
         {settled ? (
           <SerpPreview url={serpUrl(host, page.path)} title={title} description={description} />

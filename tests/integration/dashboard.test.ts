@@ -99,7 +99,7 @@ describe('getDashboard', () => {
     expect(step?.title).toBe('Reply to Fiachra');
     expect(step?.description).toBe('Waiting since 13 Oct: the oldest enquiry nobody has contacted yet.');
     expect(step?.cta).toBe('Open enquiry');
-    expect(step?.href).toMatch(/^\/dashboard\/quotes\/[0-9a-f-]{36}$/);
+    expect(step?.href).toMatch(/^\/dashboard\/enquiries\/quotes\/[0-9a-f-]{36}$/);
     expect(dto.nextUp.some((s) => s.id === 'invite')).toBe(true);
   });
 

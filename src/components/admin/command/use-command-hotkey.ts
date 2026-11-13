@@ -2,13 +2,14 @@
 
 import { useEffect } from 'react';
 
-type KeyLike = Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'>;
+// `key` can be missing: Chrome fires keydown with no key when it autofills a field.
+type KeyLike = Pick<KeyboardEvent, 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'> & { key?: string };
 type PaletteKeyEvent = KeyLike & Pick<KeyboardEvent, 'repeat' | 'defaultPrevented' | 'target' | 'preventDefault'>;
 
 // ⌘K on macOS, Ctrl+K elsewhere. A modifier is required, so typing a bare "k"
 // never opens the palette (no single-key hotkeys).
 export function isPaletteShortcut(event: KeyLike) {
-  return event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
+  return event.key?.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
 }
 
 // Rich-text editors (a contenteditable root) use ⌘K for links, so they keep

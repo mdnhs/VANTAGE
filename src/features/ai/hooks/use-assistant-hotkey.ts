@@ -2,12 +2,13 @@
 
 import { useEffect } from 'react';
 
-type KeyLike = Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'>;
+// `key` can be missing: Chrome fires keydown with no key when it autofills a field.
+type KeyLike = Pick<KeyboardEvent, 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'> & { key?: string };
 
 // ⌘J / Ctrl+J. Unlike ⌘K it also works inside the rich-text editor: TipTap
 // binds no Mod-j, and that is where people most want help (it binds no Mod-j).
 export function isAssistantShortcut(event: KeyLike) {
-  return event.key.toLowerCase() === 'j' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
+  return event.key?.toLowerCase() === 'j' && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
 }
 
 export function useAssistantHotkey(enabled: boolean, onTrigger: () => void) {

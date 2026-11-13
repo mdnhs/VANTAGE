@@ -38,14 +38,14 @@ export const MEDIA_REFERRER_TABLES = [
 ] as const;
 
 const PAGE_KEY_HREFS: Record<string, string> = {
-  'page.home': '/dashboard/home-page',
-  'page.services': '/dashboard/services',
-  'page.our-work': '/dashboard/projects',
-  'page.insurance': '/dashboard/insurance',
-  'page.about': '/dashboard/about',
-  'page.process': '/dashboard/process-page',
-  'page.contact': '/dashboard/contact-page',
-  'page.get-a-quote': '/dashboard/home-page?tab=quote-form',
+  'page.home': '/dashboard/website/home-page',
+  'page.services': '/dashboard/website/services',
+  'page.our-work': '/dashboard/website/projects',
+  'page.insurance': '/dashboard/website/insurance',
+  'page.about': '/dashboard/website/about',
+  'page.process': '/dashboard/website/process-page',
+  'page.contact': '/dashboard/website/contact-page',
+  'page.get-a-quote': '/dashboard/website/home-page?tab=quote-form',
 };
 
 function settingUse(key: string): MediaUse {
@@ -81,7 +81,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
         sql`${services.iconMediaId} = ${id} or ${services.imageMediaId} = ${id} or ${services.ogImageMediaId} = ${id}`,
       ),
     'Service',
-    '/dashboard/services',
+    '/dashboard/website/services',
   );
   content(
     await db
@@ -89,7 +89,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .from(homepageCatalogs)
       .where(eq(homepageCatalogs.iconMediaId, id)),
     'Catalog card',
-    '/dashboard/homepage-catalogs',
+    '/dashboard/website/homepage-catalogs',
   );
   content(
     await db
@@ -97,7 +97,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .from(partnerLogos)
       .where(eq(partnerLogos.logoMediaId, id)),
     'Partner logo',
-    '/dashboard/partner-logos',
+    '/dashboard/website/partner-logos',
   );
   content(
     await db
@@ -107,7 +107,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
         sql`${projects.beforeImageMediaId} = ${id} or ${projects.afterImageMediaId} = ${id} or ${projects.ogImageMediaId} = ${id}`,
       ),
     'Project',
-    '/dashboard/projects',
+    '/dashboard/website/projects',
   );
   content(
     await db
@@ -116,7 +116,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .innerJoin(projects, eq(projects.id, projectGalleryImages.projectId))
       .where(eq(projectGalleryImages.mediaId, id)),
     'Project gallery',
-    '/dashboard/projects',
+    '/dashboard/website/projects',
   );
   content(
     await db
@@ -124,7 +124,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .from(testimonials)
       .where(eq(testimonials.avatarMediaId, id)),
     'Testimonial',
-    '/dashboard/testimonials',
+    '/dashboard/website/testimonials',
   );
   content(
     await db
@@ -132,7 +132,7 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
       .from(legalPages)
       .where(eq(legalPages.ogImageMediaId, id)),
     'Legal page',
-    '/dashboard/legal-pages',
+    '/dashboard/website/legal-pages',
   );
 
   const photos = await db
@@ -146,13 +146,13 @@ export async function mediaUsage(db: DbLike, id: string): Promise<MediaUse[]> {
             kind: 'enquiry',
             id: photo.quoteId,
             label: 'Quote request photo',
-            href: `/dashboard/quotes/${photo.quoteId}`,
+            href: `/dashboard/enquiries/quotes/${photo.quoteId}`,
           }
         : {
             kind: 'enquiry',
             id: photo.contactId!,
             label: 'Contact message photo',
-            href: `/dashboard/contacts/${photo.contactId}`,
+            href: `/dashboard/enquiries/contacts/${photo.contactId}`,
           },
     );
   }

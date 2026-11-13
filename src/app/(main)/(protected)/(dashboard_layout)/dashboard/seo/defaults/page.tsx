@@ -20,7 +20,7 @@ export default async function SeoDefaultsPage() {
   await requirePermission(permissionFor(path), path);
   return (
     <div className='flex flex-col gap-8'>
-      <GlobalEditor title='SEO defaults' keys={['seo']} />
+      <GlobalEditor title='SEO defaults' keys={['seo']} stacked />
       <CrawlPreview />
     </div>
   );

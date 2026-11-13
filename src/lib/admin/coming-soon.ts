@@ -11,16 +11,16 @@ export function comingSoonLink(section: string, rest: readonly string[] = []): N
 // Registry destinations that already have their own route folder. A real
 // route wins over the catch-all, so these are not prerendered as placeholders.
 export const REAL_ROUTES: ReadonlySet<string> = new Set([
-  '/dashboard/home-page',
-  '/dashboard/services',
-  '/dashboard/legal-pages',
-  '/dashboard/projects',
-  '/dashboard/insurance',
-  '/dashboard/about',
-  '/dashboard/process-page',
-  '/dashboard/contact-page',
-  '/dashboard/quotes',
-  '/dashboard/contacts',
+  '/dashboard/website/home-page',
+  '/dashboard/website/services',
+  '/dashboard/website/legal-pages',
+  '/dashboard/website/projects',
+  '/dashboard/website/insurance',
+  '/dashboard/website/about',
+  '/dashboard/website/process-page',
+  '/dashboard/website/contact-page',
+  '/dashboard/enquiries/quotes',
+  '/dashboard/enquiries/contacts',
   '/dashboard/support',
   '/dashboard/settings',
   // settings/[slug] serves every settings page.

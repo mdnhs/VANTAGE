@@ -263,7 +263,7 @@ describe('content tools', () => {
   });
 
   it('contextSubject is null without page.read', async () => {
-    const context = { path: '/dashboard/about', entity: { type: 'page' as const, key: 'page.about' as const } };
+    const context = { path: '/dashboard/website/about', entity: { type: 'page' as const, key: 'page.about' as const } };
     expect(await contextSubject(actorFor('intake'), context)).toBeNull();
     expect(await contextSubject(actorFor('editor'), context)).toEqual({
       kind: 'page',

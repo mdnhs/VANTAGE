@@ -23,10 +23,13 @@ import { GlobalHistory } from './global-history';
 export function GlobalForm({
   settingKey,
   onValuesChange,
+  stacked = false,
 }: {
   settingKey: EditableGlobalKey;
   // Single-key editors only: live values for previews.
   onValuesChange?: (values: unknown) => void;
+  // Sections as cards one under another (short forms beside a preview) rather than tabs.
+  stacked?: boolean;
 }) {
   const doc = useGlobal(settingKey);
   const { save } = useSaveGlobal(settingKey);
@@ -59,42 +62,45 @@ export function GlobalForm({
 
   return (
     <section aria-label={label} className='flex flex-col gap-4'>
-      <Button variant='outline' className='self-end' onClick={() => setHistoryOpen(true)}>
-        <HistoryIcon data-icon='inline-start' />
-        History
-      </Button>
       {conflict ? (
         <p role='alert' className='rounded-xl border border-destructive/40 p-3 text-sm text-destructive'>
           {CONFLICT_MESSAGE}
         </p>
       ) : null}
       {/* Read-only for roles that can read but not update; the API still refuses their PUT. */}
-      <fieldset disabled={!canUpdate} className='min-w-0'>
-        <SchemaForm
-          key={version}
-          schema={GLOBALS[settingKey]}
-          overrides={GLOBAL_FIELD_UI[settingKey]}
-          defaultValues={value as never}
-          submitLabel={`Save ${label.toLowerCase()}`}
-          readOnly={!canUpdate}
-          // Forms with sections (the footer) show them as horizontal tabs.
-          sectionTabs
-          onValuesChange={onValuesChange}
-          onSubmit={async (next) => {
-            setConflict(false);
-            const result = await save({ version, value: next });
-            if (result.saved) {
-              toast.success(`${label} saved`);
-              return;
-            }
-            if (result.conflict) {
-              setConflict(true);
-              return;
-            }
-            return result;
-          }}
-        />
-      </fieldset>
+      <SchemaForm
+        key={version}
+        schema={GLOBALS[settingKey]}
+        overrides={GLOBAL_FIELD_UI[settingKey]}
+        defaultValues={value as never}
+        submitLabel={`Save ${label.toLowerCase()}`}
+        readOnly={!canUpdate}
+        disabled={!canUpdate}
+        // Fields outside any section (the consent banner, for one) still get a card.
+        leafTitle={label}
+        toolbar={
+          <Button variant='outline' size='sm' onClick={() => setHistoryOpen(true)}>
+            <HistoryIcon data-icon='inline-start' />
+            History
+          </Button>
+        }
+        // Forms with sections (the footer) show them as horizontal tabs.
+        sectionTabs={!stacked}
+        onValuesChange={onValuesChange}
+        onSubmit={async (next) => {
+          setConflict(false);
+          const result = await save({ version, value: next });
+          if (result.saved) {
+            toast.success(`${label} saved`);
+            return;
+          }
+          if (result.conflict) {
+            setConflict(true);
+            return;
+          }
+          return result;
+        }}
+      />
       <GlobalHistory
         settingKey={settingKey}
         open={historyOpen}

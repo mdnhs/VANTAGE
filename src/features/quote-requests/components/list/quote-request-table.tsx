@@ -130,7 +130,7 @@ export function QuoteRequestTable({ initialData, initialStats }: QuoteRequestTab
           }
         />
       ) : (
-        <div className='overflow-x-auto rounded-lg border border-border'>
+        <div className='overflow-x-auto rounded-lg border border-border bg-card shadow-xs'>
           <table className='w-full text-sm'>
             <thead>
               <tr className='border-b border-border bg-muted/50 text-left text-xs font-medium text-muted-foreground'>

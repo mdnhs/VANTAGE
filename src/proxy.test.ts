@@ -12,10 +12,10 @@ const req = (url: string, init?: { cookie?: string; headers?: Record<string, str
 
 describe('proxy', () => {
   it('redirects /dashboard without a session cookie to /login, remembering the page', async () => {
-    const res = await proxy(req('/dashboard/quotes?x=1'));
+    const res = await proxy(req('/dashboard/enquiries/quotes?x=1'));
     expect(res.status).toBe(307);
     expect(new URL(res.headers.get('location')!).pathname + new URL(res.headers.get('location')!).search).toBe(
-      '/login?next=%2Fdashboard%2Fquotes%3Fx%3D1',
+      '/login?next=%2Fdashboard%2Fenquiries%2Fquotes%3Fx%3D1',
     );
     expect(res.headers.get('cache-control')).toBe('no-store');
   });
@@ -26,9 +26,9 @@ describe('proxy', () => {
   });
 
   it.each(['vantage.session_token=t', '__Secure-vantage.session_token=t'])('lets %s through', async (cookie) => {
-    const res = await proxy(req('/dashboard/quotes', { cookie }));
+    const res = await proxy(req('/dashboard/enquiries/quotes', { cookie }));
     expect(res.status).toBe(200);
-    expect(res.headers.get('x-middleware-request-x-vantage-admin-path')).toBe('/dashboard/quotes');
+    expect(res.headers.get('x-middleware-request-x-vantage-admin-path')).toBe('/dashboard/enquiries/quotes');
   });
 
   it('overwrites a client-sent admin-path header', async () => {
@@ -298,5 +298,17 @@ describe('proxy: preferred address', () => {
     await visit('autopaintshop.ie');
     await visit('autopaintshop.ie');
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('movedAdminPath', () => {
+  it('sends the old admin addresses to their section', async () => {
+    const { movedAdminPath } = await import('./proxy');
+    expect(movedAdminPath('/dashboard/home-page')).toBe('/dashboard/website/home-page');
+    expect(movedAdminPath('/dashboard/services/abc/edit')).toBe('/dashboard/website/services/abc/edit');
+    expect(movedAdminPath('/dashboard/quotes/123')).toBe('/dashboard/enquiries/quotes/123');
+    expect(movedAdminPath('/dashboard/website/home-page')).toBeNull();
+    expect(movedAdminPath('/dashboard/services-x')).toBeNull();
+    expect(movedAdminPath('/dashboard/seo')).toBeNull();
   });
 });

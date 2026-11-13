@@ -8,35 +8,35 @@ import { STARTERS } from './starters';
 describe('contextFromRoute (V9-R10)', () => {
   it('maps the exact editor paths to their page keys', () => {
     const paths: Record<string, string> = {
-      '/dashboard/home-page': 'page.home',
-      '/dashboard/services': 'page.services',
-      '/dashboard/projects': 'page.our-work',
-      '/dashboard/insurance': 'page.insurance',
-      '/dashboard/about': 'page.about',
-      '/dashboard/process-page': 'page.process',
-      '/dashboard/contact-page': 'page.contact',
+      '/dashboard/website/home-page': 'page.home',
+      '/dashboard/website/services': 'page.services',
+      '/dashboard/website/projects': 'page.our-work',
+      '/dashboard/website/insurance': 'page.insurance',
+      '/dashboard/website/about': 'page.about',
+      '/dashboard/website/process-page': 'page.process',
+      '/dashboard/website/contact-page': 'page.contact',
     };
     for (const [path, key] of Object.entries(paths)) {
       expect(contextFromRoute(path)).toEqual({ screen: 'page', context: { path, entity: { type: 'page', key } } });
     }
-    expect(contextFromRoute('/dashboard/about/')?.screen).toBe('page');
+    expect(contextFromRoute('/dashboard/website/about/')?.screen).toBe('page');
   });
 
   it('keeps sub-routes and other screens on the default set', () => {
-    expect(contextFromRoute('/dashboard/about/x')).toEqual({
+    expect(contextFromRoute('/dashboard/website/about/x')).toEqual({
       screen: 'default',
-      context: { path: '/dashboard/about/x' },
+      context: { path: '/dashboard/website/about/x' },
     });
     expect(contextFromRoute('/dashboard')).toEqual({ screen: 'default', context: { path: '/dashboard' } });
-    expect(contextFromRoute('/dashboard/projects/new')?.screen).toBe('default');
+    expect(contextFromRoute('/dashboard/website/projects/new')?.screen).toBe('default');
   });
 
   it('uses the enquiries set for quotes and contacts', () => {
-    expect(contextFromRoute('/dashboard/quotes')).toEqual({
+    expect(contextFromRoute('/dashboard/enquiries/quotes')).toEqual({
       screen: 'enquiries',
-      context: { path: '/dashboard/quotes' },
+      context: { path: '/dashboard/enquiries/quotes' },
     });
-    expect(contextFromRoute('/dashboard/contacts')?.screen).toBe('enquiries');
+    expect(contextFromRoute('/dashboard/enquiries/contacts')?.screen).toBe('enquiries');
   });
 
   it('sends nothing outside the dashboard', () => {
@@ -46,7 +46,7 @@ describe('contextFromRoute (V9-R10)', () => {
   });
 
   it('only produces contexts the server accepts, with the path capped at 200', () => {
-    expect(ChatContext.safeParse(contextFromRoute('/dashboard/about')!.context).success).toBe(true);
+    expect(ChatContext.safeParse(contextFromRoute('/dashboard/website/about')!.context).success).toBe(true);
     const long = `/dashboard/${'x'.repeat(300)}`;
     expect(contextFromRoute(long)!.context.path).toHaveLength(200);
   });

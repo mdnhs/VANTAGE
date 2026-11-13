@@ -9,7 +9,7 @@ import { AiAssistant } from './assistant';
 
 const mocks = vi.hoisted(() => ({ chatLoaded: 0, actor: null as unknown as MePayload }));
 vi.mock('@/contexts/actor-provider', () => ({ useActor: () => mocks.actor }));
-vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard/about' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard/website/about' }));
 // The factory runs when the module is first imported.
 vi.mock('@ai-sdk/react', () => {
   mocks.chatLoaded++;

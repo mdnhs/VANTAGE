@@ -11,13 +11,13 @@ export type RouteContext = { screen: AssistantScreen; context: ChatContext };
 
 // The editable website pages and the exact admin paths that open them.
 const PAGE_ROUTES: Record<string, PageKey> = {
-  '/dashboard/home-page': 'page.home',
-  '/dashboard/services': 'page.services',
-  '/dashboard/projects': 'page.our-work',
-  '/dashboard/insurance': 'page.insurance',
-  '/dashboard/about': 'page.about',
-  '/dashboard/process-page': 'page.process',
-  '/dashboard/contact-page': 'page.contact',
+  '/dashboard/website/home-page': 'page.home',
+  '/dashboard/website/services': 'page.services',
+  '/dashboard/website/projects': 'page.our-work',
+  '/dashboard/website/insurance': 'page.insurance',
+  '/dashboard/website/about': 'page.about',
+  '/dashboard/website/process-page': 'page.process',
+  '/dashboard/website/contact-page': 'page.contact',
 };
 
 // From the route alone (no DOM): which screen the person is on and, on a page
@@ -31,7 +31,7 @@ export function contextFromRoute(pathname: string): RouteContext | null {
   const clean = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
   const key = PAGE_ROUTES[clean];
   if (key) return { screen: 'page', context: { path, entity: { type: 'page', key } } };
-  if (clean === '/dashboard/quotes' || clean === '/dashboard/contacts') {
+  if (clean === '/dashboard/enquiries/quotes' || clean === '/dashboard/enquiries/contacts') {
     return { screen: 'enquiries', context: { path } };
   }
   return { screen: 'default', context: { path } };

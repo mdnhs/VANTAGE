@@ -59,37 +59,46 @@ export function TablePageSkeleton({ rows = 6 }: { rows?: number }) {
 // Site settings: title, a vertical tab list on the left (5 sections) and one form card on the
 // right — mirrors SettingsTabs so the layout doesn't jump when the real page streams in.
 export function SettingsPageSkeleton() {
+  // Mirrors a settings page inside the Site settings layout (whose menu stays mounted beside it):
+  // title and History, the section tabs, then one card with an icon header and a two-column grid.
   return (
     <div className='flex flex-col gap-6' aria-busy='true' aria-label='Loading'>
       <div className='flex flex-col gap-2'>
-        <Skeleton className='h-6 w-36' />
-        <Skeleton className='h-4 w-96 max-w-full' />
+        <Skeleton className='h-8 w-56 bg-skeleton' />
+        <Skeleton className='h-4 w-64 max-w-full bg-skeleton' />
       </div>
 
-      <div className='flex items-start gap-6'>
-        <div className='flex w-48 shrink-0 flex-col gap-1'>
-          {[0, 1, 2, 3, 4].map((tab) => (
-            <Skeleton key={tab} className={tab === 0 ? 'h-8 w-full' : 'h-8 w-4/5'} />
+      <div className='flex flex-col gap-4'>
+        <Skeleton className='h-9 w-24 self-end rounded-lg bg-skeleton' />
+        <div className='flex gap-5 border-b border-border pb-2.5'>
+          {[24, 28, 26].map((w, tab) => (
+            <Skeleton key={tab} className='h-5 bg-skeleton' style={{ width: `${w * 4}px` }} />
           ))}
         </div>
 
-        <div className='flex min-w-0 flex-1 flex-col gap-5 rounded-xl border border-border p-6'>
-          <div className='flex flex-col gap-2'>
-            <Skeleton className='h-5 w-40' />
-            <Skeleton className='h-4 w-72 max-w-full' />
-          </div>
-          {[0, 1, 2].map((field) => (
-            <div key={field} className='flex flex-col gap-2'>
-              <Skeleton className='h-4 w-28' />
-              <Skeleton className='h-9 w-full' />
+        <div className='@container flex flex-col rounded-card border bg-card shadow-xs'>
+          <div className='flex items-start gap-3 border-b px-4 py-3.5 sm:px-5'>
+            <Skeleton className='size-9 shrink-0 rounded-lg bg-skeleton' />
+            <div className='flex flex-1 flex-col gap-2 pt-1'>
+              <Skeleton className='h-4 w-36 bg-skeleton' />
+              <Skeleton className='h-3.5 w-80 max-w-full bg-skeleton' />
             </div>
-          ))}
-          <div className='flex flex-col gap-2'>
-            <Skeleton className='h-4 w-24' />
-            <Skeleton className='h-20 w-full' />
           </div>
-          <Skeleton className='h-9 w-24' />
+          <div className='grid gap-5 p-4 sm:p-5 @xl:grid-cols-2'>
+            {[0, 1, 2, 3].map((field) => (
+              <div key={field} className='flex flex-col gap-2'>
+                <Skeleton className='h-4 w-32 bg-skeleton' />
+                <Skeleton className='h-9 w-full bg-skeleton' />
+              </div>
+            ))}
+            <div className='flex flex-col gap-2 @xl:col-span-2'>
+              <Skeleton className='h-4 w-28 bg-skeleton' />
+              <Skeleton className='h-20 w-full bg-skeleton' />
+            </div>
+          </div>
         </div>
+
+        <Skeleton className='h-11 w-44 rounded-xl bg-skeleton' />
       </div>
     </div>
   );

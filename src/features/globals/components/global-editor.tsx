@@ -13,6 +13,7 @@ export function GlobalEditor({
   keys,
   onValuesChange,
   embedded = false,
+  stacked = false,
 }: {
   title: string;
   keys: readonly EditableGlobalKey[];
@@ -20,12 +21,14 @@ export function GlobalEditor({
   onValuesChange?: (values: unknown) => void;
   // Inside a page that already has its own header (e.g. a tab of a website page).
   embedded?: boolean;
+  // Single-key editors: draw the form's sections as stacked cards instead of tabs.
+  stacked?: boolean;
 }) {
   return (
     <div className='flex flex-col gap-6'>
       {!embedded && <PageHeader title={title} description='Changes go live as soon as you save.' />}
       {keys.length === 1 ? (
-        <GlobalForm settingKey={keys[0]!} onValuesChange={onValuesChange} />
+        <GlobalForm settingKey={keys[0]!} onValuesChange={onValuesChange} stacked={stacked} />
       ) : (
         // Each document is its own form with its own Save and History, so only the open one is mounted.
         <SectionTabs

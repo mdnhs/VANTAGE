@@ -48,10 +48,10 @@ describe('comingSoonParams', () => {
     expect(keys).not.toContain('');
     for (const k of [
       'media',
-      'home-page',
-      'services',
-      'quotes',
-      'contacts',
+      'website/home-page',
+      'website/services',
+      'enquiries/quotes',
+      'enquiries/contacts',
       'settings',
       'users',
       'account',

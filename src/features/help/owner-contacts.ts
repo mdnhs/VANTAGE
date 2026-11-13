@@ -6,7 +6,7 @@ import { parseRoles } from '@/lib/auth/permissions';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema/auth';
 
-import type { OwnerContact } from './content';
+import type { OwnerContact } from './types';
 
 // Active owners' names and work emails, for "Who to contact". Every signed-in
 // role sees these, including roles that cannot open Users & roles; only name
