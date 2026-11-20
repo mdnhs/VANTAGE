@@ -31,16 +31,27 @@ const NEVER_FRAMED = [
 
 // The s3 media driver's public host, read at build (Docker passes MEDIA_PUBLIC_URL as a build arg).
 const mediaRemotePatterns = () => {
-  const raw = process.env.MEDIA_PUBLIC_URL;
-  if (!raw) return [];
-  const url = new URL(raw);
-  return [
-    {
-      protocol: url.protocol === 'http:' ? ('http' as const) : ('https' as const),
-      hostname: url.hostname,
-      ...(url.port ? { port: url.port } : {}),
-    },
+  const patterns: Array<{ protocol: 'http' | 'https'; hostname: string; port?: string }> = [
+    { protocol: 'https', hostname: 'bucket.raynx.ie' },
+    { protocol: 'https', hostname: '*.r2.dev' },
+    { protocol: 'https', hostname: '**.r2.dev' },
   ];
+  const raw = process.env.MEDIA_PUBLIC_URL;
+  if (raw) {
+    try {
+      const url = new URL(raw);
+      if (!patterns.some((p) => p.hostname === url.hostname)) {
+        patterns.push({
+          protocol: url.protocol === 'http:' ? ('http' as const) : ('https' as const),
+          hostname: url.hostname,
+          ...(url.port ? { port: url.port } : {}),
+        });
+      }
+    } catch {
+      // ignore invalid URL
+    }
+  }
+  return patterns;
 };
 
 const nextConfig: NextConfig = {
