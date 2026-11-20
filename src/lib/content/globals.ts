@@ -346,6 +346,20 @@ export const MicrocopyGlobal = z.object({
       directionsLabel: s(40, 'Get directions'),
     })
     .prefault({}),
+  // The dark banner above the footer on every public page. The quote button's words come from
+  // Settings > Navigation > Quote button; the other button's link is the business WhatsApp number.
+  closingCta: z
+    .object({
+      eyebrow: s(60, 'Same-day walk-in vehicle assessments'),
+      title: s(80, 'Ready to restore your vehicle to'),
+      accent: s(60, 'flawless standard?'),
+      body: s(
+        300,
+        'Speak directly with our Dublin master technicians, or submit your damage photos online for an immediate digital estimate.',
+      ),
+      whatsappButton: s(40, 'WhatsApp photos'),
+    })
+    .prefault({}),
 });
 
 // -------------------------------------------------------------- operations

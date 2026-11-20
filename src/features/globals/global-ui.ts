@@ -243,6 +243,25 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
       section: 'Visit us',
       sectionDescription: 'The map section at the bottom of the Contact page.',
     },
+    closingCta: {
+      label: 'Closing banner',
+      section: 'Closing banner',
+      sectionDescription:
+        'The banner above the footer on every page. The quote button wording is set in Settings > Navigation > Quote button.',
+    },
+    'closingCta.eyebrow': { label: 'Small label above the heading', section: 'Closing banner' },
+    'closingCta.title': { label: 'Heading', section: 'Closing banner' },
+    'closingCta.accent': {
+      label: 'Heading (highlighted part)',
+      description: 'Printed after the heading in the brand colour.',
+      section: 'Closing banner',
+    },
+    'closingCta.body': { label: 'Text under the heading', section: 'Closing banner' },
+    'closingCta.whatsappButton': {
+      label: 'WhatsApp button',
+      description: 'Opens WhatsApp with the business number from Settings > Contact.',
+      section: 'Closing banner',
+    },
     'visitUs.hoursTitle': { label: 'Opening hours card: title', section: 'Visit us' },
     'visitUs.openNow': {
       label: 'Opening hours card: open badge',

@@ -11,7 +11,15 @@ const EYEBROW_DOT = '/assets/landing/1606e632d7f1d3ed093428897b21854cb1b7b173.sv
 const ICON_ARROW = '/assets/landing/59b4140a9e8daa1d2222ade20afa6a0530e51e09.svg';
 const LOGO_WHATSAPP = '/assets/landing/09936fdd2159e847dcf168e3160a539c758f5211.svg';
 
-export function StitchCta({ phone }: { phone: string }) {
+type ClosingCtaCopy = {
+  eyebrow: string;
+  title: string;
+  accent: string;
+  body: string;
+  whatsappButton: string;
+};
+
+export function StitchCta({ phone, copy }: { phone: string; copy: ClosingCtaCopy }) {
   return (
     <section id='contact' className='w-full bg-[#1b1f26]'>
       <div className='mx-auto w-full max-w-[1440px] px-5 py-14 sm:px-6 sm:py-20 lg:px-10 lg:py-24 xl:p-[120px]'>
@@ -61,20 +69,19 @@ export function StitchCta({ phone }: { phone: string }) {
                 className='absolute inset-0 block size-full max-w-none'
               />
             </span>
-            <span className='text-[11px] leading-[normal] font-medium tracking-[0.06em] text-[#c9ced6] sm:font-normal sm:tracking-[0.44px] sm:whitespace-nowrap sm:text-white/80'>
-              SAME-DAY WALK-IN VEHICLE ASSESSMENTS
+            <span className='text-[11px] leading-[normal] font-medium tracking-[0.06em] text-[#c9ced6] uppercase sm:font-normal sm:tracking-[0.44px] sm:whitespace-nowrap sm:text-white/80'>
+              {copy.eyebrow}
             </span>
           </div>
 
           {/* Heading */}
-          <SectionTitle className='relative w-full max-w-[820px] text-center font-site-heading text-[28px] leading-[1.12] font-extrabold text-[#f1f3f6] sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
-            READY TO RESTORE YOUR VEHICLE TO <span className='text-brand'>FLAWLESS STANDARD?</span>
+          <SectionTitle className='relative w-full max-w-[820px] text-center font-site-heading uppercase text-[28px] leading-[1.12] font-extrabold text-[#f1f3f6] sm:text-[42px] sm:leading-[50px] sm:tracking-[-1px] lg:text-[52px] lg:leading-[60px] lg:tracking-[-1.3px]'>
+            {copy.title} <span className='text-brand'>{copy.accent}</span>
           </SectionTitle>
 
           {/* Body */}
           <p className='relative w-full max-w-[620px] text-center text-[15px] leading-[1.55] text-[#b9bfc9] sm:text-[17px] sm:leading-[24px] sm:leading-[27px] sm:text-white/[0.66]'>
-            Speak directly with our Dublin master technicians, or submit your damage photos online for an immediate
-            digital estimate.
+            {copy.body}
           </p>
 
           {/* CTAs */}
@@ -128,7 +135,7 @@ export function StitchCta({ phone }: { phone: string }) {
                       className='absolute inset-0 block size-full max-w-none'
                     />
                   </span>
-                  <span>WhatsApp photos</span>
+                  <span>{copy.whatsappButton}</span>
                 </span>
               </span>
             </a>

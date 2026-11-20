@@ -202,7 +202,7 @@ describe('settings pages are organised into tabs', () => {
     footer: ['Brand', 'Social media', 'Link columns', 'Contact column', 'Bottom bar'],
     quoteForm: ['Field text', 'Buttons', 'Reassurance', 'After sending'],
     contactForm: ['Heading', 'Fields', 'Buttons & notes', 'After sending'],
-    microcopy: ['Contact info', 'Visit us'],
+    microcopy: ['Contact info', 'Visit us', 'Closing banner'],
     notifications: ['Recipients', 'Auto-reply'],
     privacy: ['Enquiries', 'Spam'],
     supportBot: ['Assistant', 'Limits'],

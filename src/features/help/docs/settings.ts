@@ -164,7 +164,7 @@ export const SETTINGS_DOCS: readonly HelpArticle[] = [
             items: [
               '**Quote form**: field text, buttons, the reassurance lines and the message after sending. `{phone}` is replaced with the visitor’s number.',
               '**Contact form**: heading, fields, buttons and the message after sending. `{name}` is replaced with the visitor’s name.',
-              '**Microcopy**: small labels, such as the opening hours card’s **open** and **closed** badges and the directions button.',
+              '**Microcopy**: small labels, such as the opening hours card’s **open** and **closed** badges and the directions button, and the **Closing banner** above the footer (heading, text and WhatsApp button).',
             ],
           },
           { type: 'open', href: '/dashboard/settings/forms', label: 'Open Forms' },

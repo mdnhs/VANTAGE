@@ -22,9 +22,10 @@ import { siteSettingsService } from '@/server/services/site-settings-service';
 
 // One navbar + closing CTA + footer for every public page; contact details come from CMS site settings.
 export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
-  const [settings, navigation, chatRetentionMonths, insurance] = await Promise.all([
+  const [settings, navigation, microcopy, chatRetentionMonths, insurance] = await Promise.all([
     siteSettingsService.getPublic(),
     getSetting('navigation'),
+    getSetting('microcopy'),
     getSupportRetentionMonths(),
     getInsuranceEnabled(),
   ]);
@@ -47,7 +48,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
             />
             <div data-route-content>
               {children}
-              <StitchCta phone={settings.phone} />
+              <StitchCta phone={settings.phone} copy={microcopy.closingCta} />
               <MarketingFooter cookieSettings={<CookieSettingsSlot />} />
             </div>
             <MarketingTracking />
