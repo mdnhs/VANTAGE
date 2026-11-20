@@ -9,7 +9,7 @@ import * as z from 'zod';
 import type { SupportSender } from '@/lib/support/types';
 import { siteNameFrom } from '@/lib/content/site-name';
 import { buildKnowledge } from '@/server/lib/support/bot-knowledge';
-import { buildBotPrompt, tidyReply, toModelMessages } from '@/server/lib/support/bot-prompt';
+import { buildBotPrompt, linkAddress, tidyReply, toModelMessages } from '@/server/lib/support/bot-prompt';
 import { createBudget } from '@/server/lib/support/limits';
 import { publishSupportEvent } from '@/server/lib/support/realtime';
 import { serviceRepository } from '@/server/repositories/service-repository';
@@ -64,10 +64,6 @@ async function knowledge(): Promise<string> {
     testimonialRepository.listPublished({ limit: 5 }),
   ]);
   const address = formatAddress(contact.address);
-  // The map address from Settings > Contact, else a Google Maps search for the address.
-  const mapUrl =
-    contact.mapUrl ||
-    (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '');
   const text = buildKnowledge({
     siteName: siteNameFrom(site.name),
     services: services.map((s) => ({
@@ -82,7 +78,6 @@ async function knowledge(): Promise<string> {
       email: contact.email,
       whatsapp: contact.whatsapp,
       address,
-      mapUrl,
       hours: contact.hours.summary,
     },
     reviews: reviews.map((r) => ({ author: r.customerName, body: r.reviewText })),
@@ -154,7 +149,13 @@ async function generate(
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  const body = tidyReply(result.text) || (handoff ? HANDOFF_FALLBACK : '');
+  // The address links to the map from Settings > Contact, else a Google Maps search for it.
+  const contact = (await readEffectiveGlobal('contact')).value;
+  const address = formatAddress(contact.address);
+  const mapUrl =
+    contact.mapUrl ||
+    (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '');
+  const body = linkAddress(tidyReply(result.text), address, mapUrl) || (handoff ? HANDOFF_FALLBACK : '');
   if (!body) throw new Error('empty answer');
   return { body, handoff };
 }

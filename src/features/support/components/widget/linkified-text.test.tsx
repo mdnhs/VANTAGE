@@ -46,4 +46,11 @@ describe('LinkifiedText', () => {
     expect(link.textContent).toBe(`${window.location.origin}/get-a-quote`);
     expect(link.getAttribute('target')).toBeNull();
   });
+
+  it('shows [label](url) as the label, linked to the url', () => {
+    render(<LinkifiedText text='📍 [Derryguile, Co. Laois](https://www.google.com/maps/search/?api=1&query=x) Open' />);
+    const link = screen.getByRole('link', { name: 'Derryguile, Co. Laois' });
+    expect(link.getAttribute('href')).toBe('https://www.google.com/maps/search/?api=1&query=x');
+    expect(link.getAttribute('target')).toBe('_blank');
+  });
 });

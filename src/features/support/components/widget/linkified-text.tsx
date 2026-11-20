@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 // One pass over the chat text, earliest match wins:
+//  - [label](https://...) -> the label as a link
 //  - https links, and the site's own pages written as a path (/get-a-quote): the bot is told to
 //    write paths, so the link always points at the site the visitor is on (localhost, staging, live)
 //  - email addresses -> mailto:
@@ -8,6 +9,8 @@ import type { ReactNode } from 'react';
 //    line names WhatsApp before the number
 const TOKEN_RE = new RegExp(
   [
+    // [label](https://...): the assistant's way of making a piece of text (the address) a link.
+    /\[([^\]\n]{1,200})\]\((https?:\/\/[^\s)<>"']+)\)/.source,
     /(https?:\/\/[^\s<>"']+|(?<![\w/.:-])\/(?:get-a-quote|contact|services|our-work|about|process)(?:\/[\w-]+)?)/
       .source,
     /((?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+)/.source,
@@ -49,8 +52,10 @@ export function LinkifiedText({ text }: { text: string }): ReactNode {
   for (const m of text.matchAll(TOKEN_RE)) {
     const start = m.index ?? 0;
     if (start > last) out.push(text.slice(last, start));
-    const [, url, email, phone] = m;
-    if (url) {
+    const [, label, labelUrl, url, email, phone] = m;
+    if (labelUrl) {
+      out.push(anchor(start, labelUrl, label ?? labelUrl, true));
+    } else if (url) {
       const trail = TRAILING.exec(url)?.[0] ?? '';
       const target = trail ? url.slice(0, -trail.length) : url;
       const internal = target.startsWith('/');

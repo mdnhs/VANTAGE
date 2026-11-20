@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildBotPrompt, toModelMessages } from './bot-prompt';
+import { buildBotPrompt, linkAddress, toModelMessages } from './bot-prompt';
 
 const input = {
   botName: 'AI assistant',
@@ -83,5 +83,21 @@ describe('tidyReply', () => {
   it('keeps insurance out of the chat unless the admin switches it on', () => {
     expect(buildBotPrompt(input)).toMatch(/Do not offer or mention insurance/i);
     expect(buildBotPrompt({ ...input, insurance: true })).not.toMatch(/Do not offer or mention insurance/i);
+  });
+});
+
+describe('linkAddress', () => {
+  const address = 'Derryguile, Mounmallik, County Laois, Ireland';
+  const url = 'https://maps.example/x';
+
+  it('turns the address in a reply into a link to the map', () => {
+    expect(linkAddress(`📍 ${address}\nThanks`, address, url)).toBe(`📍 [${address}](${url})\nThanks`);
+  });
+
+  it('matches regardless of case and leaves other replies, and unsafe urls, alone', () => {
+    expect(linkAddress(`📍 ${address.toUpperCase()}`, address, url)).toContain(`](${url})`);
+    expect(linkAddress('No address here', address, url)).toBe('No address here');
+    expect(linkAddress(`📍 ${address}`, address, 'javascript:alert(1)')).toBe(`📍 ${address}`);
+    expect(linkAddress(`📍 [${address}](${url})`, address, url)).toBe(`📍 [${address}](${url})`);
   });
 });

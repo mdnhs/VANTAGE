@@ -9,7 +9,7 @@ export const KNOWLEDGE_MAX = 6000;
 export type KnowledgeInput = {
   siteName: string;
   services: { name: string; description: string; checklist: string[]; startingPrice: number | null }[];
-  contact: { phone: string; emergencyPhone: string; email: string; whatsapp: string; address: string; mapUrl?: string; hours: string };
+  contact: { phone: string; emergencyPhone: string; email: string; whatsapp: string; address: string; hours: string };
   reviews: { author: string; body: string }[];
 };
 
@@ -17,8 +17,8 @@ const SERVICE_DESCRIPTION_MAX = 400;
 const REVIEW_MAX = 200;
 const MAX_REVIEWS = 5;
 
-const line = (label: string, value: string, max = 300) => {
-  const text = oneLine(value, max);
+const line = (label: string, value: string) => {
+  const text = oneLine(value, 300);
   return text ? `- ${label}: ${text}` : null;
 };
 
@@ -30,8 +30,6 @@ function contactSection(c: KnowledgeInput['contact']) {
     line('Email', c.email),
     line('WhatsApp', c.whatsapp),
     line('Address', c.address),
-    // Long Google Maps links must not be cut, or the chat would link to a broken address.
-    line('Google Maps link', c.mapUrl ?? '', 600),
     line('Opening hours', c.hours),
   ]
     .filter((l): l is string => l !== null)
