@@ -37,6 +37,13 @@ describe('buildKnowledge', () => {
     expect(text).not.toContain('WhatsApp');
   });
 
+  it('gives the assistant the Google Maps link in full, next to the address', () => {
+    const mapUrl = 'https://www.google.com/maps/place/Unit+4/@53.3498,-6.2603,17z/data=!3m1!4b1';
+    const text = buildKnowledge({ ...base, contact: { ...contact, mapUrl } });
+    expect(text).toContain(`- Google Maps link: ${mapUrl}`);
+    expect(buildKnowledge(base)).not.toContain('Google Maps link');
+  });
+
   it('stays within 6000 characters however much content there is', () => {
     const services = Array.from({ length: 200 }, (_, i) => ({
       name: `Service ${i}`,

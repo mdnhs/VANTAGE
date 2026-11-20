@@ -64,6 +64,10 @@ async function knowledge(): Promise<string> {
     testimonialRepository.listPublished({ limit: 5 }),
   ]);
   const address = formatAddress(contact.address);
+  // The map address from Settings > Contact, else a Google Maps search for the address.
+  const mapUrl =
+    contact.mapUrl ||
+    (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '');
   const text = buildKnowledge({
     siteName: siteNameFrom(site.name),
     services: services.map((s) => ({
@@ -78,6 +82,7 @@ async function knowledge(): Promise<string> {
       email: contact.email,
       whatsapp: contact.whatsapp,
       address,
+      mapUrl,
       hours: contact.hours.summary,
     },
     reviews: reviews.map((r) => ({ author: r.customerName, body: r.reviewText })),
