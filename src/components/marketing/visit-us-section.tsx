@@ -15,7 +15,16 @@ import { formatOpeningHoursSummary } from '@/lib/content/opening-hours';
 // Coordinates aren't part of site settings (no lat/lng field on the model), so the pin
 // stays hardcoded here — address and hours below are pulled from admin-managed
 // settings so they can't drift from what's shown elsewhere on the site.
-const GARAGE_LOCATION: [number, number] = [-6.2603, 53.3498];
+const DEFAULT_LOCATION: [number, number] = [-6.2603, 53.3498];
+
+// "lat, lng" from the editor -> the [lng, lat] the map wants; falls back to the default when blank or invalid.
+function parseCoordinates(raw: string): [number, number] {
+  const m = raw.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (!m) return DEFAULT_LOCATION;
+  const lat = Number(m[1]);
+  const lng = Number(m[2]);
+  return Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? [lng, lat] : DEFAULT_LOCATION;
+}
 
 const ROW = 'flex items-start justify-between gap-4 py-[14px] font-site-body text-[14px] leading-normal';
 
@@ -25,6 +34,7 @@ export async function VisitUsSection() {
     getSetting('microcopy'),
     getSetting('contact'),
   ]);
+  const GARAGE_LOCATION = parseCoordinates(contact.mapCoordinates ?? '');
   const copy = microcopy.visitUs;
   const weekly = contact.hours.weekly;
   const rows = buildHoursRows(weekly, copy.closedDay);

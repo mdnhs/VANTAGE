@@ -108,6 +108,16 @@ export const ContactGlobal = z.object({
     .max(1000)
     .refine((v) => v === '' || /^https?:\/\/\S+$/.test(v), 'Use a full http(s):// address')
     .default(''),
+  // Where the map pin sits, pasted from Google Maps (right-click the spot): "53.3498, -6.2603". Blank = default.
+  mapCoordinates: z
+    .string()
+    .trim()
+    .max(60)
+    .refine(
+      (v) => v === '' || /^-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?$/.test(v),
+      'Use "latitude, longitude", e.g. 53.3498, -6.2603',
+    )
+    .default(''),
   hours: z
     .object({
       weekly: z

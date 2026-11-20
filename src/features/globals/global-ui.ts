@@ -92,6 +92,13 @@ export const GLOBAL_FIELD_UI: Partial<Record<EditableGlobalKey, FieldOverrides>>
     },
     'hours.summary': { description: 'Leave blank to generate it from the opening times.' },
     mapUrl: { label: 'Map link', inputType: 'url', placeholder: 'https://', section: 'Address & map' },
+    mapCoordinates: {
+      label: 'Map pin position',
+      placeholder: '53.3498, -6.2603',
+      description:
+        'Where the pin sits on the Visit us map. In Google Maps right-click your workshop and click the numbers at the top to copy them, then paste here.',
+      section: 'Address & map',
+    },
   },
   navigation: {
     links: {

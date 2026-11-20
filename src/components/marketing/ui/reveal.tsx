@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, type Variants } from 'motion/react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 // Small scroll-reveal pieces built on motion, for server components that cannot call it directly.
 
@@ -38,11 +38,19 @@ export function RevealItem({ children, className }: { children: ReactNode; class
 
 // A photo that opens like a curtain: the frame wipes up from the bottom, with no zoom.
 export function ClipReveal({ children, className }: { children: ReactNode; className?: string }) {
+  const [forced, setForced] = useState(false);
+  // Failsafe: the server HTML ships the frame closed, so if the in-view trigger never fires the photo must still open.
+  useEffect(() => {
+    const t = setTimeout(() => setForced(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <motion.div
       initial={{ clipPath: 'inset(100% 0% 0% 0%)' }}
       whileInView={{ clipPath: 'inset(0% 0% 0% 0%)' }}
-      viewport={{ once: true, amount: 0.25 }}
+      animate={forced ? { clipPath: 'inset(0% 0% 0% 0%)' } : undefined}
+      // amount 'some' (any pixel visible) so a photo inside a horizontal scroller or a framed preview still opens.
+      viewport={{ once: true, amount: 'some' }}
       transition={{ duration: 1.1, ease: EASE }}
       className={className}
     >
