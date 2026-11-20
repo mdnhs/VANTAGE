@@ -126,7 +126,7 @@ export function StitchHero({
             </HeroItem>
 
             {/* Heading */}
-            <HeroHeading className='font-site-heading text-[clamp(34px,10.77vw,42px)] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[64px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[84px] lg:leading-[88px]'>
+            <HeroHeading className='font-site-heading text-[clamp(30px,9.4vw,36px)] leading-none font-extrabold tracking-[-0.02em] uppercase sm:text-[52px] sm:leading-[1.05] sm:tracking-[-0.03em] lg:text-[68px] lg:leading-[72px]'>
               {/* Plain spaces between the block lines keep the words apart for crawlers and screen readers. */}
               <HeroLine className='text-[#f1f3f6]'>{headlineLine1}</HeroLine>{' '}
               <HeroLine className='text-[#f1f3f6]'>{headlineLine2}</HeroLine>{' '}
