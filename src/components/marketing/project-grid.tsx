@@ -11,6 +11,7 @@ import { sizedSrc } from '@/lib/media/public-image';
 import { projectPath } from '@/lib/seo/detail-paths';
 import type { ProjectPublic } from '@/features/projects/types';
 import { ALL_FILTER, DEFAULT_FILTERS, PortfolioFilters } from '@/components/marketing/portfolio-filters';
+import { BeforeAfterSlider } from '@/components/marketing/ui/before-after-slider';
 import { BUTTON_SECONDARY } from '@/components/marketing/ui/landing-primitives';
 
 const PAGE_SIZE = 9;
@@ -22,6 +23,8 @@ const normalize = (value: string) => value.trim().toLowerCase();
 // before/after toggle, category + title + description, VEHICLE / COMPLETED meta rows.
 function ProjectCard({ project }: { project: ProjectPublic }) {
   const hasBefore = Boolean(project.beforeImage);
+  // Both photos: one draggable before/after frame instead of the toggle.
+  const slider = project.beforeImage && project.afterImage ? { before: project.beforeImage, after: project.afterImage } : null;
   const [mode, setMode] = useState<'after' | 'before'>('after');
   const currentMode = hasBefore ? mode : 'after';
   const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
@@ -30,6 +33,10 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
     <TiltArticle className='group relative flex flex-1 flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 sm:rounded-2xl'>
       {/* Photo with Before/After toggle */}
       <div className='relative h-[210px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
+        {slider ? (
+          <BeforeAfterSlider before={slider.before} after={slider.after} alt={project.title} sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw' />
+        ) : (
+          <>
         {/* Before and after crossfade (with a slight settle) instead of swapping in one frame. */}
         <AnimatePresence initial={false}>
           {current && (
@@ -83,6 +90,8 @@ function ProjectCard({ project }: { project: ProjectPublic }) {
         >
           {currentMode === 'after' ? 'COMPLETED' : 'ACCIDENT INTAKE'}
         </div>
+          </>
+        )}
       </div>
 
       {/* Body */}

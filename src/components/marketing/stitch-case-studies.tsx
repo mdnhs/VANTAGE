@@ -1,5 +1,6 @@
 'use client';
 
+import { BeforeAfterSlider } from '@/components/marketing/ui/before-after-slider';
 import { ClipReveal } from '@/components/marketing/ui/reveal';
 
 import { TiltArticle } from '@/components/marketing/ui/tilt-article';
@@ -78,6 +79,11 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
           {projects.map((project) => {
             const currentMode = viewState[project.id] ?? 'after';
             const current = currentMode === 'after' ? project.afterImage : project.beforeImage;
+            // Both photos: one draggable before/after frame instead of the toggle.
+            const slider =
+              project.beforeImage && project.afterImage
+                ? { before: project.beforeImage, after: project.afterImage }
+                : null;
 
             return (
               <TiltArticle
@@ -86,6 +92,10 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
               >
                 {/* Photo with Before/After toggle */}
                 <ClipReveal className='relative h-[200px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
+                  {slider ? (
+                    <BeforeAfterSlider before={slider.before} after={slider.after} alt={project.title} sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw' />
+                  ) : (
+                    <>
                   {current && (
                     <Image
                       src={sizedSrc(current, 'w_800,h_512,c_fill')}
@@ -125,6 +135,8 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                   >
                     {currentMode === 'after' ? 'COMPLETED' : 'ACCIDENT INTAKE'}
                   </div>
+                    </>
+                  )}
                 </ClipReveal>
 
                 {/* Body */}

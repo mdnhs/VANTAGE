@@ -12,6 +12,7 @@ import {
   SECTION_CONTAINER,
   SECTION_PADDING,
 } from '@/components/marketing/ui/landing-primitives';
+import { BeforeAfterSlider } from '@/components/marketing/ui/before-after-slider';
 import { PageAnimations } from '@/components/marketing/page-animations';
 import { sizedSrc, type PublicImage } from '@/lib/media/public-image';
 import { projectPath, servicePath } from '@/lib/seo/detail-paths';
@@ -105,7 +106,18 @@ export default async function ProjectPage({ params }: PageProps<'/our-work/[slug
 
       <section className={SECTION_BG.raised}>
         <div className={`${SECTION_CONTAINER} ${SECTION_PADDING} gap-12`}>
-          {(project.beforeImage || project.afterImage) && (
+          {project.beforeImage && project.afterImage && (
+            <div className='relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-[#353c47] bg-black'>
+              <BeforeAfterSlider
+                before={project.beforeImage}
+                after={project.afterImage}
+                alt={project.title}
+                sizes='(min-width: 1024px) 1200px, 100vw'
+                priority
+              />
+            </div>
+          )}
+          {(!project.beforeImage || !project.afterImage) && (project.beforeImage || project.afterImage) && (
             <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
               {project.beforeImage && (
                 <Photo image={project.beforeImage} alt={`${project.title}, before the repair`} label='Before' />
