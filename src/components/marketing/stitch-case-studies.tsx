@@ -91,7 +91,7 @@ export function StitchCaseStudies({ projects }: StitchCaseStudiesProps) {
                 className='group relative flex flex-col overflow-hidden rounded-[18px] border border-[#353c47] bg-[#262b34] transition-colors hover:border-brand/50 max-sm:w-[310px] max-sm:shrink-0 max-sm:snap-start sm:rounded-2xl'
               >
                 {/* Photo with Before/After toggle */}
-                <ClipReveal className='relative h-[200px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
+                <ClipReveal className='relative z-10 h-[200px] w-full shrink-0 overflow-hidden bg-black sm:h-64'>
                   {slider ? (
                     <BeforeAfterSlider before={slider.before} after={slider.after} alt={project.title} sizes='(min-width: 1024px) 384px, (min-width: 768px) 50vw, 100vw' />
                   ) : (
